@@ -25,6 +25,7 @@ from kumiki_reference_lab.catalog.store import build_catalog_index, load_catalog
 from kumiki_reference_lab.contracts.source import RIGHTS_STATUSES
 from kumiki_reference_lab.core.artifacts import write_json_artifact
 from kumiki_reference_lab.pipeline.analyze import run_analysis
+from kumiki_reference_lab.pipeline.study import study_reference
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -173,6 +174,19 @@ def build_parser() -> argparse.ArgumentParser:
     shot_evidence.add_argument("analysis_run", type=Path)
     shot_evidence.add_argument("--out", type=Path)
 
+    study = commands.add_parser(
+        "study-reference", help="one command: analyze, propose, summarize, and render cue review")
+    study.add_argument("source", type=Path)
+    study.add_argument("--out", type=Path, required=True)
+    study.add_argument("--catalog-root", type=Path, default=Path("catalog/entries"))
+    study.add_argument("--max-seconds", type=int, default=10)
+    study.add_argument("--thumbnails", type=int, default=8)
+    study.add_argument("--max-cues", type=int, default=8)
+    study.add_argument("--ffmpeg", default="ffmpeg")
+    study.add_argument("--ffprobe", default="ffprobe")
+    study.add_argument("--rights-status", choices=RIGHTS_STATUSES,
+                       default="review-required")
+
     analyze = commands.add_parser("analyze", help="run a bounded, atomic multi-stage reference analysis")
     analyze.add_argument("source", type=Path)
     analyze.add_argument("--out", type=Path, required=True, help="parent directory for immutable run")
@@ -266,6 +280,15 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
             else:
                 print(str(write_json_artifact(args.out, "shot-evidence.json", result)))
+            return 0
+        if args.command == "study-reference":
+            result = study_reference(
+                args.source, args.out, catalog_root=args.catalog_root,
+                seconds=args.max_seconds, thumbnails=args.thumbnails,
+                max_cues=args.max_cues, ffmpeg=args.ffmpeg, ffprobe=args.ffprobe,
+                rights_status=args.rights_status,
+            )
+            print(str(result))
             return 0
         if args.command == "compare-appearance":
             comparison = compare_appearance(
