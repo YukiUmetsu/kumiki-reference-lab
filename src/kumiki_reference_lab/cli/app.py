@@ -33,6 +33,7 @@ from kumiki_reference_lab.contracts.source import RIGHTS_STATUSES
 from kumiki_reference_lab.core.artifacts import write_json_artifact
 from kumiki_reference_lab.pipeline.analyze import run_analysis
 from kumiki_reference_lab.pipeline.study import study_reference
+from kumiki_reference_lab.integrations.kumiki.film_handoff import export_film_handoff
 from kumiki_reference_lab.reviews.notes import review_notes_template, validate_review_notes
 
 
@@ -266,6 +267,16 @@ def build_parser() -> argparse.ArgumentParser:
     study.add_argument("--rights-status", choices=RIGHTS_STATUSES,
                        default="review-required")
 
+    handoff = commands.add_parser(
+        "export-film-handoff",
+        help="verified study -> non-executable FD1 authoring evidence packet")
+    handoff.add_argument("study_manifest", type=Path,
+                         help="study-manifest.json from a verified v5 study")
+    handoff.add_argument("--out", type=Path, required=True,
+                         help="directory outside immutable study/analysis bundles")
+    handoff.add_argument("--fps-num", type=int, default=30)
+    handoff.add_argument("--fps-den", type=int, default=1)
+
     notes = commands.add_parser(
         "review-notes", help="create or validate source-linked, unapproved human/AI notes")
     notes_actions = notes.add_subparsers(dest="review_notes_action", required=True)
@@ -423,6 +434,10 @@ def main(argv: list[str] | None = None) -> int:
                 rights_status=args.rights_status,
             )
             print(str(result))
+            return 0
+        if args.command == "export-film-handoff":
+            print(export_film_handoff(args.study_manifest, args.out,
+                                      fps_num=args.fps_num, fps_den=args.fps_den))
             return 0
         if args.command == "compare-appearance":
             comparison = compare_appearance(

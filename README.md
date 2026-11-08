@@ -55,6 +55,7 @@ Reference Lab is an **offline authoring and research tool**. Neither Kumiki UI n
 ```bash
 python -m pip install -e '.[motion]'
 kumiki-ref study-reference ./reference.mp4 --max-seconds 10 --out ./runs
+kumiki-ref export-film-handoff ./runs/study-.../study-manifest.json --fps-num 30000 --fps-den 1001 --out ./handoff
 ```
 
 This produces a verified analysis bundle, cautious technique proposals, candidate edit-region and cut-to-cut timing summaries, and a local HTML **study overview** linking a five-track audiovisual evidence timeline, a candidate-shot storyboard and a separate technique review gallery. Storyboard frames are available even with zero technique cues. Absent audio is shown explicitly; unreliable audio decoding fails transparently. It never claims to infer the source's actual camera, lights, objects or story purpose. See [one-command study usage](docs/reference-study.md).
@@ -332,6 +333,8 @@ kumiki-ref study-reference ./reference.mp4 --max-seconds 10 --out ./runs
 
 `study-reference` orchestrates `analyze` with bounded optional numeric stages, technique proposal generation, shot-region summaries, censored candidate cut-to-cut intervals, a source-linked audiovisual timeline including possible level attacks, and two source-verified galleries. The derived v5 study is published atomically with checksummed files; v1–v4 studies remain readable, and a successful analysis remains reusable if a later review step fails. See [command contracts and output layout](docs/reference-study.md).
 
+`export-film-handoff` is the first **actual downstream authoring bridge**. It verifies a v5 study and its original analysis, then emits immutable, source-PTS-grounded `film-handoff.json`: only interior candidate cut-to-cut timing, exact rational target-frame rounding/error, audio-level attack hypotheses and catalog technique cue IDs. The packet explicitly leaves scene recipes, content, actual sound cues and Kumiki implementation IDs **unassigned**. It is *not* executable Kumiki FD1 film JSON; a coding agent must inspect the live Kumiki catalog, author an original film, run `npm run film:check`, render and visually review. See [FD1 handoff contract and agent workflow](docs/film-handoff.md).
+
 **Regression evidence:** Three procedurally generated reference-video fixtures exercise the actual FFmpeg → analysis → proposal → HTML gallery / shot-region path with known causes, including misleading visual lookalikes. These and all FFmpeg/NumPy integration tests remain available for **local testing**; the streamlined GitHub CI runs only inexpensive core smoke tests. See [synthetic source validation](docs/synthetic-reference-qa.md).
 
 `analyze` is the transactional orchestration layer: it runs `inspect` + `frames` + `cuts` + `contact-sheet`, with `--motion`, `--sparse-flow`, `--appearance`, and `--box` opt-ins. By default it requires only FFmpeg/FFprobe. Each completed bundle contains JSON artifacts, a local visual contact sheet, and `analysis-run.json` with hashes and immutable input/settings identity. If any required stage fails, the temporary bundle is discarded and no partial run is published. The bounded initial implementation repeats some inexpensive metadata work rather than building an unverified streaming/cache engine.
@@ -347,7 +350,7 @@ kumiki-ref analyze ./reference.mp4 --features shots,motion,color --out ./runs/ex
 # Optional subject tracking, with explicit model selection
 kumiki-ref track ./reference.mp4 --shot shot-001 --prompt "product" --backend sam2
 
-# Later: AI-assisted semantic technique interpretation and a typed Kumiki treatment
+# Later: AI-assisted semantic interpretation and fully authored executable Kumiki treatment
 kumiki-ref interpret ./runs/example/analysis.json --model local
 kumiki-ref export kumiki ./runs/example/analysis.json --out ./runs/example/treatment.yaml
 
