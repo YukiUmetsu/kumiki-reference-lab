@@ -13,6 +13,33 @@ the experiment independently of `--max-samples`, which controls the optional
 global-motion and ROI stages. Opting in changes the checksum-bound run
 identity; legacy runs without sparse flow keep their existing identity.
 
+## Review the actual sampled frames
+
+```bash
+kumiki-ref sparse-flow reference.mp4 --out ./runs/sparse
+kumiki-ref review-sparse-flow reference.mp4 ./runs/sparse/sparse-flow.json --out ./runs/reviews
+```
+
+Open the printed `index.html` locally. The command decodes the **original
+source's selected PTS frames** into small lossless RGB PNGs and overlays
+accepted image-plane pair displacements as SVG lines and endpoints. It shows
+up to eight frames and twelve top multi-pair tracklets by default; use
+`--max-frames` (2–12) or `--max-tracklets` (1–16) to tune this bounded review.
+Each arrow ends on the frame shown, and starts at its matched point on the
+preceding sampled frame. For a pair without selected tracklets, no lines are
+shown; if no multi-pair tracklets exist anywhere, the overlay can show up to
+24 individual accepted pair vectors instead.
+
+The standalone HTML bundle contains `index.html`, PNG thumbnails, a copied
+`sparse-flow.json` and a checksum manifest conforming to
+[`sparse-flow-review.schema.json`](../schemas/v1/sparse-flow-review.schema.json).
+Source SHA-256, stream index, timebase, decoded frame PTS and tracklet links
+are verified. The output directory name is based on the source and settings;
+rerunning reuses an intact bundle and refuses a modified one. The input video
+is not copied or changed. This is **candidate evidence for human inspection**,
+not semantic object tracking, recovered camera movement, a verified physical
+trajectory, or a human artistic-quality verdict. It does not use a hosted model.
+
 For larger movement between selected frames, opt in to the bounded **two-level
 coarse-to-fine fallback** with `kumiki-ref sparse-flow reference.mp4
 --pyramid-levels 2` or `kumiki-ref analyze reference.mp4 --sparse-flow
