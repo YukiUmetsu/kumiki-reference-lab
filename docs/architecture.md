@@ -115,5 +115,6 @@ statistics and cut-aware color/brightness deltas, with a separate strict
 [`kumiki.appearance.v1` schema](../schemas/v1/appearance.schema.json). See
 the [method and interpretation guide](appearance.md). A bright-pixel center,
 histogram or luma proxy is **not** recovered scene lighting, physical camera
-exposure or a material classification. `appearance` remains separate from the
-atomic `analyze` bundle until its own opt-in integration is tested.
+exposure or a material classification. `analyze --appearance` now adds this
+stage transactionally with immutable checksums, bounded parameters and the
+original source timestamps.

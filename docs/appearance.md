@@ -12,6 +12,11 @@ Its RGB evidence comes from selected frames with original source PTS verified
 by both FFprobe and FFmpeg. Sampling is uniform in presentation time,
 not nominal FPS; pairs crossing cut *candidates* have null change metrics.
 
+To include appearance in a checksum-verified atomic bundle, run
+`kumiki-ref analyze reference.mp4 --appearance --appearance-samples 24 --out ./runs`.
+Opting in changes the run's settings hash and includes a versioned artifact
+record. Existing runs without this option retain their original identity.
+
 ## Measurements at each source timestamp
 
 | Field | Meaning | What it does **not** establish |

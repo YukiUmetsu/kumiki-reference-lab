@@ -20,7 +20,15 @@
                                      {"required": ["sparsePoints"]},
                                      {"required": ["sparseRadius"]},
                                      {"required": ["sparseCorrelation"]}]},
-                  "properties": {"versions": {"not": {"required": ["sparseFlow"]}}}}}
+                  "properties": {"versions": {"not": {"required": ["sparseFlow"]}}}}},
+        {"if": {"required": ["appearance"]},
+         "then": {"required": ["appearanceSamples"],
+                  "properties": {"seconds": {"maximum": 20}, "width": {"maximum": 240},
+                                 "height": {"maximum": 135},
+                                 "versions": {"required": ["appearance"]}}}},
+        {"if": {"not": {"required": ["appearance"]}},
+         "then": {"not": {"required": ["appearanceSamples"]},
+                  "properties": {"versions": {"not": {"required": ["appearance"]}}}}}
       ],
       "properties": {
         "sourceSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
@@ -33,6 +41,8 @@
         "sparsePoints": {"type": "integer", "minimum": 4, "maximum": 64},
         "sparseRadius": {"type": "integer", "minimum": 2, "maximum": 12},
         "sparseCorrelation": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
+        "appearance": {"const": true},
+        "appearanceSamples": {"type": "integer", "minimum": 5, "maximum": 40},
         "roi": {"type": ["array", "null"], "minItems": 4, "maxItems": 4,
           "items": {"type": "number", "minimum": 0, "maximum": 1}},
         "samples": {"type": "integer", "minimum": 5, "maximum": 120},
@@ -52,6 +62,7 @@
             "contact": {"type": "string"},
             "motion": {"type": "string"},
             "sparseFlow": {"const": "kumiki.sparse-flow.v1"},
+            "appearance": {"const": "kumiki.appearance.v1"},
             "roi": {"type": "string"}
           }
         }
