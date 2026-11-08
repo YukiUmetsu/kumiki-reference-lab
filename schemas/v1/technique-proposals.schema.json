@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/technique-proposals.schema.json",
+  "title": "Kumiki Technique Review Cues v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "status", "source", "provenance", "method", "availableEvidence", "candidates"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.technique-proposals.v1"},
+    "status": {"const": "review-candidates-only"},
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sha256", "streamIndex", "sourceTimebase", "coverage"],
+      "properties": {
+        "sha256": {"$ref": "#/$defs/hash"},
+        "streamIndex": {"type": "integer", "minimum": 0},
+        "sourceTimebase": {"$ref": "#/$defs/rational"},
+        "coverage": {"const": "bounded-from-start-not-necessarily-full-video"}
+      }
+    },
+    "provenance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["analysisRunSha256", "catalogEntries"],
+      "properties": {
+        "analysisRunSha256": {"$ref": "#/$defs/hash"},
+        "catalogEntries": {
+          "type": "array", "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["id", "revision", "entrySha256"],
+            "properties": {
+              "id": {"type": "string", "minLength": 3},
+              "revision": {"type": "integer", "minimum": 1},
+              "entrySha256": {"$ref": "#/$defs/hash"}
+            }
+          }
+        }
+      }
+    },
+    "method": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "hasSemanticUnderstanding", "humanApprovalRequired", "limits", "gates"],
+      "properties": {
+        "name": {"const": "deterministic-conservative-visible-cues-v1"},
+        "hasSemanticUnderstanding": {"const": false},
+        "humanApprovalRequired": {"const": true},
+        "limits": {"type": "string", "minLength": 1},
+        "gates": {
+          "type": "object", "additionalProperties": false,
+          "required": ["enlargement", "brightCentroid"],
+          "properties": {
+            "enlargement": {
+              "type": "object", "additionalProperties": false,
+              "required": ["minimumAdjacentPairs", "minimumInlierFraction", "minimumImageScale", "maximumImageScale", "maximumAnisotropy", "maximumAbsRotationDegrees", "minimumSpatialSpanFraction"],
+              "properties": {
+                "minimumAdjacentPairs": {"type": "integer", "minimum": 2},
+                "minimumInlierFraction": {"type": "number", "minimum": 0, "maximum": 1},
+                "minimumImageScale": {"type": "number", "exclusiveMinimum": 1},
+                "maximumImageScale": {"type": "number", "exclusiveMinimum": 1},
+                "maximumAnisotropy": {"type": "number", "minimum": 1},
+                "maximumAbsRotationDegrees": {"type": "number", "minimum": 0, "maximum": 180},
+                "minimumSpatialSpanFraction": {"type": "number", "minimum": 0, "maximum": 1}
+              }
+            },
+            "brightCentroid": {
+              "type": "object", "additionalProperties": false,
+              "required": ["minimumConsecutiveFrames", "minimumBrightPixelFraction", "maximumBrightPixelFraction", "minimumCentroidDisplacementNormalized", "maximumLumaProxyRange", "maximumBrightFractionRange"],
+              "properties": {
+                "minimumConsecutiveFrames": {"type": "integer", "minimum": 3},
+                "minimumBrightPixelFraction": {"type": "number", "minimum": 0, "maximum": 1},
+                "maximumBrightPixelFraction": {"type": "number", "minimum": 0, "maximum": 1},
+                "minimumCentroidDisplacementNormalized": {"type": "number", "minimum": 0, "maximum": 1.414214},
+                "maximumLumaProxyRange": {"type": "number", "minimum": 0, "maximum": 1},
+                "maximumBrightFractionRange": {"type": "number", "minimum": 0, "maximum": 1}
+              }
+            }
+          }
+        }
+      }
+    },
+    "availableEvidence": {
+      "type": "array", "uniqueItems": true,
+      "items": {"enum": ["cuts", "sparseFlow", "appearance"]}
+    },
+    "candidates": {
+      "type": "array", "maxItems": 32,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "techniqueId", "catalogRevision", "catalogEntrySha256", "interpretationStatus", "visibleCueHypothesis", "sourcePtsRange", "evidence", "plausibleAlternatives", "reviewQuestions"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^cue-[a-f0-9]{16}$"},
+          "techniqueId": {"enum": ["camera.motivated-macro-dolly", "lighting.softbox-curvature-reveal"]},
+          "catalogRevision": {"type": "integer", "minimum": 1},
+          "catalogEntrySha256": {"$ref": "#/$defs/hash"},
+          "interpretationStatus": {"const": "review-required-not-verified"},
+          "visibleCueHypothesis": {"type": "string", "minLength": 1},
+          "sourcePtsRange": {"$ref": "#/$defs/ptsRange"},
+          "evidence": {
+            "type": "object", "additionalProperties": false,
+            "required": ["artifact", "startPts", "endPts", "measurements"],
+            "properties": {
+              "artifact": {"enum": ["sparse-flow.json", "appearance.json"]},
+              "startPts": {"type": "integer"},
+              "endPts": {"type": "integer"},
+              "measurements": {
+                "oneOf": [
+                  {"$ref": "#/$defs/enlargementMeasurements"},
+                  {"$ref": "#/$defs/brightCentroidMeasurements"}
+                ]
+              }
+            }
+          },
+          "plausibleAlternatives": {"$ref": "#/$defs/nonemptyStrings"},
+          "reviewQuestions": {"$ref": "#/$defs/nonemptyStrings"}
+        },
+        "allOf": [
+          {
+            "if": {"properties": {"techniqueId": {"const": "camera.motivated-macro-dolly"}}},
+            "then": {"properties": {"evidence": {"properties": {
+              "artifact": {"const": "sparse-flow.json"},
+              "measurements": {"$ref": "#/$defs/enlargementMeasurements"}
+            }}}}
+          },
+          {
+            "if": {"properties": {"techniqueId": {"const": "lighting.softbox-curvature-reveal"}}},
+            "then": {"properties": {"evidence": {"properties": {
+              "artifact": {"const": "appearance.json"},
+              "measurements": {"$ref": "#/$defs/brightCentroidMeasurements"}
+            }}}}
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "rational": {
+      "type": "object", "additionalProperties": false,
+      "required": ["numerator", "denominator"],
+      "properties": {
+        "numerator": {"type": "integer"},
+        "denominator": {"type": "integer", "minimum": 1}
+      }
+    },
+    "ptsRange": {
+      "type": "object", "additionalProperties": false,
+      "required": ["startPts", "endPts"],
+      "properties": {
+        "startPts": {"type": "integer"},
+        "endPts": {"type": "integer"}
+      }
+    },
+    "nonemptyStrings": {
+      "type": "array", "minItems": 2,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "enlargementMeasurements": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sampledPairCount", "areaScaleCandidates", "inlierFractions", "anisotropyCandidates", "units"],
+      "properties": {
+        "sampledPairCount": {"type": "integer", "minimum": 2},
+        "areaScaleCandidates": {"type": "array", "minItems": 2, "items": {"type": "number", "minimum": 1.018, "maximum": 1.3}},
+        "inlierFractions": {"type": "array", "minItems": 2, "items": {"type": "number", "minimum": 0.6, "maximum": 1}},
+        "anisotropyCandidates": {"type": "array", "minItems": 2, "items": {"type": "number", "minimum": 1, "maximum": 1.12}},
+        "units": {"const": "dimensionless image-plane affine descriptors"}
+      }
+    },
+    "brightCentroidMeasurements": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sampledFrameCount", "brightCentroidDisplacementNormalized", "brightCentroidDisplacementMagnitudeNormalized", "meanLumaProxyRange", "brightPixelFractionRange", "units"],
+      "properties": {
+        "sampledFrameCount": {"type": "integer", "minimum": 3},
+        "brightCentroidDisplacementNormalized": {
+          "type": "object", "additionalProperties": false,
+          "required": ["dx", "dy"],
+          "properties": {
+            "dx": {"type": "number", "minimum": -1, "maximum": 1},
+            "dy": {"type": "number", "minimum": -1, "maximum": 1}
+          }
+        },
+        "brightCentroidDisplacementMagnitudeNormalized": {"type": "number", "minimum": 0.08, "maximum": 1.414214},
+        "meanLumaProxyRange": {"type": "number", "minimum": 0, "maximum": 0.1},
+        "brightPixelFractionRange": {"type": "number", "minimum": 0, "maximum": 0.12},
+        "units": {"const": "normalized frame coordinates, display-referred RGB proxy"}
+      }
+    }
+  }
+}
