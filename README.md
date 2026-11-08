@@ -2,9 +2,9 @@
 
 **Reference-video analysis, cinematic technique research, and reproducible motion reconstruction for the Kumiki ecosystem.**
 
-> **Project status: early working foundation.** The `inspect`, `frames`, `cuts`, `contact-sheet`, `motion`, and `catalog` commands are implemented and tested. Automatic video-to-technique interpretation, verified reference matching, and Kumiki export remain planned.
+> **Project status: early working foundation.** The `inspect`, `frames`, `cuts`, `contact-sheet`, `motion`, `track-roi`, and `catalog` commands are implemented and tested. Automatic video-to-technique interpretation, verified reference matching, and Kumiki export remain planned.
 
-**Implemented foundation:** Python commands read local video metadata, extract real presentation timestamps, detect bounded hard-cut *candidates*, produce timecoded HTML/JPEG contact sheets, and optionally measure global image-plane translation and simple easing candidates using NumPy. A validated, searchable Cinematic Techniques Catalog now includes five original research candidates. Object-specific tracking, physical camera inference, semantic interpretation, treatment compilation and reference comparison remain planned.
+**Implemented foundation:** Python commands read local video metadata, extract real presentation timestamps, detect bounded hard-cut *candidates*, produce timecoded HTML/JPEG contact sheets, optionally measure global image-plane translation and simple easing candidates, and track a user-seeded textured image region with NumPy. A validated, searchable Cinematic Techniques Catalog includes five original research candidates. Automatic semantic identity tracking, physical camera inference, semantic interpretation, treatment compilation and reference comparison remain planned.
 
 Kumiki Reference Lab studies legally obtained motion-graphics, product-film, documentary, and explainer-video references. It extracts measurable characteristics, identifies reusable filmmaking techniques, and produces evidence-backed reports that can guide implementations in [kumiki-ui](https://github.com/YukiUmetsu/kumiki-ui).
 
@@ -82,7 +82,7 @@ Authorized reference video
 | Editing | PySceneDetect cut/fade candidates, histogram and perceptual differences | Learned transition classifier | Shot intervals and confidence |
 | Composition | Subject boxes, saliency heuristics, contrast and negative space | Vision-based semantic focus | Per-shot composition timeline |
 | Motion | **Implemented:** optional NumPy FFT global-image translation. **Next:** OpenCV optical flow, feature tracks, affine/homography estimation | Learned correspondence/tracking | Normalized trajectories and fit residuals |
-| Subject tracking | Manually seeded masks/boxes and classical tracking | SAM 2 or suitable video segmentation model | Subject masks, identities and confidence |
+| Subject tracking | **Implemented:** manually seeded textured box tracker with match/loss diagnostics. **Next:** robust keypoint tracking and occlusion handling | SAM 2 or suitable video segmentation model | Subject-box paths; identity remains a hypothesis |
 | Animation curves | **Implemented:** candidate linear, quadratic and smoothstep-family fits on valid translation segments. **Next:** Bézier and spring parameter fitting | Learned motion grouping | Frame-relative motion curves |
 | Camera hypotheses | Robustly separate background from foreground movement; estimate translation, scale, roll | Multiview SfM when assumptions hold | Camera-motion *hypotheses* |
 | Lighting and look | Color histograms, exposure, highlights, shadows, key/fill contrast proxies | Inverse-rendering/vision models | Appearance observations and hypotheses |
@@ -252,11 +252,14 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 
 ```bash
 kumiki-ref motion ./reference.mp4 --max-seconds 10 --max-samples 48 --out ./runs/motion-example
+kumiki-ref track-roi ./reference.mp4 --box 0.19 0.22 0.15 0.20 --max-seconds 10 --out ./runs/roi-example
 ```
 
 `inspect` records metadata and SHA-256, while honestly marking frame-by-frame PTS and VFR status as unknown until sampled. `frames` extracts source PTS within a bounded window, preserving exact rational timestamps and reporting missing/nonincreasing values. `cuts` detects **possible hard cuts**, not proven edits; fast subject or camera motion may produce false positives, and fades are not yet classified. `contact-sheet` automatically prioritizes frames at opening/closing and around candidate edits, then covers remaining visual gaps. It creates an immutable `contact-sheet-<source>-<settings>/` directory containing `index.html`, `contact-sheet.json`, and up to 24 labeled JPEGs. The JSON records exact rational source timestamps, each evidence image's hash, and the sampling options. Existing bundles are checked for modification, never silently replaced. `--rights-status user-declared-authorized` is an **assertion by the user**, not automated legal verification. No model download or external service is required.
 
 `motion` decodes at most 120 original frames over a 30-second source window into bounded grayscale buffers; every decoded PTS must match FFprobe. It outputs `image-motion.json` containing measured global image translation, explicit ambiguous/unobservable/cut-boundary pairs, normalized displacement, cumulative segments, and residual-ranked candidate easing curves. This cannot determine whether the displacement came from the camera, a foreground subject, a background, or a mixture; it also does not measure zoom, rotation, parallax, 3D paths, or separate subjects. Curve fits are observations of rendered motion, **not recovered source keyframes**. The stage uses NumPy only when invoked; the other commands remain dependency-free.
+
+`track-roi` accepts a normalized `x y width height` seed rectangle on the first decoded frame and follows its textured appearance with bounded local normalized cross-correlation. It produces `roi-track.json` with exact source timestamps, per-frame box coordinates, relative displacement and match diagnostics. Uniform templates, ambiguous matches, disappearance and cut boundaries stop the track; the tool does not silently invent positions or automatically re-identify subjects after a cut. This is **not semantic object recognition**: a box containing background may track background, and changing pose, lighting or occlusion can defeat a static patch. The reviewer or a future model must provide meaningful seeds.
 
 `catalog` loads canonical research entries from `catalog/entries/` when run from the repository root; provide `--root` when invoked elsewhere. `validate` rejects malformed or improperly promoted entries, `search` ranks story-purpose matches, and `index` emits a versioned metadata-only `catalog-index.json`. Research candidates do not claim verified renderer support or reference-video measurements.
 
@@ -305,7 +308,7 @@ kumiki-reference-lab/
 │   │   ├── media/                  # Implemented: inspection, timestamps, contact sheets
 │   │   ├── shots/                  # Implemented: bounded cut candidates
 │   │   ├── motion/                 # Implemented: global translations and easing candidates; future: object tracks
-│   │   └── subjects/              # Future: segmentation and identity
+│   │   └── subjects/              # Implemented: user-seeded ROI tracking; future: segmentation and identity
 │   ├── backends/
 │   │   ├── ffmpeg/                 # Implemented: FFprobe and FFmpeg adapters
 │   │   ├── opencv/                 # Future: classical CV
