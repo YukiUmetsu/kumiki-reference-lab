@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/technique-review.schema.json",
+  "title": "Kumiki Source-Verified Technique Review Gallery v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "settings", "reviewStatus", "qualityVerdict", "totalCandidateCount", "cues", "files"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.technique-review.v1"},
+    "reviewStatus": {"const": "unreviewed"},
+    "qualityVerdict": {"const": "not-performed"},
+    "totalCandidateCount": {"type": "integer", "minimum": 0, "maximum": 32},
+    "settings": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sourceSha256", "sourceStreamIndex", "sourceTimebase", "analysisRunSha256", "proposalFileSha256", "catalogEntries", "selectedCueIds", "imageSelections", "seconds", "maxCues", "cueOffset", "width", "ffmpeg", "ffprobe", "sampling"],
+      "properties": {
+        "sourceSha256": {"$ref": "#/$defs/hash"},
+        "sourceStreamIndex": {"type": "integer", "minimum": 0},
+        "sourceTimebase": {"$ref": "#/$defs/rational"},
+        "analysisRunSha256": {"$ref": "#/$defs/hash"},
+        "proposalFileSha256": {"$ref": "#/$defs/hash"},
+        "catalogEntries": {
+          "type": "array", "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["id", "revision", "entrySha256"],
+            "properties": {
+              "id": {"type": "string", "minLength": 3},
+              "revision": {"type": "integer", "minimum": 1},
+              "entrySha256": {"$ref": "#/$defs/hash"}
+            }
+          }
+        },
+        "selectedCueIds": {"type": "array", "maxItems": 8, "uniqueItems": true,
+                           "items": {"type": "string", "pattern": "^cue-[a-f0-9]{16}$"}},
+        "imageSelections": {
+          "type": "array", "maxItems": 8,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["sourcePtsRange", "frames"],
+            "properties": {
+              "sourcePtsRange": {"$ref": "#/$defs/ptsRange"},
+              "frames": {"type": "array", "minItems": 3, "maxItems": 3,
+                         "items": {"type": "array", "prefixItems": [
+                           {"type": "integer"}, {"$ref": "#/$defs/imagePath"}],
+                           "items": false, "minItems": 2, "maxItems": 2}}
+            }
+          }
+        },
+        "seconds": {"type": "integer", "minimum": 1, "maximum": 30},
+        "maxCues": {"type": "integer", "minimum": 1, "maximum": 8},
+        "cueOffset": {"type": "integer", "minimum": 0, "maximum": 31},
+        "width": {"type": "integer", "minimum": 128, "maximum": 800},
+        "ffmpeg": {"type": "string", "minLength": 1},
+        "ffprobe": {"type": "string", "minLength": 1},
+        "sampling": {"const": "source-pts-start-nearest-middle-end-v1"}
+      }
+    },
+    "cues": {
+      "type": "array", "maxItems": 8, "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "techniqueId", "sourcePtsRange", "proposal", "images"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^cue-[a-f0-9]{16}$"},
+          "techniqueId": {"type": "string", "minLength": 3},
+          "sourcePtsRange": {"$ref": "#/$defs/ptsRange"},
+          "proposal": {"type": "object", "description": "Exactly the corresponding reviewed proposal from the separate checked technique-proposals.json; verified in runtime."},
+          "images": {"type": "array", "minItems": 3, "maxItems": 3,
+                     "prefixItems": [
+                       {"$ref": "#/$defs/startFrame"},
+                       {"$ref": "#/$defs/middleFrame"},
+                       {"$ref": "#/$defs/endFrame"}],
+                     "items": false}
+        }
+      }
+    },
+    "files": {
+      "type": "array", "minItems": 2, "maxItems": 26,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"anyOf": [{"enum": ["index.html", "technique-proposals.json"]},
+                              {"$ref": "#/$defs/imagePath"}]},
+          "sha256": {"$ref": "#/$defs/hash"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "imagePath": {"type": "string", "pattern": "^frames/frame-[0-9]{3}\\.jpg$"},
+    "rational": {
+      "type": "object", "additionalProperties": false,
+      "required": ["numerator", "denominator"],
+      "properties": {"numerator": {"type": "integer"},
+                     "denominator": {"type": "integer", "minimum": 1}}
+    },
+    "ptsRange": {
+      "type": "object", "additionalProperties": false,
+      "required": ["startPts", "endPts"],
+      "properties": {"startPts": {"type": "integer"},
+                     "endPts": {"type": "integer"}}
+    },
+    "frame": {
+      "type": "object", "additionalProperties": false,
+      "required": ["role", "sourcePts", "sourceSeconds", "path"],
+      "properties": {
+        "role": {"enum": ["start", "middle", "end"]},
+        "sourcePts": {"type": "integer"},
+        "sourceSeconds": {"$ref": "#/$defs/rational"},
+        "path": {"$ref": "#/$defs/imagePath"}
+      }
+    },
+    "startFrame": {"allOf": [{"$ref": "#/$defs/frame"},
+                              {"properties": {"role": {"const": "start"}}}]},
+    "middleFrame": {"allOf": [{"$ref": "#/$defs/frame"},
+                               {"properties": {"role": {"const": "middle"}}}]},
+    "endFrame": {"allOf": [{"$ref": "#/$defs/frame"},
+                            {"properties": {"role": {"const": "end"}}}]}
+  }
+}
