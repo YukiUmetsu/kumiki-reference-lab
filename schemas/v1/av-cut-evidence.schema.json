@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/av-cut-evidence.schema.json",
+  "title": "Kumiki Candidate Audio/Video Cut Association v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "sourceSha256", "analysisRunSha256", "audioLevelEvidenceSha256", "videoSourceTimebase", "audioSourceTimebase", "videoStreamIndex", "audioStreamIndex", "scanWindowSeconds", "comparisonWindowMs", "status", "clockRelation", "videoCutStatus", "videoCutCandidateCount", "audioLevelStatus", "qualityVerdict", "cutCandidates", "limits"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.av-cut-evidence.v1"},
+    "sourceSha256": {"$ref": "#/$defs/hash"},
+    "analysisRunSha256": {"$ref": "#/$defs/hash"},
+    "audioLevelEvidenceSha256": {"$ref": "#/$defs/hash"},
+    "videoSourceTimebase": {"$ref": "#/$defs/rational"},
+    "audioSourceTimebase": {"anyOf": [{"$ref": "#/$defs/rational"}, {"type": "null"}]},
+    "videoStreamIndex": {"type": "integer", "minimum": 0},
+    "audioStreamIndex": {"type": ["integer", "null"], "minimum": 0},
+    "scanWindowSeconds": {"type": "integer", "minimum": 1, "maximum": 30},
+    "comparisonWindowMs": {"type": "integer", "minimum": 100, "maximum": 2000},
+    "status": {"enum": ["no-audio-stream", "candidate-cross-stream-pts-association"]},
+    "clockRelation": {"const": "candidate-same-container-source-presentation-seconds-no-independent-sync-verification"},
+    "videoCutStatus": {"const": "algorithmic-candidates-not-confirmed-edits"},
+    "videoCutCandidateCount": {"type": "integer", "minimum": 0},
+    "audioLevelStatus": {"const": "decoded-signal-measurements-not-semantic-audio-events"},
+    "qualityVerdict": {"const": "not-performed"},
+    "limits": {"type": "string", "minLength": 1},
+    "cutCandidates": {
+      "type": "array", "maxItems": 120,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["videoRegionId", "videoCutCandidatePts", "videoCutCandidateSeconds", "windowSeconds", "before", "after", "status", "interpretationStatus"],
+        "properties": {
+          "videoRegionId": {"type": "string", "pattern": "^region-[0-9]{3}$"},
+          "videoCutCandidatePts": {"type": "integer"},
+          "videoCutCandidateSeconds": {"$ref": "#/$defs/rational"},
+          "windowSeconds": {"$ref": "#/$defs/rational"},
+          "before": {"$ref": "#/$defs/summary"},
+          "after": {"$ref": "#/$defs/summary"},
+          "status": {"enum": ["insufficient-fully-contained-audio-frames", "candidate-quiet-level-contrast", "no-strong-quiet-level-contrast"]},
+          "interpretationStatus": {"const": "not-verified"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "rational": {"type": "object", "additionalProperties": false,
+                 "required": ["numerator", "denominator"],
+                 "properties": {
+                   "numerator": {"type": "integer"},
+                   "denominator": {"type": "integer", "minimum": 1}
+                 }},
+    "summary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["frameCount", "quietFrameCount", "quietFrameFraction", "medianFiniteRmsDbFs", "maximumFinitePeakDbFs", "firstAudioSourcePts", "lastAudioSourcePts"],
+      "properties": {
+        "frameCount": {"type": "integer", "minimum": 0},
+        "quietFrameCount": {"type": "integer", "minimum": 0},
+        "quietFrameFraction": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "medianFiniteRmsDbFs": {"type": ["number", "null"]},
+        "maximumFinitePeakDbFs": {"type": ["number", "null"]},
+        "firstAudioSourcePts": {"type": ["integer", "null"]},
+        "lastAudioSourcePts": {"type": ["integer", "null"]}
+      }
+    }
+  }
+}
