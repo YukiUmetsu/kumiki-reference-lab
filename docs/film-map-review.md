@@ -60,3 +60,15 @@ kumiki-ref film-feedback validate \
 Corrections can be categorized as `composition`, `camera`, `lighting`, `material`, `animation`, `readability`, `story-clarity`, `attention`, `continuity`, `timing`, `sound` or `other`, with `blocking`, `significant`, `polish`, or `observation` severity. All but `observation` require a suggested change. **Sound annotations must be based on separate listening**, because the paired stills do not prove audio synchronization. The draft may be annotated by a human or an AI model, but author identity is self-declared and must not be treated as authentication.
 
 Validation checks exact evidence identities and annotation structure, not the quality or truth of the feedback. It returns `artisticApproval: not-granted`; no automated validator may promote a film or technique into the catalog as production quality. The schema is [`film-map-feedback.schema.json`](../schemas/v1/film-map-feedback.schema.json). The small FFmpeg-free feedback tests remain part of local test coverage; no additional hosted CI jobs are required.
+
+## Test the complete two-repository boundary locally
+
+With FFmpeg/FFprobe installed and both repos checked out, run:
+
+```bash
+python scripts/smoke_cross_repo_fd1_feedback.py --kumiki-ui ../kumiki-ui
+```
+
+This optional smoke script creates its own short, synthetic 10 FPS source and 30 FPS render in a temporary directory. It uses **the actual Kumiki UI FD1 checker and reference-map command**, then Reference Lab's encoded-PTS extraction and JPEG-pair verifier, feedback template/validator, and finally Kumiki UI's severity-aware scene edit queue. It checks the final scene/frame identity and that no quality approval was fabricated. The fixture's source cut window is intentionally synthetic and makes no claim about detected editorial cuts or the visual quality of either video.
+
+No generated videos, drafts or images are committed; the test is kept **local-only and off hosted CI** to preserve the low-cost workflow. It fails explicitly if the other repo, FFmpeg or an expected command is unavailable.
