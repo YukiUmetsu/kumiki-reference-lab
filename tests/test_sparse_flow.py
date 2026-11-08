@@ -86,6 +86,71 @@ class FeatureTrackingTests(unittest.TestCase):
         self.assertEqual(group_sparse_flows(tracks["accepted"], 160, 90)["status"],
                          "insufficient-consensus")
 
+    def test_optional_coarse_to_fine_recovers_motion_larger_than_local_search(self):
+        import numpy as np
+
+        from kumiki_reference_lab.analyzers.motion.features import sparse_patch_flows
+
+        base = np.random.default_rng(513).integers(0, 256, (90, 160), dtype=np.uint8)
+        shifted = np.roll(base, 14, axis=1)
+        baseline = sparse_patch_flows(base.tobytes(), shifted.tobytes(), 160, 90,
+                                      max_points=64, radius=8)
+        improved = sparse_patch_flows(base.tobytes(), shifted.tobytes(), 160, 90,
+                                      max_points=64, radius=8, pyramid_levels=2)
+        self.assertFalse(any(v["dx"] == 14 for v in baseline["accepted"]))
+        recovered = [v for v in improved["accepted"] if v["dx"] == 14 and v["dy"] == 0]
+        self.assertGreaterEqual(len(recovered), 6)
+        self.assertTrue(all(v["searchLevel"] == 2 and
+                            v["roundtripErrorPixels"] <= 1.5 for v in recovered))
+        self.assertTrue(all(v["searchLevel"] in (1, 2) for v in improved["accepted"]))
+
+    def test_coarse_to_fine_does_not_invent_motion_on_flat_video(self):
+        from kumiki_reference_lab.analyzers.motion.features import sparse_patch_flows
+
+        flat = bytes([100] * (160 * 90))
+        result = sparse_patch_flows(flat, flat, 160, 90, pyramid_levels=2)
+        self.assertEqual(result["detectedCorners"], 0)
+        self.assertEqual(result["accepted"], [])
+        with self.assertRaisesRegex(ValueError, "pyramid_levels"):
+            sparse_patch_flows(flat, flat, 160, 90, pyramid_levels=3)
+        with self.assertRaisesRegex(ValueError, "pyramid_levels"):
+            sparse_patch_flows(flat, flat, 160, 90, pyramid_levels=True)
+
+    def test_coarse_fallback_preserves_successful_level_one_matches(self):
+        import numpy as np
+
+        from kumiki_reference_lab.analyzers.motion.features import sparse_patch_flows
+
+        original = np.random.default_rng(219).integers(0, 256, (90, 160),
+                                                        dtype=np.uint8)
+        translated = np.roll(original, 4, axis=1)
+        baseline = sparse_patch_flows(original.tobytes(), translated.tobytes(),
+                                      160, 90, radius=8)
+        extended = sparse_patch_flows(original.tobytes(), translated.tobytes(),
+                                      160, 90, radius=8, pyramid_levels=2)
+        self.assertGreater(len(baseline["accepted"]), 10)
+        by_origin = {(v["x"], v["y"]): v for v in extended["accepted"]}
+        for vector in baseline["accepted"]:
+            candidate = by_origin[(vector["x"], vector["y"])]
+            self.assertEqual(candidate["searchLevel"], 1)
+            self.assertEqual({k: v for k, v in candidate.items()
+                              if k != "searchLevel"}, vector)
+
+    def test_coarse_fallback_abstains_on_repeated_texture(self):
+        import numpy as np
+
+        from kumiki_reference_lab.analyzers.motion.features import sparse_patch_flows
+
+        tile = np.random.default_rng(24).integers(0, 256, (8, 8), dtype=np.uint8)
+        original = np.tile(tile, (12, 20))[:90, :160]
+        translated = np.roll(original, 14, axis=1)
+        result = sparse_patch_flows(original.tobytes(), translated.tobytes(),
+                                    160, 90, max_points=64, radius=8,
+                                    pyramid_levels=2)
+        self.assertEqual(result["detectedCorners"], 64)
+        self.assertEqual(result["accepted"], [])
+        self.assertEqual(result["rejected"]["forward-failed"], 64)
+
     def test_affine_fit_recovers_controlled_image_zoom_without_calling_it_a_camera(self):
         points = [{"x": x, "y": y,
                    "dx": 0.065 * (x - 80) + 2,
@@ -186,6 +251,19 @@ class SparseFlowIntegrationTests(unittest.TestCase):
             self.assertTrue(all((pair["geometryHypothesis"] is None)
                                 == (pair["status"] == "cut-boundary")
                                 for pair in artifact["pairs"]))
+            json.dumps(artifact, allow_nan=False)
+
+    def test_real_video_opt_in_pyramid_contract_has_traceable_search_levels(self):
+        with tempfile.TemporaryDirectory() as directory:
+            video = Path(directory) / "source.mkv"
+            self._create_clip(video)
+            artifact = analyze_sparse_flow(video, seconds=2, max_samples=5,
+                                           pyramid_levels=2)
+            self.assertEqual(artifact["analyzer"]["method"],
+                             "shi-tomasi-approx-patch-ncc-fb-consensus-affine-pyramid2-v1")
+            self.assertEqual(artifact["analyzer"]["pyramidLevels"], 2)
+            self.assertTrue(all("searchLevel" in vector
+                                for pair in artifact["pairs"] for vector in pair["vectors"]))
             json.dumps(artifact, allow_nan=False)
 
     def test_flat_video_does_not_invent_vectors(self):

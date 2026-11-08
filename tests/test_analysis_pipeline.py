@@ -124,6 +124,28 @@ class AnalysisPipelineIntegrationTests(unittest.TestCase):
             self.assertFalse(output.exists())
 
     @unittest.skipUnless(importlib.util.find_spec("numpy"), "NumPy extra unavailable")
+    def test_opt_in_sparse_pyramid_has_separate_atomic_run_identity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "flat.mkv"
+            self._flat_video(source)
+            runs = root / "runs"
+            baseline = run_analysis(source, runs, seconds=2, thumbnails=4,
+                                    sparse_flow=True, sparse_samples=5)
+            multiscale = run_analysis(source, runs, seconds=2, thumbnails=4,
+                                      sparse_flow=True, sparse_samples=5,
+                                      sparse_pyramid_levels=2)
+            self.assertNotEqual(baseline, multiscale)
+            self.assertNotIn("sparsePyramidLevels", json.loads(baseline.read_text())["settings"])
+            self.assertEqual(json.loads(multiscale.read_text())["settings"]
+                             ["sparsePyramidLevels"], 2)
+            report = json.loads((multiscale.parent / "sparse-flow.json").read_text())
+            self.assertEqual(report["analyzer"]["pyramidLevels"], 2)
+            self.assertEqual(run_analysis(source, runs, seconds=2, thumbnails=4,
+                                          sparse_flow=True, sparse_samples=5,
+                                          sparse_pyramid_levels=2), multiscale)
+
+    @unittest.skipUnless(importlib.util.find_spec("numpy"), "NumPy extra unavailable")
     def test_appearance_bundle_is_atomic_and_may_combine_with_sparse_flow(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

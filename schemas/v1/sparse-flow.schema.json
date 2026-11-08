@@ -7,11 +7,21 @@
   "required": ["schemaVersion", "sourceSha256", "sourceStreamIndex", "sourceTimebase", "scanWindowSeconds", "coverage", "analyzer", "cutCandidatePts", "samples", "pairs"],
   "allOf": [{
     "if": {"properties": {"analyzer": {"properties": {
-      "method": {"const": "shi-tomasi-approx-patch-ncc-fb-consensus-affine-v1"}
+      "method": {"enum": ["shi-tomasi-approx-patch-ncc-fb-consensus-affine-v1", "shi-tomasi-approx-patch-ncc-fb-consensus-affine-pyramid2-v1"]}
     }}}},
     "then": {"properties": {
       "analyzer": {"required": ["affineInlierTolerancePixels", "affineMaxHypotheses"]},
       "pairs": {"items": {"required": ["geometryHypothesis"]}}
+    }}
+  }, {
+    "if": {"properties": {"analyzer": {"properties": {
+      "method": {"const": "shi-tomasi-approx-patch-ncc-fb-consensus-affine-pyramid2-v1"}
+    }}}},
+    "then": {"properties": {
+      "analyzer": {"required": ["pyramidLevels", "coarseRefinementRadiusPixels"]},
+      "pairs": {"items": {"properties": {
+        "vectors": {"items": {"required": ["searchLevel"]}}
+      }}}
     }}
   }],
   "properties": {
@@ -25,7 +35,7 @@
       "type": "object", "additionalProperties": false,
       "required": ["method", "numpyVersion", "ffmpegExecutable", "ffprobeExecutable", "resolution", "maxSamples", "maxCornersPerFramePair", "searchRadiusPixels", "patchSizePixels", "minimumAppearanceCorrelation", "roundtripTolerancePixels", "consensusTolerancePixels", "cutThreshold", "observedFrameCount", "missingSourcePtsCount", "selection", "calibratedConfidence", "limits"],
       "properties": {
-        "method": {"enum": ["shi-tomasi-approx-patch-ncc-fb-consensus-v1", "shi-tomasi-approx-patch-ncc-fb-consensus-affine-v1"]},
+        "method": {"enum": ["shi-tomasi-approx-patch-ncc-fb-consensus-v1", "shi-tomasi-approx-patch-ncc-fb-consensus-affine-v1", "shi-tomasi-approx-patch-ncc-fb-consensus-affine-pyramid2-v1"]},
         "numpyVersion": {"type": "string", "minLength": 1},
         "ffmpegExecutable": {"type": "string", "minLength": 1},
         "ffprobeExecutable": {"type": "string", "minLength": 1},
@@ -36,6 +46,8 @@
         "maxSamples": {"type": "integer", "minimum": 5, "maximum": 40},
         "maxCornersPerFramePair": {"type": "integer", "minimum": 4, "maximum": 64},
         "searchRadiusPixels": {"type": "integer", "minimum": 2, "maximum": 12},
+        "pyramidLevels": {"const": 2},
+        "coarseRefinementRadiusPixels": {"const": 2},
         "patchSizePixels": {"const": 9},
         "minimumAppearanceCorrelation": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
         "roundtripTolerancePixels": {"const": 1.5},
@@ -149,6 +161,7 @@
                      "forwardCorrelation": {"type": "number", "minimum": -1, "maximum": 1},
                      "backwardCorrelation": {"type": "number", "minimum": -1, "maximum": 1},
                      "roundtripErrorPixels": {"type": "number", "minimum": 0, "maximum": 1.5},
+                     "searchLevel": {"enum": [1, 2]},
                      "group": {"enum": ["dominant", "secondary", "unclassified"]}}},
     "consensus": {"type": "object", "additionalProperties": false,
       "required": ["status", "clusters", "unclassifiedCount"],
