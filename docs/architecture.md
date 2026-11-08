@@ -61,8 +61,16 @@ PYTHONPATH=src python -m kumiki_reference_lab cuts ./reference.mp4 --threshold 0
 
 Expected outputs: `source-manifest.json` (metadata), `frame-timeline.json` (real bounded source PTS, exact rational timestamps and anomalies), and `shot-candidates.json` (heuristic hard-cut candidates). The last two stages preserve source timebase and never invent confidence scores. The FFmpeg cut filter's own timebase is checked against the probed stream, and mismatches fail explicitly rather than producing false timestamps.
 
+Timecoded visual evidence is also supported:
+
+```bash
+PYTHONPATH=src python -m kumiki_reference_lab contact-sheet ./reference.mp4 --max-seconds 30 --max-thumbnails 12 --width 480 --out ./runs/example
+```
+
+This creates a self-contained, local HTML review index and versioned JSON manifest with JPEG thumbnails. Sampling prioritizes opening/closing, available hard-cut pairs, then wide gaps between existing samples. Frame choice uses ordinals **only to select decoded pictures**; their authoritative times are original rational source PTS. Both the cut detector and thumbnail decoder must report the same timebase and the selected image PTS must match FFprobe's timeline exactly, or the stage fails. It uses a temporary staging directory and publishes the completed bundle together. On rerun, checksum-verified completed bundles are reused. No full-resolution copies of the source video are written.
+
 Detection is a **bounded first-stage heuristic**, not comprehensive scene segmentation: it does not classify fades or dissolve transitions, reconstruct frame geometry, or prove that fast image changes are cuts. More robust detectors can later be swapped behind the analyzer interface.
 
 ## Planned next slice
 
-Complete an interoperable `analyze` pipeline: join approved shot candidates with source-frame PTS, generate contact sheets from bounded frame samples, and add deterministic optical-flow/easing estimation with synthetic fixtures. Before full-volume processing, add streaming frame extraction and explicit cancellation so long inputs never need to be decoded or captured entirely in memory.
+Complete an interoperable `analyze` pipeline: join reviewed shot candidates with source-frame PTS, add deterministic optical-flow/easing estimation with synthetic fixtures, and produce draft technique-catalog evidence records. Before full-volume processing, add streaming analysis and explicit cancellation so long inputs never need to be decoded or captured entirely in memory.

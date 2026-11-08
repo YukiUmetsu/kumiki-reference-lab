@@ -2,9 +2,9 @@
 
 **Reference-video analysis, cinematic technique research, and reproducible motion reconstruction for the Kumiki ecosystem.**
 
-> **Project status: proposed.** This README is an implementation brief for a new repository, not documentation of an already-working CLI. Commands, package paths, schemas, and features marked *planned* must be implemented and verified before they are advertised as available.
+> **Project status: early working foundation.** The `inspect`, `frames`, `cuts`, and `contact-sheet` commands are implemented and tested. The broader video-understanding, technique-catalog, and Kumiki-export features described here remain a roadmap.
 
-**Implemented foundation:** dependency-free Python commands read local video metadata, extract real presentation timestamps, and detect bounded hard-cut *candidates* using FFprobe/FFmpeg. Object tracking, motion fitting, semantic analysis, treatment compilation and reference comparison remain planned.
+**Implemented foundation:** dependency-free Python commands read local video metadata, extract real presentation timestamps, detect bounded hard-cut *candidates*, and produce timecoded HTML/JPEG contact sheets using FFprobe/FFmpeg. Object tracking, motion fitting, semantic analysis, treatment compilation and reference comparison remain planned.
 
 Kumiki Reference Lab studies legally obtained motion-graphics, product-film, documentary, and explainer-video references. It extracts measurable characteristics, identifies reusable filmmaking techniques, and produces evidence-backed reports that can guide implementations in [kumiki-ui](https://github.com/YukiUmetsu/kumiki-ui).
 
@@ -239,10 +239,11 @@ PYTHONPATH=src python -m kumiki_reference_lab inspect ./reference.mp4
 PYTHONPATH=src python -m kumiki_reference_lab inspect ./reference.mp4 --out ./runs/example
 PYTHONPATH=src python -m kumiki_reference_lab frames ./reference.mp4 --max-seconds 60 --out ./runs/example
 PYTHONPATH=src python -m kumiki_reference_lab cuts ./reference.mp4 --max-seconds 60 --threshold 0.25 --out ./runs/example
+PYTHONPATH=src python -m kumiki_reference_lab contact-sheet ./reference.mp4 --max-seconds 30 --max-thumbnails 12 --width 480 --out ./runs/example
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-`inspect` records metadata and SHA-256, while honestly marking frame-by-frame PTS and VFR status as unknown until sampled. `frames` extracts source PTS within a bounded window, preserving exact rational timestamps and reporting missing/nonincreasing values. `cuts` detects **possible hard cuts**, not proven edits; fast subject or camera motion may produce false positives, and fades are not yet classified. `--rights-status user-declared-authorized` is an **assertion by the user**, not automated legal verification. Commands do not copy media or download models.
+`inspect` records metadata and SHA-256, while honestly marking frame-by-frame PTS and VFR status as unknown until sampled. `frames` extracts source PTS within a bounded window, preserving exact rational timestamps and reporting missing/nonincreasing values. `cuts` detects **possible hard cuts**, not proven edits; fast subject or camera motion may produce false positives, and fades are not yet classified. `contact-sheet` automatically prioritizes frames at opening/closing and around candidate edits, then covers remaining visual gaps. It creates an immutable `contact-sheet-<source>-<settings>/` directory containing `index.html`, `contact-sheet.json`, and up to 24 labeled JPEGs. The JSON records exact rational source timestamps, each evidence image's hash, and the sampling options. Existing bundles are checked for modification, never silently replaced. `--rights-status user-declared-authorized` is an **assertion by the user**, not automated legal verification. No model download or external service is required.
 
 **Planned interfaces (not implemented):**
 
@@ -286,7 +287,7 @@ kumiki-reference-lab/
 │   ├── contracts/                  # Versioned artifacts, never renderer logic
 │   ├── pipeline/                   # Stage DAG, restart/cache, results (future)
 │   ├── analyzers/
-│   │   ├── media/                  # Implemented: FFprobe source inspection
+│   │   ├── media/                  # Implemented: inspection, timestamps, contact sheets
 │   │   ├── shots/                  # Implemented: bounded cut candidates
 │   │   ├── motion/                 # Future: optical flow and easing fits
 │   │   └── subjects/              # Future: segmentation and identity
