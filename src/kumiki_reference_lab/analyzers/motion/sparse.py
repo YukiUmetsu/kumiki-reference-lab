@@ -122,5 +122,5 @@ def analyze_sparse_flow(
         "samples": [{"sampleOrdinal": f.ordinal, "sourcePts": f.pts,
                      "sourceSeconds": as_rational_dict(int(f.pts) * timebase)} for f in samples],
         "pairs": pairs,
-        "temporalTracklets": build_sparse_tracklets(pairs),
+        "temporalTracklets": build_sparse_tracklets(pairs, timebase=timebase),
     }

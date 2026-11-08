@@ -7,6 +7,7 @@ camera motion, or recovery across a cut or occlusion. Ambiguity means abstain.
 from __future__ import annotations
 
 import math
+from fractions import Fraction
 from typing import Any
 
 LINK_TOLERANCE_PIXELS = 2.0
@@ -60,12 +61,17 @@ def _unambiguous_links(
     return links
 
 
-def build_sparse_tracklets(pairs: list[dict[str, Any]]) -> dict[str, Any]:
+def build_sparse_tracklets(
+    pairs: list[dict[str, Any]], *, timebase: Fraction,
+) -> dict[str, Any]:
     """Link evidence across adjacent decoded samples with no guessed gap filling.
 
     Only tracks supported by >=2 consecutive pair vectors are published;
     single-pair vectors remain available in the original pair evidence.
     """
+    if not isinstance(timebase, Fraction) or timebase <= 0:
+        raise ValueError("sparse tracklet source timebase must be a positive rational")
+
     active: list[dict[str, Any]] = []
     completed: list[dict[str, Any]] = []
     singletons = 0
@@ -73,13 +79,48 @@ def build_sparse_tracklets(pairs: list[dict[str, Any]]) -> dict[str, Any]:
 
     def finish(track: dict[str, Any], reason: str) -> None:
         nonlocal singletons
-        if len(track["observations"]) < MIN_TRACK_PAIRS:
+        observations = track["observations"]
+        if len(observations) < MIN_TRACK_PAIRS:
             singletons += 1
             return
+        elapsed = (observations[-1]["endPts"] - observations[0]["startPts"]) * timebase
+        if elapsed <= 0:
+            raise ValueError("sparse tracklet has non-positive source presentation duration")
+        dx = sum(o["endPixels"]["x"] - o["startPixels"]["x"] for o in observations)
+        dy = sum(o["endPixels"]["y"] - o["startPixels"]["y"] for o in observations)
+        distance = sum(math.hypot(o["endPixels"]["x"] - o["startPixels"]["x"],
+                                  o["endPixels"]["y"] - o["startPixels"]["y"])
+                       for o in observations)
+        try:
+            duration_seconds = float(elapsed)
+        except OverflowError as exc:
+            raise ValueError("sparse tracklet source presentation duration is not representable") from exc
+        if not math.isfinite(duration_seconds) or duration_seconds <= 0:
+            raise ValueError("sparse tracklet source presentation duration is not representable")
         completed.append({**track, "pairCount": len(track["observations"]),
-                          "endReason": reason})
+                          "endReason": reason,
+                          "kinematics": {
+                              "durationSeconds": {
+                                  "numerator": elapsed.numerator,
+                                  "denominator": elapsed.denominator,
+                              },
+                              "summedImageDisplacementPixels": {
+                                  "dx": dx, "dy": dy,
+                              },
+                              "observedPathLengthPixels": round(distance, 4),
+                              "meanImageVelocityPixelsPerSecond": {
+                                  "dx": round(dx / duration_seconds, 4),
+                                  "dy": round(dy / duration_seconds, 4),
+                              },
+                              "meanImageSpeedPixelsPerSecond": round(
+                                  distance / duration_seconds, 4),
+                              "basis": "observed-pairs-only-no-gap-filling",
+                              "calibratedConfidence": False,
+                          }})
 
     for pair_index, pair in enumerate(pairs):
+        if pair["endPts"] <= pair["startPts"]:
+            raise ValueError("sparse tracklet pair must have increasing source PTS")
         vectors = pair["vectors"]
         is_cut = pair["status"] == "cut-boundary"
         adjacent = (pair_index > 0 and
