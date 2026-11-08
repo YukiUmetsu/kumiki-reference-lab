@@ -128,3 +128,9 @@ versioned [appearance comparison](appearance-comparison.md). This is a useful
 diagnostic baseline, **not** pixel-level visual reconstruction, style-copying
 or an artistic quality judgment. Later work can reuse the same explicit
 alignment contract for masks, camera/image-plane tracks and visual QA.
+
+`compare-frames` also consumes two local videos and builds an immutable
+[side-by-side review sheet](frame-comparison.md) with paired exact source PTS,
+verified JPEG source frames and checksum validation. This makes full-resolution
+manual visual judgment possible at *sampled* moments, but does not yet
+compare the videos at full speed or recover their original editing projects.

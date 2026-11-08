@@ -10,6 +10,7 @@ from pathlib import Path
 from kumiki_reference_lab.analyzers.media.inspect import inspect_source
 from kumiki_reference_lab.analyzers.appearance.analyze import analyze_appearance
 from kumiki_reference_lab.analyzers.comparison.appearance import compare_appearance
+from kumiki_reference_lab.analyzers.comparison.frames import build_frame_comparison
 from kumiki_reference_lab.analyzers.media.contact_sheet import build_contact_sheet
 from kumiki_reference_lab.analyzers.motion.analyze import analyze_image_motion
 from kumiki_reference_lab.analyzers.motion.sparse import analyze_sparse_flow
@@ -125,6 +126,23 @@ def build_parser() -> argparse.ArgumentParser:
     comparison.add_argument("--time-scale", default="1")
     comparison.add_argument("--out", type=Path)
 
+    frame_compare = commands.add_parser("compare-frames",
+                                        help="create immutable aligned side-by-side video frame evidence")
+    frame_compare.add_argument("reference", type=Path)
+    frame_compare.add_argument("candidate", type=Path)
+    frame_compare.add_argument("--out", type=Path, required=True)
+    frame_compare.add_argument("--reference-anchor-ms", type=int, required=True)
+    frame_compare.add_argument("--candidate-anchor-ms", type=int, required=True)
+    frame_compare.add_argument("--tolerance-ms", type=int, default=150)
+    frame_compare.add_argument("--time-scale", default="1")
+    frame_compare.add_argument("--max-seconds", type=int, default=10)
+    frame_compare.add_argument("--max-samples", type=int, default=10)
+    frame_compare.add_argument("--width", type=int, default=480)
+    frame_compare.add_argument("--ffmpeg", default="ffmpeg")
+    frame_compare.add_argument("--ffprobe", default="ffprobe")
+    frame_compare.add_argument("--rights-status", choices=RIGHTS_STATUSES,
+                               default="review-required")
+
     analyze = commands.add_parser("analyze", help="run a bounded, atomic multi-stage reference analysis")
     analyze.add_argument("source", type=Path)
     analyze.add_argument("--out", type=Path, required=True, help="parent directory for immutable run")
@@ -208,6 +226,18 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 print(str(write_json_artifact(args.out, "appearance-comparison.json",
                                               comparison)))
+            return 0
+        if args.command == "compare-frames":
+            index = build_frame_comparison(
+                args.reference, args.candidate, args.out,
+                reference_anchor_ms=args.reference_anchor_ms,
+                candidate_anchor_ms=args.candidate_anchor_ms,
+                tolerance_ms=args.tolerance_ms, time_scale=args.time_scale,
+                seconds=args.max_seconds, samples=args.max_samples,
+                width=args.width, ffmpeg=args.ffmpeg, ffprobe=args.ffprobe,
+                rights_status=args.rights_status,
+            )
+            print(str(index))
             return 0
         if args.command == "contact-sheet":
             index = build_contact_sheet(
