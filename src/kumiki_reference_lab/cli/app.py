@@ -17,6 +17,7 @@ from kumiki_reference_lab.analyzers.comparison.frames import build_frame_compari
 from kumiki_reference_lab.analyzers.techniques.propose import propose_techniques
 from kumiki_reference_lab.analyzers.techniques.review import build_technique_review
 from kumiki_reference_lab.analyzers.shots.evidence import build_shot_evidence
+from kumiki_reference_lab.analyzers.shots.rhythm import build_edit_rhythm
 from kumiki_reference_lab.analyzers.shots.gallery import build_shot_gallery
 from kumiki_reference_lab.analyzers.media.contact_sheet import build_contact_sheet
 from kumiki_reference_lab.analyzers.motion.analyze import analyze_image_motion
@@ -208,6 +209,11 @@ def build_parser() -> argparse.ArgumentParser:
     shot_evidence.add_argument("analysis_run", type=Path)
     shot_evidence.add_argument("--out", type=Path)
 
+    edit_rhythm = commands.add_parser(
+        "edit-rhythm", help="measure exact candidate cut-to-cut intervals and pacing changes")
+    edit_rhythm.add_argument("analysis_run", type=Path)
+    edit_rhythm.add_argument("--out", type=Path)
+
     shot_gallery = commands.add_parser(
         "review-shots", help="render original-frame storyboards for candidate edit regions")
     shot_gallery.add_argument("source", type=Path)
@@ -348,6 +354,13 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
             else:
                 print(str(write_json_artifact(args.out, "shot-evidence.json", result)))
+            return 0
+        if args.command == "edit-rhythm":
+            result = build_edit_rhythm(args.analysis_run)
+            if args.out is None:
+                print(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
+            else:
+                print(str(write_json_artifact(args.out, "edit-rhythm.json", result)))
             return 0
         if args.command == "av-cut-evidence":
             result = build_av_cut_evidence(
