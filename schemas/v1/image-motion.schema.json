@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/image-motion.schema.json",
+  "title": "Kumiki Image Motion v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "sourceSha256", "sourceStreamIndex", "sourceTimebase", "scanWindowSeconds", "coverage", "analysis", "cutCandidatePts", "samples", "pairs", "segments"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.image-motion.v1"},
+    "sourceSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "sourceStreamIndex": {"type": "integer", "minimum": 0},
+    "sourceTimebase": {"$ref": "#/$defs/rational"},
+    "scanWindowSeconds": {"type": "integer", "minimum": 1, "maximum": 30},
+    "coverage": {"const": "bounded-from-start-not-necessarily-full-video"},
+    "analysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "numpyVersion", "ffmpegExecutable", "ffprobeExecutable", "resolution", "maxSamples", "observedFrameCount", "missingSourcePtsCount", "selection", "cutThreshold", "calibratedConfidence", "limits"],
+      "properties": {
+        "method": {"const": "fft-phase-correlation-global-translation-v1"},
+        "numpyVersion": {"type": "string", "minLength": 1},
+        "ffmpegExecutable": {"type": "string", "minLength": 1},
+        "ffprobeExecutable": {"type": "string", "minLength": 1},
+        "resolution": {
+          "type": "object", "additionalProperties": false,
+          "required": ["width", "height"],
+          "properties": {"width": {"type": "integer", "minimum": 64, "maximum": 320},
+                         "height": {"type": "integer", "minimum": 36, "maximum": 180}}
+        },
+        "maxSamples": {"type": "integer", "minimum": 5, "maximum": 120},
+        "observedFrameCount": {"type": "integer", "minimum": 2},
+        "missingSourcePtsCount": {"type": "integer", "minimum": 0},
+        "selection": {"const": "uniform-original-pts-nearest-frame"},
+        "cutThreshold": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
+        "calibratedConfidence": {"const": false},
+        "limits": {"type": "string"}
+      }
+    },
+    "cutCandidatePts": {"type": "array", "items": {"type": "integer"}},
+    "samples": {
+      "type": "array", "minItems": 2, "maxItems": 120,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["sampleOrdinal", "sourcePts", "sourceSeconds"],
+        "properties": {
+          "sampleOrdinal": {"type": "integer", "minimum": 0},
+          "sourcePts": {"type": "integer"},
+          "sourceSeconds": {"$ref": "#/$defs/rational"}
+        }
+      }
+    },
+    "pairs": {
+      "type": "array", "minItems": 1, "maxItems": 119,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["startPts", "endPts", "deltaTimeSeconds", "status", "dxPixels", "dyPixels", "dxNormalized", "dyNormalized", "peakToSidelobeRatio"],
+        "properties": {
+          "startPts": {"type": "integer"},
+          "endPts": {"type": "integer"},
+          "deltaTimeSeconds": {"$ref": "#/$defs/rational"},
+          "status": {"enum": ["measured-image-translation", "unobservable-low-texture", "ambiguous-correlation", "cut-boundary"]},
+          "dxPixels": {"type": ["number", "null"]},
+          "dyPixels": {"type": ["number", "null"]},
+          "dxNormalized": {"type": ["number", "null"]},
+          "dyNormalized": {"type": ["number", "null"]},
+          "peakToSidelobeRatio": {"type": ["number", "null"]}
+        }
+      }
+    },
+    "segments": {
+      "type": "array", "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["startPts", "endPts", "samples", "easing"],
+        "properties": {
+          "startPts": {"type": "integer"}, "endPts": {"type": "integer"},
+          "samples": {"type": "array", "minItems": 2, "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["sourcePts", "sourceSeconds", "cumulativeDxPixels", "cumulativeDyPixels"],
+            "properties": {
+              "sourcePts": {"type": "integer"},
+              "sourceSeconds": {"$ref": "#/$defs/rational"},
+              "cumulativeDxPixels": {"type": "number"},
+              "cumulativeDyPixels": {"type": "number"}
+            }
+          }},
+          "easing": {"type": "object", "required": ["status", "candidates", "bestCandidate"],
+            "properties": {
+              "status": {"enum": ["insufficient-samples", "invalid-source-times", "insufficient-net-motion", "nonmonotonic-or-overshooting", "poor-simple-curve-fit", "ambiguous-curve-family", "candidate-only"]},
+              "bestCandidate": {"type": ["string", "null"]},
+              "netDisplacementPixels": {"type": "number"},
+              "sampleCount": {"type": "integer", "minimum": 5},
+              "candidates": {"type": "array", "items": {
+                "type": "object", "additionalProperties": false,
+                "required": ["name", "normalizedRms", "maxAbsoluteResidual"],
+                "properties": {
+                  "name": {"enum": ["linear", "ease-in-quad", "ease-out-quad", "ease-in-out-cubic", "ease-in-out-quintic"]},
+                  "normalizedRms": {"type": "number", "minimum": 0},
+                  "maxAbsoluteResidual": {"type": "number", "minimum": 0}
+                }
+              }}
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {"rational": {
+    "type": "object", "additionalProperties": false,
+    "required": ["numerator", "denominator"],
+    "properties": {"numerator": {"type": "integer"},
+                   "denominator": {"type": "integer", "minimum": 1}}
+  }}
+}

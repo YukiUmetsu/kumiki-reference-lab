@@ -69,8 +69,20 @@ PYTHONPATH=src python -m kumiki_reference_lab contact-sheet ./reference.mp4 --ma
 
 This creates a self-contained, local HTML review index and versioned JSON manifest with JPEG thumbnails. Sampling prioritizes opening/closing, available hard-cut pairs, then wide gaps between existing samples. Frame choice uses ordinals **only to select decoded pictures**; their authoritative times are original rational source PTS. Both the cut detector and thumbnail decoder must report the same timebase and the selected image PTS must match FFprobe's timeline exactly, or the stage fails. It uses a temporary staging directory and publishes the completed bundle together. On rerun, checksum-verified completed bundles are reused. No full-resolution copies of the source video are written.
 
+## Image motion and easing candidates
+
+Install the optional NumPy dependency with `python -m pip install -e '.[motion]'`. Then:
+
+```bash
+kumiki-ref motion ./reference.mp4 --max-seconds 10 --max-samples 48 --out ./runs/motion
+```
+
+The `motion` command produces a versioned `image-motion.json`. Sampling targets uniformly spaced **original source PTS**; FFmpeg selects corresponding decoded-frame ordinals and must report identical timestamps/timebase. A bounded grayscale FFT phase-correlation estimator yields relative *global image-plane* pixel shifts and an **uncalibrated** peak-to-sidelobe ratio diagnostic. Uniform and ambiguous pairs have null displacements. Cross-cut comparisons are explicitly skipped. Valid continuous samples build cumulative image-motion paths whose projected progress is fitted against linear, quadratic and smoothstep-family candidates with numeric residuals. Short, reversing, low-motion or poorly fitted paths receive explicit statuses instead of arbitrary easing labels.
+
+Measured global image shift is **not** interchangeable with optical flow, subject tracking or reconstructed camera motion. Planar translation can come from any dominant moving content; panning, dolly, parallax, changing geometry, zoom and multiple independently moving objects are not disentangled. Future feature tracking and segmentation must build on these source-timestamped observations without mislabeling them as physical truth.
+
 Detection is a **bounded first-stage heuristic**, not comprehensive scene segmentation: it does not classify fades or dissolve transitions, reconstruct frame geometry, or prove that fast image changes are cuts. More robust detectors can later be swapped behind the analyzer interface.
 
 ## Planned next slice
 
-Complete an interoperable `analyze` pipeline: join reviewed shot candidates with source-frame PTS, add deterministic optical-flow/easing estimation with synthetic fixtures, and produce draft technique-catalog evidence records. Before full-volume processing, add streaming analysis and explicit cancellation so long inputs never need to be decoded or captured entirely in memory.
+Complete an interoperable `analyze` pipeline: join reviewed shots and global motion measurements, add robust local feature/optical-flow tracking with multiple-motion separation, and produce draft technique-catalog evidence records. Before full-volume processing, add streaming analysis and explicit cancellation so long inputs never need to be decoded or captured entirely in memory.
