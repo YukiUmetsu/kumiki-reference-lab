@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/timeline-review.schema.json",
+  "title": "Kumiki source-linked offline timeline review v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "settings", "files", "qualityVerdict"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.timeline-review.v1"},
+    "qualityVerdict": {"const": "not-performed"},
+    "settings": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sourceSha256", "analysisRunSha256", "styleRevision", "windowMs", "maxAudioFrames", "ffmpeg", "ffprobe", "shotEvidenceSha256", "editRhythmSha256", "avCutEvidenceSha256"],
+      "properties": {
+        "sourceSha256": {"$ref": "#/$defs/hash"},
+        "analysisRunSha256": {"$ref": "#/$defs/hash"},
+        "styleRevision": {"const": "offline-observation-tracks-v1"},
+        "windowMs": {"type": "integer", "minimum": 100, "maximum": 2000},
+        "maxAudioFrames": {"type": "integer", "minimum": 1, "maximum": 10000},
+        "ffmpeg": {"type": "string", "minLength": 1},
+        "ffprobe": {"type": "string", "minLength": 1},
+        "shotEvidenceSha256": {"$ref": "#/$defs/hash"},
+        "editRhythmSha256": {"$ref": "#/$defs/hash"},
+        "avCutEvidenceSha256": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "files": {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"enum": ["index.html", "shot-evidence.json", "edit-rhythm.json", "av-cut-evidence.json"]},
+          "sha256": {"$ref": "#/$defs/hash"}
+        }
+      }
+    }
+  },
+  "$defs": {"hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}
+}

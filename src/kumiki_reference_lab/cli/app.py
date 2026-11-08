@@ -18,6 +18,7 @@ from kumiki_reference_lab.analyzers.techniques.propose import propose_techniques
 from kumiki_reference_lab.analyzers.techniques.review import build_technique_review
 from kumiki_reference_lab.analyzers.shots.evidence import build_shot_evidence
 from kumiki_reference_lab.analyzers.shots.rhythm import build_edit_rhythm
+from kumiki_reference_lab.analyzers.shots.timeline_view import build_timeline_view
 from kumiki_reference_lab.analyzers.shots.gallery import build_shot_gallery
 from kumiki_reference_lab.analyzers.media.contact_sheet import build_contact_sheet
 from kumiki_reference_lab.analyzers.motion.analyze import analyze_image_motion
@@ -225,6 +226,16 @@ def build_parser() -> argparse.ArgumentParser:
     shot_gallery.add_argument("--ffmpeg", default="ffmpeg")
     shot_gallery.add_argument("--ffprobe", default="ffprobe")
 
+    timeline_view = commands.add_parser(
+        "review-timeline", help="visual review of aligned candidate cuts, pacing, image motion and audio contrast")
+    timeline_view.add_argument("source", type=Path)
+    timeline_view.add_argument("analysis_run", type=Path)
+    timeline_view.add_argument("--out", type=Path, required=True)
+    timeline_view.add_argument("--window-ms", type=int, default=400)
+    timeline_view.add_argument("--max-audio-frames", type=int, default=4096)
+    timeline_view.add_argument("--ffmpeg", default="ffmpeg")
+    timeline_view.add_argument("--ffprobe", default="ffprobe")
+
     study = commands.add_parser(
         "study-reference", help="one command: analyze, propose, summarize, and render cue review")
     study.add_argument("source", type=Path)
@@ -377,6 +388,12 @@ def main(argv: list[str] | None = None) -> int:
                 args.source, args.analysis_run, args.out,
                 max_regions=args.max_regions, region_offset=args.region_offset,
                 width=args.width, ffmpeg=args.ffmpeg, ffprobe=args.ffprobe))
+            return 0
+        if args.command == "review-timeline":
+            print(build_timeline_view(
+                args.source, args.analysis_run, args.out,
+                window_ms=args.window_ms, max_audio_frames=args.max_audio_frames,
+                ffmpeg=args.ffmpeg, ffprobe=args.ffprobe))
             return 0
         if args.command == "study-reference":
             result = study_reference(
