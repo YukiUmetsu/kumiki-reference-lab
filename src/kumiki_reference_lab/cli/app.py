@@ -11,6 +11,7 @@ from kumiki_reference_lab.analyzers.media.inspect import inspect_source
 from kumiki_reference_lab.analyzers.appearance.analyze import analyze_appearance
 from kumiki_reference_lab.analyzers.comparison.appearance import compare_appearance
 from kumiki_reference_lab.analyzers.comparison.frames import build_frame_comparison
+from kumiki_reference_lab.analyzers.techniques.propose import propose_techniques
 from kumiki_reference_lab.analyzers.media.contact_sheet import build_contact_sheet
 from kumiki_reference_lab.analyzers.motion.analyze import analyze_image_motion
 from kumiki_reference_lab.analyzers.motion.sparse import analyze_sparse_flow
@@ -143,6 +144,14 @@ def build_parser() -> argparse.ArgumentParser:
     frame_compare.add_argument("--rights-status", choices=RIGHTS_STATUSES,
                                default="review-required")
 
+    technique_proposals = commands.add_parser(
+        "propose-techniques", help="derive conservative, source-linked cinematic review cues")
+    technique_proposals.add_argument("analysis_run", type=Path,
+                                     help="analysis-run.json from an immutable verified run")
+    technique_proposals.add_argument("--catalog-root", type=Path,
+                                     default=Path("catalog/entries"))
+    technique_proposals.add_argument("--out", type=Path)
+
     analyze = commands.add_parser("analyze", help="run a bounded, atomic multi-stage reference analysis")
     analyze.add_argument("source", type=Path)
     analyze.add_argument("--out", type=Path, required=True, help="parent directory for immutable run")
@@ -213,6 +222,13 @@ def main(argv: list[str] | None = None) -> int:
                 rights_status=args.rights_status,
             )
             print(str(manifest))
+            return 0
+        if args.command == "propose-techniques":
+            result = propose_techniques(args.analysis_run, args.catalog_root)
+            if args.out is None:
+                print(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
+            else:
+                print(str(write_json_artifact(args.out, "technique-proposals.json", result)))
             return 0
         if args.command == "compare-appearance":
             comparison = compare_appearance(
