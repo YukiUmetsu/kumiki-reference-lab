@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/schemas/v1/shot-candidates.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "sourceSha256", "sourceStreamIndex", "sourceTimebase", "scanWindowSeconds", "coverage", "detector", "candidates"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.shot-candidates.v1"},
+    "sourceSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "sourceStreamIndex": {"type": "integer", "minimum": 0},
+    "sourceTimebase": {"$ref": "#/$defs/positiveRational"},
+    "scanWindowSeconds": {"type": "integer", "minimum": 1, "maximum": 120},
+    "coverage": {"const": "bounded-from-start-not-necessarily-full-video"},
+    "detector": {
+      "type": "object", "additionalProperties": false,
+      "required": ["method", "threshold", "limits"],
+      "properties": {
+        "method": {"const": "ffmpeg-select-scene-difference"},
+        "threshold": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
+        "limits": {"type": "string"}
+      }
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["sourcePts", "sourceSeconds", "kind", "confidence"],
+        "properties": {
+          "sourcePts": {"type": "integer"},
+          "sourceSeconds": {"$ref": "#/$defs/signedRational"},
+          "kind": {"const": "hard-cut-candidate"},
+          "confidence": {"type": "null"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "positiveRational": {
+      "type": "object", "additionalProperties": false,
+      "required": ["numerator", "denominator"],
+      "properties": {
+        "numerator": {"type": "integer", "minimum": 1},
+        "denominator": {"type": "integer", "minimum": 1}
+      }
+    },
+    "signedRational": {
+      "type": "object", "additionalProperties": false,
+      "required": ["numerator", "denominator"],
+      "properties": {
+        "numerator": {"type": "integer"},
+        "denominator": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}

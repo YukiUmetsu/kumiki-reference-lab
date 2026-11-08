@@ -4,7 +4,7 @@
 
 > **Project status: proposed.** This README is an implementation brief for a new repository, not documentation of an already-working CLI. Commands, package paths, schemas, and features marked *planned* must be implemented and verified before they are advertised as available.
 
-**Implemented foundation:** the dependency-free Python `inspect` command reads a local video with FFprobe and writes a source manifest. Shot detection, tracking, semantic analysis, treatment compilation, and reference comparison remain planned.
+**Implemented foundation:** dependency-free Python commands read local video metadata, extract real presentation timestamps, and detect bounded hard-cut *candidates* using FFprobe/FFmpeg. Object tracking, motion fitting, semantic analysis, treatment compilation and reference comparison remain planned.
 
 Kumiki Reference Lab studies legally obtained motion-graphics, product-film, documentary, and explainer-video references. It extracts measurable characteristics, identifies reusable filmmaking techniques, and produces evidence-backed reports that can guide implementations in [kumiki-ui](https://github.com/YukiUmetsu/kumiki-ui).
 
@@ -232,20 +232,22 @@ rights:
 
 ## CLI: implemented versus planned
 
-**Available now (Python 3.11+, FFprobe installed):**
+**Available now (Python 3.11+, FFmpeg and FFprobe installed):**
 
 ```bash
 PYTHONPATH=src python -m kumiki_reference_lab inspect ./reference.mp4
 PYTHONPATH=src python -m kumiki_reference_lab inspect ./reference.mp4 --out ./runs/example
+PYTHONPATH=src python -m kumiki_reference_lab frames ./reference.mp4 --max-seconds 60 --out ./runs/example
+PYTHONPATH=src python -m kumiki_reference_lab cuts ./reference.mp4 --max-seconds 60 --threshold 0.25 --out ./runs/example
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-The manifest records metadata and SHA-256, while honestly marking frame-by-frame PTS and VFR status as unknown until sampled. `--rights-status user-declared-authorized` is an **assertion by the user**, not automated legal verification. The command does not copy media or download models.
+`inspect` records metadata and SHA-256, while honestly marking frame-by-frame PTS and VFR status as unknown until sampled. `frames` extracts source PTS within a bounded window, preserving exact rational timestamps and reporting missing/nonincreasing values. `cuts` detects **possible hard cuts**, not proven edits; fast subject or camera motion may produce false positives, and fades are not yet classified. `--rights-status user-declared-authorized` is an **assertion by the user**, not automated legal verification. Commands do not copy media or download models.
 
 **Planned interfaces (not implemented):**
 
 ```bash
-# Identify cuts and produce evidence/contact sheets
+# Later: full composition, optical-flow and color analysis
 kumiki-ref analyze ./reference.mp4 --features shots,motion,color --out ./runs/example
 
 # Optional subject tracking, with explicit model selection
@@ -285,11 +287,11 @@ kumiki-reference-lab/
 │   ├── pipeline/                   # Stage DAG, restart/cache, results (future)
 │   ├── analyzers/
 │   │   ├── media/                  # Implemented: FFprobe source inspection
-│   │   ├── shots/                  # Future: edit detection
+│   │   ├── shots/                  # Implemented: bounded cut candidates
 │   │   ├── motion/                 # Future: optical flow and easing fits
 │   │   └── subjects/              # Future: segmentation and identity
 │   ├── backends/
-│   │   ├── ffmpeg/                 # Implemented: FFprobe adapter
+│   │   ├── ffmpeg/                 # Implemented: FFprobe and FFmpeg adapters
 │   │   ├── opencv/                 # Future: classical CV
 │   │   └── segmentation/          # Future: optional ML
 │   ├── interpretation/             # Future: story/technique semantics
@@ -338,7 +340,7 @@ Model-backend installation scripts and tested advanced setup commands will be ad
 - Detect cuts and fades; export shot intervals and contact sheets.
 - Compute optical flow, tracked-point motion, approximate scene motion and basic color/contrast statistics.
 - Fit a small, documented easing family to synthetic known curves; report residual and rejected fits.
-- **Exit:** accurately recover cuts and known motion from original, programmatically generated test footage; no AI dependencies.
+- **Exit:** recover hard-cut candidates, exact source PTS, and known motion from original, programmatically generated test footage; no AI dependencies. Cut detection and source PTS extraction are the first delivered portions; motion fitting remains.
 
 ### Milestone 2 — Subject tracking and technique candidates
 

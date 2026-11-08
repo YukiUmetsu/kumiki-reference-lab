@@ -18,7 +18,7 @@ def probe_media(path: Path, *, ffprobe: str = "ffprobe", timeout: float = 30) ->
         "-v", "error",
         "-show_format", "-show_streams",
         "-of", "json",
-        "-i", str(path),
+        "-i", str(path.resolve()),
     ]
     try:
         result = subprocess.run(

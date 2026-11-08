@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/schemas/v1/frame-timeline.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "sourceSha256", "sourceStreamIndex", "sourceTimebase", "scanWindowSeconds", "coverage", "ptsDerivedFromFps", "frames", "anomalies"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.frame-timeline.v1"},
+    "sourceSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "sourceStreamIndex": {"type": "integer", "minimum": 0},
+    "sourceTimebase": {"$ref": "#/$defs/positiveRational"},
+    "scanWindowSeconds": {"type": "integer", "minimum": 1, "maximum": 120},
+    "coverage": {"const": "bounded-from-start-not-necessarily-full-video"},
+    "ptsDerivedFromFps": {"const": false},
+    "frames": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["sampleOrdinal", "sourcePts", "ptsSource", "sourceSeconds"],
+        "properties": {
+          "sampleOrdinal": {"type": "integer", "minimum": 0},
+          "sourcePts": {"type": ["integer", "null"]},
+          "ptsSource": {"enum": ["best_effort_timestamp", "pts-fallback", "missing"]},
+          "sourceSeconds": {"anyOf": [{"$ref": "#/$defs/signedRational"}, {"type": "null"}]}
+        }
+      }
+    },
+    "anomalies": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["sampleOrdinal", "reason"],
+        "properties": {
+          "sampleOrdinal": {"type": "integer", "minimum": 0},
+          "reason": {"enum": ["missing-source-pts", "nonincreasing-source-pts"]}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "positiveRational": {
+      "type": "object", "additionalProperties": false,
+      "required": ["numerator", "denominator"],
+      "properties": {
+        "numerator": {"type": "integer", "minimum": 1},
+        "denominator": {"type": "integer", "minimum": 1}
+      }
+    },
+    "signedRational": {
+      "type": "object", "additionalProperties": false,
+      "required": ["numerator", "denominator"],
+      "properties": {
+        "numerator": {"type": "integer"},
+        "denominator": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}

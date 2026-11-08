@@ -4,14 +4,15 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
-import tempfile
 from pathlib import Path
 
 from kumiki_reference_lab.analyzers.media.inspect import inspect_source
+from kumiki_reference_lab.analyzers.media.timeline import analyze_frame_timeline
+from kumiki_reference_lab.analyzers.shots.detect import analyze_hard_cuts
 from kumiki_reference_lab.backends.ffmpeg.probe import ProbeError
 from kumiki_reference_lab.contracts.source import RIGHTS_STATUSES
+from kumiki_reference_lab.core.artifacts import write_json_artifact
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -22,6 +23,22 @@ def build_parser() -> argparse.ArgumentParser:
     inspect.add_argument("--out", type=Path, help="output directory for source-manifest.json")
     inspect.add_argument("--ffprobe", default="ffprobe", help="ffprobe executable or path")
     inspect.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
+
+    frames = commands.add_parser("frames", help="extract bounded source presentation timestamps")
+    frames.add_argument("source", type=Path)
+    frames.add_argument("--out", type=Path)
+    frames.add_argument("--max-seconds", type=int, default=60)
+    frames.add_argument("--ffprobe", default="ffprobe")
+    frames.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
+
+    cuts = commands.add_parser("cuts", help="find bounded hard-cut candidates")
+    cuts.add_argument("source", type=Path)
+    cuts.add_argument("--out", type=Path)
+    cuts.add_argument("--max-seconds", type=int, default=60)
+    cuts.add_argument("--threshold", type=float, default=0.25)
+    cuts.add_argument("--ffmpeg", default="ffmpeg")
+    cuts.add_argument("--ffprobe", default="ffprobe")
+    cuts.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
     return parser
 
 
@@ -29,42 +46,25 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
-        manifest = inspect_source(args.source, ffprobe=args.ffprobe, rights_status=args.rights_status)
-        payload = json.dumps(manifest, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+        if args.command == "inspect":
+            artifact = inspect_source(args.source, ffprobe=args.ffprobe,
+                                      rights_status=args.rights_status)
+            filename = "source-manifest.json"
+        elif args.command == "frames":
+            artifact = analyze_frame_timeline(args.source, seconds=args.max_seconds,
+                                              ffprobe=args.ffprobe,
+                                              rights_status=args.rights_status)
+            filename = "frame-timeline.json"
+        else:
+            artifact = analyze_hard_cuts(args.source, seconds=args.max_seconds,
+                                         threshold=args.threshold, ffmpeg=args.ffmpeg,
+                                         ffprobe=args.ffprobe, rights_status=args.rights_status)
+            filename = "shot-candidates.json"
+        payload = json.dumps(artifact, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
         if args.out is None:
             sys.stdout.write(payload)
             return 0
-        args.out.mkdir(parents=True, exist_ok=True)
-        destination = args.out / "source-manifest.json"
-        if destination.exists():
-            if destination.is_file() and destination.read_text(encoding="utf-8") == payload:
-                print(str(destination))
-                return 0
-            raise ValueError("manifest already exists with different content; choose a new --out")
-
-        # Publish a complete manifest atomically, without replacing another
-        # process's output. The temporary file and destination share a volume.
-        temporary: Path | None = None
-        try:
-            with tempfile.NamedTemporaryFile(
-                mode="w", encoding="utf-8", dir=args.out,
-                prefix=".source-manifest-", suffix=".tmp", delete=False,
-            ) as file:
-                temporary = Path(file.name)
-                file.write(payload)
-                file.flush()
-                os.fsync(file.fileno())
-            try:
-                os.link(temporary, destination)
-            except FileExistsError:
-                if (destination.is_file() and
-                        destination.read_text(encoding="utf-8") == payload):
-                    print(str(destination))
-                    return 0
-                raise ValueError("manifest already exists with different content; choose a new --out")
-        finally:
-            if temporary is not None:
-                temporary.unlink(missing_ok=True)
+        destination = write_json_artifact(args.out, filename, artifact)
         print(str(destination))
         return 0
     except (OSError, ValueError, ProbeError) as exc:
