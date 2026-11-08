@@ -2,6 +2,8 @@
 
 `review-timeline` creates a **self-contained, offline HTML report** with four aligned evidence tracks: candidate video regions/cuts, apparent image-plane displacement, measured interior edit intervals, and candidate audio quiet-level contrasts. It also provides accessible data tables for exact values and provenance, rather than relying solely on color or a chart.
 
+The same viewer is included automatically in `study-reference` v4. Open the returned study `index.html` and choose **Evidence timeline**; the standalone command remains available for custom measurement settings.
+
 ## Command
 
 ```bash

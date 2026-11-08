@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v4/reference-study.schema.json",
+  "title": "Kumiki Reference Study v4: source-linked audiovisual timeline and galleries",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "settings", "artifacts", "files", "humanReviewStatus", "qualityVerdict"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.reference-study.v4"},
+    "humanReviewStatus": {"const": "unreviewed"},
+    "qualityVerdict": {"const": "not-performed"},
+    "settings": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sourceSha256", "analysisRunDirectory", "analysisRunSha256", "catalogEntries", "proposalsSha256", "shotEvidenceSha256", "editRhythmSha256", "seconds", "thumbnails", "maxCues", "ffmpeg", "ffprobe", "rightsStatus", "sampling", "timelineStyleRevision", "timelineWindowMs", "timelineMaxAudioFrames", "studyVersion"],
+      "properties": {
+        "sourceSha256": {"$ref": "#/$defs/hash"},
+        "analysisRunDirectory": {"type": "string", "pattern": "^analysis-[a-f0-9]{12}-[a-f0-9]{20}$"},
+        "analysisRunSha256": {"$ref": "#/$defs/hash"},
+        "catalogEntries": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["id", "revision", "entrySha256"],
+            "properties": {
+              "id": {"type": "string", "minLength": 3},
+              "revision": {"type": "integer", "minimum": 1},
+              "entrySha256": {"$ref": "#/$defs/hash"}
+            }
+          }
+        },
+        "proposalsSha256": {"$ref": "#/$defs/hash"},
+        "shotEvidenceSha256": {"$ref": "#/$defs/hash"},
+        "editRhythmSha256": {"$ref": "#/$defs/hash"},
+        "seconds": {"type": "integer", "minimum": 1, "maximum": 20},
+        "thumbnails": {"type": "integer", "minimum": 2, "maximum": 24},
+        "maxCues": {"type": "integer", "minimum": 1, "maximum": 8},
+        "ffmpeg": {"type": "string", "minLength": 1},
+        "ffprobe": {"type": "string", "minLength": 1},
+        "rightsStatus": {"type": "string", "minLength": 1},
+        "sampling": {
+          "type": "object", "additionalProperties": false,
+          "required": ["motion", "sparse", "appearance", "sparsePoints", "width", "height"],
+          "properties": {
+            "motion": {"const": 24}, "sparse": {"const": 12},
+            "appearance": {"const": 12}, "sparsePoints": {"const": 40},
+            "width": {"const": 160}, "height": {"const": 90}
+          }
+        },
+        "timelineStyleRevision": {"const": "offline-observation-tracks-v1"},
+        "timelineWindowMs": {"const": 400},
+        "timelineMaxAudioFrames": {"const": 4096},
+        "studyVersion": {"const": "kumiki.reference-study.v4"}
+      }
+    },
+    "artifacts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["techniqueProposals", "shotEvidence", "editRhythm", "reviewGallery", "shotGallery", "timelineView", "studyOverview"],
+      "properties": {
+        "techniqueProposals": {"const": "technique-proposals.json"},
+        "shotEvidence": {"const": "shot-evidence.json"},
+        "editRhythm": {"const": "edit-rhythm.json"},
+        "reviewGallery": {"type": "string", "pattern": "^visual/technique-review-[a-z0-9-]+/index\\.html$"},
+        "shotGallery": {"type": "string", "pattern": "^visual/shot-gallery-[a-z0-9-]+/index\\.html$"},
+        "timelineView": {"type": "string", "pattern": "^visual/timeline-[a-z0-9-]+/index\\.html$"},
+        "studyOverview": {"const": "index.html"}
+      }
+    },
+    "files": {
+      "type": "array", "minItems": 13,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1, "maxLength": 4096},
+          "sha256": {"$ref": "#/$defs/hash"}
+        }
+      }
+    }
+  },
+  "$defs": {"hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}
+}

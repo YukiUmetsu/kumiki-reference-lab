@@ -14,11 +14,15 @@ from kumiki_reference_lab.analyzers.media.inspect import sha256_file
 from kumiki_reference_lab.analyzers.shots.evidence import build_shot_evidence
 from kumiki_reference_lab.analyzers.shots.rhythm import edit_rhythm_from_verified_shots
 from kumiki_reference_lab.analyzers.shots.gallery import build_shot_gallery
+from kumiki_reference_lab.analyzers.shots.timeline_view import (
+    STYLE_REVISION as TIMELINE_STYLE_REVISION, build_timeline_view,
+)
 from kumiki_reference_lab.analyzers.techniques.propose import propose_techniques
 from kumiki_reference_lab.analyzers.techniques.review import build_technique_review
 from kumiki_reference_lab.core.artifacts import write_json_artifact
 from kumiki_reference_lab.contracts.analysis import (
     REFERENCE_STUDY_VERSION, REFERENCE_STUDY_V1_VERSION, REFERENCE_STUDY_V2_VERSION,
+    REFERENCE_STUDY_V3_VERSION,
 )
 from kumiki_reference_lab.pipeline.analyze import _file_records, _json_bytes, run_analysis
 
@@ -38,7 +42,7 @@ def _verify_study(destination: Path, settings: dict[str, Any]) -> Path:
         raise ValueError("study manifest JSON is unreadable") from exc
     version = payload.get("schemaVersion") if isinstance(payload, dict) else None
     if (version not in (REFERENCE_STUDY_V1_VERSION, REFERENCE_STUDY_V2_VERSION,
-                       STUDY_VERSION) or
+                       REFERENCE_STUDY_V3_VERSION, STUDY_VERSION) or
             payload.get("settings") != settings or
             settings.get("studyVersion") != version or
             payload.get("qualityVerdict") != "not-performed" or
@@ -48,8 +52,10 @@ def _verify_study(destination: Path, settings: dict[str, Any]) -> Path:
     expected_keys = {"techniqueProposals", "shotEvidence", "reviewGallery"}
     if version != REFERENCE_STUDY_V1_VERSION:
         expected_keys.update(("shotGallery", "studyOverview"))
-    if version == STUDY_VERSION:
+    if version in (REFERENCE_STUDY_V3_VERSION, STUDY_VERSION):
         expected_keys.add("editRhythm")
+    if version == STUDY_VERSION:
+        expected_keys.add("timelineView")
     if (not isinstance(artifacts, dict) or set(artifacts) != expected_keys or
             artifacts.get("techniqueProposals") != "technique-proposals.json" or
             artifacts.get("shotEvidence") != "shot-evidence.json"):
@@ -70,10 +76,14 @@ def _verify_study(destination: Path, settings: dict[str, Any]) -> Path:
                 artifacts["studyOverview"] != "index.html"):
             raise ValueError("study shot gallery or overview path is unsafe")
         expected.update(("index.html", artifacts["shotGallery"]))
-    if version == STUDY_VERSION:
+    if version in (REFERENCE_STUDY_V3_VERSION, STUDY_VERSION):
         if artifacts["editRhythm"] != "edit-rhythm.json":
             raise ValueError("study edit rhythm artifact path was modified")
         expected.add("edit-rhythm.json")
+    if version == STUDY_VERSION:
+        if not valid_gallery(artifacts["timelineView"], "timeline-"):
+            raise ValueError("study timeline path is unsafe")
+        expected.add(artifacts["timelineView"])
     actual = _file_records(destination)
     actual = [item for item in actual if item["path"] != "study-manifest.json"]
     records = payload.get("files")
@@ -85,7 +95,7 @@ def _verify_study(destination: Path, settings: dict[str, Any]) -> Path:
             sha256_file(destination / "shot-evidence.json") !=
             settings["shotEvidenceSha256"]):
         raise ValueError("study evidence does not match its verified identity")
-    if (version == STUDY_VERSION and
+    if (version in (REFERENCE_STUDY_V3_VERSION, STUDY_VERSION) and
             sha256_file(destination / "edit-rhythm.json") != settings["editRhythmSha256"]):
         raise ValueError("study edit rhythm does not match its verified identity")
     return destination / artifacts.get("studyOverview", gallery)
@@ -138,6 +148,8 @@ def study_reference(
         "ffmpeg": ffmpeg, "ffprobe": ffprobe, "rightsStatus": rights_status,
         "sampling": {"motion": 24, "sparse": 12, "appearance": 12,
                      "sparsePoints": 40, "width": 160, "height": 90},
+        "timelineStyleRevision": TIMELINE_STYLE_REVISION,
+        "timelineWindowMs": 400, "timelineMaxAudioFrames": 4096,
         "studyVersion": STUDY_VERSION,
     }
     digest = hashlib.sha256(_json_bytes(settings)).hexdigest()[:16]
@@ -158,12 +170,19 @@ def study_reference(
             source, analysis, staging / "visual",
             max_regions=8, width=480, ffmpeg=ffmpeg, ffprobe=ffprobe,
         )
+        timeline = build_timeline_view(
+            source, analysis, staging / "visual",
+            window_ms=settings["timelineWindowMs"],
+            max_audio_frames=settings["timelineMaxAudioFrames"],
+            ffmpeg=ffmpeg, ffprobe=ffprobe,
+        )
         artifact_paths = {
             "techniqueProposals": "technique-proposals.json",
             "shotEvidence": "shot-evidence.json",
             "editRhythm": "edit-rhythm.json",
             "reviewGallery": gallery.relative_to(staging).as_posix(),
             "shotGallery": shot_gallery.relative_to(staging).as_posix(),
+            "timelineView": timeline.relative_to(staging).as_posix(),
             "studyOverview": "index.html",
         }
         (staging / "index.html").write_text(
@@ -174,9 +193,13 @@ def study_reference(
             'max-width:880px;margin:10vh auto;padding:20px;line-height:1.6}'
             'a{color:#98d1ff}li{margin:16px 0}</style></head>'
             '<body><h1>Cinematic reference study</h1><p>Verified source-image '
-            'measurements are separate from interpretations. Neither gallery '
-            'establishes physical camera/light rigs, artistic intent or quality.</p>'
+            'measurements are separate from interpretations. These reports do not '
+            'establish physical camera/light rigs, artistic intent or quality.</p>'
             '<ul><li><a href="' +
+            html.escape(artifact_paths["timelineView"], quote=True) +
+            '">Evidence timeline: source-time cut markers, motion, pacing and '
+            'audio near cuts</a></li>'
+            '<li><a href="' +
             html.escape(artifact_paths["shotGallery"], quote=True) +
             '">Shot storyboard: chronological composition and story questions</a></li>'
             '<li><a href="' +
