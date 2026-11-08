@@ -16,6 +16,7 @@ from kumiki_reference_lab.contracts.analysis import (
     AUDIO_TIMELINE_VERSION,
     AUDIO_LEVELS_VERSION,
     AV_CUT_EVIDENCE_VERSION,
+    EDIT_RHYTHM_VERSION,
     REFERENCE_STUDY_V1_VERSION,
 )
 from kumiki_reference_lab.catalog.validate import TECHNIQUE_SCHEMA_VERSION, INDEX_SCHEMA_VERSION
@@ -49,6 +50,7 @@ class SchemaTests(unittest.TestCase):
                               ("audio-timeline", AUDIO_TIMELINE_VERSION),
                               ("audio-levels", AUDIO_LEVELS_VERSION),
                               ("av-cut-evidence", AV_CUT_EVIDENCE_VERSION),
+                              ("edit-rhythm", EDIT_RHYTHM_VERSION),
                               ("roi-track", ROI_TRACK_VERSION),
                               ("analysis-run", ANALYSIS_RUN_VERSION)):
             schema = json.loads((root / (name + ".schema.json")).read_text(encoding="utf-8"))
