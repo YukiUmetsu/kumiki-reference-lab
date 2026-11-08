@@ -25,4 +25,4 @@ jobs:
           PYTHONPATH: src
         run: |
           python -m compileall -q src
-          python -m unittest tests.test_cli tests.test_timebase tests.test_schema tests.test_catalog -q
+          python -m unittest tests.test_cli tests.test_timebase tests.test_schema tests.test_catalog tests.test_sparse_tracklets -q

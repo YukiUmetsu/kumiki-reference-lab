@@ -34,6 +34,14 @@ identity; legacy runs without sparse flow keep their existing identity.
    estimates receive explicit rejection statuses.
 8. Detect hard-cut candidates separately and **never** track across their
    boundaries. A cut pair has no vectors and a null consensus.
+9. Conservatively link independent pair vectors into `temporalTracklets`:
+   compare each vector's projected endpoint only to the next pair's corner,
+   require mutual-nearest agreement within 2 pixels and reject candidates
+   with a competing neighbor within 0.5 pixels of the best distance.
+   Publish only tracklets spanning at least two consecutive pairs; record
+   the original pair/vector indices, PTS, observed endpoints, and handoff
+   residuals. Cuts, gaps, missing detections and ambiguous matches break
+   continuity; no missing points are interpolated.
 
 Each pair exposes `detectedCorners`, `rejected` counts by reason, `vectors`
 with original coordinates, offsets, match correlations and roundtrip error,
@@ -45,6 +53,14 @@ accepted point indices, candidate 2×3 affine matrix, translation/affine RMS,
 observed spatial support, apparent area scale, rotation and anisotropy.
 These are *estimated image properties*; they are never proof of optical zoom,
 camera roll or an object's physical rotation.
+
+`temporalTracklets.status` is `candidate-only` when at least one conservative
+multi-pair link survives, otherwise `insufficient-continuity`. Its
+`singlePairCandidatesDiscarded` counts tracks that never gained a second
+observation. A tracklet is a deterministic short image-plane correspondence
+**candidate**, not a persistent verified object identity. Its `group` may
+change between pairs. Even a clean multi-pair link can switch between similar
+textures, and the method does not recover links after occlusion.
 
 ## Reading the results honestly
 
@@ -67,13 +83,14 @@ camera roll or an object's physical rotation.
   decompositions of the fitted matrix. Multiple possible 3D mechanisms can
   produce the same screen-space transformation.
 
-The method is a deterministic, short-baseline **translation baseline**. It does
+The method is a deterministic, short-baseline **image-plane baseline**. It does
 not recover lens intrinsics, zoom, roll, depth, parallax, true camera pose,
 lighting, silhouettes, object identities or 3D geometry. The tracking radius
 must fit motion between **selected** frames; if widely separated frames move
 more than the search radius, increase sample density within the bounded cap
-or interpret the result as unobservable. The current method detects corners
-independently for every pair, so **point IDs do not persist** across time.
+or interpret the result as unobservable. Corners are still detected independently
+for every pair; tracklet IDs link only short, mutually consistent observations
+and are **not** verified identities.
 
 ## Limits, performance and next experiments
 
@@ -86,7 +103,7 @@ perspective, rescaling, motion blur, occlusion and crossfades degrade it.
   scale/rotation, but camera movement plus parallax, perspective, depth,
   rotating props and deformation require more careful geometric modeling.
 - Recommended subsequent work: multi-scale optical flow, homography versus
-  affine model selection, persistent temporal track IDs and occlusion
+  affine model selection, validated feature re-identification with occlusion
   handling, then *optional* image segmentation/semantic classification.
 
 The longer-term research use is to inform **candidate** Kumiki camera/subject
