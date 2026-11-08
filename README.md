@@ -2,7 +2,7 @@
 
 **Reference-video analysis, cinematic technique research, and reproducible motion reconstruction for the Kumiki ecosystem.**
 
-> **Project status: early working foundation.** The `inspect`, `frames`, `cuts`, `contact-sheet`, `motion`, `track-roi`, `sparse-flow`, `appearance`, `compare-appearance`, `compare-frames`, `propose-techniques`, `analyze`, and `catalog` commands are implemented and tested. Semantic video-to-technique interpretation, full visual matching, and Kumiki export remain planned.
+> **Project status: early working foundation.** The `inspect`, `frames`, `cuts`, `contact-sheet`, `motion`, `track-roi`, `sparse-flow`, `appearance`, `compare-appearance`, `compare-frames`, `propose-techniques`, `review-techniques`, `analyze`, and `catalog` commands are implemented and tested. Semantic video-to-technique interpretation, full visual matching, and Kumiki export remain planned.
 
 **Implemented foundation:** Python commands read local video metadata, extract real presentation timestamps, detect bounded hard-cut *candidates*, produce timecoded HTML/JPEG contact sheets, optionally measure global image-plane translation and easing candidates, track a seeded image region, and characterize sparse 2D motion with conservative affine hypotheses. The `appearance` command measures display-referred RGB color and contrast; `compare-appearance` compares two reports at **explicitly aligned source times**, while `compare-frames` produces side-by-side timecoded JPEGs for manual visual QA. A versioned `analyze` pipeline combines motion/appearance evidence into immutable runs. `propose-techniques` now generates explicit, machine-readable, non-semantic review cues from such a verified run. A searchable Cinematic Techniques Catalog includes five original research candidates. Semantic interpretation, full-speed visual matching, physical camera/lighting inference and treatment compilation remain planned.
 
@@ -58,6 +58,8 @@ PYTHONPATH=src python -m kumiki_reference_lab analyze ./reference.mp4 --max-seco
 The resulting `analysis-<source>-<settings>/analysis-run.json` inventories stage outputs and their SHA-256 checksums. All requested stages must succeed before the bundle is published. Re-running the same source/settings checks the completed output; changed or missing files are rejected. `catalogProposals` stays empty and `interpretationStatus` is `not-performed` until a real interpretation stage exists.
 
 For **cautious, non-semantic technique review cues**, run `analyze` with `--sparse-flow --appearance`, then `kumiki-ref propose-techniques <analysis-run.json> --out ./runs/review`. The separate report links observed enlargement or shifting bright-pixel regions to existing catalog entries and states alternative explanations and reviewer questions. It does **not** establish actual lighting, camera motion, story intent, or source authoring technique. See [technique cue methodology](docs/technique-proposals.md).
+
+Run `kumiki-ref review-techniques ./reference.mp4 <analysis-run.json> --out ./runs` to generate a matching **visual review gallery** with verified start/middle/end frames for each proposed cue. It is an evidence spot-check, not a creative verdict. See [gallery usage and integrity checks](docs/technique-review.md).
 
 ```text
 Authorized reference video
@@ -271,6 +273,7 @@ kumiki-ref appearance ./reference.mp4 --max-seconds 10 --max-samples 24 --out ./
 kumiki-ref compare-appearance ./runs/reference/appearance.json ./runs/render/appearance.json --reference-anchor-ms 0 --candidate-anchor-ms 0 --out ./runs/comparison
 kumiki-ref compare-frames ./reference.mp4 ./render.mp4 --reference-anchor-ms 0 --candidate-anchor-ms 0 --out ./runs
 kumiki-ref propose-techniques ./runs/analysis-<source>-<settings>/analysis-run.json --out ./runs/review
+kumiki-ref review-techniques ./reference.mp4 ./runs/analysis-<source>-<settings>/analysis-run.json --out ./runs
 ```
 
 `inspect` records metadata and SHA-256, while honestly marking frame-by-frame PTS and VFR status as unknown until sampled. `frames` extracts source PTS within a bounded window, preserving exact rational timestamps and reporting missing/nonincreasing values. `cuts` detects **possible hard cuts**, not proven edits; fast subject or camera motion may produce false positives, and fades are not yet classified. `contact-sheet` automatically prioritizes frames at opening/closing and around candidate edits, then covers remaining visual gaps. It creates an immutable `contact-sheet-<source>-<settings>/` directory containing `index.html`, `contact-sheet.json`, and up to 24 labeled JPEGs. The JSON records exact rational source timestamps, each evidence image's hash, and the sampling options. Existing bundles are checked for modification, never silently replaced. `--rights-status user-declared-authorized` is an **assertion by the user**, not automated legal verification. No model download or external service is required.
@@ -288,6 +291,8 @@ kumiki-ref propose-techniques ./runs/analysis-<source>-<settings>/analysis-run.j
 `compare-frames` creates an immutable responsive HTML/JPEG review sheet pairing source/render frames at explicitly aligned original PTS, with verified FFmpeg decoding and hashes. The goal is to inspect actual composition, materials, lighting and story beats at matched moments. It does not automatically assign a "premium" quality score. See [visual review guide](docs/frame-comparison.md).
 
 `propose-techniques` validates the completed analysis bundle and produces a separate immutable versioned report of catalog-linked *review hypotheses*. Currently it proposes only coherent image-plane enlargement and shifting bright-region cues, with source PTS, measurements, competing interpretations and specific human review questions. It does not rely on AI, rewrite the catalog, or pretend its cues are confirmed cinematography. See [heuristic gates and agent workflow](docs/technique-proposals.md).
+
+`review-techniques` independently verifies the same source video and analysis run, then assembles a self-contained source-PTS-verified HTML/JPEG gallery for up to eight of those cues. Each displays three source moments, quantitative evidence, alternative explanations and reviewer questions. Immutable inventory hashes catch modified images and reports on reuse. See [visual cue review](docs/technique-review.md).
 
 `analyze` is the transactional orchestration layer: it runs `inspect` + `frames` + `cuts` + `contact-sheet`, with `--motion`, `--sparse-flow`, `--appearance`, and `--box` opt-ins. By default it requires only FFmpeg/FFprobe. Each completed bundle contains JSON artifacts, a local visual contact sheet, and `analysis-run.json` with hashes and immutable input/settings identity. If any required stage fails, the temporary bundle is discarded and no partial run is published. The bounded initial implementation repeats some inexpensive metadata work rather than building an unverified streaming/cache engine.
 

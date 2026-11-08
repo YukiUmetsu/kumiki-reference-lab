@@ -12,6 +12,7 @@ from kumiki_reference_lab.analyzers.appearance.analyze import analyze_appearance
 from kumiki_reference_lab.analyzers.comparison.appearance import compare_appearance
 from kumiki_reference_lab.analyzers.comparison.frames import build_frame_comparison
 from kumiki_reference_lab.analyzers.techniques.propose import propose_techniques
+from kumiki_reference_lab.analyzers.techniques.review import build_technique_review
 from kumiki_reference_lab.analyzers.media.contact_sheet import build_contact_sheet
 from kumiki_reference_lab.analyzers.motion.analyze import analyze_image_motion
 from kumiki_reference_lab.analyzers.motion.sparse import analyze_sparse_flow
@@ -152,6 +153,20 @@ def build_parser() -> argparse.ArgumentParser:
                                      default=Path("catalog/entries"))
     technique_proposals.add_argument("--out", type=Path)
 
+    technique_review = commands.add_parser(
+        "review-techniques", help="render source-verified frames for technique review cues")
+    technique_review.add_argument("source", type=Path)
+    technique_review.add_argument("analysis_run", type=Path)
+    technique_review.add_argument("--out", type=Path, required=True)
+    technique_review.add_argument("--catalog-root", type=Path,
+                                  default=Path("catalog/entries"))
+    technique_review.add_argument("--max-cues", type=int, default=8)
+    technique_review.add_argument("--cue-offset", type=int, default=0,
+                                  help="zero-based offset into chronological cue results")
+    technique_review.add_argument("--width", type=int, default=480)
+    technique_review.add_argument("--ffmpeg", default="ffmpeg")
+    technique_review.add_argument("--ffprobe", default="ffprobe")
+
     analyze = commands.add_parser("analyze", help="run a bounded, atomic multi-stage reference analysis")
     analyze.add_argument("source", type=Path)
     analyze.add_argument("--out", type=Path, required=True, help="parent directory for immutable run")
@@ -229,6 +244,15 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
             else:
                 print(str(write_json_artifact(args.out, "technique-proposals.json", result)))
+            return 0
+        if args.command == "review-techniques":
+            result = build_technique_review(
+                args.source, args.analysis_run, args.out,
+                catalog_root=args.catalog_root, max_cues=args.max_cues,
+                cue_offset=args.cue_offset,
+                width=args.width, ffmpeg=args.ffmpeg, ffprobe=args.ffprobe,
+            )
+            print(str(result))
             return 0
         if args.command == "compare-appearance":
             comparison = compare_appearance(
