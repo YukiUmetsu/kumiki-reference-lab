@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/review-notes.schema.json",
+  "title": "Kumiki Source-Linked Cinematic Review Notes v1",
+  "description": "Unapproved human/AI observations, hypotheses and design suggestions. JSON Schema validates shape; CLI also checks the immutable study, exact source PTS, target IDs and reviewer provenance.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "study", "reviewer", "reviewStatus", "annotations"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.review-notes.v1"},
+    "study": {
+      "type": "object", "additionalProperties": false,
+      "required": ["manifestSha256", "sourceSha256", "analysisRunSha256", "proposalsSha256", "shotEvidenceSha256"],
+      "properties": {
+        "manifestSha256": {"$ref": "#/$defs/sha256"},
+        "sourceSha256": {"$ref": "#/$defs/sha256"},
+        "analysisRunSha256": {"$ref": "#/$defs/sha256"},
+        "proposalsSha256": {"$ref": "#/$defs/sha256"},
+        "shotEvidenceSha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "reviewer": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "id", "modelId"],
+      "properties": {
+        "kind": {"enum": ["human", "ai"]},
+        "id": {"type": "string", "minLength": 1, "maxLength": 128},
+        "modelId": {"type": ["string", "null"], "minLength": 1, "maxLength": 256}
+      },
+      "allOf": [
+        {"if": {"properties": {"kind": {"const": "human"}}}, "then": {"properties": {"modelId": {"const": null}}}},
+        {"if": {"properties": {"kind": {"const": "ai"}}}, "then": {"properties": {"modelId": {"type": "string"}}}}
+      ]
+    },
+    "reviewStatus": {"const": "draft"},
+    "annotations": {
+      "type": "array", "maxItems": 64,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "target", "category", "layer", "statement", "confidence", "assessment", "evidenceFrames", "uncertainties"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^note-[a-z0-9][a-z0-9-]{0,62}$"},
+          "target": {
+            "type": "object", "additionalProperties": false,
+            "required": ["kind", "id"],
+            "properties": {
+              "kind": {"enum": ["cue", "region"]},
+              "id": {"type": "string", "minLength": 3}
+            }
+          },
+          "category": {"enum": ["story", "attention", "composition", "camera", "lighting", "materials", "animation", "editing", "sound", "other"]},
+          "layer": {"enum": ["visible-observation", "visual-hypothesis", "story-interpretation", "implementation-suggestion"]},
+          "statement": {"type": "string", "minLength": 1, "maxLength": 2000},
+          "confidence": {"enum": ["low", "medium", "high"]},
+          "assessment": {"enum": ["supports", "contradicts", "unresolved", "not-applicable"]},
+          "evidenceFrames": {
+            "type": "array", "minItems": 1, "maxItems": 8,
+            "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["sourcePts", "description"],
+              "properties": {
+                "sourcePts": {"type": "integer"},
+                "description": {"type": "string", "minLength": 1, "maxLength": 500},
+                "normalizedBox": {
+                  "type": "array", "prefixItems": [
+                    {"type": "number", "minimum": 0, "maximum": 1},
+                    {"type": "number", "minimum": 0, "maximum": 1},
+                    {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+                    {"type": "number", "exclusiveMinimum": 0, "maximum": 1}
+                  ], "items": false, "minItems": 4, "maxItems": 4
+                }
+              }
+            }
+          },
+          "uncertainties": {
+            "type": "array", "maxItems": 8,
+            "items": {"type": "string", "minLength": 1, "maxLength": 500}
+          }
+        },
+        "allOf": [
+          {
+            "if": {"properties": {"layer": {"not": {"const": "visible-observation"}}}},
+            "then": {"properties": {"uncertainties": {"minItems": 1}}}
+          },
+          {
+            "if": {
+              "properties": {
+                "target": {"properties": {"kind": {"const": "region"}}}
+              }
+            },
+            "then": {"properties": {"assessment": {"const": "not-applicable"}}}
+          },
+          {
+            "if": {
+              "properties": {
+                "target": {"properties": {"kind": {"const": "cue"}}}
+              }
+            },
+            "then": {"properties": {"assessment": {"enum": ["supports", "contradicts", "unresolved"]}}}
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {"sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}
+}

@@ -26,6 +26,7 @@ from kumiki_reference_lab.contracts.source import RIGHTS_STATUSES
 from kumiki_reference_lab.core.artifacts import write_json_artifact
 from kumiki_reference_lab.pipeline.analyze import run_analysis
 from kumiki_reference_lab.pipeline.study import study_reference
+from kumiki_reference_lab.reviews.notes import review_notes_template, validate_review_notes
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -187,6 +188,20 @@ def build_parser() -> argparse.ArgumentParser:
     study.add_argument("--rights-status", choices=RIGHTS_STATUSES,
                        default="review-required")
 
+    notes = commands.add_parser(
+        "review-notes", help="create or validate source-linked, unapproved human/AI notes")
+    notes_actions = notes.add_subparsers(dest="review_notes_action", required=True)
+    notes_init = notes_actions.add_parser("init", help="create an empty immutable review draft")
+    notes_init.add_argument("study_manifest", type=Path)
+    notes_init.add_argument("--out", type=Path, required=True)
+    notes_init.add_argument("--reviewer-kind", choices=("human", "ai"), default="human")
+    notes_init.add_argument("--reviewer-id", required=True)
+    notes_init.add_argument("--model-id")
+    notes_check = notes_actions.add_parser(
+        "validate", help="check full study provenance and exact frame evidence anchors")
+    notes_check.add_argument("study_manifest", type=Path)
+    notes_check.add_argument("review_notes", type=Path)
+
     analyze = commands.add_parser("analyze", help="run a bounded, atomic multi-stage reference analysis")
     analyze.add_argument("source", type=Path)
     analyze.add_argument("--out", type=Path, required=True, help="parent directory for immutable run")
@@ -232,6 +247,15 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
+        if args.command == "review-notes":
+            if args.review_notes_action == "init":
+                print(review_notes_template(
+                    args.study_manifest, args.out, reviewer_kind=args.reviewer_kind,
+                    reviewer_id=args.reviewer_id, model_id=args.model_id))
+            else:
+                print(json.dumps(validate_review_notes(
+                    args.study_manifest, args.review_notes), indent=2, sort_keys=True))
+            return 0
         if args.command == "catalog":
             entries = load_catalog(args.root)
             if args.catalog_action == "validate":

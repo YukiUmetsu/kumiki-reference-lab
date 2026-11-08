@@ -13,6 +13,7 @@ from kumiki_reference_lab.analyzers.techniques.propose import propose_techniques
 from kumiki_reference_lab.analyzers.techniques.review import build_technique_review
 from kumiki_reference_lab.pipeline.analyze import run_analysis
 from kumiki_reference_lab.pipeline.study import study_reference
+from kumiki_reference_lab.reviews.notes import review_notes_template, validate_review_notes
 
 
 CATALOG = Path(__file__).resolve().parents[1] / "catalog" / "entries"
@@ -122,6 +123,34 @@ class OriginalVideoTechniqueEndToEndTests(unittest.TestCase):
             self.assertEqual(study_manifest["humanReviewStatus"], "unreviewed")
             self.assertEqual(study_manifest["qualityVerdict"], "not-performed")
             self.assertIn("Other explanations", study_gallery.read_text())
+            # A reviewer may explicitly reject the *light* interpretation,
+            # without mutating the reported bright-centroid observation.
+            study_root = study_gallery.parents[2]
+            study_cues = json.loads((study_root / "technique-proposals.json").read_text())
+            self.assertEqual(len(study_cues["candidates"]), 1)
+            study_cue = study_cues["candidates"][0]
+            draft_path = review_notes_template(
+                study_root / "study-manifest.json", root / "notes",
+                reviewer_kind="human", reviewer_id="test-director")
+            draft = json.loads(draft_path.read_text())
+            draft["annotations"] = [{
+                "id": "note-bright-object",
+                "target": {"kind": "cue", "id": study_cue["id"]},
+                "category": "lighting",
+                "layer": "visual-hypothesis",
+                "statement": "The moving bright square is an animated object, not a light.",
+                "confidence": "high",
+                "assessment": "contradicts",
+                "evidenceFrames": [
+                    {"sourcePts": study_cue["sourcePtsRange"]["startPts"],
+                     "description": "Original bright square on a flat dark background."},
+                ],
+                "uncertainties": ["A visual analysis cannot establish the authoring software."],
+            }]
+            draft_path.write_text(json.dumps(draft), encoding="utf-8")
+            result = validate_review_notes(study_root / "study-manifest.json", draft_path)
+            self.assertEqual(result["layers"], {"visual-hypothesis": 1})
+            self.assertEqual(result["semanticStatus"], "not-verified")
 
     def test_digital_enlargement_does_not_get_misnamed_as_recovered_dolly(self):
         with tempfile.TemporaryDirectory() as directory:
