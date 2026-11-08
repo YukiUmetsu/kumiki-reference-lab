@@ -2,7 +2,7 @@
 
 **Reference-video analysis, cinematic technique research, and reproducible motion reconstruction for the Kumiki ecosystem.**
 
-> **Project status: early working foundation.** The `inspect`, `frames`, `cuts`, `contact-sheet`, `motion`, `track-roi`, `sparse-flow`, `appearance`, `shot-evidence`, `compare-appearance`, `compare-frames`, `propose-techniques`, `review-techniques`, `analyze`, and `catalog` commands are implemented and tested. Semantic video-to-technique interpretation, full visual matching, and Kumiki export remain planned.
+> **Project status: early working foundation.** The `study-reference`, `inspect`, `frames`, `cuts`, `contact-sheet`, `motion`, `track-roi`, `sparse-flow`, `appearance`, `shot-evidence`, `compare-appearance`, `compare-frames`, `propose-techniques`, `review-techniques`, `analyze`, and `catalog` commands are implemented and tested. Semantic video-to-technique interpretation, full visual matching, and Kumiki export remain planned.
 
 **Implemented foundation:** Python commands read local video metadata, extract real presentation timestamps, detect bounded hard-cut *candidates*, produce timecoded HTML/JPEG contact sheets, optionally measure global image-plane translation and easing candidates, track a seeded image region, and characterize sparse 2D motion with conservative affine hypotheses. The `appearance` command measures display-referred RGB color and contrast; `compare-appearance` compares two reports at **explicitly aligned source times**, while `compare-frames` produces side-by-side timecoded JPEGs for manual visual QA. A versioned `analyze` pipeline combines motion/appearance evidence into immutable runs. `propose-techniques` now generates explicit, machine-readable, non-semantic review cues from such a verified run. A searchable Cinematic Techniques Catalog includes five original research candidates. Semantic interpretation, full-speed visual matching, physical camera/lighting inference and treatment compilation remain planned.
 
@@ -47,6 +47,17 @@ Reference Lab is an **offline authoring and research tool**. Neither Kumiki UI n
 8. **Independent reproducibility.** Same source bytes, parameters, model checkpoints, and tool versions should produce equivalent structured measurements; record nondeterministic exceptions.
 
 ## Workflow
+
+**One command for the full implemented research workflow:**
+
+```bash
+python -m pip install -e '.[motion]'
+kumiki-ref study-reference ./reference.mp4 --max-seconds 10 --out ./runs
+```
+
+This produces a verified analysis bundle, cautious technique proposals, candidate edit-region summaries and a local HTML gallery. It never claims to infer the source's actual camera, lights, objects or story purpose. See [one-command study usage](docs/reference-study.md).
+
+For more detailed control, run the individual stages below.
 
 Run the implemented evidence pipeline first:
 
@@ -277,6 +288,7 @@ kumiki-ref compare-frames ./reference.mp4 ./render.mp4 --reference-anchor-ms 0 -
 kumiki-ref propose-techniques ./runs/analysis-<source>-<settings>/analysis-run.json --out ./runs/review
 kumiki-ref review-techniques ./reference.mp4 ./runs/analysis-<source>-<settings>/analysis-run.json --out ./runs
 kumiki-ref shot-evidence ./runs/analysis-<source>-<settings>/analysis-run.json --out ./runs/regions
+kumiki-ref study-reference ./reference.mp4 --max-seconds 10 --out ./runs
 ```
 
 `inspect` records metadata and SHA-256, while honestly marking frame-by-frame PTS and VFR status as unknown until sampled. `frames` extracts source PTS within a bounded window, preserving exact rational timestamps and reporting missing/nonincreasing values. `cuts` detects **possible hard cuts**, not proven edits; fast subject or camera motion may produce false positives, and fades are not yet classified. `contact-sheet` automatically prioritizes frames at opening/closing and around candidate edits, then covers remaining visual gaps. It creates an immutable `contact-sheet-<source>-<settings>/` directory containing `index.html`, `contact-sheet.json`, and up to 24 labeled JPEGs. The JSON records exact rational source timestamps, each evidence image's hash, and the sampling options. Existing bundles are checked for modification, never silently replaced. `--rights-status user-declared-authorized` is an **assertion by the user**, not automated legal verification. No model download or external service is required.
@@ -298,6 +310,8 @@ kumiki-ref shot-evidence ./runs/analysis-<source>-<settings>/analysis-run.json -
 `review-techniques` independently verifies the same source video and analysis run, then assembles a self-contained source-PTS-verified HTML/JPEG gallery for up to eight of those cues. Each displays three source moments, quantitative evidence, alternative explanations and reviewer questions. Immutable inventory hashes catch modified images and reports on reuse. See [visual cue review](docs/technique-review.md).
 
 `shot-evidence` groups already measured frame data into candidate edit regions, summarizes available appearance/translation/sparse-flow measurements and records explicit uncertainty. It refuses unreliable source timestamp timelines and does not manufacture a final exclusive end PTS. See [shot evidence and semantic limits](docs/shot-evidence.md).
+
+`study-reference` orchestrates `analyze` with bounded optional numeric stages, technique proposal generation, shot-region summaries and a source-verified gallery. The derived study is published atomically with checksummed files, and a successful analysis remains reusable if a later review step fails. See [command contracts and output layout](docs/reference-study.md).
 
 **Regression evidence:** Three procedurally generated reference-video fixtures exercise the actual FFmpeg → analysis → proposal → HTML gallery / shot-region path with known causes, including misleading visual lookalikes. GitHub CI runs them with NumPy and FFmpeg preflight separately from dependency-free baseline tests. See [synthetic source validation](docs/synthetic-reference-qa.md).
 

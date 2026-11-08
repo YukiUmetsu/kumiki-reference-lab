@@ -38,7 +38,7 @@ jobs:
           ffmpeg -version
       - name: Install optional numeric analysis dependencies
         run: python -m pip install -e '.[motion]'
-      - name: Synthetic reference analysis through gallery
+      - name: Synthetic reference and complete study integrations
         env:
           PYTHONPATH: src
-        run: python -m unittest tests.test_technique_end_to_end -v
+        run: python -m unittest tests.test_technique_end_to_end tests.test_reference_study -v

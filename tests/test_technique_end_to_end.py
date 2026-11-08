@@ -12,6 +12,7 @@ from kumiki_reference_lab.analyzers.shots.evidence import build_shot_evidence
 from kumiki_reference_lab.analyzers.techniques.propose import propose_techniques
 from kumiki_reference_lab.analyzers.techniques.review import build_technique_review
 from kumiki_reference_lab.pipeline.analyze import run_analysis
+from kumiki_reference_lab.pipeline.study import study_reference
 
 
 CATALOG = Path(__file__).resolve().parents[1] / "catalog" / "entries"
@@ -110,6 +111,17 @@ class OriginalVideoTechniqueEndToEndTests(unittest.TestCase):
             self.assertEqual(evidence["regions"][0]["observations"]
                              ["appearance"]["sampleCount"], 10)
             self.assertIsNone(evidence["regions"][0]["endPtsExclusive"])
+
+            # The higher-level user workflow must preserve this same evidence
+            # and generate a visual cue sheet without pretending it found a light.
+            study_gallery = study_reference(source, root / "complete-study",
+                                            catalog_root=CATALOG, seconds=2,
+                                            thumbnails=4)
+            study_manifest = json.loads(
+                (study_gallery.parents[2] / "study-manifest.json").read_text())
+            self.assertEqual(study_manifest["humanReviewStatus"], "unreviewed")
+            self.assertEqual(study_manifest["qualityVerdict"], "not-performed")
+            self.assertIn("Other explanations", study_gallery.read_text())
 
     def test_digital_enlargement_does_not_get_misnamed_as_recovered_dolly(self):
         with tempfile.TemporaryDirectory() as directory:
