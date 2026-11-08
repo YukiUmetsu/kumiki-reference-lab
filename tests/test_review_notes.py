@@ -46,7 +46,7 @@ class ReviewNotesIntegrationTests(unittest.TestCase):
                              result.stderr.decode(errors="replace"))
             gallery = study_reference(video, root / "runs", catalog_root=CATALOG,
                                       seconds=2, thumbnails=4)
-            manifest = gallery.parents[2] / "study-manifest.json"
+            manifest = gallery.parent / "study-manifest.json"
             output = root / "review"
             notes_path = review_notes_template(manifest, output, reviewer_kind="human",
                                                reviewer_id="senior-director")

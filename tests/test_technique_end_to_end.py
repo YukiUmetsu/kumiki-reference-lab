@@ -119,13 +119,15 @@ class OriginalVideoTechniqueEndToEndTests(unittest.TestCase):
                                             catalog_root=CATALOG, seconds=2,
                                             thumbnails=4)
             study_manifest = json.loads(
-                (study_gallery.parents[2] / "study-manifest.json").read_text())
+                (study_gallery.parent / "study-manifest.json").read_text())
             self.assertEqual(study_manifest["humanReviewStatus"], "unreviewed")
             self.assertEqual(study_manifest["qualityVerdict"], "not-performed")
-            self.assertIn("Other explanations", study_gallery.read_text())
+            self.assertIn("Shot storyboard", study_gallery.read_text())
+            technique_gallery = study_gallery.parent / study_manifest["artifacts"]["reviewGallery"]
+            self.assertIn("Other explanations", technique_gallery.read_text())
             # A reviewer may explicitly reject the *light* interpretation,
             # without mutating the reported bright-centroid observation.
-            study_root = study_gallery.parents[2]
+            study_root = study_gallery.parent
             study_cues = json.loads((study_root / "technique-proposals.json").read_text())
             self.assertEqual(len(study_cues["candidates"]), 1)
             study_cue = study_cues["candidates"][0]

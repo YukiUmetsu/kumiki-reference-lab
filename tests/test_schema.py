@@ -13,6 +13,7 @@ from kumiki_reference_lab.contracts.analysis import (
     REFERENCE_STUDY_VERSION,
     REVIEW_NOTES_VERSION,
     SHOT_GALLERY_VERSION,
+    REFERENCE_STUDY_V1_VERSION,
 )
 from kumiki_reference_lab.catalog.validate import TECHNIQUE_SCHEMA_VERSION, INDEX_SCHEMA_VERSION
 
@@ -40,13 +41,18 @@ class SchemaTests(unittest.TestCase):
                               ("technique-proposals", TECHNIQUE_PROPOSALS_VERSION),
                               ("technique-review", TECHNIQUE_REVIEW_VERSION),
                               ("shot-evidence", SHOT_EVIDENCE_VERSION),
-                              ("reference-study", REFERENCE_STUDY_VERSION),
                               ("review-notes", REVIEW_NOTES_VERSION),
                               ("shot-gallery", SHOT_GALLERY_VERSION),
                               ("roi-track", ROI_TRACK_VERSION),
                               ("analysis-run", ANALYSIS_RUN_VERSION)):
             schema = json.loads((root / (name + ".schema.json")).read_text(encoding="utf-8"))
             self.assertEqual(schema["properties"]["schemaVersion"]["const"], version)
+        legacy = json.loads((root / "reference-study.schema.json").read_text())
+        self.assertEqual(legacy["properties"]["schemaVersion"]["const"],
+                         REFERENCE_STUDY_V1_VERSION)
+        updated = json.loads((root.parent / "v2/reference-study.schema.json").read_text())
+        self.assertEqual(updated["properties"]["schemaVersion"]["const"],
+                         REFERENCE_STUDY_VERSION)
 
     def test_catalog_schema_versions(self):
         root = Path(__file__).resolve().parents[1] / "schemas/v1"
