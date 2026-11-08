@@ -20,6 +20,7 @@ from kumiki_reference_lab.contracts.analysis import (
     TIMELINE_REVIEW_VERSION,
     REFERENCE_STUDY_V1_VERSION,
     REFERENCE_STUDY_V2_VERSION,
+    REFERENCE_STUDY_V3_VERSION,
 )
 from kumiki_reference_lab.catalog.validate import TECHNIQUE_SCHEMA_VERSION, INDEX_SCHEMA_VERSION
 
@@ -64,7 +65,10 @@ class SchemaTests(unittest.TestCase):
         updated = json.loads((root.parent / "v2/reference-study.schema.json").read_text())
         self.assertEqual(updated["properties"]["schemaVersion"]["const"],
                          REFERENCE_STUDY_V2_VERSION)
-        current = json.loads((root.parent / "v3/reference-study.schema.json").read_text())
+        v3 = json.loads((root.parent / "v3/reference-study.schema.json").read_text())
+        self.assertEqual(v3["properties"]["schemaVersion"]["const"],
+                         REFERENCE_STUDY_V3_VERSION)
+        current = json.loads((root.parent / "v4/reference-study.schema.json").read_text())
         self.assertEqual(current["properties"]["schemaVersion"]["const"],
                          REFERENCE_STUDY_VERSION)
 
