@@ -6,6 +6,13 @@
 Install NumPy with `pip install '.[motion]'` before running. The tool needs
 FFmpeg and FFprobe in `PATH`; it runs locally without model/API calls.
 
+The same artifact is available inside atomic analysis bundles with
+`kumiki-ref analyze reference.mp4 --sparse-flow --sparse-samples 24 --out ./runs`.
+`--sparse-points`, `--sparse-radius` and `--sparse-correlation` can tune
+the experiment independently of `--max-samples`, which controls the optional
+global-motion and ROI stages. Opting in changes the checksum-bound run
+identity; legacy runs without sparse flow keep their existing identity.
+
 ## What it actually measures
 
 1. Preserve the source stream's integer presentation timestamps (PTS) and

@@ -13,11 +13,12 @@ from kumiki_reference_lab.analyzers.media.contact_sheet import build_contact_she
 from kumiki_reference_lab.analyzers.media.inspect import inspect_source, sha256_file
 from kumiki_reference_lab.analyzers.media.timeline import analyze_frame_timeline
 from kumiki_reference_lab.analyzers.motion.analyze import analyze_image_motion
+from kumiki_reference_lab.analyzers.motion.sparse import analyze_sparse_flow
 from kumiki_reference_lab.analyzers.shots.detect import analyze_hard_cuts
 from kumiki_reference_lab.analyzers.subjects.roi import analyze_roi_track
 from kumiki_reference_lab.contracts.analysis import (
     ANALYSIS_RUN_VERSION, CONTACT_SHEET_VERSION, FRAME_TIMELINE_VERSION,
-    IMAGE_MOTION_VERSION, ROI_TRACK_VERSION, SHOT_CANDIDATES_VERSION,
+    IMAGE_MOTION_VERSION, ROI_TRACK_VERSION, SHOT_CANDIDATES_VERSION, SPARSE_FLOW_VERSION,
 )
 from kumiki_reference_lab.contracts.source import SCHEMA_VERSION as SOURCE_MANIFEST_VERSION
 from kumiki_reference_lab.core.artifacts import write_json_artifact
@@ -30,6 +31,7 @@ _STAGES = {
     "cuts": "shot-candidates.json",
     "motion": "image-motion.json",
     "trackRoi": "roi-track.json",
+    "sparseFlow": "sparse-flow.json",
 }
 
 
@@ -69,6 +71,8 @@ def _validate_existing(destination: Path, settings: dict[str, Any]) -> Path:
         expected_artifacts["motion"] = _STAGES["motion"]
     if settings["roi"] is not None:
         expected_artifacts["trackRoi"] = _STAGES["trackRoi"]
+    if settings.get("sparseFlow", False):
+        expected_artifacts["sparseFlow"] = _STAGES["sparseFlow"]
     artifacts = manifest.get("artifacts")
     if (not isinstance(artifacts, dict) or
             {key: value for key, value in artifacts.items() if key != "contactSheet"} != expected_artifacts or
@@ -117,6 +121,9 @@ def run_analysis(
     source: Path, output: Path, *, seconds: int = 10, thumbnails: int = 12,
     motion: bool = False, roi: tuple[float, float, float, float] | None = None,
     samples: int = 48, width: int = 160, height: int = 90,
+    sparse_flow: bool = False, sparse_samples: int = 24,
+    sparse_points: int = 40, sparse_radius: int = 8,
+    sparse_correlation: float = 0.68,
     threshold: float = 0.25, ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
     rights_status: str = "review-required",
 ) -> Path:
@@ -131,6 +138,20 @@ def run_analysis(
         raise ValueError("analysis width/height are out of range")
     if not isinstance(motion, bool):
         raise ValueError("motion must be a boolean")
+    if not isinstance(sparse_flow, bool):
+        raise ValueError("sparse_flow must be a boolean")
+    if sparse_flow:
+        if seconds > 20 or width > 240 or height > 135:
+            raise ValueError("sparse-flow requires seconds <=20, width <=240 and height <=135")
+        if type(sparse_samples) is not int or not 5 <= sparse_samples <= 40:
+            raise ValueError("sparse-flow samples must be 5..40")
+        if type(sparse_points) is not int or not 4 <= sparse_points <= 64:
+            raise ValueError("sparse-flow points must be 4..64")
+        if type(sparse_radius) is not int or not 2 <= sparse_radius <= 12:
+            raise ValueError("sparse-flow radius must be 2..12")
+        if (not isinstance(sparse_correlation, (int, float)) or
+                not 0 < sparse_correlation < 1):
+            raise ValueError("sparse-flow correlation must be between zero and one")
 
     signature = file_signature(source)
     inspected = inspect_source(source, rights_status=rights_status, ffprobe=ffprobe)
@@ -148,6 +169,13 @@ def run_analysis(
                      "contact": CONTACT_SHEET_VERSION, "motion": IMAGE_MOTION_VERSION,
                      "roi": ROI_TRACK_VERSION},
     }
+    # Keep legacy/default run identity unchanged. Sparse-flow settings and its
+    # version participate in the run hash only when that stage is requested.
+    if sparse_flow:
+        settings.update({"sparseFlow": True, "sparseSamples": sparse_samples,
+                         "sparsePoints": sparse_points, "sparseRadius": sparse_radius,
+                         "sparseCorrelation": float(sparse_correlation)})
+        settings["versions"]["sparseFlow"] = SPARSE_FLOW_VERSION
     run_hash = hashlib.sha256(_json_bytes(settings)).hexdigest()[:20]
     destination = output / f"analysis-{settings['sourceSha256'][:12]}-{run_hash}"
     output.mkdir(parents=True, exist_ok=True)
@@ -195,6 +223,15 @@ def run_analysis(
             )
             write_json_artifact(staging, _STAGES["trackRoi"], tracked)
             artifacts["trackRoi"] = _STAGES["trackRoi"]
+        if sparse_flow:
+            sparse = analyze_sparse_flow(
+                source, seconds=seconds, max_samples=sparse_samples, width=width,
+                height=height, max_points=sparse_points, radius=sparse_radius,
+                correlation=sparse_correlation, threshold=threshold,
+                ffmpeg=ffmpeg, ffprobe=ffprobe, rights_status=rights_status,
+            )
+            write_json_artifact(staging, _STAGES["sparseFlow"], sparse)
+            artifacts["sparseFlow"] = _STAGES["sparseFlow"]
         require_unchanged(source, signature)
 
         manifest = {

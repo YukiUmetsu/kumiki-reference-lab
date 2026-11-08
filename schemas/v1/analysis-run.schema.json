@@ -9,12 +9,30 @@
     "settings": {
       "type": "object", "additionalProperties": false,
       "required": ["sourceSha256", "streamIndex", "seconds", "thumbnails", "motion", "roi", "samples", "width", "height", "cutThreshold", "ffmpeg", "ffprobe", "rightsStatus", "versions"],
+      "allOf": [
+        {"if": {"required": ["sparseFlow"]},
+         "then": {"required": ["sparseSamples", "sparsePoints", "sparseRadius", "sparseCorrelation"],
+                  "properties": {"seconds": {"maximum": 20}, "width": {"maximum": 240},
+                                 "height": {"maximum": 135},
+                                 "versions": {"required": ["sparseFlow"]}}}},
+        {"if": {"not": {"required": ["sparseFlow"]}},
+         "then": {"not": {"anyOf": [{"required": ["sparseSamples"]},
+                                     {"required": ["sparsePoints"]},
+                                     {"required": ["sparseRadius"]},
+                                     {"required": ["sparseCorrelation"]}]},
+                  "properties": {"versions": {"not": {"required": ["sparseFlow"]}}}}}
+      ],
       "properties": {
         "sourceSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "streamIndex": {"type": "integer", "minimum": 0},
         "seconds": {"type": "integer", "minimum": 1, "maximum": 30},
         "thumbnails": {"type": "integer", "minimum": 2, "maximum": 24},
         "motion": {"type": "boolean"},
+        "sparseFlow": {"const": true},
+        "sparseSamples": {"type": "integer", "minimum": 5, "maximum": 40},
+        "sparsePoints": {"type": "integer", "minimum": 4, "maximum": 64},
+        "sparseRadius": {"type": "integer", "minimum": 2, "maximum": 12},
+        "sparseCorrelation": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
         "roi": {"type": ["array", "null"], "minItems": 4, "maxItems": 4,
           "items": {"type": "number", "minimum": 0, "maximum": 1}},
         "samples": {"type": "integer", "minimum": 5, "maximum": 120},
@@ -33,6 +51,7 @@
             "cuts": {"type": "string"},
             "contact": {"type": "string"},
             "motion": {"type": "string"},
+            "sparseFlow": {"const": "kumiki.sparse-flow.v1"},
             "roi": {"type": "string"}
           }
         }
