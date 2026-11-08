@@ -63,6 +63,24 @@ def _validate_existing(destination: Path, settings: dict[str, Any]) -> Path:
     if (not isinstance(manifest, dict) or manifest.get("schemaVersion") != ANALYSIS_RUN_VERSION or
             manifest.get("settings") != settings):
         raise ValueError("analysis destination has mismatched run settings")
+    expected_artifacts = {"inspect": _STAGES["inspect"],
+                          "frames": _STAGES["frames"], "cuts": _STAGES["cuts"]}
+    if settings["motion"]:
+        expected_artifacts["motion"] = _STAGES["motion"]
+    if settings["roi"] is not None:
+        expected_artifacts["trackRoi"] = _STAGES["trackRoi"]
+    artifacts = manifest.get("artifacts")
+    if (not isinstance(artifacts, dict) or
+            {key: value for key, value in artifacts.items() if key != "contactSheet"} != expected_artifacts or
+            not isinstance(artifacts.get("contactSheet"), str) or
+            len(PurePosixPath(artifacts["contactSheet"]).parts) != 3 or
+            PurePosixPath(artifacts["contactSheet"]).parts[0] != "visual" or
+            not PurePosixPath(artifacts["contactSheet"]).parts[1].startswith("contact-sheet-") or
+            PurePosixPath(artifacts["contactSheet"]).parts[2] != "index.html" or
+            manifest.get("catalogProposals") != [] or
+            manifest.get("interpretationStatus") != "not-performed" or
+            manifest.get("coverage") != "bounded-from-start-not-necessarily-full-video"):
+        raise ValueError("analysis destination has altered stage metadata")
     recorded = manifest.get("files")
     if not isinstance(recorded, list) or not recorded:
         raise ValueError("analysis destination has no file inventory")
@@ -86,6 +104,12 @@ def _validate_existing(destination: Path, settings: dict[str, Any]) -> Path:
     # Do not silently accept extra/corrupt files not listed in the manifest.
     if actual_paths != recorded_paths:
         raise ValueError("analysis destination contains untracked artifacts")
+    if artifacts["contactSheet"] not in recorded_paths:
+        raise ValueError("analysis destination contact sheet is absent from the inventory")
+    source_report = json.loads((destination / _STAGES["inspect"]).read_text(encoding="utf-8"))
+    if (manifest.get("sourceTimebase") != source_report.get("video", {}).get("sourceTimebase") or
+            source_report.get("source", {}).get("sha256") != settings["sourceSha256"]):
+        raise ValueError("analysis destination source provenance does not match")
     return manifest_path
 
 

@@ -52,6 +52,19 @@ class AnalysisPipelineIntegrationTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "missing or modified"):
                 run_analysis(source, output, seconds=2)
 
+    def test_modified_run_metadata_cannot_claim_interpretation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "flat.mkv"
+            self._flat_video(source)
+            output = root / "runs"
+            manifest_path = run_analysis(source, output, seconds=2)
+            manifest = json.loads(manifest_path.read_text())
+            manifest["interpretationStatus"] = "complete"
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "altered stage metadata"):
+                run_analysis(source, output, seconds=2)
+
     @unittest.skipUnless(importlib.util.find_spec("numpy"), "NumPy extra unavailable")
     def test_motion_run_is_integrated_and_failed_roi_never_publishes(self):
         with tempfile.TemporaryDirectory() as directory:
