@@ -13,6 +13,7 @@ from kumiki_reference_lab.analyzers.media.inspect import inspect_source
 from kumiki_reference_lab.analyzers.motion.analyze import select_motion_samples
 from kumiki_reference_lab.analyzers.motion.consensus import group_sparse_flows
 from kumiki_reference_lab.analyzers.motion.features import sparse_patch_flows
+from kumiki_reference_lab.analyzers.motion.geometry import fit_image_affine
 from kumiki_reference_lab.backends.ffmpeg.frames import read_frame_pts
 from kumiki_reference_lab.backends.ffmpeg.raw_frames import read_gray_frames
 from kumiki_reference_lab.backends.ffmpeg.scene import detect_hard_cut_pts
@@ -75,19 +76,21 @@ def analyze_sparse_flow(
                            "rejected": {key: 0 for key in (
                                "low-texture", "forward-failed", "backward-failed",
                                "roundtrip-inconsistent")},
-                           "vectors": [], "consensus": None})
+                           "vectors": [], "consensus": None, "geometryHypothesis": None})
         else:
             tracks = sparse_patch_flows(planes[index - 1], planes[index], width, height,
                                        max_points=max_points, radius=radius,
                                        minimum_correlation=correlation)
             grouped = group_sparse_flows(tracks["accepted"], width, height)
+            geometry = fit_image_affine(tracks["accepted"], width, height)
             vectors = [{**item, "group": group} for item, group in
                        zip(tracks["accepted"], grouped["pointGroups"], strict=True)]
             result.update({"status": grouped["status"],
                            "detectedCorners": tracks["detectedCorners"],
                            "rejected": tracks["rejected"], "vectors": vectors,
                            "consensus": {key: value for key, value in grouped.items()
-                                         if key != "pointGroups"}})
+                                         if key != "pointGroups"},
+                           "geometryHypothesis": geometry})
         pairs.append(result)
     return {
         "schemaVersion": SPARSE_FLOW_VERSION,
@@ -96,7 +99,7 @@ def analyze_sparse_flow(
         "scanWindowSeconds": seconds,
         "coverage": "bounded-from-start-not-necessarily-full-video",
         "analyzer": {
-            "method": "shi-tomasi-approx-patch-ncc-fb-consensus-v1",
+            "method": "shi-tomasi-approx-patch-ncc-fb-consensus-affine-v1",
             "numpyVersion": np.__version__,
             "ffmpegExecutable": ffmpeg, "ffprobeExecutable": ffprobe,
             "resolution": {"width": width, "height": height},
@@ -105,12 +108,14 @@ def analyze_sparse_flow(
             "minimumAppearanceCorrelation": correlation,
             "roundtripTolerancePixels": 1.5,
             "consensusTolerancePixels": 1.5,
+            "affineInlierTolerancePixels": 1.5,
+            "affineMaxHypotheses": 384,
             "cutThreshold": float(threshold),
             "observedFrameCount": len(frames),
             "missingSourcePtsCount": sum(frame.pts is None for frame in frames),
             "selection": "uniform-original-pts-nearest-frame",
             "calibratedConfidence": False,
-            "limits": "2D short-baseline integer patch displacement only; groups are not semantic objects or proof of camera/background; no occlusion recovery, zoom, rotation, parallax or 3D inference",
+            "limits": "2D short-baseline integer patch displacement only; affine is an image-plane fit, not physical zoom/rotation/camera recovery; groups are not semantic objects; no occlusion recovery or 3D inference",
         },
         "cutCandidatePts": cut_pts,
         "samples": [{"sampleOrdinal": f.ordinal, "sourcePts": f.pts,

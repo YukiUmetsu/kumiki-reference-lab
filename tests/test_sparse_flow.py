@@ -11,6 +11,7 @@ from unittest.mock import patch
 from kumiki_reference_lab.backends.ffmpeg.scene import CutScan
 from kumiki_reference_lab.contracts.frames import FramePts
 from kumiki_reference_lab.analyzers.motion.consensus import group_sparse_flows
+from kumiki_reference_lab.analyzers.motion.geometry import fit_image_affine
 from kumiki_reference_lab.analyzers.motion.sparse import analyze_sparse_flow
 
 
@@ -85,6 +86,66 @@ class FeatureTrackingTests(unittest.TestCase):
         self.assertEqual(group_sparse_flows(tracks["accepted"], 160, 90)["status"],
                          "insufficient-consensus")
 
+    def test_affine_fit_recovers_controlled_image_zoom_without_calling_it_a_camera(self):
+        points = [{"x": x, "y": y,
+                   "dx": 0.065 * (x - 80) + 2,
+                   "dy": 0.065 * (y - 45) - 1}
+                  for x in range(15, 146, 20) for y in range(15, 76, 15)]
+        points += [{"x": 22 + i, "y": 40 + i, "dx": -8, "dy": 7}
+                   for i in range(5)]
+        result = fit_image_affine(points, 160, 90)
+        self.assertEqual(result["status"], "affine-image-plane-candidate")
+        self.assertGreaterEqual(result["inliers"], 34)
+        self.assertAlmostEqual(result["model"]["areaScaleCandidate"], 1.065, delta=0.001)
+        self.assertLess(result["model"]["rmsAffinePixels"], 0.1)
+        self.assertFalse(result["model"]["calibratedConfidence"])
+        self.assertEqual(len(result["inlierPointIndices"]), result["inliers"])
+
+    def test_patch_tracker_and_affine_fit_recover_resampled_scale(self):
+        import numpy as np
+
+        from kumiki_reference_lab.analyzers.motion.features import sparse_patch_flows
+
+        before = np.random.default_rng(111).integers(0, 256, (90, 160), dtype=np.uint8)
+        yy, xx = np.indices(before.shape)
+        sx = np.rint((xx - 80) / 1.06 + 80).astype(int)
+        sy = np.rint((yy - 45) / 1.06 + 45).astype(int)
+        after = before[np.clip(sy, 0, 89), np.clip(sx, 0, 159)]
+        vectors = sparse_patch_flows(before.tobytes(), after.tobytes(), 160, 90,
+                                     max_points=64)["accepted"]
+        result = fit_image_affine(vectors, 160, 90)
+        self.assertGreater(len(vectors), 25)
+        self.assertEqual(result["status"], "affine-image-plane-candidate")
+        self.assertAlmostEqual(result["model"]["areaScaleCandidate"], 1.06,
+                               delta=0.015)
+
+    def test_affine_fit_recovers_controlled_image_rotation(self):
+        import math
+
+        angle = math.radians(4)
+        cosine, sine = math.cos(angle), math.sin(angle)
+        points = []
+        for x in range(15, 146, 20):
+            for y in range(15, 76, 15):
+                dx = (cosine - 1) * (x - 80) - sine * (y - 45)
+                dy = sine * (x - 80) + (cosine - 1) * (y - 45)
+                points.append({"x": x, "y": y, "dx": dx, "dy": dy})
+        result = fit_image_affine(points, 160, 90)
+        self.assertEqual(result["status"], "affine-image-plane-candidate")
+        self.assertAlmostEqual(result["model"]["rotationDegreesCandidate"], 4, delta=0.1)
+
+    def test_affine_not_selected_for_pure_translation_or_collinear_points(self):
+        points = [{"x": x, "y": y, "dx": 3, "dy": -2}
+                  for x in range(15, 146, 20) for y in range(15, 76, 15)]
+        self.assertEqual(fit_image_affine(points, 160, 90)["status"],
+                         "translation-sufficient")
+        collinear = [{"x": i * 10, "y": 40, "dx": 2, "dy": 0}
+                     for i in range(12)]
+        self.assertEqual(fit_image_affine(collinear, 160, 90)["status"],
+                         "no-robust-affine-consensus")
+        self.assertEqual(fit_image_affine(points[:3], 160, 90)["status"],
+                         "insufficient-points")
+
 
 @unittest.skipUnless(importlib.util.find_spec("numpy") and shutil.which("ffmpeg") and
                      shutil.which("ffprobe"), "NumPy/FFmpeg not available")
@@ -116,6 +177,9 @@ class SparseFlowIntegrationTests(unittest.TestCase):
             self.assertGreater(len({p["deltaTimeSeconds"]["numerator"]
                                     for p in artifact["pairs"]}), 1)
             self.assertFalse(artifact["analyzer"]["calibratedConfidence"])
+            self.assertTrue(all((pair["geometryHypothesis"] is None)
+                                == (pair["status"] == "cut-boundary")
+                                for pair in artifact["pairs"]))
             json.dumps(artifact, allow_nan=False)
 
     def test_flat_video_does_not_invent_vectors(self):
