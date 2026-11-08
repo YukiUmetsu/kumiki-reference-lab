@@ -84,6 +84,30 @@ forward-guided cross-check is still not independent calibrated validation,
 true optical-flow ground truth, or recovery of object or camera identity.
 It adds bounded CPU work and preserves prior output/run identities by default.
 
+## Optional perspective hypothesis
+
+Use `--projective-hypotheses` with `sparse-flow` or
+`--sparse-projective-hypotheses` with `analyze --sparse-flow`. This adds a
+`projectiveHypothesis` to every pair (`null` on a detected cut) without changing
+legacy/default results. Unlike the existing six-parameter affine model, a
+homography can describe some projective 2D distortions, but **does not reveal
+whether a real camera, flat surface, digital crop, or moving object caused
+them**.
+
+The deterministic bounded estimator uses normalized direct linear transforms
+from four measured point pairs, searches at most 256 hypotheses and refits
+only a sufficiently broad consensus. It requires at least ten total matches,
+at least 60% inliers, a 40%-of-frame span on both axes, a non-reflected and
+plausible frame-corner warp, and materially lower residual error than an
+affine fit on *the same inliers*. Otherwise it reports `affine-sufficient`,
+`insufficient-points`, `no-robust-projective-consensus`, or another explicit
+rejection. `rmsHomographyPixels` and `rmsAffinePixels` are image-plane fitting
+residuals, **not calibrated probabilities**; sparse coverage, mixed independent
+motions, blur, depth/parallax and repeated texture can make the result
+unreliable. No outside models are downloaded. Opt-in runs have distinct
+checksum identities, and the existing source-linked visual review can still
+display the underlying point tracks.
+
 ## What it actually measures
 
 1. Preserve the source stream's integer presentation timestamps (PTS) and
@@ -192,7 +216,8 @@ perspective, rescaling, motion blur, occlusion and crossfades degrade it.
   The optional fractional reverse check detects some inconsistent peaks but
   shares image interpolation assumptions and can reject good small motion.
 - Grouping uses translation only. Affine hypotheses help characterize apparent
-  scale/rotation, but camera movement plus parallax, perspective, depth,
+  scale/rotation, and optional homography hypotheses can characterize limited
+  perspective distortion, but camera movement plus parallax, depth,
   rotating props and deformation require more careful geometric modeling.
 - Recommended subsequent work: dense or subpixel multi-scale optical flow,
   homography versus affine model selection, validated feature

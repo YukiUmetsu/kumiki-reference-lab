@@ -181,6 +181,30 @@ class AnalysisPipelineIntegrationTests(unittest.TestCase):
                              sparse_subpixel_reverse_check=True)
 
     @unittest.skipUnless(importlib.util.find_spec("numpy"), "NumPy extra unavailable")
+    def test_projective_opt_in_is_separately_hashed_and_source_linked(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "flat.mkv"
+            self._flat_video(source)
+            runs = root / "runs"
+            baseline = run_analysis(source, runs, seconds=2, thumbnails=4,
+                                    sparse_flow=True, sparse_samples=5)
+            projective = run_analysis(source, runs, seconds=2, thumbnails=4,
+                                      sparse_flow=True, sparse_samples=5,
+                                      sparse_projective_hypotheses=True)
+            self.assertNotEqual(baseline, projective)
+            self.assertNotIn("sparseProjectiveHypotheses",
+                             json.loads(baseline.read_text())["settings"])
+            self.assertTrue(json.loads(projective.read_text())["settings"]
+                            ["sparseProjectiveHypotheses"])
+            sparse = json.loads((projective.parent / "sparse-flow.json").read_text())
+            self.assertTrue(all(p["projectiveHypothesis"]["status"] ==
+                                "insufficient-points" for p in sparse["pairs"]))
+            self.assertEqual(run_analysis(
+                source, runs, seconds=2, thumbnails=4, sparse_flow=True,
+                sparse_samples=5, sparse_projective_hypotheses=True), projective)
+
+    @unittest.skipUnless(importlib.util.find_spec("numpy"), "NumPy extra unavailable")
     def test_appearance_bundle_is_atomic_and_may_combine_with_sparse_flow(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

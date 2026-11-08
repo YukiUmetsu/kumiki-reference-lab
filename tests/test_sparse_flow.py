@@ -304,6 +304,26 @@ class SparseFlowIntegrationTests(unittest.TestCase):
                                 for pair in checked["pairs"] for v in pair["vectors"]))
             json.dumps(artifact, allow_nan=False)
 
+    def test_opt_in_projective_evidence_preserves_cut_and_vfr_uncertainty(self):
+        with tempfile.TemporaryDirectory() as directory:
+            video = Path(directory) / "source.mkv"
+            self._create_clip(video, vfr=True)
+            original = analyze_sparse_flow(video, seconds=2, max_samples=6)
+            self.assertNotIn("projectiveModel", original["analyzer"])
+            self.assertTrue(all("projectiveHypothesis" not in pair
+                                for pair in original["pairs"]))
+            projective = analyze_sparse_flow(video, seconds=2, max_samples=6,
+                                             projective_hypotheses=True)
+            self.assertEqual(projective["analyzer"]["projectiveModel"],
+                             "normalized-dlt-bounded-ransac-v1")
+            self.assertEqual(projective["analyzer"]["projectiveMaxHypotheses"], 256)
+            self.assertTrue(all((pair["projectiveHypothesis"] is None)
+                                == (pair["status"] == "cut-boundary")
+                                for pair in projective["pairs"]))
+            self.assertEqual([pair["startPts"] for pair in original["pairs"]],
+                             [pair["startPts"] for pair in projective["pairs"]])
+            json.dumps(projective, allow_nan=False)
+
     def test_flat_video_does_not_invent_vectors(self):
         with tempfile.TemporaryDirectory() as directory:
             video = Path(directory) / "flat.mkv"
