@@ -11,6 +11,7 @@ from kumiki_reference_lab.analyzers.media.inspect import inspect_source
 from kumiki_reference_lab.analyzers.appearance.analyze import analyze_appearance
 from kumiki_reference_lab.analyzers.audio.timeline import analyze_audio_timeline
 from kumiki_reference_lab.analyzers.audio.levels import analyze_audio_levels
+from kumiki_reference_lab.analyzers.audio.onsets import analyze_audio_onsets
 from kumiki_reference_lab.analyzers.audio.av_cuts import build_av_cut_evidence
 from kumiki_reference_lab.analyzers.comparison.appearance import compare_appearance
 from kumiki_reference_lab.analyzers.comparison.frames import build_frame_comparison
@@ -145,6 +146,19 @@ def build_parser() -> argparse.ArgumentParser:
     levels.add_argument("--ffmpeg", default="ffmpeg")
     levels.add_argument("--ffprobe", default="ffprobe")
     levels.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
+
+    onsets = commands.add_parser(
+        "audio-onsets", help="source-PTS-verified candidate audio level attacks (not beats/SFX)")
+    onsets.add_argument("source", type=Path)
+    onsets.add_argument("--out", type=Path)
+    onsets.add_argument("--max-seconds", type=int, default=10)
+    onsets.add_argument("--max-frames", type=int, default=4096)
+    onsets.add_argument("--min-rise-db", type=float, default=12.0)
+    onsets.add_argument("--min-peak-dbfs", type=float, default=-40.0)
+    onsets.add_argument("--cooldown-ms", type=int, default=120)
+    onsets.add_argument("--ffmpeg", default="ffmpeg")
+    onsets.add_argument("--ffprobe", default="ffprobe")
+    onsets.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
 
     av = commands.add_parser(
         "av-cut-evidence", help="compare candidate video edits to source-timecoded audio level changes")
@@ -487,6 +501,13 @@ def main(argv: list[str] | None = None) -> int:
                 ffmpeg=args.ffmpeg, ffprobe=args.ffprobe,
                 rights_status=args.rights_status)
             filename = "audio-levels.json"
+        elif args.command == "audio-onsets":
+            artifact = analyze_audio_onsets(
+                args.source, seconds=args.max_seconds, max_frames=args.max_frames,
+                min_rise_db=args.min_rise_db, min_peak_dbfs=args.min_peak_dbfs,
+                cooldown_ms=args.cooldown_ms, ffmpeg=args.ffmpeg,
+                ffprobe=args.ffprobe, rights_status=args.rights_status)
+            filename = "audio-onsets.json"
         else:
             artifact = analyze_hard_cuts(args.source, seconds=args.max_seconds,
                                          threshold=args.threshold, ffmpeg=args.ffmpeg,

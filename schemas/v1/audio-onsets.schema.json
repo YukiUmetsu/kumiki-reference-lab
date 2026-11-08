@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/audio-onsets.schema.json",
+  "title": "Kumiki Source-PTS Audio Level Attack Candidates v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "sourceSha256", "audioStreamIndex", "sourceTimebase", "sampleRateHz", "scanWindowSeconds", "maxFrameBudget", "status", "method", "settings", "observedFrameCount", "eligibleAdjacentFramePairs", "discontinuityRejectedPairs", "aboveThresholdPairCount", "cooldownSuppressedPairCount", "candidates", "qualityVerdict", "limits"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.audio-onsets.v1"},
+    "sourceSha256": {"$ref": "#/$defs/hash"},
+    "audioStreamIndex": {"type": ["integer", "null"], "minimum": 0},
+    "sourceTimebase": {"anyOf": [{"$ref": "#/$defs/rational"}, {"type": "null"}]},
+    "sampleRateHz": {"type": ["integer", "null"], "minimum": 1},
+    "scanWindowSeconds": {"type": "integer", "minimum": 1, "maximum": 30},
+    "maxFrameBudget": {"type": "integer", "minimum": 1, "maximum": 10000},
+    "status": {"enum": ["no-audio-stream", "source-pts-aligned-level-attack-candidates"]},
+    "method": {"const": "adjacent-source-audio-frame-rms-rise-v1"},
+    "settings": {
+      "type": "object", "additionalProperties": false,
+      "required": ["minRiseDb", "minPeakDbFs", "cooldownMs"],
+      "properties": {
+        "minRiseDb": {"type": "number", "minimum": 1, "maximum": 60},
+        "minPeakDbFs": {"type": "number", "minimum": -100, "maximum": 0},
+        "cooldownMs": {"type": "integer", "minimum": 0, "maximum": 2000}
+      }
+    },
+    "observedFrameCount": {"type": "integer", "minimum": 0},
+    "eligibleAdjacentFramePairs": {"type": "integer", "minimum": 0},
+    "discontinuityRejectedPairs": {"type": "integer", "minimum": 0},
+    "aboveThresholdPairCount": {"type": "integer", "minimum": 0},
+    "cooldownSuppressedPairCount": {"type": "integer", "minimum": 0},
+    "qualityVerdict": {"const": "not-performed"},
+    "limits": {"type": "string", "minLength": 1},
+    "candidates": {"type": "array", "maxItems": 10000, "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "anchorSourcePts", "anchorSourceSeconds", "supportWindow", "previousFrameSourcePts", "previousRmsDbFs", "currentRmsDbFs", "currentPeakDbFs", "measuredRmsRiseDb", "floorAssisted", "signal", "interpretationStatus"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^onset-[0-9]{3,}$"},
+        "anchorSourcePts": {"type": "integer"},
+        "anchorSourceSeconds": {"$ref": "#/$defs/rational"},
+        "supportWindow": {
+          "type": "object", "additionalProperties": false,
+          "required": ["startSeconds", "endSeconds"],
+          "properties": {
+            "startSeconds": {"$ref": "#/$defs/rational"},
+            "endSeconds": {"$ref": "#/$defs/rational"}
+          }
+        },
+        "previousFrameSourcePts": {"type": "integer"},
+        "previousRmsDbFs": {"type": ["number", "null"]},
+        "currentRmsDbFs": {"type": "number"},
+        "currentPeakDbFs": {"type": "number"},
+        "measuredRmsRiseDb": {"type": ["number", "null"]},
+        "floorAssisted": {"type": "boolean"},
+        "signal": {"enum": ["candidate-rms-rise", "level-return-from-measurement-floor"]},
+        "interpretationStatus": {"const": "not-verified"}
+      }
+    }}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "rational": {
+      "type": "object", "additionalProperties": false,
+      "required": ["numerator", "denominator"],
+      "properties": {
+        "numerator": {"type": "integer"},
+        "denominator": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}
