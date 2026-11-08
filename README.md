@@ -4,7 +4,7 @@
 
 **CI cost policy:** GitHub Actions runs only lightweight compile, schema, timebase, CLI and catalog smoke checks on pull requests (and on manual dispatch). There is no duplicated post-merge push run, FFmpeg installation, NumPy installation or video integration run in hosted CI. **No tests were deleted.** Before merging substantive changes, run the full test suite locally with `PYTHONPATH=src python -m unittest discover -s tests -q` and use `python -m pip install -e '.[motion]'` plus installed FFmpeg/FFprobe for video integration coverage.
 
-> **Project status: early working foundation.** The `study-reference`, `review-notes`, `review-shots`, `review-timeline`, `audio-timeline`, `audio-levels`, `av-cut-evidence`, `edit-rhythm`, `inspect`, `frames`, `cuts`, `contact-sheet`, `motion`, `track-roi`, `sparse-flow`, `appearance`, `shot-evidence`, `compare-appearance`, `compare-frames`, `propose-techniques`, `review-techniques`, `analyze`, and `catalog` commands are implemented and tested. Semantic video-to-technique interpretation, full visual matching, and Kumiki export remain planned.
+> **Project status: early working foundation.** The `study-reference`, `review-notes`, `review-shots`, `review-timeline`, `audio-timeline`, `audio-levels`, `audio-onsets`, `av-cut-evidence`, `edit-rhythm`, `inspect`, `frames`, `cuts`, `contact-sheet`, `motion`, `track-roi`, `sparse-flow`, `appearance`, `shot-evidence`, `compare-appearance`, `compare-frames`, `propose-techniques`, `review-techniques`, `analyze`, and `catalog` commands are implemented and tested. Semantic video-to-technique interpretation, full visual matching, and Kumiki export remain planned.
 
 **Implemented foundation:** Python commands read local video metadata, extract real presentation timestamps, detect bounded hard-cut *candidates*, produce timecoded HTML/JPEG contact sheets, optionally measure global image-plane translation and easing candidates, track a seeded image region, and characterize sparse 2D motion with conservative affine hypotheses. The `appearance` command measures display-referred RGB color and contrast; `compare-appearance` compares two reports at **explicitly aligned source times**, while `compare-frames` produces side-by-side timecoded JPEGs for manual visual QA. A versioned `analyze` pipeline combines motion/appearance evidence into immutable runs. `propose-techniques` now generates explicit, machine-readable, non-semantic review cues from such a verified run. A searchable Cinematic Techniques Catalog includes five original research candidates. Semantic interpretation, full-speed visual matching, physical camera/lighting inference and treatment compilation remain planned.
 
@@ -83,6 +83,8 @@ Use `kumiki-ref review-shots reference.mp4 <analysis-run.json> --out ./runs` to 
 Use `kumiki-ref audio-timeline reference.mp4 --max-seconds 10 --out ./runs/audio` to inspect **original audio frame PTS and decoded sample counts**, independently from video timebase. This is groundwork for future sound, silence, narration and beat analysis, not a sound-event classifier. See [audio clock and limitations](docs/audio-timeline.md).
 
 Use `kumiki-ref audio-levels reference.mp4 --max-seconds 10 --out ./runs/audio-levels` for **per-decoded-frame RMS and peak dBFS**, with the original audio timestamp and sample count independently checked against FFprobe. Quiet frames are candidates, not recognized narration pauses or verified silence, and no A/V synchronization is assumed. See [audio-level measurements](docs/audio-levels.md).
+
+Use `kumiki-ref audio-onsets reference.mp4 --max-seconds 10 --out ./runs/onsets` to find conservative **audio-level attack candidates** from verified decoded-frame RMS rises, with exact source-audio PTS anchors, two-frame support windows and explicit discontinuity/cooldown reporting. It does not identify a musical beat, voice entrance or cinematic SFX. See [audio onset methodology](docs/audio-onsets.md).
 
 Use `kumiki-ref av-cut-evidence reference.mp4 <analysis-run.json> --window-ms 400 --out ./runs/audio-cuts` to examine **quiet-level changes immediately before and after candidate video cuts**, comparing rational source presentation seconds while excluding straddling audio frames. Same-container timing is only a synchronization **hypothesis**; the report cannot establish beats, narration, editing intent, or video quality. See [A/V cut comparison and caveats](docs/av-cut-evidence.md).
 
@@ -289,6 +291,7 @@ PYTHONPATH=src python -m kumiki_reference_lab catalog validate
 PYTHONPATH=src python -m kumiki_reference_lab catalog search "reveal material shape"
 PYTHONPATH=src python -m kumiki_reference_lab catalog index --out ./runs/catalog-r001
 PYTHONPATH=src python -m kumiki_reference_lab analyze ./reference.mp4 --max-seconds 10 --out ./runs
+PYTHONPATH=src python -m kumiki_reference_lab audio-onsets ./reference.mp4 --max-seconds 10 --out ./runs/onsets
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 

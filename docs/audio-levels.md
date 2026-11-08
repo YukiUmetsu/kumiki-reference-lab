@@ -31,6 +31,6 @@ For video without audio, `status: no-audio-stream` and empty observations are re
 - Plot RMS/peak alongside independently verified video cut candidates **only after** establishing the audio↔video timebase/offset mapping.
 - Look for possible quiet holds, contrast jumps and impact neighborhoods. A low RMS value can represent sparse content, very quiet material or digital silence; it is not enough to label a narrator pause.
 - Before recreating an effect in Kumiki UI, inspect audio at playback speed and add separate evidence-linked interpretation. Do not add SFX merely because an arbitrary amplitude threshold was crossed.
-- Future work: multi-channel selection, explicit cross-stream presentation alignment, short-time envelope aggregation, onset and beat candidates, voice/speaker alignment and audiovisual contrast QA.
+- The [`audio-onsets`](audio-onsets.md) command now finds conservative level-attack candidates from verified frame envelopes. Future work: multi-channel selection, explicit cross-stream presentation alignment, short-time envelope aggregation, *spectral* onsets and beat candidates, voice/speaker alignment and audiovisual contrast QA.
 
 See [FFmpeg astats and metadata filter documentation](https://ffmpeg.org/ffmpeg-filters.html) for the measurement definitions. Review notes, not raw levels, will ultimately capture story or editing purpose.
