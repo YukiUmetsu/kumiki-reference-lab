@@ -34,6 +34,7 @@ from kumiki_reference_lab.core.artifacts import write_json_artifact
 from kumiki_reference_lab.pipeline.analyze import run_analysis
 from kumiki_reference_lab.pipeline.study import study_reference
 from kumiki_reference_lab.integrations.kumiki.film_handoff import export_film_handoff
+from kumiki_reference_lab.integrations.kumiki.film_map_review import build_film_map_review
 from kumiki_reference_lab.reviews.notes import review_notes_template, validate_review_notes
 
 
@@ -197,6 +198,18 @@ def build_parser() -> argparse.ArgumentParser:
     frame_compare.add_argument("--ffprobe", default="ffprobe")
     frame_compare.add_argument("--rights-status", choices=RIGHTS_STATUSES,
                                default="review-required")
+
+    film_map = commands.add_parser(
+        "review-film-map", help="extract verified PTS source/FD1 render stills from explicit anchors")
+    film_map.add_argument("review_map", type=Path)
+    film_map.add_argument("authored_film", type=Path)
+    film_map.add_argument("source", type=Path)
+    film_map.add_argument("render", type=Path)
+    film_map.add_argument("--out", type=Path, required=True)
+    film_map.add_argument("--max-seconds", type=int, default=30)
+    film_map.add_argument("--width", type=int, default=480)
+    film_map.add_argument("--ffmpeg", default="ffmpeg")
+    film_map.add_argument("--ffprobe", default="ffprobe")
 
     technique_proposals = commands.add_parser(
         "propose-techniques", help="derive conservative, source-linked cinematic review cues")
@@ -462,6 +475,13 @@ def main(argv: list[str] | None = None) -> int:
                 width=args.width, ffmpeg=args.ffmpeg, ffprobe=args.ffprobe,
                 rights_status=args.rights_status,
             )
+            print(str(index))
+            return 0
+        if args.command == "review-film-map":
+            index = build_film_map_review(
+                args.review_map, args.authored_film, args.source,
+                args.render, args.out, seconds=args.max_seconds,
+                width=args.width, ffmpeg=args.ffmpeg, ffprobe=args.ffprobe)
             print(str(index))
             return 0
         if args.command == "contact-sheet":

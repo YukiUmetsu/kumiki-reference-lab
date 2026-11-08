@@ -54,6 +54,8 @@ The nearest-half-up rounding rule is an *individual duration suggestion*. When c
 4. Write `*.film.json` with authored scenes, duration frames, content, outputs, assets and sound. Validate with `npm run film:check`, review critical frames via `npm run film:review`, and render using `npm run film:render`.
 5. Supply the actual render to `compare-frames` or `compare-appearance` with **explicitly chosen** source/render anchors. Inspect the movie at full speed, check readability and obtain human visual approval. Automated hashes and schema success do not certify a cinematic match.
 
+For a reproducible multi-anchor review after authoring, use Kumiki UI's `film:reference-map` to link exact source PTS to FD1 frames, then run Reference Lab's [`review-film-map`](film-map-review.md) against the original source video and rendered MP4. The command verifies encoded timestamps and creates actual paired JPEG evidence; it never claims a finished quality verdict.
+
 ## Quality and CI
 
 Run `PYTHONPATH=src python -m unittest tests.test_film_handoff -v` locally for deterministic frame conversion, provenance checks, excluded scan ends, no implied sound-event import, immutable artifact reuse and tamper detection. The optional FFmpeg/NumPy end-to-end fixture remains local. Hosted GitHub CI continues its small smoke suite; no test files are removed.
