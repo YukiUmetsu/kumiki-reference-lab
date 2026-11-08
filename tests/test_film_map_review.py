@@ -10,6 +10,9 @@ from kumiki_reference_lab.analyzers.media.inspect import inspect_source, sha256_
 from kumiki_reference_lab.backends.ffmpeg.frames import read_frame_pts
 from kumiki_reference_lab.core.timebase import as_rational_dict
 from kumiki_reference_lab.integrations.kumiki.film_map_review import build_film_map_review
+from kumiki_reference_lab.integrations.kumiki.film_feedback import (
+    init_film_feedback, validate_film_feedback,
+)
 from kumiki_reference_lab.cli.app import build_parser
 
 
@@ -79,6 +82,11 @@ class FilmMapReviewTests(unittest.TestCase):
             self.assertEqual(report["qualityVerdict"], "not-performed")
             self.assertEqual(len(report["pairs"]), 2)
             self.assertEqual(len(report["files"]), 5)
+            feedback = init_film_feedback(
+                index.parent / "film-map-review.json", root / "feedback",
+                reviewer_kind="human", reviewer_id="editor-1")
+            self.assertEqual(validate_film_feedback(
+                index.parent / "film-map-review.json", feedback)["findingCount"], 0)
             for pair in report["pairs"]:
                 self.assertEqual((index.parent / pair["source"]["image"]).read_bytes(),
                                  (index.parent / pair["film"]["image"]).read_bytes())

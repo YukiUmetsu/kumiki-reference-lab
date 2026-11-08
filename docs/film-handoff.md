@@ -56,6 +56,8 @@ The nearest-half-up rounding rule is an *individual duration suggestion*. When c
 
 For a reproducible multi-anchor review after authoring, use Kumiki UI's `film:reference-map` to link exact source PTS to FD1 frames, then run Reference Lab's [`review-film-map`](film-map-review.md) against the original source video and rendered MP4. The command verifies encoded timestamps and creates actual paired JPEG evidence; it never claims a finished quality verdict.
 
+Once the paired stills and full-motion render have been inspected, `film-feedback init`/`validate` produces separately authored, evidence-bound correction findings for the next FD1 edit pass. Such feedback remains draft, without automatic aesthetic approval or catalog promotion.
+
 ## Quality and CI
 
 Run `PYTHONPATH=src python -m unittest tests.test_film_handoff -v` locally for deterministic frame conversion, provenance checks, excluded scan ends, no implied sound-event import, immutable artifact reuse and tamper detection. The optional FFmpeg/NumPy end-to-end fixture remains local. Hosted GitHub CI continues its small smoke suite; no test files are removed.

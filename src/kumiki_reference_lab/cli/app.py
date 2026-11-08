@@ -35,6 +35,9 @@ from kumiki_reference_lab.pipeline.analyze import run_analysis
 from kumiki_reference_lab.pipeline.study import study_reference
 from kumiki_reference_lab.integrations.kumiki.film_handoff import export_film_handoff
 from kumiki_reference_lab.integrations.kumiki.film_map_review import build_film_map_review
+from kumiki_reference_lab.integrations.kumiki.film_feedback import (
+    init_film_feedback, validate_film_feedback,
+)
 from kumiki_reference_lab.reviews.notes import review_notes_template, validate_review_notes
 
 
@@ -211,6 +214,19 @@ def build_parser() -> argparse.ArgumentParser:
     film_map.add_argument("--ffmpeg", default="ffmpeg")
     film_map.add_argument("--ffprobe", default="ffprobe")
 
+    feedback = commands.add_parser(
+        "film-feedback", help="author or validate source/render evidence-bound revision notes")
+    feedback_actions = feedback.add_subparsers(dest="feedback_action", required=True)
+    feedback_init = feedback_actions.add_parser("init", help="create an empty film feedback draft")
+    feedback_init.add_argument("review_manifest", type=Path)
+    feedback_init.add_argument("--out", type=Path, required=True)
+    feedback_init.add_argument("--reviewer-kind", choices=("human", "ai"), default="human")
+    feedback_init.add_argument("--reviewer-id", required=True)
+    feedback_init.add_argument("--model-id")
+    feedback_check = feedback_actions.add_parser("validate", help="verify anchors, hashes and notes")
+    feedback_check.add_argument("review_manifest", type=Path)
+    feedback_check.add_argument("feedback", type=Path)
+
     technique_proposals = commands.add_parser(
         "propose-techniques", help="derive conservative, source-linked cinematic review cues")
     technique_proposals.add_argument("analysis_run", type=Path,
@@ -349,6 +365,15 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
+        if args.command == "film-feedback":
+            if args.feedback_action == "init":
+                print(init_film_feedback(
+                    args.review_manifest, args.out, reviewer_kind=args.reviewer_kind,
+                    reviewer_id=args.reviewer_id, model_id=args.model_id))
+            else:
+                print(json.dumps(validate_film_feedback(args.review_manifest, args.feedback),
+                                 indent=2, sort_keys=True))
+            return 0
         if args.command == "review-notes":
             if args.review_notes_action == "init":
                 print(review_notes_template(
