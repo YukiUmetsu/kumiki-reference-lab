@@ -1,6 +1,6 @@
 # One-command reference study
 
-`study-reference` is the local-first entry point for studying a reference clip and generating everything currently possible **without AI**. It produces an aligned **four-track evidence timeline**, a shot storyboard and a technique-cue gallery. Cinematic intent, real camera/light rigs, narration strategy and premium quality are not machine-certified.
+`study-reference` is the local-first entry point for studying a reference clip and generating everything currently possible **without AI**. It produces an aligned **five-track evidence timeline**, a shot storyboard and a technique-cue gallery. Cinematic intent, real camera/light rigs, narration strategy and premium quality are not machine-certified.
 
 ```bash
 python -m pip install -e '.[motion]'
@@ -9,7 +9,7 @@ kumiki-ref study-reference ./reference.mp4 \
   --catalog-root catalog/entries --out ./runs
 ```
 
-It returns the path to a browsable local **study overview** `index.html` linking the audiovisual evidence timeline, chronological shot storyboard, technique-cue gallery and edit-rhythm JSON. The timeline links candidate cuts, observed image-plane movement, cut-to-cut gaps, and quiet-level audio contrast using the same original source timeline. It composes verified stages; it does not implement a second video analyzer, editor, calibrated A/V clock or renderer.
+It returns the path to a browsable local **study overview** `index.html` linking the audiovisual evidence timeline, chronological shot storyboard, technique-cue gallery and edit-rhythm JSON. The timeline links candidate cuts, observed image-plane movement, cut-to-cut gaps, quiet-level audio contrasts and possible audio attacks using a shared **candidate** source presentation timeline. It composes verified stages; it does not implement a second video analyzer, editor, calibrated A/V clock or renderer.
 
 | Stage | Material produced |
 | --- | --- |
@@ -17,7 +17,7 @@ It returns the path to a browsable local **study overview** `index.html` linking
 | `propose-techniques` | Catalog-linked *hypotheses* with numerical evidence and alternatives, not physical rig recovery. |
 | `shot-evidence` | Candidate edit-region summaries with exact source PTS, observed appearance/motion and no invented final end. |
 | `edit-rhythm` | Exact candidate cut-to-cut duration measurements, only where both cut boundaries are observed; the partial first/last regions are excluded. |
-| `review-timeline` | Offline, accessible SVG and tables aligning candidate cut PTS, image-plane movement, interior cut intervals and near-cut audio quietness. Audio/video alignment remains a hypothesis. |
+| `review-timeline` | Offline, accessible SVG and tables aligning candidate cut PTS, image-plane movement, interior cut intervals, near-cut audio quietness and possible audio-level attacks. Audio/video alignment remains a hypothesis. |
 | `review-techniques` | An immutable HTML gallery with three verified source frames per candidate, questions and caveats. |
 | `review-shots` | An immutable HTML storyboard showing start/middle/last observed source frames per candidate region, including regions without technique cues. |
 | Study manifest | Hashes, versions, selected catalog revision hashes, and a checked inventory of every derived report, HTML document and image. |
@@ -44,18 +44,18 @@ runs/
         │   ├── technique-review.json, technique-proposals.json
         │   └── frames/ (only for matched review cues)
         ├── shot-gallery-.../
-            ├── index.html, shot-gallery.json, shot-evidence.json
-            └── frames/ (up to 24 real source frames)
+        │   ├── index.html, shot-gallery.json, shot-evidence.json
+        │   └── frames/ (up to 24 real source frames)
         └── timeline-.../
             ├── index.html, timeline-review.json
-            └── shot-evidence.json, edit-rhythm.json, av-cut-evidence.json
+            └── shot-evidence.json, edit-rhythm.json, av-cut-evidence.json, audio-onsets.json
 ```
 
 The one-command defaults are intentionally bounded for a typical Apple Silicon M4 with 24 GB unified memory: a maximum 10-second scan, 160×90 measurement frames, 24 global motion samples, 12 sparse/appearance samples, 40 feature points, and up to eight review cues. `--max-seconds` may be 1–20, `--thumbnails` 2–24, and `--max-cues` 1–8. Use the individual commands when you need a larger window, higher resolution or alternative parameters. The study's numeric stages need the optional `motion` extra (NumPy), but **never** auto-download a neural model or call a paid service.
 
-The analysis bundle and derived study are published atomically at their respective boundaries. If a late derived step fails, the completed **valid analysis bundle is reusable**; there is no incomplete published study. Exact repeats verify hashes and reuse the study; missing, additional or modified output files raise an error. Changed sources/settings/catalog entries produce a new identity. The [v4 study manifest](../schemas/v4/reference-study.schema.json) requires the timeline, both galleries, overview and checksum-verified cut-to-cut rhythm evidence. Existing [v1](../schemas/v1/reference-study.schema.json), [v2](../schemas/v2/reference-study.schema.json) and [v3](../schemas/v3/reference-study.schema.json) studies retain their original identities and remain separately verifiable, including for grounded review notes. Running the current command creates a new v4 identity without altering previously saved studies.
+The analysis bundle and derived study are published atomically at their respective boundaries. If a late derived step fails, the completed **valid analysis bundle is reusable**; there is no incomplete published study. Exact repeats verify hashes and reuse the study; missing, additional or modified output files raise an error. Changed sources/settings/catalog entries produce a new identity. The [v5 study manifest](../schemas/v5/reference-study.schema.json) requires the timeline with audio onset evidence, both galleries, overview and checksum-verified cut-to-cut rhythm evidence. Existing [v1](../schemas/v1/reference-study.schema.json), [v2](../schemas/v2/reference-study.schema.json), [v3](../schemas/v3/reference-study.schema.json) and [v4](../schemas/v4/reference-study.schema.json) studies retain their original identities and remain separately verifiable, including for grounded review notes. Running the current command creates a new v5 identity without altering previously saved studies.
 
-The study timeline uses a fixed 400 ms A/V comparison window and a maximum of 4,096 audio frames. Clips **without an audio stream** receive an explicitly empty audio track, not a fabricated silence score. If an existing audio stream cannot be decoded with reliable source timestamps, the command fails rather than disguising failed measurement as absent audio; the completed analysis bundle remains reusable and no partial study is published. The timeline does not assert physical synchronization, narration meaning or music beats. Use the [standalone timeline command](timeline-review.md) to select other audio windows or work independently of the one-command bundle.
+The study timeline uses a fixed 400 ms A/V comparison window, a maximum of 4,096 audio frames and conservative default onset thresholds (12 dB RMS rise, −40 dBFS peak minimum, 120 ms cooldown). One verified audio decode feeds both audio analyses. Clips **without an audio stream** receive explicitly empty audio tracks, not fabricated silence or onset events. If an existing audio stream cannot be decoded with reliable source timestamps, the command fails rather than disguising failed measurement as absent audio; the completed analysis bundle remains reusable and no partial study is published. The timeline does not assert physical synchronization, narration meaning, music beats or sound effect identity. Use the [standalone timeline command](timeline-review.md) to select other audio windows/thresholds or work independently of the one-command bundle.
 
 The output is a visual review starting point for a coding agent. It must check actual source frames and story purpose, resolve the currently available Kumiki UI contracts, implement an **original** technique, render full motion, compare at explicit time anchors, and obtain human sign-off before claiming any premium production quality or promoting a catalog entry.
 

@@ -247,6 +247,9 @@ def build_parser() -> argparse.ArgumentParser:
     timeline_view.add_argument("--out", type=Path, required=True)
     timeline_view.add_argument("--window-ms", type=int, default=400)
     timeline_view.add_argument("--max-audio-frames", type=int, default=4096)
+    timeline_view.add_argument("--onset-min-rise-db", type=float, default=12.0)
+    timeline_view.add_argument("--onset-min-peak-dbfs", type=float, default=-40.0)
+    timeline_view.add_argument("--onset-cooldown-ms", type=int, default=120)
     timeline_view.add_argument("--ffmpeg", default="ffmpeg")
     timeline_view.add_argument("--ffprobe", default="ffprobe")
 
@@ -407,6 +410,9 @@ def main(argv: list[str] | None = None) -> int:
             print(build_timeline_view(
                 args.source, args.analysis_run, args.out,
                 window_ms=args.window_ms, max_audio_frames=args.max_audio_frames,
+                onset_min_rise_db=args.onset_min_rise_db,
+                onset_min_peak_dbfs=args.onset_min_peak_dbfs,
+                onset_cooldown_ms=args.onset_cooldown_ms,
                 ffmpeg=args.ffmpeg, ffprobe=args.ffprobe))
             return 0
         if args.command == "study-reference":

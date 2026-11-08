@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v2/timeline-review.schema.json",
+  "title": "Kumiki source-linked offline A/V timeline with audio level attacks v2",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "settings", "files", "qualityVerdict"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.timeline-review.v2"},
+    "qualityVerdict": {"const": "not-performed"},
+    "settings": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sourceSha256", "analysisRunSha256", "styleRevision", "windowMs", "maxAudioFrames", "onsetMinRiseDb", "onsetMinPeakDbFs", "onsetCooldownMs", "ffmpeg", "ffprobe", "shotEvidenceSha256", "editRhythmSha256", "avCutEvidenceSha256", "audioOnsetsSha256"],
+      "properties": {
+        "sourceSha256": {"$ref": "#/$defs/hash"},
+        "analysisRunSha256": {"$ref": "#/$defs/hash"},
+        "styleRevision": {"const": "offline-observation-tracks-v2"},
+        "windowMs": {"type": "integer", "minimum": 100, "maximum": 2000},
+        "maxAudioFrames": {"type": "integer", "minimum": 1, "maximum": 10000},
+        "onsetMinRiseDb": {"type": "number", "minimum": 1, "maximum": 60},
+        "onsetMinPeakDbFs": {"type": "number", "minimum": -100, "maximum": 0},
+        "onsetCooldownMs": {"type": "integer", "minimum": 0, "maximum": 2000},
+        "ffmpeg": {"type": "string", "minLength": 1},
+        "ffprobe": {"type": "string", "minLength": 1},
+        "shotEvidenceSha256": {"$ref": "#/$defs/hash"},
+        "editRhythmSha256": {"$ref": "#/$defs/hash"},
+        "avCutEvidenceSha256": {"$ref": "#/$defs/hash"},
+        "audioOnsetsSha256": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "files": {
+      "type": "array", "minItems": 5, "maxItems": 5,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"enum": ["index.html", "shot-evidence.json", "edit-rhythm.json", "av-cut-evidence.json", "audio-onsets.json"]},
+          "sha256": {"$ref": "#/$defs/hash"}
+        }
+      }
+    }
+  },
+  "$defs": {"hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}
+}

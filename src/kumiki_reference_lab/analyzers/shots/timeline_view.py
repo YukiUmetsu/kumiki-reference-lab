@@ -15,7 +15,9 @@ from fractions import Fraction
 from pathlib import Path
 from typing import Any
 
-from kumiki_reference_lab.analyzers.audio.av_cuts import build_av_cut_evidence
+from kumiki_reference_lab.analyzers.audio.av_cuts import av_cut_evidence_from_levels
+from kumiki_reference_lab.analyzers.audio.levels import analyze_audio_levels
+from kumiki_reference_lab.analyzers.audio.onsets import audio_onsets_from_levels
 from kumiki_reference_lab.analyzers.media.inspect import sha256_file
 from kumiki_reference_lab.analyzers.shots.evidence import build_shot_evidence
 from kumiki_reference_lab.analyzers.shots.rhythm import edit_rhythm_from_verified_shots
@@ -25,7 +27,7 @@ from kumiki_reference_lab.core.artifacts import write_json_artifact
 from kumiki_reference_lab.pipeline.analyze import _file_records
 
 
-STYLE_REVISION = "offline-observation-tracks-v1"
+STYLE_REVISION = "offline-observation-tracks-v2"
 
 
 def _frac(value: dict[str, int]) -> Fraction:
@@ -46,8 +48,8 @@ def _serialize(value: Any) -> bytes:
 
 
 def _timing(evidence: dict[str, Any], rhythm: dict[str, Any],
-            av: dict[str, Any]) -> tuple[Fraction, Fraction]:
-    """Cross-check all three reports before placing them on one axis."""
+            av: dict[str, Any], onsets: dict[str, Any]) -> tuple[Fraction, Fraction]:
+    """Cross-check all report identities before placing them on one axis."""
     identity = (evidence["sourceSha256"], evidence["analysisRunSha256"])
     if (av["sourceSha256"], av["analysisRunSha256"]) != identity or (
             rhythm["sourceSha256"], rhythm["analysisRunSha256"]) != identity:
@@ -64,6 +66,17 @@ def _timing(evidence: dict[str, Any], rhythm: dict[str, Any],
             [r["videoRegionId"] for r in av["cutCandidates"]] !=
             [r["id"] for r in evidence["regions"][1:]]):
         raise ValueError("timeline A/V candidate identities disagree")
+    if (onsets["sourceSha256"] != evidence["sourceSha256"] or
+            onsets["audioStreamIndex"] != av["audioStreamIndex"] or
+            onsets["sourceTimebase"] != av["audioSourceTimebase"] or
+            onsets["scanWindowSeconds"] != av["scanWindowSeconds"] or
+            (onsets["status"] == "no-audio-stream") !=
+            (av["status"] == "no-audio-stream") or
+            onsets["status"] not in ("no-audio-stream",
+                                    "source-pts-aligned-level-attack-candidates")):
+        raise ValueError("timeline audio onset evidence identity or status disagrees")
+    if (onsets["status"] == "no-audio-stream" and onsets["candidates"]):
+        raise ValueError("timeline audio onset report contradicts absent audio")
     regions = evidence["regions"]
     if not regions:
         raise ValueError("timeline requires at least one source-timed region")
@@ -75,9 +88,10 @@ def _timing(evidence: dict[str, Any], rhythm: dict[str, Any],
 
 
 def render_timeline_html(evidence: dict[str, Any], rhythm: dict[str, Any],
-                         av: dict[str, Any], *, source_label: str) -> str:
+                         av: dict[str, Any], onsets: dict[str, Any], *,
+                         source_label: str) -> str:
     """Render a self-contained SVG visualization + accessible evidence tables."""
-    start, end = _timing(evidence, rhythm, av)
+    start, end = _timing(evidence, rhythm, av, onsets)
     span = end - start
     if span <= 0:
         span = Fraction(1, 1000)  # Display-only axis guard; not a measured duration.
@@ -91,7 +105,7 @@ def render_timeline_html(evidence: dict[str, Any], rhythm: dict[str, Any],
         tick = start + (end - start) * Fraction(i, 5)
         tx = x(tick)
         pieces.append(
-            f'<line x1="{tx:.2f}" x2="{tx:.2f}" y1="55" y2="256" '
+            f'<line x1="{tx:.2f}" x2="{tx:.2f}" y1="55" y2="312" '
             'stroke="#2e4055" stroke-width="1"/>'
             f'<text x="{tx:.2f}" y="34" text-anchor="middle" '
             f'class="axis">{_h(_sec(tick))}</text>')
@@ -100,6 +114,7 @@ def render_timeline_html(evidence: dict[str, Any], rhythm: dict[str, Any],
         '<text x="12" y="155" class="track-label">Image-plane motion</text>',
         '<text x="12" y="199" class="track-label">Cut-to-cut gaps</text>',
         '<text x="12" y="245" class="track-label">Audio near cuts</text>',
+        '<text x="12" y="293" class="track-label">Audio level attacks</text>',
     ]
     regions = evidence["regions"]
     for index, region in enumerate(regions):
@@ -138,7 +153,7 @@ def render_timeline_html(evidence: dict[str, Any], rhythm: dict[str, Any],
     for region in regions[1:]:
         cut_x = x(_frac(region["startSeconds"]))
         pieces.append(f'<line x1="{cut_x:.2f}" x2="{cut_x:.2f}" '
-                      'y1="69" y2="256" stroke="#f1b970" stroke-width="1.6" '
+                      'y1="69" y2="312" stroke="#f1b970" stroke-width="1.6" '
                       'stroke-dasharray="3 4"/>')
         signal = audio_by_region.get(region["id"])
         if signal is not None:
@@ -148,6 +163,13 @@ def render_timeline_html(evidence: dict[str, Any], rhythm: dict[str, Any],
                           f'fill="{fill}" stroke="#0b1420" stroke-width="2"/>')
     if av["status"] == "no-audio-stream":
         pieces.append('<text x="209" y="243" class="no-audio">No audio stream</text>')
+        pieces.append('<text x="209" y="295" class="no-audio">No audio stream</text>')
+    for item in onsets["candidates"]:
+        anchor = _frac(item["anchorSourceSeconds"])
+        if start <= anchor <= end:
+            cx = x(anchor)
+            pieces.append(f'<path d="M{cx:.2f},281 l7,10 l-7,10 l-7,-10 Z" '
+                          'fill="#81e3b5" stroke="#13231f" stroke-width="2"/>')
     if not rhythm["intervals"]:
         pieces.append('<text x="209" y="197" class="no-audio">'
                       'Fewer than two candidate cuts</text>')
@@ -169,6 +191,19 @@ def render_timeline_html(evidence: dict[str, Any], rhythm: dict[str, Any],
             '<tr><th scope="row">' + _h(region["id"]) + '</th><td>' +
             _h(_sec(_frac(region["startSeconds"]))) + '</td><td>' + _h(before) +
             '</td><td>' + _h(after) + '</td><td>' + _h(status) + '</td></tr>')
+    onset_rows = []
+    for item in onsets["candidates"]:
+        anchor = _frac(item["anchorSourceSeconds"])
+        window = item["supportWindow"]
+        rise = item["measuredRmsRiseDb"]
+        onset_rows.append(
+            '<tr><th scope="row">' + _h(item["id"]) + '</th><td>' +
+            _h(_sec(anchor)) + ' / PTS ' + _h(item["anchorSourcePts"]) +
+            '</td><td>' + _h(_sec(_frac(window["startSeconds"]))) + '–' +
+            _h(_sec(_frac(window["endSeconds"]))) + '</td><td>' +
+            ('— (measurement floor)' if rise is None else _h(f"+{rise:.1f} dB")) +
+            '</td><td>' + _h(item["signal"].replace("-", " ")) +
+            '</td><td>' + ('Yes' if start <= anchor <= end else 'No') + '</td></tr>')
     rhythm_rows = [
         '<tr><th scope="row">' + _h(r["regionId"]) + '</th><td>' +
         _h(_sec(_frac(r["fromSeconds"]))) + ' to ' +
@@ -232,7 +267,7 @@ def render_timeline_html(evidence: dict[str, Any], rhythm: dict[str, Any],
         '</style></head><body><main>'
         '<div class="eyebrow">Kumiki · measurement review</div>'
         '<h1>Reference timeline</h1><p class="lede">Video cut positions, apparent image motion, '
-        'bounded pacing gaps, and source audio-level contrast on a shared candidate '
+        'bounded pacing gaps, audio-level contrasts and possible audio attacks on a shared candidate '
         'presentation-time axis. They are observations, not reconstructed edit intent.</p>'
         '<p class="meta">' + _h(source_label) + ' · ' +
         _h(_sec(start)) + ' to ' + _h(_sec(end)) + ' observed · ' +
@@ -240,14 +275,15 @@ def render_timeline_html(evidence: dict[str, Any], rhythm: dict[str, Any],
         '<section aria-labelledby="plot-heading"><h2 id="plot-heading">Evidence at a glance</h2>'
         '<div class="timeline" role="region" tabindex="0" '
         'aria-label="Evidence timeline. Scroll horizontally to inspect all timestamps.">'
-        '<svg viewBox="0 0 1200 275" role="img" '
+        '<svg viewBox="0 0 1200 332" role="img" '
         'aria-label="Visual alignment of video regions, motion magnitude, cut intervals, '
-        'and audio contrast markers; precise numbers are in the tables below">' +
+        'audio contrast and audio level attack markers; precise numbers are in the tables below">' +
         "".join(pieces) + '</svg></div>'
         '<div class="legend"><span><i class="swatch" style="background:#f1b970"></i>'
         'Candidate video cut</span><span><i class="swatch" style="background:#60bad2"></i>'
         'Apparent displacement per sampled pair</span><span><i class="swatch" '
-        'style="background:#d0a9f5"></i>Quiet-level contrast candidate</span></div>'
+        'style="background:#d0a9f5"></i>Quiet-level contrast candidate</span>'
+        '<span><i class="swatch" style="background:#81e3b5"></i>Audio level attack candidate</span></div>'
         '<p class="note">The first and last bounded video regions are not complete '
         'shot-duration measurements. Audio/video clock alignment is provisional.</p></section>'
         '<section aria-labelledby="cut-heading"><h2 id="cut-heading">Audio near candidate cuts</h2>'
@@ -257,6 +293,15 @@ def render_timeline_html(evidence: dict[str, Any], rhythm: dict[str, Any],
         '</tr></thead><tbody>' + rows_or_empty(audio_rows, 5, "No candidate cuts in the scanned portion") +
         '</tbody></table></div><p class="note">Quiet fractions count decoded audio frames '
         'fully inside the comparison window, not verified sound events or synchronization.</p></section>'
+        '<section aria-labelledby="onset-heading"><h2 id="onset-heading">Candidate audio level attacks</h2>'
+        '<div class="table-wrap"><table><thead><tr><th scope="col">Candidate</th>'
+        '<th scope="col">Audio PTS anchor</th><th scope="col">Two-frame support</th>'
+        '<th scope="col">RMS rise</th><th scope="col">Signal</th>'
+        '<th scope="col">In plotted video range</th></tr></thead><tbody>' +
+        rows_or_empty(onset_rows, 6, "No candidate audio level attacks in the bounded scan") +
+        '</tbody></table></div><p class="note">Each marker anchors the later audio frame, '
+        'not the exact acoustic onset. Audio events outside the observed video region are '
+        'listed here but not drawn. No speech, beat or SFX classification is performed.</p></section>'
         '<section aria-labelledby="rhythm-heading"><h2 id="rhythm-heading">Candidate cut intervals</h2>'
         '<div class="table-wrap"><table><thead><tr><th scope="col">Interior region</th>'
         '<th scope="col">Cut boundaries</th><th scope="col">Duration</th>'
@@ -290,14 +335,15 @@ def _verify(directory: Path, settings: dict[str, Any]) -> Path:
         raise ValueError("timeline review metadata differs from expected settings")
     records = manifest.get("files")
     expected = {"index.html", "shot-evidence.json", "edit-rhythm.json",
-                "av-cut-evidence.json"}
+                "av-cut-evidence.json", "audio-onsets.json"}
     actual = [row for row in _file_records(directory) if row["path"] != "timeline-review.json"]
     if (not isinstance(records, list) or records != actual or
             {row["path"] for row in actual} != expected):
         raise ValueError("timeline review files were altered")
     for key, name in (("shotEvidenceSha256", "shot-evidence.json"),
                       ("editRhythmSha256", "edit-rhythm.json"),
-                      ("avCutEvidenceSha256", "av-cut-evidence.json")):
+                      ("avCutEvidenceSha256", "av-cut-evidence.json"),
+                      ("audioOnsetsSha256", "audio-onsets.json")):
         if sha256_file(directory / name) != settings[key]:
             raise ValueError("timeline review evidence hash differs")
     return directory / "index.html"
@@ -305,12 +351,22 @@ def _verify(directory: Path, settings: dict[str, Any]) -> Path:
 
 def build_timeline_view(source: Path, analysis_run: Path, output: Path, *,
                         window_ms: int = 400, max_audio_frames: int = 4096,
+                        onset_min_rise_db: float = 12.0,
+                        onset_min_peak_dbfs: float = -40.0,
+                        onset_cooldown_ms: int = 120,
                         ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe") -> Path:
     """Generate a checksum-verified static report from the same source bytes."""
     if type(window_ms) is not int or not 100 <= window_ms <= 2000:
         raise ValueError("timeline window_ms must be 100..2000")
     if type(max_audio_frames) is not int or not 1 <= max_audio_frames <= 10000:
         raise ValueError("timeline max_audio_frames must be 1..10000")
+    if (type(onset_min_rise_db) not in (int, float) or
+            not 1 <= onset_min_rise_db <= 60 or
+            type(onset_min_peak_dbfs) not in (int, float) or
+            not -100 <= onset_min_peak_dbfs <= 0 or
+            type(onset_cooldown_ms) is not int or
+            not 0 <= onset_cooldown_ms <= 2000):
+        raise ValueError("timeline onset thresholds are outside supported bounds")
     resolved_out = output.resolve()
     if resolved_out.is_relative_to(analysis_run.parent.resolve()) or any(
             (parent / marker).exists() for parent in (resolved_out, *resolved_out.parents)
@@ -319,12 +375,19 @@ def build_timeline_view(source: Path, analysis_run: Path, output: Path, *,
         raise ValueError("timeline output must be outside immutable analysis/review bundles")
     evidence = build_shot_evidence(analysis_run)
     rhythm = edit_rhythm_from_verified_shots(evidence)
-    av = build_av_cut_evidence(source, analysis_run, window_ms=window_ms,
-                               max_audio_frames=max_audio_frames, ffmpeg=ffmpeg,
-                               ffprobe=ffprobe)
-    _timing(evidence, rhythm, av)
+    run = _json_file(analysis_run, limit=262_144)
+    seconds = run["settings"]["seconds"]
+    audio = analyze_audio_levels(
+        source, seconds=seconds, max_frames=max_audio_frames, ffmpeg=ffmpeg,
+        ffprobe=ffprobe, rights_status=run["settings"]["rightsStatus"])
+    av = av_cut_evidence_from_levels(evidence, audio, seconds=seconds,
+                                     window_ms=window_ms)
+    onsets = audio_onsets_from_levels(
+        audio, min_rise_db=onset_min_rise_db,
+        min_peak_dbfs=onset_min_peak_dbfs, cooldown_ms=onset_cooldown_ms)
+    _timing(evidence, rhythm, av, onsets)
     reports = {"shot-evidence.json": evidence, "edit-rhythm.json": rhythm,
-               "av-cut-evidence.json": av}
+               "av-cut-evidence.json": av, "audio-onsets.json": onsets}
     encoded = {name: json.dumps(report, indent=2, sort_keys=True,
                                 ensure_ascii=False, allow_nan=False).encode("utf-8") + b"\n"
                for name, report in reports.items()}
@@ -333,10 +396,14 @@ def build_timeline_view(source: Path, analysis_run: Path, output: Path, *,
         "analysisRunSha256": evidence["analysisRunSha256"],
         "styleRevision": STYLE_REVISION,
         "windowMs": window_ms, "maxAudioFrames": max_audio_frames,
+        "onsetMinRiseDb": float(onset_min_rise_db),
+        "onsetMinPeakDbFs": float(onset_min_peak_dbfs),
+        "onsetCooldownMs": onset_cooldown_ms,
         "ffmpeg": ffmpeg, "ffprobe": ffprobe,
         "shotEvidenceSha256": hashlib.sha256(encoded["shot-evidence.json"]).hexdigest(),
         "editRhythmSha256": hashlib.sha256(encoded["edit-rhythm.json"]).hexdigest(),
         "avCutEvidenceSha256": hashlib.sha256(encoded["av-cut-evidence.json"]).hexdigest(),
+        "audioOnsetsSha256": hashlib.sha256(encoded["audio-onsets.json"]).hexdigest(),
     }
     digest = hashlib.sha256(_serialize(settings)).hexdigest()[:16]
     destination = output / f'timeline-{settings["sourceSha256"][:12]}-{digest}'
@@ -348,7 +415,8 @@ def build_timeline_view(source: Path, analysis_run: Path, output: Path, *,
         for filename, report in reports.items():
             write_json_artifact(staging, filename, report)
         (staging / "index.html").write_text(
-            render_timeline_html(evidence, rhythm, av, source_label=source.name),
+            render_timeline_html(evidence, rhythm, av, onsets,
+                                 source_label=source.name),
             encoding="utf-8")
         write_json_artifact(staging, "timeline-review.json", {
             "schemaVersion": TIMELINE_REVIEW_VERSION, "settings": settings,

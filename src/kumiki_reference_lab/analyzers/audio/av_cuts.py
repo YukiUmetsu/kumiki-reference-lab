@@ -84,26 +84,17 @@ def summarize_cut_audio(
     return rows
 
 
-def build_av_cut_evidence(source: Path, analysis_run: Path, *,
-                          window_ms: int = 400,
-                          max_audio_frames: int = 4096,
-                          ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe") -> dict[str, Any]:
-    """Measure possible audio contrast against candidate cuts in one original file."""
+def av_cut_evidence_from_levels(evidence: dict[str, Any], audio: dict[str, Any], *,
+                                seconds: int, window_ms: int) -> dict[str, Any]:
+    """Reuse one verified audio decode across cut contrast and onset analysis."""
     if type(window_ms) is not int or not 100 <= window_ms <= 2000:
         raise ValueError("audio-video window_ms must be 100..2000")
-    if type(max_audio_frames) is not int or not 1 <= max_audio_frames <= 10000:
-        raise ValueError("max_audio_frames must be 1..10000")
-    evidence = build_shot_evidence(analysis_run)
     if evidence["status"] != "candidate-edit-regions":
         raise ValueError("video original PTS are not reliable enough for A/V candidates")
-    run = _json_file(analysis_run, limit=262_144)
-    seconds = run["settings"]["seconds"]
-    audio = analyze_audio_levels(
-        source, seconds=seconds, max_frames=max_audio_frames,
-        ffmpeg=ffmpeg, ffprobe=ffprobe,
-        rights_status=run["settings"]["rightsStatus"])
     if audio["sourceSha256"] != evidence["sourceSha256"]:
         raise ValueError("audio and video evidence refer to different source bytes")
+    if audio["scanWindowSeconds"] != seconds:
+        raise ValueError("audio and video have different bounded scan windows")
     if audio["status"] == "no-audio-stream":
         status, cuts = "no-audio-stream", []
     elif audio["status"] == "source-pts-aligned-level-observations":
@@ -135,3 +126,25 @@ def build_av_cut_evidence(source: Path, analysis_run: Path, *,
         "cutCandidates": cuts,
         "limits": "Shared source bytes alone do not prove synchronized clocks, absence of priming/edit lists, musical beats, narration intent, causality or edit accuracy. Only fully contained audio frames are compared; a straddling frame is excluded.",
     }
+
+
+def build_av_cut_evidence(source: Path, analysis_run: Path, *,
+                          window_ms: int = 400,
+                          max_audio_frames: int = 4096,
+                          ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe") -> dict[str, Any]:
+    """Measure possible audio contrast against candidate cuts in one original file."""
+    if type(window_ms) is not int or not 100 <= window_ms <= 2000:
+        raise ValueError("audio-video window_ms must be 100..2000")
+    if type(max_audio_frames) is not int or not 1 <= max_audio_frames <= 10000:
+        raise ValueError("max_audio_frames must be 1..10000")
+    evidence = build_shot_evidence(analysis_run)
+    if evidence["status"] != "candidate-edit-regions":
+        raise ValueError("video original PTS are not reliable enough for A/V candidates")
+    run = _json_file(analysis_run, limit=262_144)
+    seconds = run["settings"]["seconds"]
+    audio = analyze_audio_levels(
+        source, seconds=seconds, max_frames=max_audio_frames,
+        ffmpeg=ffmpeg, ffprobe=ffprobe,
+        rights_status=run["settings"]["rightsStatus"])
+    return av_cut_evidence_from_levels(evidence, audio, seconds=seconds,
+                                       window_ms=window_ms)
