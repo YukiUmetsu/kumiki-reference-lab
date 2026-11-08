@@ -8,7 +8,7 @@
 - `contracts`: source/analysis/technique artifact types and version policy. No models or rendering.
 - `analyzers`: evidence-producing algorithms consuming typed artifacts and capability ports.
 - `backends`: concrete implementations of subprocess, CV and ML ports. Optional ML backends are loaded only when requested.
-- `pipeline` (future): orchestrates analyzer stages, caching, retry and outputs; never owns an algorithm.
+- `pipeline`: orchestrates existing analyzer stages and transactionally publishes checksum-verified output bundles; future: DAG scheduling, caching and retry. Never owns an algorithm.
 - `interpretation` (future): creates proposals/hypotheses, never modifies observations.
 - `catalog`: validated canonical technique research metadata, purpose search and exported index; not animation implementations.
 - `integrations/kumiki` (future): maps a supported subset of treatment fields into Kumiki-owned executable contracts, without a separate render clock.
@@ -91,8 +91,19 @@ The four `--box` values are normalized X, Y, width and height **on the first sam
 
 Compute is bounded by source duration (30 s), sample count (120), resize dimensions, search radius and a per-frame correlation budget. No neural model is required. An ROI track is an appearance path, **not guaranteed to follow a named physical object**; its box can include background, deform or leave view. It can eventually be compared with global image shift as *evidence for differential motion*, but camera-versus-object attribution still requires independent background tracks, geometric checks and explicit uncertainty.
 
+## Transactional analysis bundles
+
+```bash
+kumiki-ref analyze ./reference.mp4 --max-seconds 10 --out ./runs
+kumiki-ref analyze ./reference.mp4 --max-seconds 10 --motion --box 0.19 0.22 0.15 0.20 --out ./runs
+```
+
+`analyze` calls the existing `inspect`, `frames`, `cuts`, and `contact-sheet` analyzers; global motion and seeded ROI are optional and require NumPy. A source/settings hash creates a stable run directory name. All stages run inside a private temporary directory; only a completed set is renamed into place. The `kumiki.analysis-run.v1` manifest records stage artifact paths, SHA-256 of every file, original stream timebase and exact settings. Reruns verify all files before reusing a completed run, reject corruption/unknown artifacts and leave previously published data untouched. A failure in any required stage discards the temporary directory. This is stage-level **atomic publication**, not yet incremental restart, distributed execution or streaming analysis.
+
+No AI inference or technique classification is performed by this command. `catalogProposals` is explicitly empty, `interpretationStatus` is `not-performed`, and the existing catalog candidates remain separate authored research. Future models may propose an interpretation **referencing** this manifest and verified PTS; they must never rewrite the observed measurements or silently promote catalog verification state.
+
 Detection is a **bounded first-stage heuristic**, not comprehensive scene segmentation: it does not classify fades or dissolve transitions, reconstruct frame geometry, or prove that fast image changes are cuts. More robust detectors can later be swapped behind the analyzer interface.
 
 ## Planned next slice
 
-Complete an interoperable `analyze` pipeline: join reviewed shots, global motion and seeded ROI paths; add robust local feature/optical-flow tracking with multiple-motion separation, then generate reviewed technique **evidence proposals** for the existing canonical catalog. The catalog validates/indexes authored recipes but does not infer a technique from arbitrary footage. See [catalog guide](catalog.md). Before full-volume processing, add streaming analysis and explicit cancellation so long inputs never need to be decoded or captured entirely in memory.
+Expand the `analyze` run into a restartable stage DAG with shared decoded frames and explicit cancellation; add robust local feature/optical-flow tracking with multiple-motion separation; then generate reviewed technique **evidence proposals** for the existing canonical catalog. The catalog validates/indexes authored recipes but does not infer a technique from arbitrary footage. See [catalog guide](catalog.md). Before full-volume processing, add streaming analysis so long inputs never need to be decoded or captured entirely in memory.
