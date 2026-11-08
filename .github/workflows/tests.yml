@@ -41,4 +41,4 @@ jobs:
       - name: Synthetic reference and complete study integrations
         env:
           PYTHONPATH: src
-        run: python -m unittest tests.test_technique_end_to_end tests.test_reference_study tests.test_review_notes tests.test_shot_gallery tests.test_audio_timeline -v
+        run: python -m unittest tests.test_technique_end_to_end tests.test_reference_study tests.test_review_notes tests.test_shot_gallery tests.test_audio_timeline tests.test_audio_levels -v

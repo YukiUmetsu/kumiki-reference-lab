@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/audio-levels.schema.json",
+  "title": "Kumiki Original Audio PTS-Aligned RMS/Peak Frame Levels v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "sourceSha256", "audioStreamIndex", "sourceTimebase", "sampleRateHz", "scanWindowSeconds", "maxFrameBudget", "levelUnits", "coverage", "limits", "status", "frames"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.audio-levels.v1"},
+    "sourceSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "audioStreamIndex": {"type": ["integer", "null"], "minimum": 0},
+    "sourceTimebase": {"anyOf": [{"$ref": "#/$defs/rational"}, {"type": "null"}]},
+    "sampleRateHz": {"type": ["integer", "null"], "minimum": 1},
+    "scanWindowSeconds": {"type": "integer", "minimum": 1, "maximum": 30},
+    "maxFrameBudget": {"type": "integer", "minimum": 1, "maximum": 10000},
+    "levelUnits": {"const": "dBFS-relative-to-decoded-audio-full-scale"},
+    "coverage": {"const": "bounded-first-audio-stream-not-necessarily-full-video"},
+    "limits": {"type": "string", "minLength": 1},
+    "status": {"enum": ["no-audio-stream", "source-pts-aligned-level-observations"]},
+    "frames": {"type": "array", "maxItems": 10000, "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sourcePts", "sourceSeconds", "decodedSampleCount", "decodedDurationSeconds", "rmsDbFs", "peakDbFs", "belowMeasurementFloor", "quietFrameCandidate"],
+      "properties": {
+        "sourcePts": {"type": "integer"},
+        "sourceSeconds": {"$ref": "#/$defs/rational"},
+        "decodedSampleCount": {"type": "integer", "minimum": 1},
+        "decodedDurationSeconds": {"$ref": "#/$defs/rational"},
+        "rmsDbFs": {"type": ["number", "null"], "maximum": 2, "minimum": -400},
+        "peakDbFs": {"type": ["number", "null"], "maximum": 2, "minimum": -400},
+        "belowMeasurementFloor": {"type": "boolean"},
+        "quietFrameCandidate": {"type": "boolean"}
+      }
+    }}
+  },
+  "$defs": {
+    "rational": {"type": "object", "additionalProperties": false,
+                 "required": ["numerator", "denominator"],
+                 "properties": {
+                   "numerator": {"type": "integer"},
+                   "denominator": {"type": "integer", "minimum": 1}
+                 }}
+  }
+}

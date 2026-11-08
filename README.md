@@ -2,7 +2,7 @@
 
 **Reference-video analysis, cinematic technique research, and reproducible motion reconstruction for the Kumiki ecosystem.**
 
-> **Project status: early working foundation.** The `study-reference`, `review-notes`, `review-shots`, `audio-timeline`, `inspect`, `frames`, `cuts`, `contact-sheet`, `motion`, `track-roi`, `sparse-flow`, `appearance`, `shot-evidence`, `compare-appearance`, `compare-frames`, `propose-techniques`, `review-techniques`, `analyze`, and `catalog` commands are implemented and tested. Semantic video-to-technique interpretation, full visual matching, and Kumiki export remain planned.
+> **Project status: early working foundation.** The `study-reference`, `review-notes`, `review-shots`, `audio-timeline`, `audio-levels`, `inspect`, `frames`, `cuts`, `contact-sheet`, `motion`, `track-roi`, `sparse-flow`, `appearance`, `shot-evidence`, `compare-appearance`, `compare-frames`, `propose-techniques`, `review-techniques`, `analyze`, and `catalog` commands are implemented and tested. Semantic video-to-technique interpretation, full visual matching, and Kumiki export remain planned.
 
 **Implemented foundation:** Python commands read local video metadata, extract real presentation timestamps, detect bounded hard-cut *candidates*, produce timecoded HTML/JPEG contact sheets, optionally measure global image-plane translation and easing candidates, track a seeded image region, and characterize sparse 2D motion with conservative affine hypotheses. The `appearance` command measures display-referred RGB color and contrast; `compare-appearance` compares two reports at **explicitly aligned source times**, while `compare-frames` produces side-by-side timecoded JPEGs for manual visual QA. A versioned `analyze` pipeline combines motion/appearance evidence into immutable runs. `propose-techniques` now generates explicit, machine-readable, non-semantic review cues from such a verified run. A searchable Cinematic Techniques Catalog includes five original research candidates. Semantic interpretation, full-speed visual matching, physical camera/lighting inference and treatment compilation remain planned.
 
@@ -79,6 +79,8 @@ Use `kumiki-ref shot-evidence <analysis-run.json> --out ./runs/regions` to summa
 Use `kumiki-ref review-shots reference.mp4 <analysis-run.json> --out ./runs` to create a separate immutable **shot storyboard** with three original timecoded frames per candidate edit region, measured evidence and story-direction questions. This remains useful even when `propose-techniques` detects nothing. See [shot storyboard guide](docs/shot-gallery.md).
 
 Use `kumiki-ref audio-timeline reference.mp4 --max-seconds 10 --out ./runs/audio` to inspect **original audio frame PTS and decoded sample counts**, independently from video timebase. This is groundwork for future sound, silence, narration and beat analysis, not a sound-event classifier. See [audio clock and limitations](docs/audio-timeline.md).
+
+Use `kumiki-ref audio-levels reference.mp4 --max-seconds 10 --out ./runs/audio-levels` for **per-decoded-frame RMS and peak dBFS**, with the original audio timestamp and sample count independently checked against FFprobe. Quiet frames are candidates, not recognized narration pauses or verified silence, and no A/V synchronization is assumed. See [audio-level measurements](docs/audio-levels.md).
 
 ```text
 Authorized reference video
