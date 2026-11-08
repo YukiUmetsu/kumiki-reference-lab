@@ -180,6 +180,9 @@ class SparseFlowIntegrationTests(unittest.TestCase):
             self.assertIn(artifact["temporalTracklets"]["status"],
                           ("candidate-only", "insufficient-continuity"))
             self.assertFalse(artifact["temporalTracklets"]["semanticIdentityVerified"])
+            self.assertTrue(all(track["kinematics"]["durationSeconds"]["numerator"] > 0
+                                and track["kinematics"]["durationSeconds"]["denominator"] > 0
+                                for track in artifact["temporalTracklets"]["tracklets"]))
             self.assertTrue(all((pair["geometryHypothesis"] is None)
                                 == (pair["status"] == "cut-boundary")
                                 for pair in artifact["pairs"]))

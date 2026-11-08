@@ -99,6 +99,7 @@
             "id": {"type": "string", "pattern": "^tracklet-[0-9]{4,}$"},
             "pairCount": {"type": "integer", "minimum": 2, "maximum": 39},
             "endReason": {"enum": ["cut-boundary", "nonadjacent-or-missing-observation", "no-safe-match", "scan-end"]},
+            "kinematics": {"$ref": "#/$defs/trackletKinematics"},
             "observations": {"type": "array", "minItems": 2, "maxItems": 39,
               "items": {"type": "object", "additionalProperties": false,
                 "required": ["pairIndex", "vectorIndex", "startPts", "endPts", "startPixels", "endPixels", "handoffErrorPixels", "group"],
@@ -120,6 +121,22 @@
     "trackPoint": {"type": "object", "additionalProperties": false,
       "required": ["x", "y"],
       "properties": {"x": {"type": "number"}, "y": {"type": "number"}}},
+    "trackletKinematics": {
+      "type": "object", "additionalProperties": false,
+      "required": ["durationSeconds", "summedImageDisplacementPixels", "observedPathLengthPixels", "meanImageVelocityPixelsPerSecond", "meanImageSpeedPixelsPerSecond", "basis", "calibratedConfidence"],
+      "properties": {
+        "durationSeconds": {"$ref": "#/$defs/rational"},
+        "summedImageDisplacementPixels": {"$ref": "#/$defs/trackVector"},
+        "observedPathLengthPixels": {"type": "number", "minimum": 0},
+        "meanImageVelocityPixelsPerSecond": {"$ref": "#/$defs/trackVector"},
+        "meanImageSpeedPixelsPerSecond": {"type": "number", "minimum": 0},
+        "basis": {"const": "observed-pairs-only-no-gap-filling"},
+        "calibratedConfidence": {"const": false}
+      }
+    },
+    "trackVector": {"type": "object", "additionalProperties": false,
+      "required": ["dx", "dy"],
+      "properties": {"dx": {"type": "number"}, "dy": {"type": "number"}}},
     "rational": {"type": "object", "additionalProperties": false,
       "required": ["numerator", "denominator"],
       "properties": {"numerator": {"type": "integer"},

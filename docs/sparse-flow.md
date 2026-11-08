@@ -62,6 +62,15 @@ observation. A tracklet is a deterministic short image-plane correspondence
 change between pairs. Even a clean multi-pair link can switch between similar
 textures, and the method does not recover links after occlusion.
 
+Each surviving tracklet's optional `kinematics` summarizes **observed pair
+motions only**. `durationSeconds` is an exact reduced rational computed from
+the original source PTS and stream timebase, including unequal VFR intervals.
+`summedImageDisplacementPixels` sums each accepted pair's measured displacement;
+`observedPathLengthPixels` sums their Euclidean lengths. Mean image velocity
+and speed divide those observations by the observed PTS span, not nominal FPS.
+These are sampled pixel-space statistics, not recovered 3D speed, camera
+velocity, exact object paths, or trajectories filled across lost detections.
+
 ## Reading the results honestly
 
 - `dominant` = most-supported observed image translation, **not** "camera" or
