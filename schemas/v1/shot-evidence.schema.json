@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/shot-evidence.schema.json",
+  "title": "Kumiki Candidate Edit-Region Evidence v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "sourceSha256", "sourceStreamIndex", "sourceTimebase", "analysisRunSha256", "coverage", "status", "availableStages", "cutDetector", "framePtsAnomalies", "ignoredCutCandidatePts", "regions", "limits"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.shot-evidence.v1"},
+    "sourceSha256": {"$ref": "#/$defs/hash"},
+    "sourceStreamIndex": {"type": "integer", "minimum": 0},
+    "sourceTimebase": {"$ref": "#/$defs/rational"},
+    "analysisRunSha256": {"$ref": "#/$defs/hash"},
+    "coverage": {"const": "bounded-from-start-not-necessarily-full-video"},
+    "status": {"enum": ["candidate-edit-regions", "blocked-unreliable-source-pts"]},
+    "availableStages": {"type": "array", "uniqueItems": true, "minItems": 2,
+                        "items": {"enum": ["frames", "cuts", "motion", "sparseFlow", "appearance"]}},
+    "cutDetector": {"type": "object", "required": ["method", "threshold", "limits"]},
+    "framePtsAnomalies": {"type": "array", "items": {
+      "type": "object", "required": ["sampleOrdinal", "reason"],
+      "properties": {"sampleOrdinal": {"type": "integer", "minimum": 0},
+                     "reason": {"enum": ["missing-source-pts", "nonincreasing-source-pts"]}}
+    }},
+    "ignoredCutCandidatePts": {"type": "array", "items": {"type": "integer"}},
+    "regions": {"type": "array", "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "boundaryBefore", "boundaryAfter", "startPtsInclusive", "endPtsExclusive", "lastObservedFramePts", "startSeconds", "lastObservedFrameSeconds", "frameCount", "firstFrameOrdinal", "lastFrameOrdinal", "observations", "reviewQuestions", "interpretationStatus"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^region-[0-9]{3,}$"},
+        "boundaryBefore": {"enum": ["bounded-scan-start", "hard-cut-candidate"]},
+        "boundaryAfter": {"enum": ["bounded-scan-end", "hard-cut-candidate"]},
+        "startPtsInclusive": {"type": "integer"},
+        "endPtsExclusive": {"type": ["integer", "null"]},
+        "lastObservedFramePts": {"type": "integer"},
+        "startSeconds": {"$ref": "#/$defs/rational"},
+        "lastObservedFrameSeconds": {"$ref": "#/$defs/rational"},
+        "frameCount": {"type": "integer", "minimum": 1},
+        "firstFrameOrdinal": {"type": "integer", "minimum": 0},
+        "lastFrameOrdinal": {"type": "integer", "minimum": 0},
+        "observations": {
+          "type": "object", "additionalProperties": false,
+          "required": ["appearance", "motion", "sparseFlow"],
+          "properties": {
+            "appearance": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/appearanceSummary"}]},
+            "motion": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/motionSummary"}]},
+            "sparseFlow": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/sparseSummary"}]}
+          }
+        },
+        "reviewQuestions": {"type": "array", "minItems": 3,
+                            "items": {"type": "string", "minLength": 1}},
+        "interpretationStatus": {"const": "not-performed"}
+      }
+    }},
+    "limits": {"type": "string", "minLength": 1}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "rational": {
+      "type": "object", "additionalProperties": false,
+      "required": ["numerator", "denominator"],
+      "properties": {"numerator": {"type": "integer"},
+                     "denominator": {"type": "integer", "minimum": 1}}
+    },
+    "maybeNumber": {"type": ["number", "null"]},
+    "appearanceSummary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sampleCount", "sourcePts", "meanDisplayLumaProxy", "meanContrastP90MinusP10", "meanSaturation", "meanBrightPixelFraction"],
+      "properties": {
+        "sampleCount": {"type": "integer", "minimum": 0},
+        "sourcePts": {"type": "array", "items": {"type": "integer"}},
+        "meanDisplayLumaProxy": {"$ref": "#/$defs/maybeNumber"},
+        "meanContrastP90MinusP10": {"$ref": "#/$defs/maybeNumber"},
+        "meanSaturation": {"$ref": "#/$defs/maybeNumber"},
+        "meanBrightPixelFraction": {"$ref": "#/$defs/maybeNumber"}
+      }
+    },
+    "motionSummary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["pairCount", "measuredPairCount", "unmeasuredPairCount", "meanGlobalImageDisplacementNormalized", "units"],
+      "properties": {
+        "pairCount": {"type": "integer", "minimum": 0},
+        "measuredPairCount": {"type": "integer", "minimum": 0},
+        "unmeasuredPairCount": {"type": "integer", "minimum": 0},
+        "meanGlobalImageDisplacementNormalized": {"$ref": "#/$defs/maybeNumber"},
+        "units": {"type": "string", "minLength": 1}
+      }
+    },
+    "sparseSummary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["pairCount", "affineImageCandidatePairCount", "translationSufficientPairCount", "limits"],
+      "properties": {
+        "pairCount": {"type": "integer", "minimum": 0},
+        "affineImageCandidatePairCount": {"type": "integer", "minimum": 0},
+        "translationSufficientPairCount": {"type": "integer", "minimum": 0},
+        "limits": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}
