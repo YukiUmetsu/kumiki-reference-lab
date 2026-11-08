@@ -1,4 +1,4 @@
-"""Decode selected original video frames as bounded grayscale pixel planes.
+"""Decode selected original video frames as bounded gray/RGB pixel planes.
 
 Selection uses decoded source-frame ordinals; presentation timestamps are
 reverified against FFprobe's actual PTS, never reconstructed from nominal FPS.
@@ -24,6 +24,31 @@ def read_gray_frames(
     *, timebase: Fraction, seconds: int, width: int = 160, height: int = 90,
     ffmpeg: str = "ffmpeg",
 ) -> list[bytes]:
+    return _read_pixel_frames(path, stream_index, ordinals, expected_pts,
+                              timebase=timebase, seconds=seconds,
+                              width=width, height=height, ffmpeg=ffmpeg,
+                              pixel_format="gray", channels=1)
+
+
+def read_rgb_frames(
+    path: Path, stream_index: int, ordinals: list[int], expected_pts: list[int],
+    *, timebase: Fraction, seconds: int, width: int = 160, height: int = 90,
+    ffmpeg: str = "ffmpeg",
+) -> list[bytes]:
+    """Decode FFmpeg-converted 8-bit RGB, not calibrated scene-linear color."""
+    return _read_pixel_frames(path, stream_index, ordinals, expected_pts,
+                              timebase=timebase, seconds=seconds,
+                              width=width, height=height, ffmpeg=ffmpeg,
+                              pixel_format="rgb24", channels=3)
+
+
+def _read_pixel_frames(
+    path: Path, stream_index: int, ordinals: list[int], expected_pts: list[int],
+    *, timebase: Fraction, seconds: int, width: int, height: int,
+    ffmpeg: str, pixel_format: str, channels: int,
+) -> list[bytes]:
+    if (pixel_format, channels) not in (("gray", 1), ("rgb24", 3)):
+        raise ValueError("unsupported pixel output format")
     if type(seconds) is not int or not 1 <= seconds <= 30:
         raise ValueError("motion scan must be between 1 and 30 seconds")
     if (type(width) is not int or type(height) is not int or
@@ -44,8 +69,8 @@ def read_gray_frames(
     command = [
         ffmpeg, "-hide_banner", "-loglevel", "info", "-nostdin", "-t", str(seconds),
         "-i", str(path.resolve()), "-map", f"0:{stream_index}",
-        "-vf", f"select='{selector}',scale={width}:{height}:flags=bicubic,format=gray,showinfo",
-        "-an", "-fps_mode", "passthrough", "-pix_fmt", "gray",
+        "-vf", f"select='{selector}',scale={width}:{height}:flags=bicubic,format={pixel_format},showinfo",
+        "-an", "-fps_mode", "passthrough", "-pix_fmt", pixel_format,
         "-f", "rawvideo", "-",
     ]
     try:
@@ -84,7 +109,7 @@ def read_gray_frames(
     if reported_pts != expected_pts:
         raise ProbeError("motion decoded-frame timestamps do not match FFprobe")
 
-    plane_size = width * height
+    plane_size = width * height * channels
     if len(completed.stdout) != plane_size * len(ordinals):
         raise ProbeError("motion decoder produced unexpected pixel-buffer size")
     return [completed.stdout[i * plane_size:(i + 1) * plane_size]

@@ -107,3 +107,13 @@ Detection is a **bounded first-stage heuristic**, not comprehensive scene segmen
 ## Planned next slice
 
 Expand the `analyze` run into a restartable stage DAG with shared decoded frames and explicit cancellation; `sparse-flow` is now an opt-in bundle stage with guarded 2D affine hypotheses, while robust homography, longer-lived tracks and physical 3D inference remain separate research problems. Then generate reviewed technique **evidence proposals** for the existing canonical catalog. The catalog validates/indexes authored recipes but does not infer a technique from arbitrary footage. See [catalog guide](catalog.md). Before full-volume processing, add streaming analysis so long inputs never need to be decoded or captured entirely in memory.
+
+## Display-referred appearance measurements
+
+The standalone `appearance` command provides source-timecoded RGB24 frame
+statistics and cut-aware color/brightness deltas, with a separate strict
+[`kumiki.appearance.v1` schema](../schemas/v1/appearance.schema.json). See
+the [method and interpretation guide](appearance.md). A bright-pixel center,
+histogram or luma proxy is **not** recovered scene lighting, physical camera
+exposure or a material classification. `appearance` remains separate from the
+atomic `analyze` bundle until its own opt-in integration is tested.
