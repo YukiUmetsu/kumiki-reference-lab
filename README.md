@@ -2,9 +2,9 @@
 
 **Reference-video analysis, cinematic technique research, and reproducible motion reconstruction for the Kumiki ecosystem.**
 
-> **Project status: early working foundation.** The `inspect`, `frames`, `cuts`, and `contact-sheet` commands are implemented and tested. The broader video-understanding, technique-catalog, and Kumiki-export features described here remain a roadmap.
+> **Project status: early working foundation.** The `inspect`, `frames`, `cuts`, `contact-sheet`, and `motion` commands are implemented and tested. The broader video-understanding, technique-catalog, and Kumiki-export features described here remain a roadmap.
 
-**Implemented foundation:** dependency-free Python commands read local video metadata, extract real presentation timestamps, detect bounded hard-cut *candidates*, and produce timecoded HTML/JPEG contact sheets using FFprobe/FFmpeg. Object tracking, motion fitting, semantic analysis, treatment compilation and reference comparison remain planned.
+**Implemented foundation:** Python commands read local video metadata, extract real presentation timestamps, detect bounded hard-cut *candidates*, produce timecoded HTML/JPEG contact sheets, and optionally measure global image-plane translation and simple easing candidates using NumPy. Object-specific tracking, physical camera inference, semantic analysis, treatment compilation and reference comparison remain planned.
 
 Kumiki Reference Lab studies legally obtained motion-graphics, product-film, documentary, and explainer-video references. It extracts measurable characteristics, identifies reusable filmmaking techniques, and produces evidence-backed reports that can guide implementations in [kumiki-ui](https://github.com/YukiUmetsu/kumiki-ui).
 
@@ -81,9 +81,9 @@ Authorized reference video
 | Ingest | FFprobe metadata, source hashing, rational FPS, audio/stream inventory | Variable-frame-rate timeline normalization | Source manifest |
 | Editing | PySceneDetect cut/fade candidates, histogram and perceptual differences | Learned transition classifier | Shot intervals and confidence |
 | Composition | Subject boxes, saliency heuristics, contrast and negative space | Vision-based semantic focus | Per-shot composition timeline |
-| Motion | OpenCV optical flow, keypoint tracking, affine/homography fitting | Learned correspondence/tracking | Normalized trajectories and fit residuals |
+| Motion | **Implemented:** optional NumPy FFT global-image translation. **Next:** OpenCV optical flow, feature tracks, affine/homography estimation | Learned correspondence/tracking | Normalized trajectories and fit residuals |
 | Subject tracking | Manually seeded masks/boxes and classical tracking | SAM 2 or suitable video segmentation model | Subject masks, identities and confidence |
-| Animation curves | Normalize tracks, fit linear/Bézier/spring candidate curves, compare residuals | Learned motion grouping | Frame-relative motion curves |
+| Animation curves | **Implemented:** candidate linear, quadratic and smoothstep-family fits on valid translation segments. **Next:** Bézier and spring parameter fitting | Learned motion grouping | Frame-relative motion curves |
 | Camera hypotheses | Robustly separate background from foreground movement; estimate translation, scale, roll | Multiview SfM when assumptions hold | Camera-motion *hypotheses* |
 | Lighting and look | Color histograms, exposure, highlights, shadows, key/fill contrast proxies | Inverse-rendering/vision models | Appearance observations and hypotheses |
 | Audio | Onsets, amplitude envelope, silence, beat candidates | Optional ASR and speaker alignment | Timecoded audio cues |
@@ -243,7 +243,15 @@ PYTHONPATH=src python -m kumiki_reference_lab contact-sheet ./reference.mp4 --ma
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
+**Optional motion analysis:** install NumPy once with `python -m pip install -e '.[motion]'`, then run:
+
+```bash
+kumiki-ref motion ./reference.mp4 --max-seconds 10 --max-samples 48 --out ./runs/motion-example
+```
+
 `inspect` records metadata and SHA-256, while honestly marking frame-by-frame PTS and VFR status as unknown until sampled. `frames` extracts source PTS within a bounded window, preserving exact rational timestamps and reporting missing/nonincreasing values. `cuts` detects **possible hard cuts**, not proven edits; fast subject or camera motion may produce false positives, and fades are not yet classified. `contact-sheet` automatically prioritizes frames at opening/closing and around candidate edits, then covers remaining visual gaps. It creates an immutable `contact-sheet-<source>-<settings>/` directory containing `index.html`, `contact-sheet.json`, and up to 24 labeled JPEGs. The JSON records exact rational source timestamps, each evidence image's hash, and the sampling options. Existing bundles are checked for modification, never silently replaced. `--rights-status user-declared-authorized` is an **assertion by the user**, not automated legal verification. No model download or external service is required.
+
+`motion` decodes at most 120 original frames over a 30-second source window into bounded grayscale buffers; every decoded PTS must match FFprobe. It outputs `image-motion.json` containing measured global image translation, explicit ambiguous/unobservable/cut-boundary pairs, normalized displacement, cumulative segments, and residual-ranked candidate easing curves. This cannot determine whether the displacement came from the camera, a foreground subject, a background, or a mixture; it also does not measure zoom, rotation, parallax, 3D paths, or separate subjects. Curve fits are observations of rendered motion, **not recovered source keyframes**. The stage uses NumPy only when invoked; the other commands remain dependency-free.
 
 **Planned interfaces (not implemented):**
 
@@ -289,7 +297,7 @@ kumiki-reference-lab/
 │   ├── analyzers/
 │   │   ├── media/                  # Implemented: inspection, timestamps, contact sheets
 │   │   ├── shots/                  # Implemented: bounded cut candidates
-│   │   ├── motion/                 # Future: optical flow and easing fits
+│   │   ├── motion/                 # Implemented: global translations and easing candidates; future: object tracks
 │   │   └── subjects/              # Future: segmentation and identity
 │   ├── backends/
 │   │   ├── ffmpeg/                 # Implemented: FFprobe and FFmpeg adapters

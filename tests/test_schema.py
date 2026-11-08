@@ -5,6 +5,7 @@ from pathlib import Path
 from kumiki_reference_lab.contracts.source import SCHEMA_VERSION
 from kumiki_reference_lab.contracts.analysis import (
     FRAME_TIMELINE_VERSION, SHOT_CANDIDATES_VERSION, CONTACT_SHEET_VERSION,
+    IMAGE_MOTION_VERSION,
 )
 
 
@@ -22,7 +23,8 @@ class SchemaTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[1] / "schemas/v1"
         for name, version in (("frame-timeline", FRAME_TIMELINE_VERSION),
                               ("shot-candidates", SHOT_CANDIDATES_VERSION),
-                              ("contact-sheet", CONTACT_SHEET_VERSION)):
+                              ("contact-sheet", CONTACT_SHEET_VERSION),
+                              ("image-motion", IMAGE_MOTION_VERSION)):
             schema = json.loads((root / (name + ".schema.json")).read_text(encoding="utf-8"))
             self.assertEqual(schema["properties"]["schemaVersion"]["const"], version)
 

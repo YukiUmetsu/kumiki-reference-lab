@@ -9,6 +9,7 @@ from pathlib import Path
 
 from kumiki_reference_lab.analyzers.media.inspect import inspect_source
 from kumiki_reference_lab.analyzers.media.contact_sheet import build_contact_sheet
+from kumiki_reference_lab.analyzers.motion.analyze import analyze_image_motion
 from kumiki_reference_lab.analyzers.media.timeline import analyze_frame_timeline
 from kumiki_reference_lab.analyzers.shots.detect import analyze_hard_cuts
 from kumiki_reference_lab.backends.ffmpeg.probe import ProbeError
@@ -51,6 +52,18 @@ def build_parser() -> argparse.ArgumentParser:
     sheet.add_argument("--ffmpeg", default="ffmpeg")
     sheet.add_argument("--ffprobe", default="ffprobe")
     sheet.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
+
+    motion = commands.add_parser("motion", help="measure sampled global image-plane translation")
+    motion.add_argument("source", type=Path)
+    motion.add_argument("--out", type=Path)
+    motion.add_argument("--max-seconds", type=int, default=10)
+    motion.add_argument("--max-samples", type=int, default=48)
+    motion.add_argument("--width", type=int, default=160)
+    motion.add_argument("--height", type=int, default=90)
+    motion.add_argument("--threshold", type=float, default=0.25)
+    motion.add_argument("--ffmpeg", default="ffmpeg")
+    motion.add_argument("--ffprobe", default="ffprobe")
+    motion.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
     return parser
 
 
@@ -75,6 +88,13 @@ def main(argv: list[str] | None = None) -> int:
                                               ffprobe=args.ffprobe,
                                               rights_status=args.rights_status)
             filename = "frame-timeline.json"
+        elif args.command == "motion":
+            artifact = analyze_image_motion(
+                args.source, seconds=args.max_seconds, max_samples=args.max_samples,
+                width=args.width, height=args.height, threshold=args.threshold,
+                ffmpeg=args.ffmpeg, ffprobe=args.ffprobe, rights_status=args.rights_status,
+            )
+            filename = "image-motion.json"
         else:
             artifact = analyze_hard_cuts(args.source, seconds=args.max_seconds,
                                          threshold=args.threshold, ffmpeg=args.ffmpeg,
