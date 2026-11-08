@@ -49,6 +49,12 @@
     "then": {"properties": {"pairs": {"items": {"properties": {
       "vectors": {"items": {"required": ["subpixelReverseErrorPixels"]}}
     }}}}}
+  }, {
+    "if": {"properties": {"analyzer": {"required": ["projectiveModel"]}}},
+    "then": {"properties": {
+      "analyzer": {"required": ["projectiveInlierTolerancePixels", "projectiveMaxHypotheses"]},
+      "pairs": {"items": {"required": ["projectiveHypothesis"]}}
+    }}
   }],
   "properties": {
     "schemaVersion": {"const": "kumiki.sparse-flow.v1"},
@@ -76,6 +82,9 @@
         "coarseRefinementRadiusPixels": {"const": 2},
         "subpixelPeakModel": {"const": "separable-3-point-ncc-parabola-v1"},
         "subpixelReverseVerification": {"enum": ["integer-peak-only", "fractional-bilinear-patch-check"]},
+        "projectiveModel": {"const": "normalized-dlt-bounded-ransac-v1"},
+        "projectiveInlierTolerancePixels": {"const": 1.5},
+        "projectiveMaxHypotheses": {"const": 256},
         "patchSizePixels": {"const": 9},
         "minimumAppearanceCorrelation": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
         "roundtripTolerancePixels": {"const": 1.5},
@@ -114,7 +123,8 @@
                            "roundtrip-inconsistent": {"type": "integer", "minimum": 0}}},
           "vectors": {"type": "array", "maxItems": 64, "items": {"$ref": "#/$defs/vector"}},
           "consensus": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/consensus"}]},
-          "geometryHypothesis": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/geometry"}]}
+          "geometryHypothesis": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/geometry"}]},
+          "projectiveHypothesis": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/projective"}]}
         }
       }
     }
@@ -216,6 +226,34 @@
         "inlierPointIndices": {"type": "array", "maxItems": 64, "uniqueItems": true,
           "items": {"type": "integer", "minimum": 0, "maximum": 63}},
         "model": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/affineModel"}]}
+      }
+    },
+    "projective": {"type": "object", "additionalProperties": false,
+      "required": ["status", "inliers", "correspondences", "inlierPointIndices", "model"],
+      "properties": {
+        "status": {"enum": ["insufficient-points", "no-robust-projective-consensus", "unstable-projective-refinement", "implausible-projective-warp", "insufficient-spatial-support", "affine-sufficient", "projective-image-plane-candidate"]},
+        "inliers": {"type": "integer", "minimum": 0, "maximum": 64},
+        "correspondences": {"type": "integer", "minimum": 0, "maximum": 64},
+        "inlierPointIndices": {"type": "array", "maxItems": 64, "uniqueItems": true,
+          "items": {"type": "integer", "minimum": 0, "maximum": 63}},
+        "model": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/projectiveModel"}]}
+      }
+    },
+    "projectiveModel": {"type": "object", "additionalProperties": false,
+      "required": ["matrix3x3", "rmsHomographyPixels", "rmsAffinePixels", "inlierFraction", "inlierSpanFraction", "cornerDenominatorRatio", "calibratedConfidence"],
+      "properties": {
+        "matrix3x3": {"type": "array", "minItems": 3, "maxItems": 3,
+          "items": {"type": "array", "minItems": 3, "maxItems": 3,
+            "items": {"type": "number"}}},
+        "rmsHomographyPixels": {"type": "number", "minimum": 0},
+        "rmsAffinePixels": {"type": "number", "minimum": 0},
+        "inlierFraction": {"type": "number", "minimum": 0, "maximum": 1},
+        "inlierSpanFraction": {"type": "object", "additionalProperties": false,
+          "required": ["x", "y"],
+          "properties": {"x": {"type": "number", "minimum": 0, "maximum": 1},
+                         "y": {"type": "number", "minimum": 0, "maximum": 1}}},
+        "cornerDenominatorRatio": {"type": "number", "minimum": 1, "maximum": 4},
+        "calibratedConfidence": {"const": false}
       }
     },
     "affineModel": {"type": "object", "additionalProperties": false,

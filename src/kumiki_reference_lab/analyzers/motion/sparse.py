@@ -14,6 +14,7 @@ from kumiki_reference_lab.analyzers.motion.analyze import select_motion_samples
 from kumiki_reference_lab.analyzers.motion.consensus import group_sparse_flows
 from kumiki_reference_lab.analyzers.motion.features import sparse_patch_flows
 from kumiki_reference_lab.analyzers.motion.geometry import fit_image_affine
+from kumiki_reference_lab.analyzers.motion.homography import fit_image_homography
 from kumiki_reference_lab.analyzers.motion.tracklets import build_sparse_tracklets
 from kumiki_reference_lab.backends.ffmpeg.frames import read_frame_pts
 from kumiki_reference_lab.backends.ffmpeg.raw_frames import read_gray_frames
@@ -28,7 +29,7 @@ def analyze_sparse_flow(
     width: int = 160, height: int = 90, max_points: int = 40,
     radius: int = 8, correlation: float = 0.68, threshold: float = 0.25,
     pyramid_levels: int = 1, subpixel_refinement: bool = False,
-    subpixel_reverse_check: bool = False,
+    subpixel_reverse_check: bool = False, projective_hypotheses: bool = False,
     ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
     rights_status: str = "review-required",
 ) -> dict[str, Any]:
@@ -50,6 +51,8 @@ def analyze_sparse_flow(
     if type(subpixel_reverse_check) is not bool or (subpixel_reverse_check and
                                                     not subpixel_refinement):
         raise ValueError("sparse-flow subpixel_reverse_check requires subpixel_refinement")
+    if type(projective_hypotheses) is not bool:
+        raise ValueError("sparse-flow projective_hypotheses must be a boolean")
     if not all(math.isfinite(v) and 0 < v < 1 for v in (correlation, threshold)):
         raise ValueError("sparse-flow correlation/threshold must be between zero and one")
     if importlib.util.find_spec("numpy") is None:
@@ -87,6 +90,8 @@ def analyze_sparse_flow(
                                "low-texture", "forward-failed", "backward-failed",
                                "roundtrip-inconsistent")},
                            "vectors": [], "consensus": None, "geometryHypothesis": None})
+            if projective_hypotheses:
+                result["projectiveHypothesis"] = None
         else:
             tracks = sparse_patch_flows(planes[index - 1], planes[index], width, height,
                                        max_points=max_points, radius=radius,
@@ -96,6 +101,8 @@ def analyze_sparse_flow(
                                        subpixel_reverse_check=subpixel_reverse_check)
             grouped = group_sparse_flows(tracks["accepted"], width, height)
             geometry = fit_image_affine(tracks["accepted"], width, height)
+            projective = (fit_image_homography(tracks["accepted"], width, height)
+                          if projective_hypotheses else None)
             vectors = [{**item, "group": group} for item, group in
                        zip(tracks["accepted"], grouped["pointGroups"], strict=True)]
             result.update({"status": grouped["status"],
@@ -104,6 +111,8 @@ def analyze_sparse_flow(
                            "consensus": {key: value for key, value in grouped.items()
                                          if key != "pointGroups"},
                            "geometryHypothesis": geometry})
+            if projective_hypotheses:
+                result["projectiveHypothesis"] = projective
         pairs.append(result)
     return {
         "schemaVersion": SPARSE_FLOW_VERSION,
@@ -129,6 +138,10 @@ def analyze_sparse_flow(
                     "fractional-bilinear-patch-check" if subpixel_reverse_check else
                     "integer-peak-only")}
                if subpixel_refinement else {}),
+            **({"projectiveModel": "normalized-dlt-bounded-ransac-v1",
+                "projectiveInlierTolerancePixels": 1.5,
+                "projectiveMaxHypotheses": 256}
+               if projective_hypotheses else {}),
             "minimumAppearanceCorrelation": correlation,
             "roundtripTolerancePixels": 1.5,
             "consensusTolerancePixels": 1.5,

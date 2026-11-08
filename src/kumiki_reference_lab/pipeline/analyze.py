@@ -130,6 +130,7 @@ def run_analysis(
     sparse_points: int = 40, sparse_radius: int = 8,
     sparse_correlation: float = 0.68, sparse_pyramid_levels: int = 1,
     sparse_subpixel_refinement: bool = False, sparse_subpixel_reverse_check: bool = False,
+    sparse_projective_hypotheses: bool = False,
     appearance: bool = False, appearance_samples: int = 24,
     threshold: float = 0.25, ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
     rights_status: str = "review-required",
@@ -163,6 +164,8 @@ def run_analysis(
         if type(sparse_subpixel_reverse_check) is not bool or (sparse_subpixel_reverse_check and
                                                                not sparse_subpixel_refinement):
             raise ValueError("sparse-flow subpixel reverse check requires subpixel refinement")
+        if type(sparse_projective_hypotheses) is not bool:
+            raise ValueError("sparse-flow projective hypotheses must be a boolean")
         if (not isinstance(sparse_correlation, (int, float)) or
                 not 0 < sparse_correlation < 1):
             raise ValueError("sparse-flow correlation must be between zero and one")
@@ -202,6 +205,8 @@ def run_analysis(
             settings["sparseSubpixelRefinement"] = True
         if sparse_subpixel_reverse_check:
             settings["sparseSubpixelReverseCheck"] = True
+        if sparse_projective_hypotheses:
+            settings["sparseProjectiveHypotheses"] = True
         settings["versions"]["sparseFlow"] = SPARSE_FLOW_VERSION
     if appearance:
         settings.update({"appearance": True, "appearanceSamples": appearance_samples})
@@ -261,6 +266,7 @@ def run_analysis(
                 pyramid_levels=sparse_pyramid_levels,
                 subpixel_refinement=sparse_subpixel_refinement,
                 subpixel_reverse_check=sparse_subpixel_reverse_check,
+                projective_hypotheses=sparse_projective_hypotheses,
                 ffmpeg=ffmpeg, ffprobe=ffprobe, rights_status=rights_status,
             )
             write_json_artifact(staging, _STAGES["sparseFlow"], sparse)

@@ -122,6 +122,8 @@ def build_parser() -> argparse.ArgumentParser:
                         help="candidate fractional NCC peak offsets; reverse gate stays integer")
     sparse.add_argument("--subpixel-reverse-check", action="store_true",
                         help="also check fractional peaks with reverse bilinear patch matching")
+    sparse.add_argument("--projective-hypotheses", action="store_true",
+                        help="optional bounded projective image-plane fit; never a camera claim")
     sparse.add_argument("--correlation", type=float, default=0.68)
     sparse.add_argument("--threshold", type=float, default=0.25)
     sparse.add_argument("--ffmpeg", default="ffmpeg")
@@ -351,6 +353,7 @@ def build_parser() -> argparse.ArgumentParser:
     analyze.add_argument("--sparse-pyramid-levels", type=int, choices=(1, 2), default=1)
     analyze.add_argument("--sparse-subpixel-refinement", action="store_true")
     analyze.add_argument("--sparse-subpixel-reverse-check", action="store_true")
+    analyze.add_argument("--sparse-projective-hypotheses", action="store_true")
     analyze.add_argument("--sparse-correlation", type=float, default=0.68)
     analyze.add_argument("--appearance", action="store_true",
                          help="include optional timecoded RGB appearance evidence")
@@ -426,6 +429,7 @@ def main(argv: list[str] | None = None) -> int:
                 sparse_pyramid_levels=args.sparse_pyramid_levels,
                 sparse_subpixel_refinement=args.sparse_subpixel_refinement,
                 sparse_subpixel_reverse_check=args.sparse_subpixel_reverse_check,
+                sparse_projective_hypotheses=args.sparse_projective_hypotheses,
                 appearance=args.appearance, appearance_samples=args.appearance_samples,
                 threshold=args.threshold, ffmpeg=args.ffmpeg, ffprobe=args.ffprobe,
                 rights_status=args.rights_status,
@@ -578,6 +582,7 @@ def main(argv: list[str] | None = None) -> int:
                 pyramid_levels=args.pyramid_levels,
                 subpixel_refinement=args.subpixel_refinement,
                 subpixel_reverse_check=args.subpixel_reverse_check,
+                projective_hypotheses=args.projective_hypotheses,
                 ffmpeg=args.ffmpeg, ffprobe=args.ffprobe, rights_status=args.rights_status,
             )
             filename = "sparse-flow.json"
