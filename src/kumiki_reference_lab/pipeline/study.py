@@ -12,12 +12,13 @@ from typing import Any
 
 from kumiki_reference_lab.analyzers.media.inspect import sha256_file
 from kumiki_reference_lab.analyzers.shots.evidence import build_shot_evidence
+from kumiki_reference_lab.analyzers.shots.rhythm import edit_rhythm_from_verified_shots
 from kumiki_reference_lab.analyzers.shots.gallery import build_shot_gallery
 from kumiki_reference_lab.analyzers.techniques.propose import propose_techniques
 from kumiki_reference_lab.analyzers.techniques.review import build_technique_review
 from kumiki_reference_lab.core.artifacts import write_json_artifact
 from kumiki_reference_lab.contracts.analysis import (
-    REFERENCE_STUDY_VERSION, REFERENCE_STUDY_V1_VERSION,
+    REFERENCE_STUDY_VERSION, REFERENCE_STUDY_V1_VERSION, REFERENCE_STUDY_V2_VERSION,
 )
 from kumiki_reference_lab.pipeline.analyze import _file_records, _json_bytes, run_analysis
 
@@ -36,17 +37,19 @@ def _verify_study(destination: Path, settings: dict[str, Any]) -> Path:
     except (UnicodeError, json.JSONDecodeError) as exc:
         raise ValueError("study manifest JSON is unreadable") from exc
     version = payload.get("schemaVersion") if isinstance(payload, dict) else None
-    if (version not in (REFERENCE_STUDY_V1_VERSION, STUDY_VERSION) or
+    if (version not in (REFERENCE_STUDY_V1_VERSION, REFERENCE_STUDY_V2_VERSION,
+                       STUDY_VERSION) or
             payload.get("settings") != settings or
             settings.get("studyVersion") != version or
             payload.get("qualityVerdict") != "not-performed" or
             payload.get("humanReviewStatus") != "unreviewed"):
         raise ValueError("study settings or review status were modified")
     artifacts = payload.get("artifacts")
-    expected_keys = ({"techniqueProposals", "shotEvidence", "reviewGallery"}
-                     if version == REFERENCE_STUDY_V1_VERSION else
-                     {"techniqueProposals", "shotEvidence", "reviewGallery",
-                      "shotGallery", "studyOverview"})
+    expected_keys = {"techniqueProposals", "shotEvidence", "reviewGallery"}
+    if version != REFERENCE_STUDY_V1_VERSION:
+        expected_keys.update(("shotGallery", "studyOverview"))
+    if version == STUDY_VERSION:
+        expected_keys.add("editRhythm")
     if (not isinstance(artifacts, dict) or set(artifacts) != expected_keys or
             artifacts.get("techniqueProposals") != "technique-proposals.json" or
             artifacts.get("shotEvidence") != "shot-evidence.json"):
@@ -62,11 +65,15 @@ def _verify_study(destination: Path, settings: dict[str, Any]) -> Path:
     if not valid_gallery(gallery, "technique-review-"):
         raise ValueError("study technique gallery path is unsafe")
     expected = {"technique-proposals.json", "shot-evidence.json", gallery}
-    if version == STUDY_VERSION:
+    if version != REFERENCE_STUDY_V1_VERSION:
         if (not valid_gallery(artifacts["shotGallery"], "shot-gallery-") or
                 artifacts["studyOverview"] != "index.html"):
             raise ValueError("study shot gallery or overview path is unsafe")
         expected.update(("index.html", artifacts["shotGallery"]))
+    if version == STUDY_VERSION:
+        if artifacts["editRhythm"] != "edit-rhythm.json":
+            raise ValueError("study edit rhythm artifact path was modified")
+        expected.add("edit-rhythm.json")
     actual = _file_records(destination)
     actual = [item for item in actual if item["path"] != "study-manifest.json"]
     records = payload.get("files")
@@ -78,6 +85,9 @@ def _verify_study(destination: Path, settings: dict[str, Any]) -> Path:
             sha256_file(destination / "shot-evidence.json") !=
             settings["shotEvidenceSha256"]):
         raise ValueError("study evidence does not match its verified identity")
+    if (version == STUDY_VERSION and
+            sha256_file(destination / "edit-rhythm.json") != settings["editRhythmSha256"]):
+        raise ValueError("study edit rhythm does not match its verified identity")
     return destination / artifacts.get("studyOverview", gallery)
 
 
@@ -109,10 +119,13 @@ def study_reference(
     )
     proposals = propose_techniques(analysis, catalog_root)
     evidence = build_shot_evidence(analysis)
+    rhythm = edit_rhythm_from_verified_shots(evidence)
     proposals_sha = hashlib.sha256((json.dumps(proposals, indent=2, sort_keys=True,
                                               ensure_ascii=False) + "\n").encode("utf-8")).hexdigest()
     evidence_sha = hashlib.sha256((json.dumps(evidence, indent=2, sort_keys=True,
                                              ensure_ascii=False) + "\n").encode("utf-8")).hexdigest()
+    rhythm_sha = hashlib.sha256((json.dumps(rhythm, indent=2, sort_keys=True,
+                                           ensure_ascii=False) + "\n").encode("utf-8")).hexdigest()
     settings = {
         "sourceSha256": proposals["source"]["sha256"],
         "analysisRunDirectory": analysis.parent.name,
@@ -120,6 +133,7 @@ def study_reference(
         "catalogEntries": proposals["provenance"]["catalogEntries"],
         "proposalsSha256": proposals_sha,
         "shotEvidenceSha256": evidence_sha,
+        "editRhythmSha256": rhythm_sha,
         "seconds": seconds, "thumbnails": thumbnails, "maxCues": max_cues,
         "ffmpeg": ffmpeg, "ffprobe": ffprobe, "rightsStatus": rights_status,
         "sampling": {"motion": 24, "sparse": 12, "appearance": 12,
@@ -135,6 +149,7 @@ def study_reference(
         staging = Path(name)
         write_json_artifact(staging, "technique-proposals.json", proposals)
         write_json_artifact(staging, "shot-evidence.json", evidence)
+        write_json_artifact(staging, "edit-rhythm.json", rhythm)
         gallery = build_technique_review(
             source, analysis, staging / "visual", catalog_root=catalog_root,
             max_cues=max_cues, ffmpeg=ffmpeg, ffprobe=ffprobe,
@@ -146,6 +161,7 @@ def study_reference(
         artifact_paths = {
             "techniqueProposals": "technique-proposals.json",
             "shotEvidence": "shot-evidence.json",
+            "editRhythm": "edit-rhythm.json",
             "reviewGallery": gallery.relative_to(staging).as_posix(),
             "shotGallery": shot_gallery.relative_to(staging).as_posix(),
             "studyOverview": "index.html",
@@ -165,7 +181,12 @@ def study_reference(
             '">Shot storyboard: chronological composition and story questions</a></li>'
             '<li><a href="' +
             html.escape(artifact_paths["reviewGallery"], quote=True) +
-            '">Technique cues: measured movement/appearance hypotheses</a></li></ul>'
+            '">Technique cues: measured movement/appearance hypotheses</a></li>'
+            '<li><a href="' +
+            html.escape(artifact_paths["editRhythm"], quote=True) +
+            '">Edit rhythm: source-timed candidate cut intervals</a> (' +
+            str(rhythm["observedInterCutIntervalCount"]) +
+            ' measured inter-cut gaps; scan ends are excluded)</li></ul>'
             '<p>Review the full original video, annotate evidence in a separate '
             'review-notes.json draft, and require human approval after rendering.</p>'
             '</body></html>\n', encoding="utf-8")

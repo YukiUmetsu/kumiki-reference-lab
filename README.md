@@ -57,7 +57,7 @@ python -m pip install -e '.[motion]'
 kumiki-ref study-reference ./reference.mp4 --max-seconds 10 --out ./runs
 ```
 
-This produces a verified analysis bundle, cautious technique proposals, candidate edit-region summaries and a local HTML **study overview** linking both a candidate-shot storyboard and a separate technique review gallery. Storyboard frames are available even with zero technique cues. It never claims to infer the source's actual camera, lights, objects or story purpose. See [one-command study usage](docs/reference-study.md).
+This produces a verified analysis bundle, cautious technique proposals, candidate edit-region and cut-to-cut timing summaries, and a local HTML **study overview** linking both a candidate-shot storyboard and a separate technique review gallery. Storyboard frames are available even with zero technique cues. It never claims to infer the source's actual camera, lights, objects or story purpose. See [one-command study usage](docs/reference-study.md).
 
 To document human observations or optional AI hypotheses in a separate, source-verified draft, use `kumiki-ref review-notes init <study-manifest.json> --reviewer-id NAME --out reviews/`, then `review-notes validate <study-manifest.json> reviews/review-notes.json`. Exact original frame PTS, cue/region identity and study hashes are checked, but no semantic truth or human approval is implied. See [review notes contract](docs/review-notes.md).
 
@@ -325,9 +325,9 @@ kumiki-ref study-reference ./reference.mp4 --max-seconds 10 --out ./runs
 
 `shot-evidence` groups already measured frame data into candidate edit regions, summarizes available appearance/translation/sparse-flow measurements and records explicit uncertainty. It refuses unreliable source timestamp timelines and does not manufacture a final exclusive end PTS. See [shot evidence and semantic limits](docs/shot-evidence.md).
 
-`study-reference` orchestrates `analyze` with bounded optional numeric stages, technique proposal generation, shot-region summaries and a source-verified gallery. The derived study is published atomically with checksummed files, and a successful analysis remains reusable if a later review step fails. See [command contracts and output layout](docs/reference-study.md).
+`study-reference` orchestrates `analyze` with bounded optional numeric stages, technique proposal generation, shot-region summaries, censored candidate cut-to-cut intervals and a source-verified gallery. The derived v3 study is published atomically with checksummed files, and a successful analysis remains reusable if a later review step fails. See [command contracts and output layout](docs/reference-study.md).
 
-**Regression evidence:** Three procedurally generated reference-video fixtures exercise the actual FFmpeg → analysis → proposal → HTML gallery / shot-region path with known causes, including misleading visual lookalikes. GitHub CI runs them with NumPy and FFmpeg preflight separately from dependency-free baseline tests. See [synthetic source validation](docs/synthetic-reference-qa.md).
+**Regression evidence:** Three procedurally generated reference-video fixtures exercise the actual FFmpeg → analysis → proposal → HTML gallery / shot-region path with known causes, including misleading visual lookalikes. These and all FFmpeg/NumPy integration tests remain available for **local testing**; the streamlined GitHub CI runs only inexpensive core smoke tests. See [synthetic source validation](docs/synthetic-reference-qa.md).
 
 `analyze` is the transactional orchestration layer: it runs `inspect` + `frames` + `cuts` + `contact-sheet`, with `--motion`, `--sparse-flow`, `--appearance`, and `--box` opt-ins. By default it requires only FFmpeg/FFprobe. Each completed bundle contains JSON artifacts, a local visual contact sheet, and `analysis-run.json` with hashes and immutable input/settings identity. If any required stage fails, the temporary bundle is discarded and no partial run is published. The bounded initial implementation repeats some inexpensive metadata work rather than building an unverified streaming/cache engine.
 

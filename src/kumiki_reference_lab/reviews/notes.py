@@ -15,6 +15,7 @@ from kumiki_reference_lab.analyzers.media.inspect import sha256_file
 from kumiki_reference_lab.analyzers.techniques.propose import _json_file
 from kumiki_reference_lab.contracts.analysis import (
     REVIEW_NOTES_VERSION, REFERENCE_STUDY_VERSION, REFERENCE_STUDY_V1_VERSION,
+    REFERENCE_STUDY_V2_VERSION,
 )
 from kumiki_reference_lab.core.artifacts import write_json_artifact
 from kumiki_reference_lab.pipeline.analyze import _validate_existing
@@ -68,7 +69,8 @@ def _study_context(manifest_path: Path) -> tuple[dict[str, Any], dict[str, Any],
             not re.fullmatch(r"analysis-[a-f0-9]{12}-[a-f0-9]{20}", run_name)):
         raise ValueError("study analysis directory has an unsafe identity")
     if study["schemaVersion"] not in (
-            REFERENCE_STUDY_V1_VERSION, REFERENCE_STUDY_VERSION):
+            REFERENCE_STUDY_V1_VERSION, REFERENCE_STUDY_V2_VERSION,
+            REFERENCE_STUDY_VERSION):
         raise ValueError("unsupported reference study")
     proposals = _json_file(manifest_path.parent / "technique-proposals.json",
                            limit=4_194_304)

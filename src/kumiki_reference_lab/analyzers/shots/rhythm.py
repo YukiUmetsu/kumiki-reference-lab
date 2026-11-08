@@ -63,9 +63,8 @@ def summarize_edit_rhythm(regions: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def build_edit_rhythm(analysis_run: Path) -> dict[str, Any]:
-    """Extract temporal cadence measurements from a checksum-verified run."""
-    evidence = build_shot_evidence(analysis_run)
+def edit_rhythm_from_verified_shots(evidence: dict[str, Any]) -> dict[str, Any]:
+    """Project already verified shot evidence into pure edit timing measurements."""
     if evidence["status"] != "candidate-edit-regions":
         raise ValueError("edit rhythm requires reliable original video presentation PTS")
     measured = summarize_edit_rhythm(evidence["regions"])
@@ -81,3 +80,8 @@ def build_edit_rhythm(analysis_run: Path) -> dict[str, Any]:
         "qualityVerdict": "not-performed",
         "limits": "Only exact gaps between consecutive candidate cut PTS are measured. No claim is made about completed shots, cut intent, pace preference, film rhythm quality, or edits beyond the bounded scan.",
     }
+
+
+def build_edit_rhythm(analysis_run: Path) -> dict[str, Any]:
+    """Extract temporal cadence measurements from a checksum-verified run."""
+    return edit_rhythm_from_verified_shots(build_shot_evidence(analysis_run))
