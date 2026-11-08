@@ -13,6 +13,19 @@ the experiment independently of `--max-samples`, which controls the optional
 global-motion and ROI stages. Opting in changes the checksum-bound run
 identity; legacy runs without sparse flow keep their existing identity.
 
+For larger movement between selected frames, opt in to the bounded **two-level
+coarse-to-fine fallback** with `kumiki-ref sparse-flow reference.mp4
+--pyramid-levels 2` or `kumiki-ref analyze reference.mp4 --sparse-flow
+--sparse-pyramid-levels 2 --out ./runs`. The default level 1 retains the
+original behavior and analysis-run identity. Level 2 first attempts the
+original full-resolution match; only failed matches are retried using a 2×
+averaged grayscale image and then refined within ±2 original pixels.
+Reverse matching checks the recovered patch against its source neighborhood.
+Each accepted vector carries `searchLevel: 1|2` so reviewers know which
+method contributed. This increases reachable displacement to roughly
+2× the declared local radius plus 2px refinement; it does **not** guarantee
+recovery under blur, occlusion, repeated texture, zoom or camera rotation.
+
 ## What it actually measures
 
 1. Preserve the source stream's integer presentation timestamps (PTS) and
@@ -23,6 +36,9 @@ identity; legacy runs without sparse flow keep their existing identity.
 4. Match 9×9 patches in a bounded ±8-pixel neighborhood with zero-mean
    normalized cross-correlation. Reject poor/ambiguous appearance matches.
 5. Track the matched patch backward; reject roundtrip error over 1.5 pixels.
+   In two-level fallback mode, reverse consistency is measured against the
+   original source-patch neighborhood, so it is not an independently
+   initialized global backward correspondence.
 6. Group accepted integer pixel displacements into up to two translation
    consensuses with 1.5-pixel tolerance, a three-point minimum and a
    2.5-pixel separation requirement. Keep unclassified point vectors.
@@ -106,14 +122,19 @@ and are **not** verified identities.
 - Defaults: 160×90 pixels, 10 seconds, 24 sampled frames, 40 feature points,
   ±8px search. Hard limits: 240×135, 20 seconds, 40 frames, 64 points, ±12px.
   Designed for controlled short tests, not a full feature film at 4K.
+- Two-level search runs more bounded CPU work on pairs where local matching
+  failed. Original level-1 estimates are unchanged; coarse recovery may fail
+  under aliasing or downsampling of fine textures, and is only candidate
+  evidence, not an automatic correction to physics or film technique labels.
 - Patch NCC assumes locally stable texture and modest translations. Rotation,
 perspective, rescaling, motion blur, occlusion and crossfades degrade it.
 - Grouping uses translation only. Affine hypotheses help characterize apparent
   scale/rotation, but camera movement plus parallax, perspective, depth,
   rotating props and deformation require more careful geometric modeling.
-- Recommended subsequent work: multi-scale optical flow, homography versus
-  affine model selection, validated feature re-identification with occlusion
-  handling, then *optional* image segmentation/semantic classification.
+- Recommended subsequent work: dense or subpixel multi-scale optical flow,
+  homography versus affine model selection, validated feature
+  re-identification with occlusion handling, then *optional* image
+  segmentation/semantic classification.
 
 The longer-term research use is to inform **candidate** Kumiki camera/subject
 choreography, compare observed timings, and select reproducible effect presets

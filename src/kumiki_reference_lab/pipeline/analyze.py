@@ -128,7 +128,7 @@ def run_analysis(
     samples: int = 48, width: int = 160, height: int = 90,
     sparse_flow: bool = False, sparse_samples: int = 24,
     sparse_points: int = 40, sparse_radius: int = 8,
-    sparse_correlation: float = 0.68,
+    sparse_correlation: float = 0.68, sparse_pyramid_levels: int = 1,
     appearance: bool = False, appearance_samples: int = 24,
     threshold: float = 0.25, ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
     rights_status: str = "review-required",
@@ -155,6 +155,8 @@ def run_analysis(
             raise ValueError("sparse-flow points must be 4..64")
         if type(sparse_radius) is not int or not 2 <= sparse_radius <= 12:
             raise ValueError("sparse-flow radius must be 2..12")
+        if type(sparse_pyramid_levels) is not int or sparse_pyramid_levels not in (1, 2):
+            raise ValueError("sparse-flow pyramid levels must be 1 or 2")
         if (not isinstance(sparse_correlation, (int, float)) or
                 not 0 < sparse_correlation < 1):
             raise ValueError("sparse-flow correlation must be between zero and one")
@@ -188,6 +190,8 @@ def run_analysis(
         settings.update({"sparseFlow": True, "sparseSamples": sparse_samples,
                          "sparsePoints": sparse_points, "sparseRadius": sparse_radius,
                          "sparseCorrelation": float(sparse_correlation)})
+        if sparse_pyramid_levels == 2:
+            settings["sparsePyramidLevels"] = 2
         settings["versions"]["sparseFlow"] = SPARSE_FLOW_VERSION
     if appearance:
         settings.update({"appearance": True, "appearanceSamples": appearance_samples})
@@ -244,6 +248,7 @@ def run_analysis(
                 source, seconds=seconds, max_samples=sparse_samples, width=width,
                 height=height, max_points=sparse_points, radius=sparse_radius,
                 correlation=sparse_correlation, threshold=threshold,
+                pyramid_levels=sparse_pyramid_levels,
                 ffmpeg=ffmpeg, ffprobe=ffprobe, rights_status=rights_status,
             )
             write_json_artifact(staging, _STAGES["sparseFlow"], sparse)

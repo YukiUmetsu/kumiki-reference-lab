@@ -27,6 +27,7 @@ def analyze_sparse_flow(
     source: Path, *, seconds: int = 10, max_samples: int = 24,
     width: int = 160, height: int = 90, max_points: int = 40,
     radius: int = 8, correlation: float = 0.68, threshold: float = 0.25,
+    pyramid_levels: int = 1,
     ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
     rights_status: str = "review-required",
 ) -> dict[str, Any]:
@@ -41,6 +42,8 @@ def analyze_sparse_flow(
         raise ValueError("sparse-flow max_points must be 4..64")
     if type(radius) is not int or not 2 <= radius <= 12:
         raise ValueError("sparse-flow radius must be 2..12")
+    if type(pyramid_levels) is not int or pyramid_levels not in (1, 2):
+        raise ValueError("sparse-flow pyramid_levels must be 1 or 2")
     if not all(math.isfinite(v) and 0 < v < 1 for v in (correlation, threshold)):
         raise ValueError("sparse-flow correlation/threshold must be between zero and one")
     if importlib.util.find_spec("numpy") is None:
@@ -81,7 +84,8 @@ def analyze_sparse_flow(
         else:
             tracks = sparse_patch_flows(planes[index - 1], planes[index], width, height,
                                        max_points=max_points, radius=radius,
-                                       minimum_correlation=correlation)
+                                       minimum_correlation=correlation,
+                                       pyramid_levels=pyramid_levels)
             grouped = group_sparse_flows(tracks["accepted"], width, height)
             geometry = fit_image_affine(tracks["accepted"], width, height)
             vectors = [{**item, "group": group} for item, group in
@@ -100,12 +104,16 @@ def analyze_sparse_flow(
         "scanWindowSeconds": seconds,
         "coverage": "bounded-from-start-not-necessarily-full-video",
         "analyzer": {
-            "method": "shi-tomasi-approx-patch-ncc-fb-consensus-affine-v1",
+            "method": ("shi-tomasi-approx-patch-ncc-fb-consensus-affine-pyramid2-v1"
+                       if pyramid_levels == 2 else
+                       "shi-tomasi-approx-patch-ncc-fb-consensus-affine-v1"),
             "numpyVersion": np.__version__,
             "ffmpegExecutable": ffmpeg, "ffprobeExecutable": ffprobe,
             "resolution": {"width": width, "height": height},
             "maxSamples": max_samples, "maxCornersPerFramePair": max_points,
             "searchRadiusPixels": radius, "patchSizePixels": 9,
+            **({"pyramidLevels": 2, "coarseRefinementRadiusPixels": 2}
+               if pyramid_levels == 2 else {}),
             "minimumAppearanceCorrelation": correlation,
             "roundtripTolerancePixels": 1.5,
             "consensusTolerancePixels": 1.5,

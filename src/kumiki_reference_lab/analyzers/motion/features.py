@@ -75,7 +75,7 @@ def select_corners(
 def sparse_patch_flows(
     before: bytes, after: bytes, width: int, height: int, *,
     max_points: int = 48, patch_size: int = 9, radius: int = 8,
-    minimum_correlation: float = 0.68,
+    minimum_correlation: float = 0.68, pyramid_levels: int = 1,
 ) -> dict[str, Any]:
     """Track source-frame corners with forward/backward patch consistency.
 
@@ -84,15 +84,53 @@ def sparse_patch_flows(
     """
     if not 0 < minimum_correlation < 1:
         raise ValueError("minimum_correlation must be between 0 and 1")
+    if type(pyramid_levels) is not int or pyramid_levels not in (1, 2):
+        raise ValueError("sparse-flow pyramid_levels must be 1 or 2")
     corners = select_corners(before, width, height, max_points=max_points,
                              patch_size=patch_size, radius=radius)
     half = patch_size // 2
 
-    def patch(plane: bytes, x: int, y: int) -> bytes:
+    coarse_before: bytes | None = None
+    coarse_after: bytes | None = None
+    coarse_width, coarse_height = width // 2, height // 2
+    if pyramid_levels == 2 and corners:
+        import numpy as np
+
+        def downscale(plane: bytes) -> bytes:
+            image = np.frombuffer(plane, dtype=np.uint8).reshape(height, width)
+            block = image[:coarse_height * 2, :coarse_width * 2]
+            return np.rint(block.reshape(coarse_height, 2, coarse_width, 2)
+                           .mean(axis=(1, 3))).astype(np.uint8).tobytes()
+
+        coarse_before, coarse_after = downscale(before), downscale(after)
+
+    def patch(plane: bytes, x: int, y: int, plane_width: int = width) -> bytes:
         left, top = x - half, y - half
-        return b"".join(plane[(top + row) * width + left:
-                              (top + row) * width + left + patch_size]
+        return b"".join(plane[(top + row) * plane_width + left:
+                              (top + row) * plane_width + left + patch_size]
                         for row in range(patch_size))
+
+    def coarse_refine(x: int, y: int, template: bytes) -> dict[str, Any] | None:
+        if coarse_before is None or coarse_after is None:
+            return None
+        cx, cy = x // 2, y // 2
+        if not (half <= cx < coarse_width - half and
+                half <= cy < coarse_height - half):
+            return None
+        coarse_template = patch(coarse_before, cx, cy, coarse_width)
+        candidate = track_template(coarse_template, coarse_after,
+                                   coarse_width, coarse_height, patch_size, patch_size,
+                                   cx - half, cy - half,
+                                   radius=radius,
+                                   minimum_correlation=minimum_correlation)
+        if candidate["status"] != "matched-template":
+            return None
+        predicted_x = x - half + 2 * (candidate["x"] - (cx - half))
+        predicted_y = y - half + 2 * (candidate["y"] - (cy - half))
+        refined = track_template(template, after, width, height,
+                                 patch_size, patch_size, predicted_x, predicted_y,
+                                 radius=2, minimum_correlation=minimum_correlation)
+        return refined if refined["status"] == "matched-template" else None
 
     accepted: list[dict[str, Any]] = []
     rejected = {"low-texture": 0, "forward-failed": 0, "backward-failed": 0,
@@ -100,30 +138,41 @@ def sparse_patch_flows(
     for x, y in corners:
         template = patch(before, x, y)
         start_x, start_y = x - half, y - half
-        forward = track_template(template, after, width, height,
+        initial = track_template(template, after, width, height,
                                  patch_size, patch_size, start_x, start_y,
                                  radius=radius, minimum_correlation=minimum_correlation)
-        if forward["status"] == "unobservable-low-texture":
-            rejected["low-texture"] += 1
-            continue
-        if forward["status"] != "matched-template":
-            rejected["forward-failed"] += 1
-            continue
-        next_x, next_y = forward["x"] + half, forward["y"] + half
-        reverse_template = patch(after, next_x, next_y)
-        backward = track_template(reverse_template, before, width, height,
-                                  patch_size, patch_size, forward["x"], forward["y"],
-                                  radius=radius, minimum_correlation=minimum_correlation)
-        if backward["status"] != "matched-template":
-            rejected["backward-failed"] += 1
-            continue
-        error = math.hypot(backward["x"] - start_x, backward["y"] - start_y)
-        if error > 1.5:
-            rejected["roundtrip-inconsistent"] += 1
-            continue
-        accepted.append({"x": x, "y": y, "dx": next_x - x, "dy": next_y - y,
-                         "forwardCorrelation": forward["correlation"],
-                         "backwardCorrelation": backward["correlation"],
-                         "roundtripErrorPixels": round(error, 4)})
+        failure = ("low-texture" if initial["status"] == "unobservable-low-texture"
+                   else "forward-failed")
+        for search_level in range(1, pyramid_levels + 1):
+            forward = (initial if search_level == 1
+                       else coarse_refine(x, y, template))
+            if forward is None or forward["status"] != "matched-template":
+                continue
+            next_x, next_y = forward["x"] + half, forward["y"] + half
+            reverse_template = patch(after, next_x, next_y)
+            # A coarse-recovered displacement may exceed the local radius;
+            # validate the patch against its known source neighborhood.
+            reverse_x, reverse_y = ((start_x, start_y) if search_level == 2
+                                    else (forward["x"], forward["y"]))
+            backward = track_template(reverse_template, before, width, height,
+                                      patch_size, patch_size, reverse_x, reverse_y,
+                                      radius=radius, minimum_correlation=minimum_correlation)
+            if backward["status"] != "matched-template":
+                failure = "backward-failed"
+                continue
+            error = math.hypot(backward["x"] - start_x, backward["y"] - start_y)
+            if error > 1.5:
+                failure = "roundtrip-inconsistent"
+                continue
+            vector = {"x": x, "y": y, "dx": next_x - x, "dy": next_y - y,
+                      "forwardCorrelation": forward["correlation"],
+                      "backwardCorrelation": backward["correlation"],
+                      "roundtripErrorPixels": round(error, 4)}
+            if pyramid_levels == 2:
+                vector["searchLevel"] = search_level
+            accepted.append(vector)
+            break
+        else:
+            rejected[failure] += 1
     return {"detectedCorners": len(corners), "accepted": accepted,
             "rejected": rejected}
