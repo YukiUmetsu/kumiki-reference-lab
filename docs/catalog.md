@@ -42,7 +42,7 @@ Do not increment status merely because tests pass. Tests validate structure and 
 
 ## Turning a video into evidence
 
-1. Use `inspect`, `frames`, `cuts`, `contact-sheet`, `motion`, and optional manually seeded `track-roi` on a reference with known source hash.
+1. Use `analyze` to obtain a checksum-verified bundle of `inspect`, `frames`, `cuts`, `contact-sheet`, and optionally `motion` and `track-roi` reports on a reference with known source hash. The manifest intentionally contains no automatic technique claim.
 2. Human/AI reviewers examine the actual frames (or a locally configured vision model examines those frames) and produce **separate** observations, hypotheses and creative choices. A motion magnitude is an observation; "this must have been a dolly" is only a hypothesis.
 3. Attach a precise `evidence[]` record only when it refers to an existing artifact and real source PTS. Include the observed quality, not invented camera/light numbers.
 4. Propose and implement a Kumiki scene, inspect render frames and full-motion playback, and compare motion, silhouette, rhythm, exposure and comprehensibility with the original reference.

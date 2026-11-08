@@ -17,6 +17,7 @@ from kumiki_reference_lab.backends.ffmpeg.probe import ProbeError
 from kumiki_reference_lab.catalog.store import build_catalog_index, load_catalog, search_catalog
 from kumiki_reference_lab.contracts.source import RIGHTS_STATUSES
 from kumiki_reference_lab.core.artifacts import write_json_artifact
+from kumiki_reference_lab.pipeline.analyze import run_analysis
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -84,6 +85,23 @@ def build_parser() -> argparse.ArgumentParser:
     roi.add_argument("--ffprobe", default="ffprobe")
     roi.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
 
+    analyze = commands.add_parser("analyze", help="run a bounded, atomic multi-stage reference analysis")
+    analyze.add_argument("source", type=Path)
+    analyze.add_argument("--out", type=Path, required=True, help="parent directory for immutable run")
+    analyze.add_argument("--max-seconds", type=int, default=10)
+    analyze.add_argument("--thumbnails", type=int, default=12)
+    analyze.add_argument("--motion", action="store_true", help="include optional NumPy motion measurements")
+    analyze.add_argument("--box", type=float, nargs=4,
+                         metavar=("X", "Y", "WIDTH", "HEIGHT"),
+                         help="optional seeded ROI in normalized image coordinates")
+    analyze.add_argument("--max-samples", type=int, default=48)
+    analyze.add_argument("--width", type=int, default=160)
+    analyze.add_argument("--height", type=int, default=90)
+    analyze.add_argument("--threshold", type=float, default=0.25)
+    analyze.add_argument("--ffmpeg", default="ffmpeg")
+    analyze.add_argument("--ffprobe", default="ffprobe")
+    analyze.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
+
     catalog = commands.add_parser("catalog", help="search and validate cinematic technique research")
     catalog_actions = catalog.add_subparsers(dest="catalog_action", required=True)
     for action in ("validate", "search", "index"):
@@ -114,6 +132,16 @@ def main(argv: list[str] | None = None) -> int:
                 destination = write_json_artifact(args.out, "catalog-index.json",
                                                   build_catalog_index(entries))
                 print(str(destination))
+            return 0
+        if args.command == "analyze":
+            manifest = run_analysis(
+                args.source, args.out, seconds=args.max_seconds, thumbnails=args.thumbnails,
+                motion=args.motion, roi=(tuple(args.box) if args.box is not None else None),
+                samples=args.max_samples, width=args.width, height=args.height,
+                threshold=args.threshold, ffmpeg=args.ffmpeg, ffprobe=args.ffprobe,
+                rights_status=args.rights_status,
+            )
+            print(str(manifest))
             return 0
         if args.command == "contact-sheet":
             index = build_contact_sheet(

@@ -2,9 +2,9 @@
 
 **Reference-video analysis, cinematic technique research, and reproducible motion reconstruction for the Kumiki ecosystem.**
 
-> **Project status: early working foundation.** The `inspect`, `frames`, `cuts`, `contact-sheet`, `motion`, `track-roi`, and `catalog` commands are implemented and tested. Automatic video-to-technique interpretation, verified reference matching, and Kumiki export remain planned.
+> **Project status: early working foundation.** The `inspect`, `frames`, `cuts`, `contact-sheet`, `motion`, `track-roi`, `analyze`, and `catalog` commands are implemented and tested. Automatic video-to-technique interpretation, verified reference matching, and Kumiki export remain planned.
 
-**Implemented foundation:** Python commands read local video metadata, extract real presentation timestamps, detect bounded hard-cut *candidates*, produce timecoded HTML/JPEG contact sheets, optionally measure global image-plane translation and simple easing candidates, and track a user-seeded textured image region with NumPy. A validated, searchable Cinematic Techniques Catalog includes five original research candidates. Automatic semantic identity tracking, physical camera inference, semantic interpretation, treatment compilation and reference comparison remain planned.
+**Implemented foundation:** Python commands read local video metadata, extract real presentation timestamps, detect bounded hard-cut *candidates*, produce timecoded HTML/JPEG contact sheets, optionally measure global image-plane translation and simple easing candidates, and track a user-seeded textured image region with NumPy. A versioned `analyze` pipeline combines these into an immutable, checksum-verified run. A validated, searchable Cinematic Techniques Catalog includes five original research candidates. Automatic semantic identity tracking, physical camera inference, semantic interpretation, treatment compilation and reference comparison remain planned.
 
 Kumiki Reference Lab studies legally obtained motion-graphics, product-film, documentary, and explainer-video references. It extracts measurable characteristics, identifies reusable filmmaking techniques, and produces evidence-backed reports that can guide implementations in [kumiki-ui](https://github.com/YukiUmetsu/kumiki-ui).
 
@@ -47,6 +47,15 @@ Reference Lab is an **offline authoring and research tool**. Neither Kumiki UI n
 8. **Independent reproducibility.** Same source bytes, parameters, model checkpoints, and tool versions should produce equivalent structured measurements; record nondeterministic exceptions.
 
 ## Workflow
+
+Run the implemented evidence pipeline first:
+
+```bash
+PYTHONPATH=src python -m kumiki_reference_lab analyze ./reference.mp4 --max-seconds 10 --out ./runs
+# With NumPy installed: --motion and optionally --box X Y WIDTH HEIGHT
+```
+
+The resulting `analysis-<source>-<settings>/analysis-run.json` inventories stage outputs and their SHA-256 checksums. All requested stages must succeed before the bundle is published. Re-running the same source/settings checks the completed output; changed or missing files are rejected. `catalogProposals` stays empty and `interpretationStatus` is `not-performed` until a real interpretation stage exists.
 
 ```text
 Authorized reference video
@@ -245,6 +254,7 @@ PYTHONPATH=src python -m kumiki_reference_lab contact-sheet ./reference.mp4 --ma
 PYTHONPATH=src python -m kumiki_reference_lab catalog validate
 PYTHONPATH=src python -m kumiki_reference_lab catalog search "reveal material shape"
 PYTHONPATH=src python -m kumiki_reference_lab catalog index --out ./runs/catalog-r001
+PYTHONPATH=src python -m kumiki_reference_lab analyze ./reference.mp4 --max-seconds 10 --out ./runs
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
@@ -260,6 +270,8 @@ kumiki-ref track-roi ./reference.mp4 --box 0.19 0.22 0.15 0.20 --max-seconds 10 
 `motion` decodes at most 120 original frames over a 30-second source window into bounded grayscale buffers; every decoded PTS must match FFprobe. It outputs `image-motion.json` containing measured global image translation, explicit ambiguous/unobservable/cut-boundary pairs, normalized displacement, cumulative segments, and residual-ranked candidate easing curves. This cannot determine whether the displacement came from the camera, a foreground subject, a background, or a mixture; it also does not measure zoom, rotation, parallax, 3D paths, or separate subjects. Curve fits are observations of rendered motion, **not recovered source keyframes**. The stage uses NumPy only when invoked; the other commands remain dependency-free.
 
 `track-roi` accepts a normalized `x y width height` seed rectangle on the first decoded frame and follows its textured appearance with bounded local normalized cross-correlation. It produces `roi-track.json` with exact source timestamps, per-frame box coordinates, relative displacement and match diagnostics. Uniform templates, ambiguous matches, disappearance and cut boundaries stop the track; the tool does not silently invent positions or automatically re-identify subjects after a cut. This is **not semantic object recognition**: a box containing background may track background, and changing pose, lighting or occlusion can defeat a static patch. The reviewer or a future model must provide meaningful seeds.
+
+`analyze` is the transactional orchestration layer: it runs `inspect` + `frames` + `cuts` + `contact-sheet`, with `--motion` and `--box` opt-ins. By default it requires only FFmpeg/FFprobe. Each completed bundle contains JSON artifacts, a local visual contact sheet, and `analysis-run.json` with hashes and immutable input/settings identity. If any required stage fails, the temporary bundle is discarded and no partial run is published. The bounded initial implementation repeats some inexpensive metadata work rather than building an unverified streaming/cache engine.
 
 `catalog` loads canonical research entries from `catalog/entries/` when run from the repository root; provide `--root` when invoked elsewhere. `validate` rejects malformed or improperly promoted entries, `search` ranks story-purpose matches, and `index` emits a versioned metadata-only `catalog-index.json`. Research candidates do not claim verified renderer support or reference-video measurements.
 
@@ -303,7 +315,7 @@ kumiki-reference-lab/
 │   ├── cli/
 │   ├── core/                       # Timebase, provenance, errors, capability ports
 │   ├── contracts/                  # Versioned artifacts, never renderer logic
-│   ├── pipeline/                   # Stage DAG, restart/cache, results (future)
+│   ├── pipeline/                   # Implemented: atomic bounded analysis run; future: DAG/caches/retry
 │   ├── analyzers/
 │   │   ├── media/                  # Implemented: inspection, timestamps, contact sheets
 │   │   ├── shots/                  # Implemented: bounded cut candidates
