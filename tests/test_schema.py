@@ -9,6 +9,7 @@ from kumiki_reference_lab.contracts.analysis import (
     APPEARANCE_VERSION, APPEARANCE_COMPARISON_VERSION, FRAME_COMPARISON_VERSION,
     TECHNIQUE_PROPOSALS_VERSION,
     TECHNIQUE_REVIEW_VERSION,
+    SHOT_EVIDENCE_VERSION,
 )
 from kumiki_reference_lab.catalog.validate import TECHNIQUE_SCHEMA_VERSION, INDEX_SCHEMA_VERSION
 
@@ -35,6 +36,7 @@ class SchemaTests(unittest.TestCase):
                               ("frame-comparison", FRAME_COMPARISON_VERSION),
                               ("technique-proposals", TECHNIQUE_PROPOSALS_VERSION),
                               ("technique-review", TECHNIQUE_REVIEW_VERSION),
+                              ("shot-evidence", SHOT_EVIDENCE_VERSION),
                               ("roi-track", ROI_TRACK_VERSION),
                               ("analysis-run", ANALYSIS_RUN_VERSION)):
             schema = json.loads((root / (name + ".schema.json")).read_text(encoding="utf-8"))

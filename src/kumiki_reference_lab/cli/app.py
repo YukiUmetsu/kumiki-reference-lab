@@ -13,6 +13,7 @@ from kumiki_reference_lab.analyzers.comparison.appearance import compare_appeara
 from kumiki_reference_lab.analyzers.comparison.frames import build_frame_comparison
 from kumiki_reference_lab.analyzers.techniques.propose import propose_techniques
 from kumiki_reference_lab.analyzers.techniques.review import build_technique_review
+from kumiki_reference_lab.analyzers.shots.evidence import build_shot_evidence
 from kumiki_reference_lab.analyzers.media.contact_sheet import build_contact_sheet
 from kumiki_reference_lab.analyzers.motion.analyze import analyze_image_motion
 from kumiki_reference_lab.analyzers.motion.sparse import analyze_sparse_flow
@@ -167,6 +168,11 @@ def build_parser() -> argparse.ArgumentParser:
     technique_review.add_argument("--ffmpeg", default="ffmpeg")
     technique_review.add_argument("--ffprobe", default="ffprobe")
 
+    shot_evidence = commands.add_parser(
+        "shot-evidence", help="summarize verified evidence by candidate edit regions")
+    shot_evidence.add_argument("analysis_run", type=Path)
+    shot_evidence.add_argument("--out", type=Path)
+
     analyze = commands.add_parser("analyze", help="run a bounded, atomic multi-stage reference analysis")
     analyze.add_argument("source", type=Path)
     analyze.add_argument("--out", type=Path, required=True, help="parent directory for immutable run")
@@ -253,6 +259,13 @@ def main(argv: list[str] | None = None) -> int:
                 width=args.width, ffmpeg=args.ffmpeg, ffprobe=args.ffprobe,
             )
             print(str(result))
+            return 0
+        if args.command == "shot-evidence":
+            result = build_shot_evidence(args.analysis_run)
+            if args.out is None:
+                print(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
+            else:
+                print(str(write_json_artifact(args.out, "shot-evidence.json", result)))
             return 0
         if args.command == "compare-appearance":
             comparison = compare_appearance(
