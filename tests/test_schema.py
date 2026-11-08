@@ -28,6 +28,7 @@ from kumiki_reference_lab.contracts.analysis import (
 from kumiki_reference_lab.catalog.validate import TECHNIQUE_SCHEMA_VERSION, INDEX_SCHEMA_VERSION
 from kumiki_reference_lab.integrations.kumiki.film_handoff import FILM_HANDOFF_VERSION
 from kumiki_reference_lab.integrations.kumiki.film_map_review import VERSION as FILM_MAP_REVIEW_VERSION
+from kumiki_reference_lab.integrations.kumiki.film_feedback import VERSION as FILM_FEEDBACK_VERSION
 
 
 class SchemaTests(unittest.TestCase):
@@ -93,6 +94,10 @@ class SchemaTests(unittest.TestCase):
                          FILM_MAP_REVIEW_VERSION)
         self.assertEqual(film_review["properties"]["qualityVerdict"]["const"],
                          "not-performed")
+        feedback = json.loads((root / "film-map-feedback.schema.json").read_text())
+        self.assertEqual(feedback["properties"]["schemaVersion"]["const"],
+                         FILM_FEEDBACK_VERSION)
+        self.assertEqual(feedback["properties"]["reviewStatus"]["const"], "draft")
 
     def test_catalog_schema_versions(self):
         root = Path(__file__).resolve().parents[1] / "schemas/v1"

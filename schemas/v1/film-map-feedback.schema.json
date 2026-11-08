@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/film-map-feedback.schema.json",
+  "title": "Source/render frame evidence-bound cinematic revision notes",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "evidence", "reviewer", "reviewStatus", "findings"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.film-map-feedback.v1"},
+    "reviewStatus": {"const": "draft"},
+    "evidence": {
+      "type": "object", "additionalProperties": false,
+      "required": ["reviewManifestSha256", "referenceVideoSha256", "renderVideoSha256", "anchors"],
+      "properties": {
+        "reviewManifestSha256": {"$ref": "#/$defs/sha"},
+        "referenceVideoSha256": {"$ref": "#/$defs/sha"},
+        "renderVideoSha256": {"$ref": "#/$defs/sha"},
+        "anchors": {
+          "type": "array", "minItems": 1, "maxItems": 12,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["id", "sourcePts", "filmFrame", "sourceImage", "sourceImageSha256", "filmImage", "filmImageSha256"],
+            "properties": {
+              "id": {"type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,79}$"},
+              "sourcePts": {"type": "integer"},
+              "filmFrame": {"type": "integer", "minimum": 0},
+              "sourceImage": {"type": "string", "pattern": "^source/frame-[0-9]{3}\\.jpg$"},
+              "sourceImageSha256": {"$ref": "#/$defs/sha"},
+              "filmImage": {"type": "string", "pattern": "^film/frame-[0-9]{3}\\.jpg$"},
+              "filmImageSha256": {"$ref": "#/$defs/sha"}
+            }
+          }
+        }
+      }
+    },
+    "reviewer": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "id", "modelId"],
+      "properties": {
+        "kind": {"enum": ["human", "ai"]},
+        "id": {"type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,79}$"},
+        "modelId": {"type": ["string", "null"], "minLength": 1, "maxLength": 256}
+      },
+      "allOf": [
+        {"if": {"properties": {"kind": {"const": "ai"}}}, "then": {"properties": {"modelId": {"type": "string"}}}},
+        {"if": {"properties": {"kind": {"const": "human"}}}, "then": {"properties": {"modelId": {"type": "null"}}}}
+      ]
+    },
+    "findings": {
+      "type": "array", "maxItems": 48,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "anchorId", "category", "severity", "observation", "suggestedChange"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^finding-[a-z0-9][a-z0-9-]{0,63}$"},
+          "anchorId": {"type": "string", "minLength": 1},
+          "category": {"enum": ["composition", "camera", "lighting", "material", "animation", "readability", "story-clarity", "attention", "continuity", "timing", "sound", "other"]},
+          "severity": {"enum": ["blocking", "significant", "polish", "observation"]},
+          "observation": {"type": "string", "minLength": 1, "maxLength": 2000},
+          "suggestedChange": {"type": ["string", "null"], "minLength": 1, "maxLength": 2000}
+        },
+        "allOf": [
+          {"if": {"properties": {"severity": {"enum": ["blocking", "significant", "polish"]}}},
+           "then": {"properties": {"suggestedChange": {"type": "string"}}}}
+        ]
+      }
+    }
+  },
+  "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

@@ -25,3 +25,38 @@ Limits: 1–12 unique, monotonically ordered anchors per video; both anchors mus
 The HTML is an **inspection aid**. Review teaching clarity, causal object continuity, camera intention, composition, typography, surface detail, lighting and actual motion at full speed. `qualityVerdict` remains `not-performed`, even when all technical checks pass. Original frame quality is judged by a human.
 
 Local verification: `PYTHONPATH=src python -m unittest tests.test_film_map_review -v`. Video decoding tests stay out of automatic CI to conserve credits; the test file is retained.
+
+## Turn the comparison into actionable feedback
+
+The paired stills alone do not tell a coding agent what to improve. After inspecting them **and playing the rendered film at full speed**, create a separate, editable draft:
+
+```bash
+kumiki-ref film-feedback init \
+  ./review-runs/film-map-review-.../film-map-review.json \
+  --reviewer-kind human --reviewer-id editor-1 --out ./editor-notes
+```
+
+Edit `./editor-notes/film-map-feedback.json` to add findings. For example:
+
+```json
+{
+  "id": "finding-obscured-subject",
+  "anchorId": "focus-01",
+  "category": "camera",
+  "severity": "significant",
+  "observation": "The close camera hides the subject before the explanation finishes.",
+  "suggestedChange": "Move the camera back, preserving the subject while the next diagram appears."
+}
+```
+
+Insert this object into the draft's `findings` array; do not replace the full JSON document. `anchorId` must match an actual reviewed pair. Each draft records the exact SHA-256 of the review report, source/render videos, each pair's JPEG bytes, and original source PTS/film frame number. Validate with:
+
+```bash
+kumiki-ref film-feedback validate \
+  ./review-runs/film-map-review-.../film-map-review.json \
+  ./editor-notes/film-map-feedback.json
+```
+
+Corrections can be categorized as `composition`, `camera`, `lighting`, `material`, `animation`, `readability`, `story-clarity`, `attention`, `continuity`, `timing`, `sound` or `other`, with `blocking`, `significant`, `polish`, or `observation` severity. All but `observation` require a suggested change. **Sound annotations must be based on separate listening**, because the paired stills do not prove audio synchronization. The draft may be annotated by a human or an AI model, but author identity is self-declared and must not be treated as authentication.
+
+Validation checks exact evidence identities and annotation structure, not the quality or truth of the feedback. It returns `artisticApproval: not-granted`; no automated validator may promote a film or technique into the catalog as production quality. The schema is [`film-map-feedback.schema.json`](../schemas/v1/film-map-feedback.schema.json). The small FFmpeg-free feedback tests remain part of local test coverage; no additional hosted CI jobs are required.
