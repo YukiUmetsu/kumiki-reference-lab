@@ -14,6 +14,7 @@ from kumiki_reference_lab.analyzers.motion.analyze import select_motion_samples
 from kumiki_reference_lab.analyzers.motion.consensus import group_sparse_flows
 from kumiki_reference_lab.analyzers.motion.features import sparse_patch_flows
 from kumiki_reference_lab.analyzers.motion.geometry import fit_image_affine
+from kumiki_reference_lab.analyzers.motion.tracklets import build_sparse_tracklets
 from kumiki_reference_lab.backends.ffmpeg.frames import read_frame_pts
 from kumiki_reference_lab.backends.ffmpeg.raw_frames import read_gray_frames
 from kumiki_reference_lab.backends.ffmpeg.scene import detect_hard_cut_pts
@@ -115,10 +116,11 @@ def analyze_sparse_flow(
             "missingSourcePtsCount": sum(frame.pts is None for frame in frames),
             "selection": "uniform-original-pts-nearest-frame",
             "calibratedConfidence": False,
-            "limits": "2D short-baseline integer patch displacement only; affine is an image-plane fit, not physical zoom/rotation/camera recovery; groups are not semantic objects; no occlusion recovery or 3D inference",
+            "limits": "2D short-baseline integer patch displacement only; affine is an image-plane fit, not physical zoom/rotation/camera recovery; groups and linked tracklets are not semantic identities; no occlusion recovery or 3D inference",
         },
         "cutCandidatePts": cut_pts,
         "samples": [{"sampleOrdinal": f.ordinal, "sourcePts": f.pts,
                      "sourceSeconds": as_rational_dict(int(f.pts) * timebase)} for f in samples],
         "pairs": pairs,
+        "temporalTracklets": build_sparse_tracklets(pairs),
     }

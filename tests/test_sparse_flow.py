@@ -177,6 +177,9 @@ class SparseFlowIntegrationTests(unittest.TestCase):
             self.assertGreater(len({p["deltaTimeSeconds"]["numerator"]
                                     for p in artifact["pairs"]}), 1)
             self.assertFalse(artifact["analyzer"]["calibratedConfidence"])
+            self.assertIn(artifact["temporalTracklets"]["status"],
+                          ("candidate-only", "insufficient-continuity"))
+            self.assertFalse(artifact["temporalTracklets"]["semanticIdentityVerified"])
             self.assertTrue(all((pair["geometryHypothesis"] is None)
                                 == (pair["status"] == "cut-boundary")
                                 for pair in artifact["pairs"]))
@@ -191,6 +194,7 @@ class SparseFlowIntegrationTests(unittest.TestCase):
             self.assertTrue(all(pair["status"] == "insufficient-consensus"
                                 for pair in result["pairs"]))
             self.assertTrue(all(not pair["vectors"] for pair in result["pairs"]))
+            self.assertEqual(result["temporalTracklets"]["tracklets"], [])
 
     def test_cut_boundary_prevents_any_point_matching(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -219,6 +223,7 @@ class SparseFlowIntegrationTests(unittest.TestCase):
             self.assertEqual(output["pairs"][0]["vectors"], [])
             self.assertEqual(output["pairs"][0]["consensus"], None)
             self.assertEqual(match.call_count, 3)
+            self.assertEqual(output["temporalTracklets"]["tracklets"], [])
 
 
 if __name__ == "__main__":
