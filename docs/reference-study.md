@@ -44,3 +44,5 @@ The one-command defaults are intentionally bounded for a typical Apple Silicon M
 The analysis bundle and derived study are published atomically at their respective boundaries. If a late derived step fails, the completed **valid analysis bundle is reusable**; there is no incomplete published study. Exact repeats verify hashes and reuse the study; missing, additional or modified output files raise an error. Changed sources/settings/catalog entries produce a new identity. The study manifest schema is [`schemas/v1/reference-study.schema.json`](../schemas/v1/reference-study.schema.json).
 
 The output is a visual review starting point for a coding agent. It must check actual source frames and story purpose, resolve the currently available Kumiki UI contracts, implement an **original** technique, render full motion, compare at explicit time anchors, and obtain human sign-off before claiming any premium production quality or promoting a catalog entry.
+
+To add source-linked observations, rejected hypotheses, story interpretations and original implementation suggestions **without modifying immutable evidence**, see [grounded review notes](review-notes.md).

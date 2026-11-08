@@ -2,7 +2,7 @@
 
 **Reference-video analysis, cinematic technique research, and reproducible motion reconstruction for the Kumiki ecosystem.**
 
-> **Project status: early working foundation.** The `study-reference`, `inspect`, `frames`, `cuts`, `contact-sheet`, `motion`, `track-roi`, `sparse-flow`, `appearance`, `shot-evidence`, `compare-appearance`, `compare-frames`, `propose-techniques`, `review-techniques`, `analyze`, and `catalog` commands are implemented and tested. Semantic video-to-technique interpretation, full visual matching, and Kumiki export remain planned.
+> **Project status: early working foundation.** The `study-reference`, `review-notes`, `inspect`, `frames`, `cuts`, `contact-sheet`, `motion`, `track-roi`, `sparse-flow`, `appearance`, `shot-evidence`, `compare-appearance`, `compare-frames`, `propose-techniques`, `review-techniques`, `analyze`, and `catalog` commands are implemented and tested. Semantic video-to-technique interpretation, full visual matching, and Kumiki export remain planned.
 
 **Implemented foundation:** Python commands read local video metadata, extract real presentation timestamps, detect bounded hard-cut *candidates*, produce timecoded HTML/JPEG contact sheets, optionally measure global image-plane translation and easing candidates, track a seeded image region, and characterize sparse 2D motion with conservative affine hypotheses. The `appearance` command measures display-referred RGB color and contrast; `compare-appearance` compares two reports at **explicitly aligned source times**, while `compare-frames` produces side-by-side timecoded JPEGs for manual visual QA. A versioned `analyze` pipeline combines motion/appearance evidence into immutable runs. `propose-techniques` now generates explicit, machine-readable, non-semantic review cues from such a verified run. A searchable Cinematic Techniques Catalog includes five original research candidates. Semantic interpretation, full-speed visual matching, physical camera/lighting inference and treatment compilation remain planned.
 
@@ -56,6 +56,8 @@ kumiki-ref study-reference ./reference.mp4 --max-seconds 10 --out ./runs
 ```
 
 This produces a verified analysis bundle, cautious technique proposals, candidate edit-region summaries and a local HTML gallery. It never claims to infer the source's actual camera, lights, objects or story purpose. See [one-command study usage](docs/reference-study.md).
+
+To document human observations or optional AI hypotheses in a separate, source-verified draft, use `kumiki-ref review-notes init <study-manifest.json> --reviewer-id NAME --out reviews/`, then `review-notes validate <study-manifest.json> reviews/review-notes.json`. Exact original frame PTS, cue/region identity and study hashes are checked, but no semantic truth or human approval is implied. See [review notes contract](docs/review-notes.md).
 
 For more detailed control, run the individual stages below.
 
