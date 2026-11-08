@@ -10,7 +10,9 @@ from kumiki_reference_lab.cli.app import build_parser
 from kumiki_reference_lab.pipeline.study import study_reference
 from kumiki_reference_lab.pipeline.study import _verify_study
 from kumiki_reference_lab.pipeline.analyze import _file_records
-from kumiki_reference_lab.contracts.analysis import REFERENCE_STUDY_V1_VERSION
+from kumiki_reference_lab.contracts.analysis import (
+    REFERENCE_STUDY_V1_VERSION, REFERENCE_STUDY_V2_VERSION,
+)
 from kumiki_reference_lab.core.artifacts import write_json_artifact
 
 
@@ -52,14 +54,19 @@ class StudyReferenceIntegrationTests(unittest.TestCase):
             self.assertTrue(gallery.is_file())
             manifest = gallery.parent / "study-manifest.json"
             report = json.loads(manifest.read_text())
-            self.assertEqual(report["schemaVersion"], "kumiki.reference-study.v2")
+            self.assertEqual(report["schemaVersion"], "kumiki.reference-study.v3")
             self.assertEqual(report["humanReviewStatus"], "unreviewed")
             self.assertEqual(report["qualityVerdict"], "not-performed")
             self.assertTrue((manifest.parent / report["artifacts"]["shotEvidence"]).is_file())
+            self.assertTrue((manifest.parent / report["artifacts"]["editRhythm"]).is_file())
             self.assertTrue((manifest.parent / report["artifacts"]["techniqueProposals"]).is_file())
             self.assertTrue((manifest.parent / report["artifacts"]["shotGallery"]).is_file())
             self.assertTrue((manifest.parent / report["artifacts"]["reviewGallery"]).is_file())
             self.assertIn("Shot storyboard", gallery.read_text())
+            self.assertIn("Edit rhythm", gallery.read_text())
+            rhythm = json.loads((manifest.parent / "edit-rhythm.json").read_text())
+            self.assertEqual(rhythm["schemaVersion"], "kumiki.edit-rhythm.v1")
+            self.assertEqual(rhythm["observedInterCutIntervalCount"], 0)
             self.assertEqual(study_reference(source, output, catalog_root=CATALOG,
                                              seconds=2, thumbnails=4), gallery)
             # Image review files are immutable; damage must be reported on reuse.
@@ -69,7 +76,7 @@ class StudyReferenceIntegrationTests(unittest.TestCase):
                                 seconds=2, thumbnails=4)
             self.assertEqual(len(list(output.glob("analysis/analysis-*"))), 1)
 
-    def test_v1_study_remains_readable_after_v2_upgrade(self):
+    def test_v1_and_v2_studies_remain_readable_after_v3_upgrade(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             source = root / "source.mkv"
@@ -90,7 +97,9 @@ class StudyReferenceIntegrationTests(unittest.TestCase):
             gallery_source = overview.parent / study["artifacts"]["reviewGallery"]
             gallery_destination = legacy / study["artifacts"]["reviewGallery"]
             shutil.copytree(gallery_source.parent, gallery_destination.parent)
-            old_settings = study["settings"] | {"studyVersion": REFERENCE_STUDY_V1_VERSION}
+            old_settings = {k: v for k, v in study["settings"].items()
+                            if k != "editRhythmSha256"}
+            old_settings["studyVersion"] = REFERENCE_STUDY_V1_VERSION
             old_study = {
                 "schemaVersion": REFERENCE_STUDY_V1_VERSION,
                 "settings": old_settings,
@@ -102,6 +111,27 @@ class StudyReferenceIntegrationTests(unittest.TestCase):
             }
             write_json_artifact(legacy, "study-manifest.json", old_study)
             self.assertEqual(_verify_study(legacy, old_settings), gallery_destination)
+
+            v2 = output / "study-v2-legacy-example"
+            v2.mkdir()
+            for name in ("technique-proposals.json", "shot-evidence.json", "index.html"):
+                shutil.copy2(overview.parent / name, v2)
+            for key in ("reviewGallery", "shotGallery"):
+                source_html = overview.parent / study["artifacts"][key]
+                destination_html = v2 / study["artifacts"][key]
+                shutil.copytree(source_html.parent, destination_html.parent)
+            v2_settings = old_settings | {"studyVersion": REFERENCE_STUDY_V2_VERSION}
+            v2_study = {
+                "schemaVersion": REFERENCE_STUDY_V2_VERSION,
+                "settings": v2_settings,
+                "artifacts": {k: v for k, v in study["artifacts"].items()
+                              if k != "editRhythm"},
+                "files": _file_records(v2),
+                "humanReviewStatus": "unreviewed",
+                "qualityVerdict": "not-performed",
+            }
+            write_json_artifact(v2, "study-manifest.json", v2_study)
+            self.assertEqual(_verify_study(v2, v2_settings), v2 / "index.html")
 
 
 if __name__ == "__main__":

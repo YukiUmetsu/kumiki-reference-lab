@@ -18,6 +18,7 @@ from kumiki_reference_lab.contracts.analysis import (
     AV_CUT_EVIDENCE_VERSION,
     EDIT_RHYTHM_VERSION,
     REFERENCE_STUDY_V1_VERSION,
+    REFERENCE_STUDY_V2_VERSION,
 )
 from kumiki_reference_lab.catalog.validate import TECHNIQUE_SCHEMA_VERSION, INDEX_SCHEMA_VERSION
 
@@ -60,6 +61,9 @@ class SchemaTests(unittest.TestCase):
                          REFERENCE_STUDY_V1_VERSION)
         updated = json.loads((root.parent / "v2/reference-study.schema.json").read_text())
         self.assertEqual(updated["properties"]["schemaVersion"]["const"],
+                         REFERENCE_STUDY_V2_VERSION)
+        current = json.loads((root.parent / "v3/reference-study.schema.json").read_text())
+        self.assertEqual(current["properties"]["schemaVersion"]["const"],
                          REFERENCE_STUDY_VERSION)
 
     def test_catalog_schema_versions(self):
