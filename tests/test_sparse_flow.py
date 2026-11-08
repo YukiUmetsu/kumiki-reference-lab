@@ -152,7 +152,8 @@ class FeatureTrackingTests(unittest.TestCase):
         self.assertEqual(result["rejected"]["forward-failed"], 64)
         refined = sparse_patch_flows(original.tobytes(), translated.tobytes(),
                                      160, 90, max_points=64, radius=8,
-                                     pyramid_levels=2, subpixel_refinement=True)
+                                     pyramid_levels=2, subpixel_refinement=True,
+                                     subpixel_reverse_check=True)
         self.assertEqual(refined["accepted"], [])
 
     def test_affine_fit_recovers_controlled_image_zoom_without_calling_it_a_camera(self):
@@ -292,6 +293,15 @@ class SparseFlowIntegrationTests(unittest.TestCase):
             self.assertEqual(multiscale["analyzer"]["method"],
                              "shi-tomasi-approx-patch-ncc-fb-consensus-affine-pyramid2-subpixel-v1")
             self.assertEqual(multiscale["analyzer"]["pyramidLevels"], 2)
+            checked = analyze_sparse_flow(video, seconds=2, max_samples=5,
+                                          subpixel_refinement=True,
+                                          subpixel_reverse_check=True)
+            self.assertEqual(checked["analyzer"]["method"],
+                             "shi-tomasi-approx-patch-ncc-fb-consensus-affine-subpixel-bidir-v1")
+            self.assertEqual(checked["analyzer"]["subpixelReverseVerification"],
+                             "fractional-bilinear-patch-check")
+            self.assertTrue(all("subpixelReverseErrorPixels" in v
+                                for pair in checked["pairs"] for v in pair["vectors"]))
             json.dumps(artifact, allow_nan=False)
 
     def test_flat_video_does_not_invent_vectors(self):

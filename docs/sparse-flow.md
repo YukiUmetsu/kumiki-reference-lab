@@ -70,6 +70,20 @@ run identity; when omitted, all prior integer outputs and run IDs remain
 unchanged. Read the per-vector `subpixelReverseVerification` before interpreting
 small changes in trajectory or apparent affine geometry.
 
+For a stricter experimental gate, additionally pass `--subpixel-reverse-check`
+(or `analyze --sparse-subpixel-reverse-check`). This requires the corresponding
+subpixel option. After a forward peak estimate passes the original integer
+matching gates, the checker samples a small after-frame patch at the estimated
+fractional endpoint using bilinear interpolation, matches that patch backward
+against the original frame, and requires a valid fractional reverse peak within
+0.75px of the source patch origin. If that check cannot be made or fails, it
+**retains the already accepted integer vector** and labels a fallback instead
+of publishing unverified fractional motion. Passed vectors expose
+`subpixelReverseErrorPixels` and `fractional-bilinear-patch-checked`. This
+forward-guided cross-check is still not independent calibrated validation,
+true optical-flow ground truth, or recovery of object or camera identity.
+It adds bounded CPU work and preserves prior output/run identities by default.
+
 ## What it actually measures
 
 1. Preserve the source stream's integer presentation timestamps (PTS) and
@@ -175,6 +189,8 @@ perspective, rescaling, motion blur, occlusion and crossfades degrade it.
 - Fractional peak fitting assumes locally smooth, concave correlation around
   a valid integer match. It can be biased by resampling, noise and patch
   changes; an integer-peak backward gate cannot certify fractional accuracy.
+  The optional fractional reverse check detects some inconsistent peaks but
+  shares image interpolation assumptions and can reject good small motion.
 - Grouping uses translation only. Affine hypotheses help characterize apparent
   scale/rotation, but camera movement plus parallax, perspective, depth,
   rotating props and deformation require more careful geometric modeling.

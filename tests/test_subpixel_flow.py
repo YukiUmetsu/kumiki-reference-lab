@@ -19,6 +19,14 @@ class SubpixelPeakTests(unittest.TestCase):
             "analyze", "source.mp4", "--out", "runs", "--sparse-flow",
             "--sparse-subpixel-refinement"
         ]).sparse_subpixel_refinement)
+        self.assertTrue(parser.parse_args([
+            "sparse-flow", "source.mp4", "--subpixel-refinement",
+            "--subpixel-reverse-check"
+        ]).subpixel_reverse_check)
+        self.assertTrue(parser.parse_args([
+            "analyze", "source.mp4", "--out", "runs", "--sparse-flow",
+            "--sparse-subpixel-refinement", "--sparse-subpixel-reverse-check"
+        ]).sparse_subpixel_reverse_check)
 
     def test_parabolic_peak_interpolation_abstains_on_invalid_curvature(self):
         self.assertAlmostEqual(_parabolic_peak_offset(0.81, 1.0, 0.94), 0.26)
@@ -78,6 +86,26 @@ class SubpixelFlowTests(unittest.TestCase):
             sparse_patch_flows(flat, flat, 160, 90, subpixel_refinement=1)
         result = sparse_patch_flows(flat, flat, 160, 90, subpixel_refinement=True)
         self.assertEqual(result["accepted"], [])
+
+    def test_fractional_reverse_check_keeps_only_self_consistent_peak_candidates(self):
+        before, after, dx, dy = self._fractionally_translated_frames()
+        with self.assertRaisesRegex(ValueError, "requires subpixel_refinement"):
+            sparse_patch_flows(before, after, 160, 90, subpixel_reverse_check=True)
+        baseline = sparse_patch_flows(before, after, 160, 90, max_points=48)
+        checked = sparse_patch_flows(before, after, 160, 90, max_points=48,
+                                     subpixel_refinement=True,
+                                     subpixel_reverse_check=True)
+        self.assertEqual(len(checked["accepted"]), len(baseline["accepted"]))
+        candidates = [v for v in checked["accepted"]
+                      if v["subpixelReverseVerification"] ==
+                      "fractional-bilinear-patch-checked"]
+        self.assertGreaterEqual(len(candidates), 5)
+        self.assertTrue(all(v["subpixelReverseErrorPixels"] <= 0.75
+                            and v["subpixelPeakStatus"] == "candidate-1d-parabola"
+                            for v in candidates))
+        mean_error = sum(math.hypot(v["dx"] - dx, v["dy"] - dy)
+                         for v in candidates) / len(candidates)
+        self.assertLess(mean_error, 0.42)
 
 
 if __name__ == "__main__":
