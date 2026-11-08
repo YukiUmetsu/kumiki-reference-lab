@@ -126,6 +126,8 @@ def build_parser() -> argparse.ArgumentParser:
                         help="optional bounded projective image-plane fit; never a camera claim")
     sparse.add_argument("--tracklet-motion-consistency", action="store_true",
                         help="optionally abstain from implausible consecutive PTS-scaled motion links")
+    sparse.add_argument("--tracklet-appearance-consistency", action="store_true",
+                        help="optionally verify two-hop observed patch agreement before linking")
     sparse.add_argument("--correlation", type=float, default=0.68)
     sparse.add_argument("--threshold", type=float, default=0.25)
     sparse.add_argument("--ffmpeg", default="ffmpeg")
@@ -357,6 +359,7 @@ def build_parser() -> argparse.ArgumentParser:
     analyze.add_argument("--sparse-subpixel-reverse-check", action="store_true")
     analyze.add_argument("--sparse-projective-hypotheses", action="store_true")
     analyze.add_argument("--sparse-tracklet-motion-consistency", action="store_true")
+    analyze.add_argument("--sparse-tracklet-appearance-consistency", action="store_true")
     analyze.add_argument("--sparse-correlation", type=float, default=0.68)
     analyze.add_argument("--appearance", action="store_true",
                          help="include optional timecoded RGB appearance evidence")
@@ -434,6 +437,7 @@ def main(argv: list[str] | None = None) -> int:
                 sparse_subpixel_reverse_check=args.sparse_subpixel_reverse_check,
                 sparse_projective_hypotheses=args.sparse_projective_hypotheses,
                 sparse_tracklet_motion_consistency=args.sparse_tracklet_motion_consistency,
+                sparse_tracklet_appearance_consistency=args.sparse_tracklet_appearance_consistency,
                 appearance=args.appearance, appearance_samples=args.appearance_samples,
                 threshold=args.threshold, ffmpeg=args.ffmpeg, ffprobe=args.ffprobe,
                 rights_status=args.rights_status,
@@ -588,6 +592,7 @@ def main(argv: list[str] | None = None) -> int:
                 subpixel_reverse_check=args.subpixel_reverse_check,
                 projective_hypotheses=args.projective_hypotheses,
                 tracklet_motion_consistency=args.tracklet_motion_consistency,
+                tracklet_appearance_consistency=args.tracklet_appearance_consistency,
                 ffmpeg=args.ffmpeg, ffprobe=args.ffprobe, rights_status=args.rights_status,
             )
             filename = "sparse-flow.json"

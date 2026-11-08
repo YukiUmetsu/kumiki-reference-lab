@@ -10,6 +10,10 @@ import math
 from fractions import Fraction
 from typing import Any
 
+from kumiki_reference_lab.analyzers.motion.handoff_appearance import (
+    MAX_ENDPOINT_SHIFT_PIXELS, MIN_NCC, PATCH_SIZE, two_hop_patch_agreement,
+)
+
 LINK_TOLERANCE_PIXELS = 2.0
 AMBIGUITY_MARGIN_PIXELS = 0.5
 MIN_TRACK_PAIRS = 2
@@ -20,7 +24,10 @@ MOTION_RELATIVE_TOLERANCE = 0.6
 def _observation(pair: dict[str, Any], pair_index: int, vector_index: int,
                  handoff_error: float | None, *, motion_check: bool = False,
                  motion_residual: float | None = None,
-                 motion_allowance: float | None = None) -> dict[str, Any]:
+                 motion_allowance: float | None = None,
+                 appearance_check: bool = False,
+                 appearance_score: float | None = None,
+                 appearance_shift: dict[str, int] | None = None) -> dict[str, Any]:
     vector = pair["vectors"][vector_index]
     x, y = vector["x"], vector["y"]
     observation = {
@@ -36,6 +43,9 @@ def _observation(pair: dict[str, Any], pair_index: int, vector_index: int,
                                                       if motion_residual is not None else None),
                             "motionAllowancePixels": (round(motion_allowance, 4)
                                                        if motion_allowance is not None else None)})
+    if appearance_check:
+        observation.update({"twoHopAppearanceCorrelation": appearance_score,
+                            "twoHopAppearanceShiftPixels": appearance_shift})
     return observation
 
 
@@ -68,12 +78,18 @@ def _unambiguous_links(
     previous: list[dict[str, Any]], vectors: list[dict[str, Any]],
     *, pair: dict[str, Any] | None = None,
     motion_consistency: bool = False,
-) -> tuple[dict[int, tuple[int, float, float | None, float | None]], int]:
+    appearance_frames: tuple[bytes, bytes] | None = None,
+    frame_size: tuple[int, int] | None = None,
+) -> tuple[dict[int, tuple[Any, ...]], int, int, int]:
     """Return mutual nearest neighbors whose alternatives are not nearly as good."""
     candidates: list[tuple[float, int, int]] = []
     rejected_motion = 0
+    rejected_appearance = 0
+    unavailable_appearance = 0
     if motion_consistency and pair is None:
         raise ValueError("motion continuity requires the current source-PTS pair")
+    if (appearance_frames is None) != (frame_size is None):
+        raise ValueError("two-hop appearance requires paired frames and dimensions")
     for old_index, track in enumerate(previous):
         end = track["observations"][-1]["endPixels"]
         for new_index, vector in enumerate(vectors):
@@ -88,7 +104,7 @@ def _unambiguous_links(
     for options in (*by_old.values(), *by_new.values()):
         options.sort()
 
-    links: dict[int, tuple[int, float, float | None, float | None]] = {}
+    links: dict[int, tuple[Any, ...]] = {}
     for old_index, options in sorted(by_old.items()):
         distance, new_index = options[0]
         back = by_new[new_index]
@@ -104,13 +120,32 @@ def _unambiguous_links(
             if residual > allowance:
                 rejected_motion += 1
                 continue
-        links[old_index] = (new_index, distance, residual, allowance)
-    return links, rejected_motion
+        appearance_score, appearance_shift = (None, None)
+        if appearance_frames is not None:
+            vector = vectors[new_index]
+            result = two_hop_patch_agreement(
+                appearance_frames[0], appearance_frames[1], *frame_size,
+                first_point=previous[old_index]["observations"][-1]["startPixels"],
+                last_point={"x": vector["x"] + vector["dx"],
+                            "y": vector["y"] + vector["dy"]})
+            if result["status"] != "appearance-consistent":
+                if result["status"] == "unobservable":
+                    unavailable_appearance += 1
+                else:
+                    rejected_appearance += 1
+                continue
+            appearance_score, appearance_shift = result["correlation"], result["shiftPixels"]
+        links[old_index] = (new_index, distance, residual, allowance,
+                            appearance_score, appearance_shift)
+    return links, rejected_motion, rejected_appearance, unavailable_appearance
 
 
 def build_sparse_tracklets(
     pairs: list[dict[str, Any]], *, timebase: Fraction,
     motion_consistency: bool = False,
+    appearance_consistency: bool = False,
+    appearance_frames: list[bytes] | None = None,
+    frame_width: int | None = None, frame_height: int | None = None,
 ) -> dict[str, Any]:
     """Link evidence across adjacent decoded samples with no guessed gap filling.
 
@@ -121,11 +156,23 @@ def build_sparse_tracklets(
         raise ValueError("sparse tracklet source timebase must be a positive rational")
     if type(motion_consistency) is not bool:
         raise ValueError("motion_consistency must be a boolean")
+    if type(appearance_consistency) is not bool:
+        raise ValueError("appearance_consistency must be a boolean")
+    if appearance_consistency:
+        if (type(frame_width) is not int or type(frame_height) is not int or
+                not 64 <= frame_width <= 240 or not 36 <= frame_height <= 135 or
+                not isinstance(appearance_frames, list) or
+                len(appearance_frames) != len(pairs) + 1 or
+                any(type(frame) is not bytes or len(frame) != frame_width * frame_height
+                    for frame in appearance_frames)):
+            raise ValueError("two-hop appearance requires all bounded sampled grayscale frames")
 
     active: list[dict[str, Any]] = []
     completed: list[dict[str, Any]] = []
     singletons = 0
     motion_rejections = 0
+    appearance_rejections = 0
+    appearance_unavailable = 0
     next_id = 1
 
     def finish(track: dict[str, Any], reason: str) -> None:
@@ -185,20 +232,30 @@ def build_sparse_tracklets(
         if is_cut:
             continue
 
-        links, rejected = (_unambiguous_links(active, vectors, pair=pair,
-                                              motion_consistency=motion_consistency)
-                           if adjacent else ({}, 0))
-        motion_rejections += rejected
+        links, motion_lost, appearance_lost, appearance_missing = (
+            _unambiguous_links(
+                active, vectors, pair=pair, motion_consistency=motion_consistency,
+                appearance_frames=(appearance_frames[pair_index - 1],
+                                   appearance_frames[pair_index + 1])
+                if appearance_consistency else None,
+                frame_size=(frame_width, frame_height) if appearance_consistency else None)
+            if adjacent else ({}, 0, 0, 0))
+        motion_rejections += motion_lost
+        appearance_rejections += appearance_lost
+        appearance_unavailable += appearance_missing
         next_active: list[dict[str, Any]] = []
         linked_new: set[int] = set()
         for old_index, track in enumerate(active):
             if old_index not in links:
                 finish(track, "no-safe-match")
                 continue
-            vector_index, error, residual, allowance = links[old_index]
+            vector_index, error, residual, allowance, appearance_score, appearance_shift = (
+                links[old_index])
             track["observations"].append(_observation(
                 pair, pair_index, vector_index, error, motion_check=motion_consistency,
-                motion_residual=residual, motion_allowance=allowance))
+                motion_residual=residual, motion_allowance=allowance,
+                appearance_check=appearance_consistency,
+                appearance_score=appearance_score, appearance_shift=appearance_shift))
             next_active.append(track)
             linked_new.add(vector_index)
         for vector_index in range(len(vectors)):
@@ -206,7 +263,8 @@ def build_sparse_tracklets(
                 continue
             track = {"id": f"tracklet-{next_id:04d}",
                      "observations": [_observation(pair, pair_index, vector_index, None,
-                                                   motion_check=motion_consistency)]}
+                                                   motion_check=motion_consistency,
+                                                   appearance_check=appearance_consistency)]}
             next_id += 1
             next_active.append(track)
         active = next_active
@@ -216,8 +274,9 @@ def build_sparse_tracklets(
     completed.sort(key=lambda track: int(track["id"].split("-")[1]))
     result = {
         "status": "candidate-only" if completed else "insufficient-continuity",
-        "method": ("mutual-nearest-adjacent-endpoint-motion-gated-v1"
-                   if motion_consistency else "mutual-nearest-adjacent-endpoint-v1"),
+        "method": ("mutual-nearest-adjacent-endpoint" +
+                   ("-motion-gated" if motion_consistency else "") +
+                   ("-appearance-gated" if appearance_consistency else "") + "-v1"),
         "linkTolerancePixels": LINK_TOLERANCE_PIXELS,
         "ambiguityMarginPixels": AMBIGUITY_MARGIN_PIXELS,
         "minConsecutivePairs": MIN_TRACK_PAIRS,
@@ -230,4 +289,10 @@ def build_sparse_tracklets(
         result.update({"motionMinimumTolerancePixels": MOTION_MIN_TOLERANCE_PIXELS,
                        "motionRelativeTolerance": MOTION_RELATIVE_TOLERANCE,
                        "motionInconsistentLinkCandidates": motion_rejections})
+    if appearance_consistency:
+        result.update({"appearancePatchSizePixels": PATCH_SIZE,
+                       "appearanceMaxEndpointShiftPixels": MAX_ENDPOINT_SHIFT_PIXELS,
+                       "appearanceMinCorrelation": MIN_NCC,
+                       "appearanceInconsistentLinkCandidates": appearance_rejections,
+                       "appearanceUnobservableLinkCandidates": appearance_unavailable})
     return result

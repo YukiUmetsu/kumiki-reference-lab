@@ -342,6 +342,22 @@ class SparseFlowIntegrationTests(unittest.TestCase):
                              [p["vectors"] for p in checked["pairs"]])
             json.dumps(checked, allow_nan=False)
 
+    def test_opt_in_two_hop_appearance_uses_same_decoded_sample_pts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            video = Path(directory) / "source.mkv"
+            self._create_clip(video, vfr=True)
+            baseline = analyze_sparse_flow(video, seconds=2, max_samples=6)
+            checked = analyze_sparse_flow(video, seconds=2, max_samples=6,
+                                          tracklet_appearance_consistency=True)
+            self.assertEqual(checked["temporalTracklets"]["method"],
+                             "mutual-nearest-adjacent-endpoint-appearance-gated-v1")
+            self.assertEqual(checked["temporalTracklets"]["appearancePatchSizePixels"], 9)
+            self.assertEqual(checked["temporalTracklets"]["appearanceMinCorrelation"], 0.62)
+            self.assertNotIn("appearanceMinCorrelation", baseline["temporalTracklets"])
+            self.assertEqual(checked["samples"], baseline["samples"])
+            self.assertEqual(checked["pairs"], baseline["pairs"])
+            json.dumps(checked, allow_nan=False)
+
     def test_flat_video_does_not_invent_vectors(self):
         with tempfile.TemporaryDirectory() as directory:
             video = Path(directory) / "flat.mkv"

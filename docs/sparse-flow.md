@@ -129,6 +129,27 @@ reversal, changing perspective, or source-frame gap may break a valid track.
 **A linked tracklet remains a candidate, never verified subject identity**.
 It never fills missing observations or reconnects across cuts.
 
+## Optional two-hop appearance check
+
+Use `--tracklet-appearance-consistency` with `sparse-flow` or
+`--sparse-tracklet-appearance-consistency` with `analyze --sparse-flow`.
+For a geometrically unambiguous prospective link, compare the first feature's
+9×9 grayscale patch on original sampled frame **A** to the new feature's
+endpoint on original sampled frame **C**, skipping over their shared frame B.
+This tests appearance *across two measured intervals*, rather than comparing
+two locations on the same junction frame. A one-pixel endpoint search
+accommodates rounding, and zero-mean correlation must be at least 0.62.
+Insufficient texture, a patch leaving the frame, or a poor match breaks the
+link without inventing a replacement. The report includes rejected and
+unobservable link counts; accepted observations include correlation and the
+tiny best-match shift. The original per-pair vectors and timestamps remain
+unchanged. This option can be combined with the motion-consistency gate.
+
+Two-hop patches can disagree after genuine rotation, occlusion, resampling or
+lighting changes, and similar textures can still belong to different objects.
+**This is conservative image evidence, not identity verification or occlusion
+recovery.** Omitting the flag preserves existing outputs and run IDs.
+
 ## What it actually measures
 
 1. Preserve the source stream's integer presentation timestamps (PTS) and
@@ -241,7 +262,7 @@ perspective, rescaling, motion blur, occlusion and crossfades degrade it.
   perspective distortion, but camera movement plus parallax, depth,
   rotating props and deformation require more careful geometric modeling.
 - Recommended subsequent work: dense or subpixel multi-scale optical flow,
-  independent feature appearance validation and re-identification with
+  stronger multi-view feature appearance validation and re-identification with
   occlusion handling, then *optional* image
   segmentation/semantic classification.
 

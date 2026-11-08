@@ -81,6 +81,23 @@ class SparseReviewPureTests(unittest.TestCase):
         self.assertEqual([o["motionResidualPixels"] for o in tracks[0]["observations"]],
                          [None, 0.0, 0.0])
 
+    def test_two_hop_appearance_evidence_remains_reviewable(self):
+        report = _fixture()
+        width, height = 160, 90
+        base = bytes(((x * 31) ^ (y * 17) ^ (x * y)) & 255
+                     for y in range(height) for x in range(width))
+        frames = [bytes(base[y * width + (x - 2 * step) % width]
+                        for y in range(height) for x in range(width))
+                  for step in range(4)]
+        report["temporalTracklets"] = build_sparse_tracklets(
+            report["pairs"], timebase=Fraction(1, 10),
+            appearance_consistency=True, appearance_frames=frames,
+            frame_width=width, frame_height=height)
+        _, _, samples, pairs, tracks = _validate(report)
+        self.assertEqual((len(samples), len(pairs), len(tracks)), (4, 3, 1))
+        self.assertGreater(tracks[0]["observations"][1]
+                           ["twoHopAppearanceCorrelation"], 0.9)
+
     def test_tampered_points_cut_pairs_and_tracklet_links_fail_closed(self):
         report = _fixture()
         report["pairs"][1]["vectors"][0]["dx"] = 300
