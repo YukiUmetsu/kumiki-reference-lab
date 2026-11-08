@@ -324,6 +324,24 @@ class SparseFlowIntegrationTests(unittest.TestCase):
                              [pair["startPts"] for pair in projective["pairs"]])
             json.dumps(projective, allow_nan=False)
 
+    def test_opt_in_tracklet_motion_gate_preserves_pts_and_default_schema(self):
+        with tempfile.TemporaryDirectory() as directory:
+            video = Path(directory) / "source.mkv"
+            self._create_clip(video, vfr=True)
+            original = analyze_sparse_flow(video, seconds=2, max_samples=6)
+            checked = analyze_sparse_flow(video, seconds=2, max_samples=6,
+                                          tracklet_motion_consistency=True)
+            self.assertNotIn("motionRelativeTolerance", original["temporalTracklets"])
+            self.assertEqual(checked["temporalTracklets"]["method"],
+                             "mutual-nearest-adjacent-endpoint-motion-gated-v1")
+            self.assertEqual(checked["temporalTracklets"]["motionRelativeTolerance"], 0.6)
+            self.assertEqual(checked["temporalTracklets"]["motionMinimumTolerancePixels"], 2.5)
+            self.assertEqual([p["startPts"] for p in original["pairs"]],
+                             [p["startPts"] for p in checked["pairs"]])
+            self.assertEqual([p["vectors"] for p in original["pairs"]],
+                             [p["vectors"] for p in checked["pairs"]])
+            json.dumps(checked, allow_nan=False)
+
     def test_flat_video_does_not_invent_vectors(self):
         with tempfile.TemporaryDirectory() as directory:
             video = Path(directory) / "flat.mkv"

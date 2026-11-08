@@ -205,6 +205,30 @@ class AnalysisPipelineIntegrationTests(unittest.TestCase):
                 sparse_samples=5, sparse_projective_hypotheses=True), projective)
 
     @unittest.skipUnless(importlib.util.find_spec("numpy"), "NumPy extra unavailable")
+    def test_tracklet_motion_consistency_opt_in_has_distinct_run_identity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "flat.mkv"
+            self._flat_video(source)
+            runs = root / "runs"
+            original = run_analysis(source, runs, seconds=2, thumbnails=4,
+                                    sparse_flow=True, sparse_samples=5)
+            checked = run_analysis(source, runs, seconds=2, thumbnails=4,
+                                   sparse_flow=True, sparse_samples=5,
+                                   sparse_tracklet_motion_consistency=True)
+            self.assertNotEqual(original, checked)
+            self.assertNotIn("sparseTrackletMotionConsistency",
+                             json.loads(original.read_text())["settings"])
+            self.assertTrue(json.loads(checked.read_text())["settings"]
+                            ["sparseTrackletMotionConsistency"])
+            self.assertEqual(json.loads((checked.parent / "sparse-flow.json").read_text())
+                             ["temporalTracklets"]["method"],
+                             "mutual-nearest-adjacent-endpoint-motion-gated-v1")
+            self.assertEqual(run_analysis(
+                source, runs, seconds=2, thumbnails=4, sparse_flow=True,
+                sparse_samples=5, sparse_tracklet_motion_consistency=True), checked)
+
+    @unittest.skipUnless(importlib.util.find_spec("numpy"), "NumPy extra unavailable")
     def test_appearance_bundle_is_atomic_and_may_combine_with_sparse_flow(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

@@ -69,6 +69,18 @@ class SparseReviewPureTests(unittest.TestCase):
         self.assertEqual(_selection(4, tracks, 3), [0, 2, 3])
         self.assertEqual(_selection(4, [], 4), [0, 1, 2, 3])
 
+    def test_motion_gated_tracklets_remain_reviewable_at_source_pts(self):
+        report = _fixture()
+        report["temporalTracklets"] = build_sparse_tracklets(
+            report["pairs"], timebase=Fraction(1, 10), motion_consistency=True)
+        width, height, samples, pairs, tracks = _validate(report)
+        self.assertEqual((width, height, len(samples), len(pairs), len(tracks)),
+                         (160, 90, 4, 3, 1))
+        self.assertEqual(report["temporalTracklets"]["motionInconsistentLinkCandidates"],
+                         0)
+        self.assertEqual([o["motionResidualPixels"] for o in tracks[0]["observations"]],
+                         [None, 0.0, 0.0])
+
     def test_tampered_points_cut_pairs_and_tracklet_links_fail_closed(self):
         report = _fixture()
         report["pairs"][1]["vectors"][0]["dx"] = 300

@@ -108,6 +108,27 @@ unreliable. No outside models are downloaded. Opt-in runs have distinct
 checksum identities, and the existing source-linked visual review can still
 display the underlying point tracks.
 
+## Optional motion-consistent tracklet handoffs
+
+Use `--tracklet-motion-consistency` with `sparse-flow` or
+`--sparse-tracklet-motion-consistency` with `analyze --sparse-flow` to add a
+conservative *linking gate*. The default retains previous behavior and output.
+After the existing mutually nearest and unambiguous endpoint test succeeds,
+the gate compares the next observed displacement with a constant-velocity
+prediction scaled by the **actual adjacent source-PTS durations** (including
+variable frame rates). It abstains if the difference exceeds the larger of
+2.5 image pixels or 60% of the larger predicted/observed offset. No
+geometrically ambiguous match can become accepted just because its motion
+looks similar.
+
+`temporalTracklets` reports the method and number of otherwise-safe handoff
+candidates rejected by this gate. Each surviving observation records the
+image-plane residual and allowance (`null` on a new track's first observation).
+The gate cannot detect or repair occlusion; a sudden real acceleration,
+reversal, changing perspective, or source-frame gap may break a valid track.
+**A linked tracklet remains a candidate, never verified subject identity**.
+It never fills missing observations or reconnects across cuts.
+
 ## What it actually measures
 
 1. Preserve the source stream's integer presentation timestamps (PTS) and
@@ -220,8 +241,8 @@ perspective, rescaling, motion blur, occlusion and crossfades degrade it.
   perspective distortion, but camera movement plus parallax, depth,
   rotating props and deformation require more careful geometric modeling.
 - Recommended subsequent work: dense or subpixel multi-scale optical flow,
-  homography versus affine model selection, validated feature
-  re-identification with occlusion handling, then *optional* image
+  independent feature appearance validation and re-identification with
+  occlusion handling, then *optional* image
   segmentation/semantic classification.
 
 The longer-term research use is to inform **candidate** Kumiki camera/subject
