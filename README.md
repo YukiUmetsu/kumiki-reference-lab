@@ -2,7 +2,7 @@
 
 **Reference-video analysis, cinematic technique research, and reproducible motion reconstruction for the Kumiki ecosystem.**
 
-> **Project status: early working foundation.** The `study-reference`, `review-notes`, `inspect`, `frames`, `cuts`, `contact-sheet`, `motion`, `track-roi`, `sparse-flow`, `appearance`, `shot-evidence`, `compare-appearance`, `compare-frames`, `propose-techniques`, `review-techniques`, `analyze`, and `catalog` commands are implemented and tested. Semantic video-to-technique interpretation, full visual matching, and Kumiki export remain planned.
+> **Project status: early working foundation.** The `study-reference`, `review-notes`, `review-shots`, `inspect`, `frames`, `cuts`, `contact-sheet`, `motion`, `track-roi`, `sparse-flow`, `appearance`, `shot-evidence`, `compare-appearance`, `compare-frames`, `propose-techniques`, `review-techniques`, `analyze`, and `catalog` commands are implemented and tested. Semantic video-to-technique interpretation, full visual matching, and Kumiki export remain planned.
 
 **Implemented foundation:** Python commands read local video metadata, extract real presentation timestamps, detect bounded hard-cut *candidates*, produce timecoded HTML/JPEG contact sheets, optionally measure global image-plane translation and easing candidates, track a seeded image region, and characterize sparse 2D motion with conservative affine hypotheses. The `appearance` command measures display-referred RGB color and contrast; `compare-appearance` compares two reports at **explicitly aligned source times**, while `compare-frames` produces side-by-side timecoded JPEGs for manual visual QA. A versioned `analyze` pipeline combines motion/appearance evidence into immutable runs. `propose-techniques` now generates explicit, machine-readable, non-semantic review cues from such a verified run. A searchable Cinematic Techniques Catalog includes five original research candidates. Semantic interpretation, full-speed visual matching, physical camera/lighting inference and treatment compilation remain planned.
 
@@ -75,6 +75,8 @@ For **cautious, non-semantic technique review cues**, run `analyze` with `--spar
 Run `kumiki-ref review-techniques ./reference.mp4 <analysis-run.json> --out ./runs` to generate a matching **visual review gallery** with verified start/middle/end frames for each proposed cue. It is an evidence spot-check, not a creative verdict. See [gallery usage and integrity checks](docs/technique-review.md).
 
 Use `kumiki-ref shot-evidence <analysis-run.json> --out ./runs/regions` to summarize motion and appearance within candidate cut regions while preserving exact source PTS. The final region has no invented end timestamp; regions are not confirmed shots or storytelling classifications. See [edit-region evidence](docs/shot-evidence.md).
+
+Use `kumiki-ref review-shots reference.mp4 <analysis-run.json> --out ./runs` to create a separate immutable **shot storyboard** with three original timecoded frames per candidate edit region, measured evidence and story-direction questions. This remains useful even when `propose-techniques` detects nothing. See [shot storyboard guide](docs/shot-gallery.md).
 
 ```text
 Authorized reference video
