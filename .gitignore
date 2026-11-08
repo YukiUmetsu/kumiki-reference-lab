@@ -1,0 +1,21 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+*.egg-info/
+build/
+dist/
+.coverage
+htmlcov/
+
+# Source footage, derived frames, masks, checkpoints and private run artifacts.
+workspace/
+runs/
+cache/
+models/
+*.mp4
+*.mov
+*.webm
+*.mkv

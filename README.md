@@ -4,6 +4,8 @@
 
 > **Project status: proposed.** This README is an implementation brief for a new repository, not documentation of an already-working CLI. Commands, package paths, schemas, and features marked *planned* must be implemented and verified before they are advertised as available.
 
+**Implemented foundation:** the dependency-free Python `inspect` command reads a local video with FFprobe and writes a source manifest. Shot detection, tracking, semantic analysis, treatment compilation, and reference comparison remain planned.
+
 Kumiki Reference Lab studies legally obtained motion-graphics, product-film, documentary, and explainer-video references. It extracts measurable characteristics, identifies reusable filmmaking techniques, and produces evidence-backed reports that can guide implementations in [kumiki-ui](https://github.com/YukiUmetsu/kumiki-ui).
 
 The aim is **not** to copy a film, recover an inaccessible source project, or automatically turn arbitrary footage into perfect 3D. It is to learn *why an animation works*, reconstruct its general techniques with independently created assets, and verify the quality of the resulting animation.
@@ -143,6 +145,8 @@ Contains raw measurements and their provenance:
 
 All values above are **schema examples**, not real measurements. Never represent estimated or missing quantities as observed facts. Record frame-accurate intervals with inclusive start and exclusive end. For variable frame rate inputs, preserve original timestamps and document any conversion to a rational output frame grid.
 
+**Timebase contract:** preserve each decoded source frame's original integer presentation timestamp (`pts`) together with its stream timebase numerator/denominator. An output frame index must be the result of an explicit, documented mapping from source PTS (including the chosen origin and rounding convention), never `sourceFrameIndex × nominalFPS`. Metadata-only inspection records the source timebase but deliberately reports frame PTS as **not yet extracted**. See [architecture and timebases](docs/architecture.md) and the implemented [source manifest schema](schemas/v1/source-manifest.schema.json).
+
 ### 3. Creative treatment
 
 An optional human-editable YAML document proposing a Kumiki implementation. It may contain:
@@ -158,7 +162,7 @@ An optional human-editable YAML document proposing a Kumiki implementation. It m
 - Output aspects, reframe rules, reduced-motion behavior and safe areas
 - Renderer capabilities, fallback behavior and quality acceptance criteria
 
-The treatment is **not executable merely because it parses**. A Kumiki-owned compiler must explicitly map each supported field to an existing contract, reject unknown required features, and report unsupported capabilities. See the separately drafted detailed cinematic-treatment example.
+The treatment is **not executable merely because it parses**. A Kumiki-owned compiler must explicitly map each supported field to an existing contract, reject unknown required features, and report unsupported capabilities. See the detailed [cinematic treatment example](examples/treatments/cinematic-gear-reveal.yaml), which is **an authoring proposal and is not yet runnable**.
 
 ### 4. Comparison and review report
 
@@ -226,14 +230,21 @@ rights:
 
 **Catalog publishing rule:** a technique can exist as a researched candidate without being implemented, but it must not claim to be production-ready until a real Kumiki rendering passes the agreed review gates.
 
-## Proposed CLI
+## CLI: implemented versus planned
 
-The names and flags below are **planned interfaces**, not commands currently available:
+**Available now (Python 3.11+, FFprobe installed):**
 
 ```bash
-# Inspect media without AI
-kumiki-ref inspect ./reference.mp4 --out ./runs/example
+PYTHONPATH=src python -m kumiki_reference_lab inspect ./reference.mp4
+PYTHONPATH=src python -m kumiki_reference_lab inspect ./reference.mp4 --out ./runs/example
+PYTHONPATH=src python -m unittest discover -s tests -v
+```
 
+The manifest records metadata and SHA-256, while honestly marking frame-by-frame PTS and VFR status as unknown until sampled. `--rights-status user-declared-authorized` is an **assertion by the user**, not automated legal verification. The command does not copy media or download models.
+
+**Planned interfaces (not implemented):**
+
+```bash
 # Identify cuts and produce evidence/contact sheets
 kumiki-ref analyze ./reference.mp4 --features shots,motion,color --out ./runs/example
 
@@ -256,46 +267,45 @@ CLI development requirements:
 - Clear `--help` and machine-readable `--format json`.
 - `inspect` and core `analyze` work without any AI package or model.
 - No model auto-download or paid API without explicit configuration.
-- Exit nonzero on missing rights, unsupported media, invalid schema, or failed required stage; allow nonblocking warnings for uncertain estimates.
+- Record missing or uncertain usage rights explicitly; require a user declaration before rights-sensitive processing or redistribution. Exit nonzero for unsupported media, invalid schema, or failed required stages. Metadata inspection itself does not prove rights.
 - Deterministic output paths, content-addressed caches, restartable stages, and progress logs.
 - Support local file inputs first; URL retrieval is out of scope until authorized sourcing and licensing behavior are specified.
 - Never execute untrusted scripts found in analysis documents or model responses.
 
-## Proposed repository layout
+## Modular repository layout and growth plan
 
 ```text
 kumiki-reference-lab/
 ├── README.md
-├── pyproject.toml                  # Future; separate minimal and ML extras
+├── pyproject.toml                  # Dependency-free inspect foundation
 ├── src/kumiki_reference_lab/
 │   ├── cli/
-│   ├── ingest/
-│   ├── shots/
-│   ├── tracking/
-│   ├── motion/
-│   ├── composition/
-│   ├── camera/
-│   ├── lighting/
-│   ├── audio/
-│   ├── interpretation/             # Optional model backends
-│   ├── techniques/
-│   ├── comparison/
-│   ├── optimization/
-│   └── exporters/kumiki/
-├── schemas/                        # Reference Lab-owned interchange contracts
-├── catalog/                        # Curated metadata, never reference footage
+│   ├── core/                       # Timebase, provenance, errors, capability ports
+│   ├── contracts/                  # Versioned artifacts, never renderer logic
+│   ├── pipeline/                   # Stage DAG, restart/cache, results (future)
+│   ├── analyzers/
+│   │   ├── media/                  # Implemented: FFprobe source inspection
+│   │   ├── shots/                  # Future: edit detection
+│   │   ├── motion/                 # Future: optical flow and easing fits
+│   │   └── subjects/              # Future: segmentation and identity
+│   ├── backends/
+│   │   ├── ffmpeg/                 # Implemented: FFprobe adapter
+│   │   ├── opencv/                 # Future: classical CV
+│   │   └── segmentation/          # Future: optional ML
+│   ├── interpretation/             # Future: story/technique semantics
+│   ├── catalog/                    # Future: search, ranking and publication
+│   ├── comparison/                 # Future: aligned render metrics
+│   ├── optimization/               # Future: bounded parameter fitting
+│   └── integrations/kumiki/       # Future: export; no second renderer
+├── schemas/v1/                    # Interchange schemas
+├── catalog/entries/               # Future: approved research metadata only
 ├── fixtures/                       # Original or explicitly licensed test videos
 ├── tests/
-├── examples/
-└── docs/
-    ├── architecture.md
-    ├── measures-and-uncertainty.md
-    ├── technique-catalog.md
-    ├── licensing-and-provenance.md
-    └── kumiki-integration.md
+├── examples/treatments/
+└── docs/architecture.md
 ```
 
-Keep the directory modular enough to test analyzers independently; do not pre-create all empty modules before implementing a complete vertical slice.
+The tree is a **target layout**, not a list of directories to create immediately. `core` and `contracts` must not import model backends; analyzers use capability interfaces, while the pipeline chooses backends. Keep generated footage, checkpoints, masks and run artifacts out of Git. See [architecture](docs/architecture.md) for ownership and dependency rules.
 
 ## Local development and Apple Silicon
 
@@ -303,10 +313,10 @@ Primary target: **macOS on Apple Silicon (M4, 24 GB unified memory)**. Linux CPU
 
 Recommended implementation language: Python for offline video/CV/ML analysis, with subprocess invocation of installed FFmpeg/FFprobe. Keep API surfaces CLI- and file-based so a TypeScript consumer is not required to embed Python.
 
-Installation scripts and tested setup commands should be added with the first working release. Until then:
+Model-backend installation scripts and tested advanced setup commands will be added with their first working release. For now:
 
 - Require a regular local FFmpeg/FFprobe installation, with a doctor/preflight command.
-- Pin Python dependencies and model versions in lockfiles/configuration.
+- Pin any future Python dependencies and model versions in lockfiles/configuration.
 - Keep baseline CPU analysis independent of PyTorch.
 - Make MPS/CPU backend selection explicit with a documented fallback; do not assume every operation accelerates on MPS.
 - Bound image sizes, decoded-frame batches, process/thread counts, memory and temporary disk use.

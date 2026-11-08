@@ -1,0 +1,1 @@
+"""FFprobe process adapter."""

@@ -1,0 +1,619 @@
+# KUMIKI — REFERENCE-TO-RENDER SHOT TREATMENT
+# PROPOSAL / AUTHORING FIXTURE. Not a shipped Kumiki wire format or CLI input.
+# Keep this as a reviewable design and test fixture. Implement a compiler adapter
+# into existing StoryboardShot, FSG1, CC1, MD1/MG1, ShotBake, AudioVisualCue, FD1.
+# All numbers below are ORIGINAL illustrative art-direction choices, NOT measurements
+# taken from Tendril, Ordinary Folk, Apple, or any other copyrighted reference.
+
+schemaVersion: "kumiki.cinematic-treatment.v0.proposed"
+id: "educational-gears-causality-001"
+revision: 1
+status: "implementation-proposal"
+
+authoring:
+  intendedConsumers: ["director", "asset-preflight", "compiler", "renderer", "reviewer"]
+  factualOwnership: "consumer-script-and-evidence"
+  qualityApproval: "human-after-full-motion-audio-review"
+  noImplicitDefaults: true
+  unknownFields: "error"
+  unsupportedCapabilities: "fail-or-declare-approved-fallback"
+  unboundedRuntimeExpressions: "forbidden"
+  externalNetworkAtRenderTime: "forbidden"
+  seed: 1701
+  repeatability: "evaluate-from-absolute-frame"
+
+sourceResearch:
+  # A studio's project description is not a frame-by-frame motion observation.
+  studyStatus: "reference-video-not-yet-frame-audited"
+  examples:
+    - id: "tendril-autostore"
+      url: "https://tendril.studio/work/autostorerouter/"
+      usage: "inspiration-only"
+      permissionToRedistribute: false
+      evidenceType: "studio-project-description"
+      reportedIdea: "close-up engineered surfaces with natural moving light"
+      inferredImplementation: "controlled close camera, large soft source, moving highlights"
+      confidenceInSpecificShotValues: "none"
+    - id: "ordinary-folk-equilibrium"
+      url: "https://www.ordinaryfolk.co/project/equilibrium"
+      usage: "inspiration-only"
+      permissionToRedistribute: false
+      evidenceType: "studio-project-description"
+      reportedIdea: "polished 3D integrated with deliberate 2D motion timing"
+      inferredImplementation: "semantic timing shared across 3D geometry and 2D annotation"
+      confidenceInSpecificShotValues: "none"
+  # Populate only after inspecting the actual licensed/reviewable video.
+  capturedVideo:
+    uri: null
+    sha256: null
+    width: null
+    height: null
+    fps: null
+    exactDurationFrames: null
+    rights: "unverified"
+  observedFrames: []
+  observationRecordContract:
+    # For each actual inspected frame, record only what a reviewer can see.
+    requiredFields:
+      - "sourceVideoSha256"
+      - "timecodeSeconds"
+      - "frameNumberOnSourceTimeline"
+      - "frameCaptureId"
+      - "subjectBoundingBoxNormalizedXYWH"
+      - "foregroundMidgroundBackgroundDescription"
+      - "cameraMotionEvidenceBetweenFrames"
+      - "lightShadowAndHighlightObservations"
+      - "visibleActionAndSecondaryMotion"
+      - "transitionBeforeAndAfter"
+      - "directObservationConfidence"
+    optionalDerivedFields:
+      - "approximateShotDurationFramesWithUncertainty"
+      - "relativeCameraTranslationEstimateWithUncertainty"
+      - "dominantHueOrLuminanceSamplesWithColorSpace"
+      - "subjectScreenVelocityPixelsPerSecond"
+      - "approximateMotionEasingFromTrackedPixels"
+    unknownCameraIntrinsics: "record-unknown; do-not-claim-precise-focal-length"
+    unknownLightGeometry: "record-unknown; do-not-claim-precise-softbox-size"
+  evidencePolicy:
+    directObservation: "timestamp + screenshot ID + measurable description"
+    inference: "claim + uncertainty + alternative explanation"
+    authoredDecision: "numeric proposed value + artistic rationale"
+    prohibit: ["invented-timecodes", "unlicensed-extracted-assets", "claimed-exact-recreation"]
+
+story:
+  audience: "general educational audience"
+  knowledgeGoal: "Explain why meshed gears rotate in opposite directions."
+  factualClaim: "For two externally meshed gears, angular speed is inversely proportional to tooth count."
+  verificationOwner: "consumer"
+  narrativeArc: ["establish", "inspect", "cause-and-effect", "payoff"]
+  subjectIds: ["gear-input", "gear-output", "mesh-contact", "output-arrow"]
+  visualProof:
+    input: "Visible clockwise rotation of gear-input."
+    process: "Teeth remain meshed at a stable contact region."
+    result: "gear-output visibly rotates counterclockwise at the correct ratio."
+  spokenLine: "When the small gear turns clockwise, the larger gear turns the other way, more slowly."
+  avoid:
+    - "generic-title-cards-as-primary-evidence"
+    - "camera-orbit-that-obscures-gear-mesh"
+    - "high-bloom-or-ambient-particles"
+    - "unmotivated-animated-text"
+
+timebase:
+  startFrame: 0
+  endFrameExclusive: 240
+  fps: { numerator: 30, denominator: 1 }
+  durationSeconds: 8
+  evaluation: "frame-absolute; seek-order-independent"
+  rangesAre: "start-inclusive-end-exclusive"
+  # Tangents/easing are always evaluated against absolute frame, not delta time.
+  motionPrecision: "float64-compile-float32-render"
+  units: "metres, degrees, seconds, frames, linear-rgb unless tagged"
+  coordinateSystem:
+    handedness: "right"
+    worldUp: "+Y"
+    cameraForward: "-Z"
+    verticalPlane: "XY"
+    gearAxis: "+Z"
+
+output:
+  master:
+    width: 1920
+    height: 1080
+    aspect: "16:9"
+    fps: 30
+    pixelAspect: 1
+    colorWorkingSpace: "linear-srgb"
+    outputColorSpace: "srgb"
+    toneMap: "neutral-or-approved-photographic-curve"
+    alpha: false
+    motionBlur: "disabled-until-validated"
+    antialias: "renderer-supported-high-quality"
+    codecTarget: "h264-mp4"
+  portrait:
+    width: 1080
+    height: 1920
+    mode: "recompute-cameras-and-annotation-layout"
+    forbidNaiveCenterCrop: true
+    approvedOverrides:
+      # Portrait is not a 16:9 crop. These explicit alternative poses form a
+      # first authored draft; check all projected bounds at full resolution.
+      - shotId: "s01-establish"
+        fovYDegrees: 42
+        cameraPosition: [0.04, 0.78, 4.70]
+        target: [0.04, 0.65, 0.02]
+        overlayPlacement: "outside-mechanism-lower-third"
+      - shotId: "s02-investigate"
+        fovYDegrees: 35
+        cameraPosition: [0.03, 0.70, 2.75]
+        target: [-0.02, 0.65, 0.02]
+        overlayPlacement: "none"
+      - shotId: "s03-causality"
+        fovYDegrees: 42
+        cameraPosition: [0.04, 0.78, 4.70]
+        target: [0.04, 0.65, 0.02]
+        overlayPlacement: "top-and-bottom-clear-of-gears"
+      - shotId: "s04-payoff"
+        fovYDegrees: 42
+        cameraPosition: [0.04, 0.78, 4.70]
+        target: [0.04, 0.65, 0.02]
+        overlayPlacement: "top-and-bottom-clear-of-gears"
+  safeAreas:
+    landscapeSubjectMarginNormalized: 0.06
+    portraitSubjectMarginNormalized: 0.09
+    subtitleBottomReservedNormalized: 0.14
+  accessibility:
+    captions: "export-separate-track"
+    reducedMotion: "fixed-camera-and-fewer-nonessential-transitions"
+    noAudioComprehension: "visible-opposite-direction-arrows-and-labels"
+    flashing: "none"
+
+assets:
+  # Asset refs are symbolic; missing refs are errors. Do not invent GLB paths.
+  - id: "gear-input"
+    role: "hero-mechanism"
+    assetRef: "REPLACE_WITH_APPROVED_SMALL_GEAR_ASSET_ID"
+    assetType: "glb"
+    provenance: { creator: null, sourceUrl: null, license: null, sha256: null }
+    requiredMetadata:
+      toothCount: 24
+      moduleMeters: 0.02
+      pitchRadiusMeters: 0.24
+      shaftAxis: "+Z"
+      restOrientationDegrees: 0
+      normalizedBoundsKnown: true
+      trueInvoluteToothGeometry: true
+    placement:
+      position: [-0.33, 0.65, 0.02]
+      rotationDegreesXYZ: [0, 0, 0]
+      scale: [1, 1, 1]
+    materialBinding: "brushed-anodized-metal"
+  - id: "gear-output"
+    role: "hero-mechanism"
+    assetRef: "REPLACE_WITH_APPROVED_LARGE_GEAR_ASSET_ID"
+    assetType: "glb"
+    provenance: { creator: null, sourceUrl: null, license: null, sha256: null }
+    requiredMetadata:
+      toothCount: 42
+      moduleMeters: 0.02
+      pitchRadiusMeters: 0.42
+      shaftAxis: "+Z"
+      restOrientationDegrees: 0
+      normalizedBoundsKnown: true
+      trueInvoluteToothGeometry: true
+    placement:
+      position: [0.33, 0.65, 0.02]
+      rotationDegreesXYZ: [0, 0, 0]
+      scale: [1, 1, 1]
+    materialBinding: "machined-steel"
+  - id: "backplate"
+    role: "environment"
+    assetRef: "REPLACE_WITH_APPROVED_VERTICAL_PANEL_ASSET_ID"
+    assetType: "glb"
+    provenance: { creator: null, sourceUrl: null, license: null, sha256: null }
+    placement:
+      position: [0, 0.65, -0.16]
+      rotationDegreesXYZ: [0, 0, 0]
+      scale: [1, 1, 1]
+    requiredDimensionsMeters: [1.6, 1.35, 0.08]
+    materialBinding: "dark-ceramic-panel"
+
+geometryConstraints:
+  expectedPitchCentreDistanceMeters: 0.66  # 0.24 + 0.42
+  allowedPitchCentreDistanceErrorMeters: 0.001
+  actualCentreDistanceFromPlacementMeters: 0.66
+  gearRotationRatio: "-24/42"  # output angle = -24/42 * input angle
+  toothPhase: "asset-preflight-must-verify-and-calibrate"
+  meshIntersection: "forbidden-after-calibration"
+  contactPointMustRemainVisibleDuringFrames: [88, 180]
+  noGeometryExploding: true
+
+surfaceLook:
+  artDirection: "high-detail laboratory product cinematography"
+  palette:
+    backgroundSrgb: "#111719"
+    primarySteelSrgb: "#ABB6BC"
+    anodizedSrgb: "#C58A52"
+    annotationSrgb: "#EDEFEF"
+    explanatoryAccentSrgb: "#62C1C9"
+  baseMaterials:
+    brushed-anodized-metal:
+      model: "metalness-roughness-pbr"
+      metalness: 0.94
+      roughness: 0.31
+      baseColorSrgb: "#C58A52"
+      normalMap: "REPLACE_WITH_LICENSED_MICRO_BRUSHING_NORMAL_MAP_ID"
+      normalScale: 0.12
+      anisotropy: "use-if-renderer-supported; otherwise-omit-with-warning"
+      textureTexelDensity: "document-at-final-camera-distance"
+      noRandomRoughnessPerRender: true
+    machined-steel:
+      model: "metalness-roughness-pbr"
+      metalness: 1.0
+      roughness: 0.24
+      baseColorSrgb: "#ABB6BC"
+      normalMap: "REPLACE_WITH_LICENSED_MICRO_SCRATCH_NORMAL_MAP_ID"
+      normalScale: 0.09
+      edgeWear: "geometry-or-authorized-texture-only"
+    dark-ceramic-panel:
+      model: "metalness-roughness-pbr"
+      metalness: 0.05
+      roughness: 0.46
+      baseColorSrgb: "#202629"
+  lookChecks:
+    - "silhouette-reads-without-emissive-outline"
+    - "metal-shape-defined-by-reflection-gradients"
+    - "teeth-visible-at-final-output-not-only-in-zoomed-debug"
+    - "textures-and-normals-do-not-shimmer-in-motion"
+
+lighting:
+  # These are authoring targets, NOT guaranteed identical between renderers.
+  exposureCompensationEV: 0.0
+  whiteBalanceKelvin: 5600
+  environment:
+    mode: "approved-licensed-studio-hdri-or-procedural"
+    assetRef: null
+    intensityRelative: 0.22
+    fallback: "procedural-dark-studio"
+  fixtures:
+    - id: "key-softbox"
+      semanticRole: "broad-curvature-highlight"
+      typeRequested: "rect-area"
+      position: [-0.7, 1.7, 1.25]
+      target: [0, 0.65, 0]
+      sizeMeters: [1.25, 0.75]
+      colorKelvin: 5600
+      powerRelative: 1.0
+      shadows: "separate-soft-shadow-capable-light-if-area-cannot-cast"
+    - id: "cool-fill"
+      semanticRole: "preserve-shadow-detail"
+      typeRequested: "rect-area"
+      position: [1.2, 1.0, 0.8]
+      target: [0.2, 0.65, 0]
+      sizeMeters: [0.7, 0.8]
+      colorKelvin: 6800
+      powerRelative: 0.27
+      shadows: false
+    - id: "rim-strip"
+      semanticRole: "separate-top-right-silhouette"
+      typeRequested: "rect-area"
+      position: [0.4, 1.65, -0.3]
+      target: [0.1, 0.65, 0]
+      sizeMeters: [0.2, 1.0]
+      colorKelvin: 4800
+      powerRelative: 0.38
+      shadows: false
+  shadows:
+    enabled: true
+    heroCastAndReceive: true
+    contactOcclusion: "enabled-with-bounded-radius"
+    forbidHardFloatingObjectShadows: true
+  animatedCue:
+    id: "reflective-sweep"
+    causalPurpose: "reveal-gear-surface-curvature-while-camera-inspects"
+    frameRange: [48, 88]
+    sourceLightId: "key-softbox"
+    # Light motion must be bounded. Never flash intensity to fake metal shine.
+    translateDeltaMeters: [0.30, 0, 0]
+    interpolation: "ease-in-out-cubic"
+    maxIntensityDeltaRelative: 0
+    fallback: "no-light-motion"
+
+cinematography:
+  shutter: { motionBlur: "off", shutterAngleDegreesIfEnabled: 180 }
+  focalSystem: "perspective-vertical-fov-degrees"
+  up: [0, 1, 0]
+  nearClipMeters: 0.05
+  farClipMeters: 50
+  depthOfField:
+    status: "only-if-supported-and-tested"
+    doNotObscureContactTeeth: true
+    # Renderer-specific bokeh controls must be mapped explicitly; don't guess.
+  shots:
+    - id: "s01-establish"
+      frameRange: [0, 48]
+      purpose: "establish-two-connected-gears"
+      dominantSubject: "gear-input"
+      cameraIntent: "stable-observer"
+      fovYDegrees: 37
+      keyframes:
+        - { frame: 0, position: [0.0, 0.78, 2.55], target: [0.0, 0.65, 0.02] }
+        - { frame: 47, position: [0.0, 0.78, 2.48], target: [0.0, 0.65, 0.02] }
+      interpolation: "smoothstep-position; look-at-target"
+      composition: { fullMechanismVisible: true, allowLabel: false }
+    - id: "s02-investigate"
+      frameRange: [48, 88]
+      purpose: "show-contact-detail-and-machined-metal"
+      dominantSubject: "mesh-contact"
+      cameraIntent: "investigate-detail"
+      fovYDegrees: 29
+      keyframes:
+        - { frame: 48, position: [0.03, 0.70, 1.45], target: [-0.02, 0.65, 0.02] }
+        - { frame: 87, position: [0.08, 0.70, 1.38], target: [-0.02, 0.65, 0.02] }
+      interpolation: "ease-in-out-cubic"
+      composition: { mustShowEngagingToothPair: true, forbidHeavyBlur: true }
+    - id: "s03-causality"
+      frameRange: [88, 180]
+      purpose: "visibly-prove-opposite-rotation"
+      dominantSubject: "mesh-contact"
+      cameraIntent: "locked-clear-evidence"
+      fovYDegrees: 37
+      keyframes:
+        - { frame: 88, position: [0.0, 0.75, 2.38], target: [0.0, 0.65, 0.02] }
+        - { frame: 179, position: [0.0, 0.75, 2.38], target: [0.0, 0.65, 0.02] }
+      interpolation: "hold"
+      composition: { bothGearsVisible: true, contactVisible: true }
+    - id: "s04-payoff"
+      frameRange: [180, 240]
+      purpose: "hold-final-evidence-for-reading"
+      dominantSubject: "gear-output"
+      cameraIntent: "settled-observer"
+      fovYDegrees: 37
+      keyframes:
+        - { frame: 180, position: [0.0, 0.75, 2.38], target: [0.0, 0.65, 0.02] }
+        - { frame: 239, position: [0.0, 0.75, 2.38], target: [0.0, 0.65, 0.02] }
+      interpolation: "hold"
+      composition: { bothGearsVisible: true, annotationReadable: true }
+  cuts:
+    - { atFrame: 48, kind: "straight-cut", reason: "change-to-contact-detail" }
+    - { atFrame: 88, kind: "straight-cut", reason: "restore-geography-for-causality" }
+    - { atFrame: 180, kind: "straight-cut", reason: "result-reading-hold" }
+  continuity:
+    persistentIdentityIds: ["gear-input", "gear-output"]
+    doNotMirrorGeometryBetweenShots: true
+    preserveClockwiseScreenSense: true
+    axisOfAction: "gear-rotation-about-positive-z"
+
+animation:
+  clock: "MG1-absolute-frame"
+  tracks:
+    - id: "input-spin"
+      targetId: "gear-input"
+      property: "rotation.z.degrees"
+      space: "local"
+      keyframes:
+        - { frame: 0, value: 0, interpolation: "hold" }
+        - { frame: 88, value: 0, interpolation: "hold" }
+        - { frame: 152, value: -90, interpolation: "linear" }
+        - { frame: 239, value: -90, interpolation: "hold" }
+      directionAsViewedFromPositiveZ: "clockwise"
+    - id: "output-spin"
+      targetId: "gear-output"
+      property: "rotation.z.degrees"
+      space: "local"
+      expression: "-input-spin*(24/42)"
+      expressionPolicy: "compile-to-known-safe-gear-ratio-operation; no-runtime-eval"
+      outputAtFrames:
+        - { frame: 88, degrees: 0 }
+        - { frame: 152, degrees: 51.4285714286 }
+        - { frame: 239, degrees: 51.4285714286 }
+    - id: "camera-light-sweep"
+      targetId: "key-softbox"
+      property: "position.x"
+      frameRange: [48, 88]
+      delta: 0.30
+      easing: "ease-in-out-cubic"
+  physicalRules:
+    kinematicDriver: "gear-input"
+    coupledFollowers: ["gear-output"]
+    preserveToothCountRatio: true
+    noInterpenetrationAfterPhaseCalibration: true
+    noTemporaryUncouplingAtCuts: true
+    note: "If real gear GLBs are not phase-compatible, block final render."
+  secondaryMotion:
+    cameraShake: "none"
+    filmGrain: "disabled-in-informational-passes"
+    ambientParticles: "none"
+    animatedBackground: "none"
+
+overlays:
+  primaryTextPolicy: "rare; no decorative headline"
+  annotations:
+    - id: "input-direction"
+      type: "world-anchored-direction-arrow"
+      targetId: "gear-input"
+      screenSide: "upper-left"
+      label: "Input"
+      visibleFrames: [92, 210]
+      colorRole: "explanatoryAccent"
+      noOcclusionOfTeeth: true
+      enterFrames: 9
+      exitFrames: 9
+    - id: "output-direction"
+      type: "world-anchored-direction-arrow"
+      targetId: "gear-output"
+      screenSide: "upper-right"
+      label: "Opposite direction"
+      visibleFrames: [108, 210]
+      colorRole: "explanatoryAccent"
+      noOcclusionOfTeeth: true
+      enterFrames: 9
+      exitFrames: 9
+  minimumTextContrastRatio: 4.5
+  minimumLandscapeTextPx: 32
+  minimumPortraitTextPx: 42
+  reflowPerOutputAspect: true
+  subtitleTrackIsSeparate: true
+
+audio:
+  timelineOwner: "AudioVisualCue-existing"
+  narration:
+    assetRef: "REPLACE_WITH_LICENSED_OR_GENERATED_VOICE_ASSET_ID"
+    transcript: "When the small gear turns clockwise, the larger gear turns the other way, more slowly."
+    alignmentSource: "consumer-provided-word-timestamps"
+    # Example cue labels: do not assume these align with actual voice asset.
+    intendedCues:
+      - { cueId: "small-gear", approxFrame: 94, event: "input-spin-start" }
+      - { cueId: "other-way", approxFrame: 125, event: "output-direction-visible" }
+      - { cueId: "more-slowly", approxFrame: 153, event: "output-slower-motion-readable" }
+    alignmentRequiredBeforeFinalRender: true
+  sfx:
+    - id: "meshing-gear-motion"
+      soundRef: "REPLACE_WITH_CLEARED_MECHANICAL_LOOP_ASSET_ID"
+      cueFrames: [88, 158]
+      gainDb: -19
+      fadeFrames: { in: 5, out: 10 }
+      prohibitIfUncleared: true
+  music:
+    assetRef: null
+    optional: true
+    duckUnderNarration: true
+  mix:
+    dialogueFirst: true
+    noClipping: true
+    targetLoudnessLufsIntegrated: -16
+    targetTruePeakDbtpMax: -1
+    verifyAfterExport: true
+
+effects:
+  bloom: { enabled: false, rationale: "not-emissive-subject" }
+  vignette: { enabled: false }
+  chromaticAberration: { enabled: false }
+  volumetricFog: { enabled: false }
+  depthOfField: { enabled: false, reconsiderOnlyIfContactTeethStaySharp: true }
+  filmGrain: { enabled: false }
+  motionBlur: { enabled: false, reconsiderOnlyAfter-motion-QA: true }
+
+renderStrategy:
+  stageQualityTiers:
+    proxy:
+      assets: "dimensionally-correct-proxy-gears"
+      lights: "basic-motivated-directional"
+      output: ["animatic", "composition-contact-sheet"]
+      purpose: "visual-proof-and-framing-before-fidelity"
+    preview:
+      assets: "approved-geometry-low-cost-textures"
+      lights: "full-rig-supported-by-renderer"
+      output: ["full-speed-preview-mp4", "landscape-contact-sheet", "portrait-contact-sheet"]
+      purpose: "review-timing-occlusion-and-camera"
+    final:
+      assets: "approved-source-geometry-and-maps"
+      lights: "full-verified-rig"
+      output: ["video-with-audio", "qa-report", "source-manifest"]
+      purpose: "human-reviewed-release-candidate"
+  platformBudget:
+    targetDevice: "Apple-Silicon-M4-24GB"
+    frameTimeMs: "measure-and-report; no-invented-hard-pass-threshold"
+    maxPeakMemoryGB: 18
+    resourceCaching: "enabled-with-content-hashes"
+    avoidMassiveVolumetrics: true
+    avoidPerFrameNetworkIO: true
+  deterministicCapture:
+    testFrames: [0, 30, 47, 48, 70, 87, 88, 116, 152, 179, 180, 210, 239]
+    seekOrderA: [0, 48, 88, 152, 239]
+    seekOrderB: [239, 88, 48, 152, 0]
+    pixelHashEquivalence: "same-renderer-settings-and-assets"
+    randomStateSeeded: true
+
+qa:
+  preflightHardFailures:
+    - "missing-licensed-hero-model-or-texture"
+    - "missing-or-ambiguous-asset-provenance"
+    - "incompatible-involute-mesh-or-tooth-phase"
+    - "unknown-shot-or-easing-or-light-operation"
+    - "invalid-frame-ranges-or-cuts"
+    - "portrait-reframe-not-defined"
+    - "unsupported-required-area-light-without-approved-fallback"
+    - "narration-asset-or-word-alignment-missing-for-final"
+  automatedFrameChecks:
+    - id: "coverage"
+      assert: "both-gear-projectable-bounds-inside-safe-area-in-s01-s03-s04"
+    - id: "tooth-mesh"
+      assert: "pitch-radii-sum-matches-centre-distance-within-0.001m"
+    - id: "kinematics"
+      assert: "output-angle == -input-angle*24/42 within 0.001deg"
+    - id: "sequence"
+      assert: "one-authoritative-scene-state-per-frame-even-after-random-seek"
+    - id: "legibility"
+      assert: "arrow-text-boxes-no-overlap-with-mechanism-or-subtitle-safe-area"
+    - id: "light-continuity"
+      assert: "no-exposure-jump-at-hard-cuts; intentional-light-sweep-only-48-to-88"
+    - id: "color"
+      assert: "sRGB-output-and-linear-workflow-consistent-across-3d-and-overlay"
+  humanReview:
+    requiredArtifacts:
+      - "8-second-MP4-with-narration-and-SFX"
+      - "landscape-and-portrait-contact-sheets"
+      - "side-by-side-reference-inspiration-not-copied"
+      - "camera-and-light-debug-views"
+      - "timecoded-defects-and-iterations"
+      - "rights-and-hash-manifest"
+    questions:
+      - "Can a viewer infer the direction relationship with captions hidden?"
+      - "Does a first-time viewer see the exact meshing location?"
+      - "Do real highlights reveal texture without noisy shimmer?"
+      - "Is every cut motivated by a new information need?"
+      - "Does the audio reinforce—not mask—the visual action?"
+      - "Does portrait preserve the same causal readability?"
+    verdicts: ["needs-revision", "approved-by-human", "blocked-missing-assets"]
+    defaultVerdict: "needs-revision"
+
+implementation:
+  # Direction for CODING AGENT. This fixture is NOT a parallel film system.
+  authoritativeReadFirst:
+    - "AGENTS.md"
+    - "docs/23-cinematic-quality-upgrade-plan.md"
+    - "docs/26-automated-content-quality-plan.md"
+    - "docs/29-cinematic-filmcraft-and-motion-direction.md"
+    - "registry/motion/storyboard.ts"
+    - "registry/visual/film-style-grammar.ts"
+    - "registry/motion/cinematic-camera-director.ts"
+    - "registry/motion/interaction-choreography.ts"
+    - "registry/motion/shot-bake.ts"
+    - "registry/video/film-document.ts"
+    - "registry/video/audio-visual-cue.ts"
+  extendRatherThanReplace:
+    storyIntent: "StoryboardShot + FSG1"
+    camera: "CC1 existing camera shot/pose contracts"
+    motion: "MG1/MD1 deterministic tracks"
+    interaction: "existing choreography/ShotBake"
+    sound: "AudioVisualCue existing frame clock"
+    film: "FD1 FilmStage via minimal typed adapters"
+    review: "existing rendered-frame-measures + film:review roadmap"
+  compilerBehavior:
+    - "parse-and-validate-authoring-YAML-to-an-internal-typed-AST"
+    - "resolve-all-symbolic-assets-and-licenses-before-final-render"
+    - "compile-safe-gear-ratio-dependency-to-existing-frame-tracks"
+    - "convert-shot-ranges-to-existing-camera-and-FD1-boundaries"
+    - "generate-aspect-specific-camera-and-annotation-variants"
+    - "render-proxy-first-then-preview-and-final-using-same-clock"
+    - "produce-unambiguous-errors-for-unsupported-fields-and-capabilities"
+    - "do-not-claim-the-example-is-runnable-until-each-field-is-mapped"
+  incrementalDelivery:
+    - id: "slice-1"
+      work: "Read existing contracts; map fields; create typed validator and missing-capability report."
+      proof: "unit-tests-fail-on-unsupported-lights-assets-frame-ranges-and-licenses"
+    - id: "slice-2"
+      work: "Compile proxy gears and four shots with frame-absolute kinematic coupling."
+      proof: "playable-animatic-with-correct-gear-ratio-random-seek-consistency"
+    - id: "slice-3"
+      work: "Bind verified models/PBR/light rig; produce both aspect previews."
+      proof: "contact-sheets-and-real-video-with-timed-defect-list"
+    - id: "slice-4"
+      work: "Connect narration/SFX, final review, provenance ledger and reduced-motion variant."
+      proof: "full-motion-audio-approval-pending-human-verdict"
+  explicitlyOutOfScope:
+    - "new-second-animation-clock"
+    - "blanket-installation-of-GSAP-or-Theatre"
+    - "scraping-commercial-frames-as-production-assets"
+    - "faking-photo-realism-with-bloom"
+    - "claiming-human-approval-from-automated-metrics"
