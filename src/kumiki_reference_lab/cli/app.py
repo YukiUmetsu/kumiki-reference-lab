@@ -10,6 +10,7 @@ from pathlib import Path
 from kumiki_reference_lab.analyzers.media.inspect import inspect_source
 from kumiki_reference_lab.analyzers.media.contact_sheet import build_contact_sheet
 from kumiki_reference_lab.analyzers.motion.analyze import analyze_image_motion
+from kumiki_reference_lab.analyzers.subjects.roi import analyze_roi_track
 from kumiki_reference_lab.analyzers.media.timeline import analyze_frame_timeline
 from kumiki_reference_lab.analyzers.shots.detect import analyze_hard_cuts
 from kumiki_reference_lab.backends.ffmpeg.probe import ProbeError
@@ -66,6 +67,23 @@ def build_parser() -> argparse.ArgumentParser:
     motion.add_argument("--ffprobe", default="ffprobe")
     motion.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
 
+    roi = commands.add_parser("track-roi", help="track a manually seeded textured image region")
+    roi.add_argument("source", type=Path)
+    roi.add_argument("--box", type=float, nargs=4, required=True,
+                     metavar=("X", "Y", "WIDTH", "HEIGHT"),
+                     help="normalized bounding box on the first sampled frame")
+    roi.add_argument("--out", type=Path)
+    roi.add_argument("--max-seconds", type=int, default=10)
+    roi.add_argument("--max-samples", type=int, default=48)
+    roi.add_argument("--width", type=int, default=160)
+    roi.add_argument("--height", type=int, default=90)
+    roi.add_argument("--radius", type=int, default=12)
+    roi.add_argument("--correlation", type=float, default=0.62)
+    roi.add_argument("--threshold", type=float, default=0.25)
+    roi.add_argument("--ffmpeg", default="ffmpeg")
+    roi.add_argument("--ffprobe", default="ffprobe")
+    roi.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
+
     catalog = commands.add_parser("catalog", help="search and validate cinematic technique research")
     catalog_actions = catalog.add_subparsers(dest="catalog_action", required=True)
     for action in ("validate", "search", "index"):
@@ -121,6 +139,14 @@ def main(argv: list[str] | None = None) -> int:
                 ffmpeg=args.ffmpeg, ffprobe=args.ffprobe, rights_status=args.rights_status,
             )
             filename = "image-motion.json"
+        elif args.command == "track-roi":
+            artifact = analyze_roi_track(
+                args.source, tuple(args.box), seconds=args.max_seconds,
+                max_samples=args.max_samples, width=args.width, height=args.height,
+                radius=args.radius, correlation=args.correlation, cut_threshold=args.threshold,
+                ffmpeg=args.ffmpeg, ffprobe=args.ffprobe, rights_status=args.rights_status,
+            )
+            filename = "roi-track.json"
         else:
             artifact = analyze_hard_cuts(args.source, seconds=args.max_seconds,
                                          threshold=args.threshold, ffmpeg=args.ffmpeg,

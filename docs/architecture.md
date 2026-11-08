@@ -81,8 +81,18 @@ The `motion` command produces a versioned `image-motion.json`. Sampling targets 
 
 Measured global image shift is **not** interchangeable with optical flow, subject tracking or reconstructed camera motion. Planar translation can come from any dominant moving content; panning, dolly, parallax, changing geometry, zoom and multiple independently moving objects are not disentangled. Future feature tracking and segmentation must build on these source-timestamped observations without mislabeling them as physical truth.
 
+## Seeded image-region tracking
+
+```bash
+kumiki-ref track-roi ./reference.mp4 --box 0.19 0.22 0.15 0.20 --max-seconds 10 --out ./runs/roi
+```
+
+The four `--box` values are normalized X, Y, width and height **on the first sampled video frame**. The tracker extracts a fixed small grayscale template and searches near its last verified position, using zero-mean normalized cross-correlation (brightness-offset tolerant). It preserves original PTS for each sampled frame. Missing PTS, insufficient texture, low similarity, repetitive ambiguous matches, cut boundaries and frame exits receive explicit statuses. Lost tracks remain stopped until a new user/model seed is provided; continuing to report a guessed identity after occlusion would be misleading.
+
+Compute is bounded by source duration (30 s), sample count (120), resize dimensions, search radius and a per-frame correlation budget. No neural model is required. An ROI track is an appearance path, **not guaranteed to follow a named physical object**; its box can include background, deform or leave view. It can eventually be compared with global image shift as *evidence for differential motion*, but camera-versus-object attribution still requires independent background tracks, geometric checks and explicit uncertainty.
+
 Detection is a **bounded first-stage heuristic**, not comprehensive scene segmentation: it does not classify fades or dissolve transitions, reconstruct frame geometry, or prove that fast image changes are cuts. More robust detectors can later be swapped behind the analyzer interface.
 
 ## Planned next slice
 
-Complete an interoperable `analyze` pipeline: join reviewed shots and global motion measurements, add robust local feature/optical-flow tracking with multiple-motion separation, and generate reviewed technique **evidence proposals** for the existing canonical catalog. The catalog itself now validates and indexes original authored recipes, but does not infer a technique from arbitrary footage. See [catalog guide](catalog.md). Before full-volume processing, add streaming analysis and explicit cancellation so long inputs never need to be decoded or captured entirely in memory.
+Complete an interoperable `analyze` pipeline: join reviewed shots, global motion and seeded ROI paths; add robust local feature/optical-flow tracking with multiple-motion separation, then generate reviewed technique **evidence proposals** for the existing canonical catalog. The catalog validates/indexes authored recipes but does not infer a technique from arbitrary footage. See [catalog guide](catalog.md). Before full-volume processing, add streaming analysis and explicit cancellation so long inputs never need to be decoded or captured entirely in memory.
