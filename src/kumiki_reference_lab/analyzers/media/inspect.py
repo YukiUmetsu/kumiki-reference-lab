@@ -8,6 +8,7 @@ from typing import Any
 
 from kumiki_reference_lab.backends.ffmpeg.probe import ProbeError, probe_media
 from kumiki_reference_lab.contracts.source import RIGHTS_STATUSES, SCHEMA_VERSION
+from kumiki_reference_lab.core.provenance import file_signature, require_unchanged
 from kumiki_reference_lab.core.timebase import as_rational_dict, parse_rational
 
 
@@ -26,7 +27,7 @@ def inspect_source(
         raise ValueError("invalid rights status")
     if not path.is_file():
         raise ValueError("source must be an existing regular file")
-    source_before = path.stat()
+    source_before = file_signature(path)
     try:
         metadata = probe_media(path, ffprobe=ffprobe)
     except ProbeError:
@@ -64,16 +65,13 @@ def inspect_source(
         raise ProbeError("video has an invalid duration field")
 
     source_hash = sha256_file(path)
-    source_after = path.stat()
-    if (source_before.st_size != source_after.st_size or
-            source_before.st_mtime_ns != source_after.st_mtime_ns):
-        raise ValueError("source changed during inspection; retry with stable input")
+    require_unchanged(path, source_before)
 
     return {
         "schemaVersion": SCHEMA_VERSION,
         "source": {
             "fileName": path.name,
-            "sizeBytes": source_after.st_size,
+            "sizeBytes": source_before[0],
             "sha256": source_hash,
             # Status is user-declared metadata, not a legal determination.
             "rightsStatus": rights_status,

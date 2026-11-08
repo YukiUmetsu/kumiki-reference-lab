@@ -18,7 +18,7 @@ Do not create empty packages for future features. Add the minimum module needed 
 
 ## Source timestamps and VFR
 
-The current `inspect` command records the selected video's **stream timebase** as a rational pair and its nominal and average frame rates **as reported by FFprobe**. These rates do **not** establish whether the video is constant- or variable-frame-rate. `timestamps.originalFramePtsExtracted` is explicitly `false`, `frameRateMode` is unknown, and no output frame mapping is claimed.
+The `inspect` command records the selected video's **stream timebase** as a rational pair and its nominal and average frame rates **as reported by FFprobe**. These rates do **not** establish whether the video is constant- or variable-frame-rate. In the *metadata-only manifest*, `timestamps.originalFramePtsExtracted` is explicitly `false`, `frameRateMode` is unknown, and no output frame mapping is claimed. The separate `frames` command extracts actual source PTS in a bounded window and records discontinuities without attempting to infer source frames from FPS.
 
 Future decoded-frame artifacts must preserve:
 
@@ -51,14 +51,18 @@ Never assume `sampleOrdinal / fps` represents the presentation time of VFR foota
 - The CLI refuses to overwrite a different existing manifest in the output directory.
 - Advanced analysis should use content-addressed caches and record backend/checkpoint versions. Cache artifacts, private frames and model checkpoints remain outside Git.
 
-## Initial supported command
+## Supported foundation commands
 
 ```bash
 PYTHONPATH=src python -m kumiki_reference_lab inspect ./reference.mp4 --out ./runs/example
+PYTHONPATH=src python -m kumiki_reference_lab frames ./reference.mp4 --max-seconds 60 --out ./runs/example
+PYTHONPATH=src python -m kumiki_reference_lab cuts ./reference.mp4 --threshold 0.25 --max-seconds 60 --out ./runs/example
 ```
 
-Expected result: `source-manifest.json` with codec, dimensions, reported rates, exact source timebase, source hash, rights declaration, and an explicit indication that per-frame timestamps have **not** been sampled.
+Expected outputs: `source-manifest.json` (metadata), `frame-timeline.json` (real bounded source PTS, exact rational timestamps and anomalies), and `shot-candidates.json` (heuristic hard-cut candidates). The last two stages preserve source timebase and never invent confidence scores. The FFmpeg cut filter's own timebase is checked against the probed stream, and mismatches fail explicitly rather than producing false timestamps.
+
+Detection is a **bounded first-stage heuristic**, not comprehensive scene segmentation: it does not classify fades or dissolve transitions, reconstruct frame geometry, or prove that fast image changes are cuts. More robust detectors can later be swapped behind the analyzer interface.
 
 ## Planned next slice
 
-Implement shot detection and a bounded frame/PTS extractor with legally usable synthetic fixtures. Preserve the source timebase and test VFR, negative PTS, discontinuities, invalid metadata, unexpected FFprobe output, cancellation and failed subprocesses before building motion fitting.
+Complete an interoperable `analyze` pipeline: join approved shot candidates with source-frame PTS, generate contact sheets from bounded frame samples, and add deterministic optical-flow/easing estimation with synthetic fixtures. Before full-volume processing, add streaming frame extraction and explicit cancellation so long inputs never need to be decoded or captured entirely in memory.
