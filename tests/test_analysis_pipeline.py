@@ -123,6 +123,42 @@ class AnalysisPipelineIntegrationTests(unittest.TestCase):
                 run_analysis(Path("missing.mp4"), output, seconds=30, sparse_flow=True)
             self.assertFalse(output.exists())
 
+    @unittest.skipUnless(importlib.util.find_spec("numpy"), "NumPy extra unavailable")
+    def test_appearance_bundle_is_atomic_and_may_combine_with_sparse_flow(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "flat.mkv"
+            self._flat_video(source)
+            runs = root / "runs"
+            manifest_path = run_analysis(source, runs, seconds=2, thumbnails=4,
+                                         sparse_flow=True, sparse_samples=6,
+                                         appearance=True, appearance_samples=6)
+            manifest = json.loads(manifest_path.read_text())
+            self.assertEqual(manifest["artifacts"]["appearance"], "appearance.json")
+            self.assertEqual(manifest["artifacts"]["sparseFlow"], "sparse-flow.json")
+            self.assertEqual(manifest["settings"]["versions"]["appearance"],
+                             "kumiki.appearance.v1")
+            report_path = manifest_path.parent / "appearance.json"
+            report = json.loads(report_path.read_text())
+            self.assertEqual(report["schemaVersion"], "kumiki.appearance.v1")
+            self.assertEqual(len(report["changes"]), len(report["samples"]) - 1)
+            self.assertEqual(run_analysis(source, runs, seconds=2, thumbnails=4,
+                                          sparse_flow=True, sparse_samples=6,
+                                          appearance=True, appearance_samples=6), manifest_path)
+            report_path.write_text("{}")
+            with self.assertRaisesRegex(ValueError, "missing or modified"):
+                run_analysis(source, runs, seconds=2, thumbnails=4,
+                             sparse_flow=True, sparse_samples=6,
+                             appearance=True, appearance_samples=6)
+
+    def test_invalid_appearance_budget_prevents_partial_run(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "runs"
+            with self.assertRaisesRegex(ValueError, "appearance requires"):
+                run_analysis(Path("missing.mp4"), output, seconds=30,
+                             appearance=True)
+            self.assertFalse(output.exists())
+
 
 if __name__ == "__main__":
     unittest.main()

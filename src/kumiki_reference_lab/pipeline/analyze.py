@@ -10,6 +10,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from kumiki_reference_lab.analyzers.media.contact_sheet import build_contact_sheet
+from kumiki_reference_lab.analyzers.appearance.analyze import analyze_appearance
 from kumiki_reference_lab.analyzers.media.inspect import inspect_source, sha256_file
 from kumiki_reference_lab.analyzers.media.timeline import analyze_frame_timeline
 from kumiki_reference_lab.analyzers.motion.analyze import analyze_image_motion
@@ -19,6 +20,7 @@ from kumiki_reference_lab.analyzers.subjects.roi import analyze_roi_track
 from kumiki_reference_lab.contracts.analysis import (
     ANALYSIS_RUN_VERSION, CONTACT_SHEET_VERSION, FRAME_TIMELINE_VERSION,
     IMAGE_MOTION_VERSION, ROI_TRACK_VERSION, SHOT_CANDIDATES_VERSION, SPARSE_FLOW_VERSION,
+    APPEARANCE_VERSION,
 )
 from kumiki_reference_lab.contracts.source import SCHEMA_VERSION as SOURCE_MANIFEST_VERSION
 from kumiki_reference_lab.core.artifacts import write_json_artifact
@@ -32,6 +34,7 @@ _STAGES = {
     "motion": "image-motion.json",
     "trackRoi": "roi-track.json",
     "sparseFlow": "sparse-flow.json",
+    "appearance": "appearance.json",
 }
 
 
@@ -73,6 +76,8 @@ def _validate_existing(destination: Path, settings: dict[str, Any]) -> Path:
         expected_artifacts["trackRoi"] = _STAGES["trackRoi"]
     if settings.get("sparseFlow", False):
         expected_artifacts["sparseFlow"] = _STAGES["sparseFlow"]
+    if settings.get("appearance", False):
+        expected_artifacts["appearance"] = _STAGES["appearance"]
     artifacts = manifest.get("artifacts")
     if (not isinstance(artifacts, dict) or
             {key: value for key, value in artifacts.items() if key != "contactSheet"} != expected_artifacts or
@@ -124,6 +129,7 @@ def run_analysis(
     sparse_flow: bool = False, sparse_samples: int = 24,
     sparse_points: int = 40, sparse_radius: int = 8,
     sparse_correlation: float = 0.68,
+    appearance: bool = False, appearance_samples: int = 24,
     threshold: float = 0.25, ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
     rights_status: str = "review-required",
 ) -> Path:
@@ -152,6 +158,13 @@ def run_analysis(
         if (not isinstance(sparse_correlation, (int, float)) or
                 not 0 < sparse_correlation < 1):
             raise ValueError("sparse-flow correlation must be between zero and one")
+    if not isinstance(appearance, bool):
+        raise ValueError("appearance must be a boolean")
+    if appearance:
+        if seconds > 20 or width > 240 or height > 135:
+            raise ValueError("appearance requires seconds <=20, width <=240 and height <=135")
+        if type(appearance_samples) is not int or not 5 <= appearance_samples <= 40:
+            raise ValueError("appearance samples must be 5..40")
 
     signature = file_signature(source)
     inspected = inspect_source(source, rights_status=rights_status, ffprobe=ffprobe)
@@ -176,6 +189,9 @@ def run_analysis(
                          "sparsePoints": sparse_points, "sparseRadius": sparse_radius,
                          "sparseCorrelation": float(sparse_correlation)})
         settings["versions"]["sparseFlow"] = SPARSE_FLOW_VERSION
+    if appearance:
+        settings.update({"appearance": True, "appearanceSamples": appearance_samples})
+        settings["versions"]["appearance"] = APPEARANCE_VERSION
     run_hash = hashlib.sha256(_json_bytes(settings)).hexdigest()[:20]
     destination = output / f"analysis-{settings['sourceSha256'][:12]}-{run_hash}"
     output.mkdir(parents=True, exist_ok=True)
@@ -232,6 +248,14 @@ def run_analysis(
             )
             write_json_artifact(staging, _STAGES["sparseFlow"], sparse)
             artifacts["sparseFlow"] = _STAGES["sparseFlow"]
+        if appearance:
+            report = analyze_appearance(
+                source, seconds=seconds, max_samples=appearance_samples,
+                width=width, height=height, threshold=threshold,
+                ffmpeg=ffmpeg, ffprobe=ffprobe, rights_status=rights_status,
+            )
+            write_json_artifact(staging, _STAGES["appearance"], report)
+            artifacts["appearance"] = _STAGES["appearance"]
         require_unchanged(source, signature)
 
         manifest = {

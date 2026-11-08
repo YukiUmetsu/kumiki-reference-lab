@@ -126,6 +126,9 @@ def build_parser() -> argparse.ArgumentParser:
     analyze.add_argument("--sparse-points", type=int, default=40)
     analyze.add_argument("--sparse-radius", type=int, default=8)
     analyze.add_argument("--sparse-correlation", type=float, default=0.68)
+    analyze.add_argument("--appearance", action="store_true",
+                         help="include optional timecoded RGB appearance evidence")
+    analyze.add_argument("--appearance-samples", type=int, default=24)
     analyze.add_argument("--box", type=float, nargs=4,
                          metavar=("X", "Y", "WIDTH", "HEIGHT"),
                          help="optional seeded ROI in normalized image coordinates")
@@ -176,6 +179,7 @@ def main(argv: list[str] | None = None) -> int:
                 sparse_flow=args.sparse_flow, sparse_samples=args.sparse_samples,
                 sparse_points=args.sparse_points, sparse_radius=args.sparse_radius,
                 sparse_correlation=args.sparse_correlation,
+                appearance=args.appearance, appearance_samples=args.appearance_samples,
                 threshold=args.threshold, ffmpeg=args.ffmpeg, ffprobe=args.ffprobe,
                 rights_status=args.rights_status,
             )
