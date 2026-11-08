@@ -11,6 +11,7 @@ from kumiki_reference_lab.analyzers.media.inspect import inspect_source
 from kumiki_reference_lab.analyzers.appearance.analyze import analyze_appearance
 from kumiki_reference_lab.analyzers.audio.timeline import analyze_audio_timeline
 from kumiki_reference_lab.analyzers.audio.levels import analyze_audio_levels
+from kumiki_reference_lab.analyzers.audio.av_cuts import build_av_cut_evidence
 from kumiki_reference_lab.analyzers.comparison.appearance import compare_appearance
 from kumiki_reference_lab.analyzers.comparison.frames import build_frame_comparison
 from kumiki_reference_lab.analyzers.techniques.propose import propose_techniques
@@ -142,6 +143,16 @@ def build_parser() -> argparse.ArgumentParser:
     levels.add_argument("--ffmpeg", default="ffmpeg")
     levels.add_argument("--ffprobe", default="ffprobe")
     levels.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
+
+    av = commands.add_parser(
+        "av-cut-evidence", help="compare candidate video edits to source-timecoded audio level changes")
+    av.add_argument("source", type=Path)
+    av.add_argument("analysis_run", type=Path)
+    av.add_argument("--out", type=Path)
+    av.add_argument("--window-ms", type=int, default=400)
+    av.add_argument("--max-audio-frames", type=int, default=4096)
+    av.add_argument("--ffmpeg", default="ffmpeg")
+    av.add_argument("--ffprobe", default="ffprobe")
 
     comparison = commands.add_parser("compare-appearance",
                                      help="compare two appearance reports using explicit time anchors")
@@ -337,6 +348,16 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
             else:
                 print(str(write_json_artifact(args.out, "shot-evidence.json", result)))
+            return 0
+        if args.command == "av-cut-evidence":
+            result = build_av_cut_evidence(
+                args.source, args.analysis_run, window_ms=args.window_ms,
+                max_audio_frames=args.max_audio_frames, ffmpeg=args.ffmpeg,
+                ffprobe=args.ffprobe)
+            if args.out is None:
+                print(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
+            else:
+                print(str(write_json_artifact(args.out, "av-cut-evidence.json", result)))
             return 0
         if args.command == "review-shots":
             print(build_shot_gallery(
