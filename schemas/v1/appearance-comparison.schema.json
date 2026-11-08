@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/appearance-comparison.schema.json",
+  "title": "Kumiki Explicitly Aligned Appearance Comparison v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "reference", "candidate", "alignment", "comparison", "pairs", "summary"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.appearance-comparison.v1"},
+    "reference": {"$ref": "#/$defs/source"},
+    "candidate": {"$ref": "#/$defs/source"},
+    "alignment": {"type": "object", "additionalProperties": false,
+      "required": ["method", "referenceAnchorSeconds", "candidateAnchorSeconds", "scale", "toleranceSeconds", "oneToOne"],
+      "properties": {
+        "method": {"const": "explicit-two-anchor-max-cardinality-min-error-monotonic-pts-v1"},
+        "referenceAnchorSeconds": {"$ref": "#/$defs/rational"},
+        "candidateAnchorSeconds": {"$ref": "#/$defs/rational"},
+        "scale": {"$ref": "#/$defs/rational"},
+        "toleranceSeconds": {"$ref": "#/$defs/rational"},
+        "oneToOne": {"const": true}
+      }
+    },
+    "comparison": {"type": "object", "additionalProperties": false,
+      "required": ["status", "matchedCount", "unmatchedReferenceCount", "unmatchedCandidateCount", "physicalPhotometry", "qualityVerdict", "limits"],
+      "properties": {"status": {"enum": ["measured-pairs", "no-aligned-pairs"]},
+                     "matchedCount": {"type": "integer", "minimum": 0, "maximum": 40},
+                     "unmatchedReferenceCount": {"type": "integer", "minimum": 0, "maximum": 40},
+                     "unmatchedCandidateCount": {"type": "integer", "minimum": 0, "maximum": 40},
+                     "physicalPhotometry": {"const": false},
+                     "qualityVerdict": {"const": "not-performed"},
+                     "limits": {"type": "string", "minLength": 1}}
+    },
+    "pairs": {"type": "array", "maxItems": 40, "items": {"$ref": "#/$defs/pair"}},
+    "summary": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/summary"}]}
+  },
+  "$defs": {
+    "rational": {"type": "object", "additionalProperties": false,
+      "required": ["numerator", "denominator"],
+      "properties": {"numerator": {"type": "integer"},
+                     "denominator": {"type": "integer", "minimum": 1}}},
+    "unit": {"type": "number", "minimum": 0, "maximum": 1},
+    "signedUnit": {"type": "number", "minimum": -1, "maximum": 1},
+    "source": {"type": "object", "additionalProperties": false,
+      "required": ["sourceSha256", "reportSha256", "sourceTimebase", "sampleCount"],
+      "properties": {"sourceSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+                     "reportSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+                     "sourceTimebase": {"$ref": "#/$defs/rational"},
+                     "sampleCount": {"type": "integer", "minimum": 2, "maximum": 40}}},
+    "pair": {"type": "object", "additionalProperties": false,
+      "required": ["referencePts", "candidatePts", "signedAlignmentErrorSeconds", "meanLumaProxyDelta", "meanRgbDistance", "spatialGridLumaMae", "hueHistogramTotalVariation", "meanSaturationDelta", "brightPixelFractionDelta", "chromaticPixelFractionDelta"],
+      "properties": {
+        "referencePts": {"type": "integer"}, "candidatePts": {"type": "integer"},
+        "signedAlignmentErrorSeconds": {"$ref": "#/$defs/rational"},
+        "meanLumaProxyDelta": {"$ref": "#/$defs/signedUnit"},
+        "meanRgbDistance": {"$ref": "#/$defs/unit"},
+        "spatialGridLumaMae": {"$ref": "#/$defs/unit"},
+        "hueHistogramTotalVariation": {"$ref": "#/$defs/unit"},
+        "meanSaturationDelta": {"$ref": "#/$defs/signedUnit"},
+        "brightPixelFractionDelta": {"$ref": "#/$defs/signedUnit"},
+        "chromaticPixelFractionDelta": {"$ref": "#/$defs/signedUnit"}
+      }
+    },
+    "summary": {"type": "object", "additionalProperties": false,
+      "required": ["meanAbsoluteLumaProxyDelta", "meanRgbDistance", "medianSpatialGridLumaMae", "meanHueHistogramTotalVariation"],
+      "properties": {"meanAbsoluteLumaProxyDelta": {"$ref": "#/$defs/unit"},
+                     "meanRgbDistance": {"$ref": "#/$defs/unit"},
+                     "medianSpatialGridLumaMae": {"$ref": "#/$defs/unit"},
+                     "meanHueHistogramTotalVariation": {"$ref": "#/$defs/unit"}}}
+  }
+}

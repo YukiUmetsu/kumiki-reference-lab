@@ -9,6 +9,7 @@ from pathlib import Path
 
 from kumiki_reference_lab.analyzers.media.inspect import inspect_source
 from kumiki_reference_lab.analyzers.appearance.analyze import analyze_appearance
+from kumiki_reference_lab.analyzers.comparison.appearance import compare_appearance
 from kumiki_reference_lab.analyzers.media.contact_sheet import build_contact_sheet
 from kumiki_reference_lab.analyzers.motion.analyze import analyze_image_motion
 from kumiki_reference_lab.analyzers.motion.sparse import analyze_sparse_flow
@@ -114,6 +115,16 @@ def build_parser() -> argparse.ArgumentParser:
     appearance.add_argument("--ffprobe", default="ffprobe")
     appearance.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
 
+    comparison = commands.add_parser("compare-appearance",
+                                     help="compare two appearance reports using explicit time anchors")
+    comparison.add_argument("reference_report", type=Path)
+    comparison.add_argument("candidate_report", type=Path)
+    comparison.add_argument("--reference-anchor-ms", type=int, required=True)
+    comparison.add_argument("--candidate-anchor-ms", type=int, required=True)
+    comparison.add_argument("--tolerance-ms", type=int, default=150)
+    comparison.add_argument("--time-scale", default="1")
+    comparison.add_argument("--out", type=Path)
+
     analyze = commands.add_parser("analyze", help="run a bounded, atomic multi-stage reference analysis")
     analyze.add_argument("source", type=Path)
     analyze.add_argument("--out", type=Path, required=True, help="parent directory for immutable run")
@@ -184,6 +195,19 @@ def main(argv: list[str] | None = None) -> int:
                 rights_status=args.rights_status,
             )
             print(str(manifest))
+            return 0
+        if args.command == "compare-appearance":
+            comparison = compare_appearance(
+                args.reference_report, args.candidate_report,
+                reference_anchor_ms=args.reference_anchor_ms,
+                candidate_anchor_ms=args.candidate_anchor_ms,
+                tolerance_ms=args.tolerance_ms, time_scale=args.time_scale,
+            )
+            if args.out is None:
+                print(json.dumps(comparison, indent=2, sort_keys=True, ensure_ascii=False))
+            else:
+                print(str(write_json_artifact(args.out, "appearance-comparison.json",
+                                              comparison)))
             return 0
         if args.command == "contact-sheet":
             index = build_contact_sheet(

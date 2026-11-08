@@ -118,3 +118,13 @@ histogram or luma proxy is **not** recovered scene lighting, physical camera
 exposure or a material classification. `analyze --appearance` now adds this
 stage transactionally with immutable checksums, bounded parameters and the
 original source timestamps.
+
+## Reference-to-render alignment
+
+`compare-appearance` consumes two already-produced appearance reports and
+requires user-provided time anchors and an explicit time-scale transform. It
+finds an optimal bounded monotonic one-to-one sample matching and emits a
+versioned [appearance comparison](appearance-comparison.md). This is a useful
+diagnostic baseline, **not** pixel-level visual reconstruction, style-copying
+or an artistic quality judgment. Later work can reuse the same explicit
+alignment contract for masks, camera/image-plane tracks and visual QA.
