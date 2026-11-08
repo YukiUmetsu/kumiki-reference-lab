@@ -5,6 +5,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "sourceSha256", "sourceStreamIndex", "sourceTimebase", "scanWindowSeconds", "coverage", "analyzer", "cutCandidatePts", "samples", "pairs"],
+  "allOf": [{
+    "if": {"properties": {"analyzer": {"properties": {
+      "method": {"const": "shi-tomasi-approx-patch-ncc-fb-consensus-affine-v1"}
+    }}}},
+    "then": {"properties": {
+      "analyzer": {"required": ["affineInlierTolerancePixels", "affineMaxHypotheses"]},
+      "pairs": {"items": {"required": ["geometryHypothesis"]}}
+    }}
+  }],
   "properties": {
     "schemaVersion": {"const": "kumiki.sparse-flow.v1"},
     "sourceSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
@@ -16,7 +25,7 @@
       "type": "object", "additionalProperties": false,
       "required": ["method", "numpyVersion", "ffmpegExecutable", "ffprobeExecutable", "resolution", "maxSamples", "maxCornersPerFramePair", "searchRadiusPixels", "patchSizePixels", "minimumAppearanceCorrelation", "roundtripTolerancePixels", "consensusTolerancePixels", "cutThreshold", "observedFrameCount", "missingSourcePtsCount", "selection", "calibratedConfidence", "limits"],
       "properties": {
-        "method": {"const": "shi-tomasi-approx-patch-ncc-fb-consensus-v1"},
+        "method": {"enum": ["shi-tomasi-approx-patch-ncc-fb-consensus-v1", "shi-tomasi-approx-patch-ncc-fb-consensus-affine-v1"]},
         "numpyVersion": {"type": "string", "minLength": 1},
         "ffmpegExecutable": {"type": "string", "minLength": 1},
         "ffprobeExecutable": {"type": "string", "minLength": 1},
@@ -31,6 +40,8 @@
         "minimumAppearanceCorrelation": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
         "roundtripTolerancePixels": {"const": 1.5},
         "consensusTolerancePixels": {"const": 1.5},
+        "affineInlierTolerancePixels": {"const": 1.5},
+        "affineMaxHypotheses": {"const": 384},
         "cutThreshold": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
         "observedFrameCount": {"type": "integer", "minimum": 2},
         "missingSourcePtsCount": {"type": "integer", "minimum": 0},
@@ -61,7 +72,8 @@
                            "backward-failed": {"type": "integer", "minimum": 0},
                            "roundtrip-inconsistent": {"type": "integer", "minimum": 0}}},
           "vectors": {"type": "array", "maxItems": 64, "items": {"$ref": "#/$defs/vector"}},
-          "consensus": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/consensus"}]}
+          "consensus": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/consensus"}]},
+          "geometryHypothesis": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/geometry"}]}
         }
       }
     }
@@ -85,6 +97,40 @@
       "properties": {"status": {"enum": ["insufficient-consensus", "ambiguous-dominant-group", "multiple-image-translations", "single-image-translation-candidate"]},
                      "clusters": {"type": "array", "maxItems": 2, "items": {"$ref": "#/$defs/cluster"}},
                      "unclassifiedCount": {"type": "integer", "minimum": 0}}},
+    "geometry": {"type": "object", "additionalProperties": false,
+      "required": ["status", "inliers", "correspondences", "inlierPointIndices", "model"],
+      "properties": {
+        "status": {"enum": ["insufficient-points", "no-robust-affine-consensus", "unstable-affine-refinement", "insufficient-spatial-support", "implausible-affine-geometry", "translation-sufficient", "affine-image-plane-candidate"]},
+        "inliers": {"type": "integer", "minimum": 0, "maximum": 64},
+        "correspondences": {"type": "integer", "minimum": 0, "maximum": 64},
+        "inlierPointIndices": {"type": "array", "maxItems": 64, "uniqueItems": true,
+          "items": {"type": "integer", "minimum": 0, "maximum": 63}},
+        "model": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/affineModel"}]}
+      }
+    },
+    "affineModel": {"type": "object", "additionalProperties": false,
+      "required": ["matrix2x3", "translationOnlyPixels", "rmsAffinePixels", "rmsTranslationPixels", "inlierFraction", "inlierSpanFraction", "areaScaleCandidate", "rotationDegreesCandidate", "anisotropyCandidate", "reflectionOrInvalidGeometry", "calibratedConfidence"],
+      "properties": {
+        "matrix2x3": {"type": "array", "minItems": 2, "maxItems": 2,
+          "items": {"type": "array", "minItems": 3, "maxItems": 3,
+                    "items": {"type": "number"}}},
+        "translationOnlyPixels": {"type": "object", "additionalProperties": false,
+          "required": ["dx", "dy"],
+          "properties": {"dx": {"type": "number"}, "dy": {"type": "number"}}},
+        "rmsAffinePixels": {"type": "number", "minimum": 0},
+        "rmsTranslationPixels": {"type": "number", "minimum": 0},
+        "inlierFraction": {"type": "number", "minimum": 0, "maximum": 1},
+        "inlierSpanFraction": {"type": "object", "additionalProperties": false,
+          "required": ["x", "y"],
+          "properties": {"x": {"type": "number", "minimum": 0, "maximum": 1},
+                         "y": {"type": "number", "minimum": 0, "maximum": 1}}},
+        "areaScaleCandidate": {"type": "number", "exclusiveMinimum": 0},
+        "rotationDegreesCandidate": {"type": "number"},
+        "anisotropyCandidate": {"type": "number", "minimum": 1},
+        "reflectionOrInvalidGeometry": {"const": false},
+        "calibratedConfidence": {"const": false}
+      }
+    },
     "cluster": {"type": "object", "additionalProperties": false,
       "required": ["role", "support", "supportFraction", "dxPixels", "dyPixels", "medianResidualPixels", "spatialCellCount", "pointBoundsPixels"],
       "properties": {"role": {"enum": ["dominant", "secondary"]},

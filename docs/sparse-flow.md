@@ -26,7 +26,13 @@ identity; legacy runs without sparse flow keep their existing identity.
 6. Group accepted integer pixel displacements into up to two translation
    consensuses with 1.5-pixel tolerance, a three-point minimum and a
    2.5-pixel separation requirement. Keep unclassified point vectors.
-7. Detect hard-cut candidates separately and **never** track across their
+7. Independently test up to 384 deterministic three-point affine hypotheses
+   over all accepted correspondences, requiring at least 55% inliers (and
+   at least six), sufficient 2D spatial coverage, and low reprojection error.
+   An affine model is only preferred if it substantially reduces RMS error
+   relative to translation on the same inliers. Degenerate/reflected/unstable
+   estimates receive explicit rejection statuses.
+8. Detect hard-cut candidates separately and **never** track across their
    boundaries. A cut pair has no vectors and a null consensus.
 
 Each pair exposes `detectedCorners`, `rejected` counts by reason, `vectors`
@@ -34,6 +40,11 @@ with original coordinates, offsets, match correlations and roundtrip error,
 and `consensus` containing group support, median residual, spatial coverage,
 and bounding coordinates. `status` communicates when no consensus exists or
 when similarly supported motion groups make the dominant group ambiguous.
+Each non-cut pair also includes `geometryHypothesis` with its own status,
+accepted point indices, candidate 2×3 affine matrix, translation/affine RMS,
+observed spatial support, apparent area scale, rotation and anisotropy.
+These are *estimated image properties*; they are never proof of optical zoom,
+camera roll or an object's physical rotation.
 
 ## Reading the results honestly
 
@@ -49,6 +60,12 @@ when similarly supported motion groups make the dominant group ambiguous.
   not force a choice.
 - Each accepted patch correlation is an appearance score, not a calibrated
   probability or verified identity.
+- `affine-image-plane-candidate` = the measured 2D point motions fit an
+  affine transform better than translation, under the declared thresholds.
+  `translation-sufficient` means affine adds no meaningful evidence.
+- Apparent 2D area scale, planar rotation and anisotropy are mathematical
+  decompositions of the fitted matrix. Multiple possible 3D mechanisms can
+  produce the same screen-space transformation.
 
 The method is a deterministic, short-baseline **translation baseline**. It does
 not recover lens intrinsics, zoom, roll, depth, parallax, true camera pose,
@@ -64,11 +81,12 @@ independently for every pair, so **point IDs do not persist** across time.
   ±8px search. Hard limits: 240×135, 20 seconds, 40 frames, 64 points, ±12px.
   Designed for controlled short tests, not a full feature film at 4K.
 - Patch NCC assumes locally stable texture and modest translations. Rotation,
-  perspective, rescaling, motion blur, occlusion and crossfades degrade it.
-- Grouping uses translation only. Camera movement plus parallax, dolly zoom,
-  rotating props and deformation require different geometric models.
-- Recommended subsequent work: multi-scale flow, affine and homography
-  model fitting with residual distributions, temporal track IDs and occlusion
+perspective, rescaling, motion blur, occlusion and crossfades degrade it.
+- Grouping uses translation only. Affine hypotheses help characterize apparent
+  scale/rotation, but camera movement plus parallax, perspective, depth,
+  rotating props and deformation require more careful geometric modeling.
+- Recommended subsequent work: multi-scale optical flow, homography versus
+  affine model selection, persistent temporal track IDs and occlusion
   handling, then *optional* image segmentation/semantic classification.
 
 The longer-term research use is to inform **candidate** Kumiki camera/subject
