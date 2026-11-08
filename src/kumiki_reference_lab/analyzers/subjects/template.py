@@ -6,10 +6,22 @@ import math
 from typing import Any
 
 
+def _parabolic_peak_offset(left: float, center: float, right: float) -> float | None:
+    """Subpixel peak from three discrete NCC scores, or abstain if unstable."""
+    curvature = left - 2 * center + right
+    if not math.isfinite(curvature) or curvature >= -0.002:
+        return None
+    offset = 0.5 * (left - right) / curvature
+    if not math.isfinite(offset) or abs(offset) > 0.75:
+        return None
+    return float(offset)
+
+
 def track_template(
     template: bytes, image: bytes, image_width: int, image_height: int,
     box_width: int, box_height: int, previous_x: int, previous_y: int,
     *, radius: int = 12, minimum_correlation: float = 0.62,
+    subpixel_peak: bool = False,
 ) -> dict[str, Any]:
     """Find a small static textured patch near its previous position.
 
@@ -26,6 +38,8 @@ def track_template(
     if (type(radius) is not int or not 1 <= radius <= 48 or
             not math.isfinite(minimum_correlation) or not 0 < minimum_correlation < 1):
         raise ValueError("invalid template search radius or correlation threshold")
+    if type(subpixel_peak) is not bool:
+        raise ValueError("subpixel_peak must be a boolean")
     if (box_width < 8 or box_height < 8 or box_width > image_width // 2 or
             box_height > image_height // 2):
         raise ValueError("template box must be at least 8px and at most half the frame")
@@ -73,5 +87,22 @@ def track_template(
     if margin < 0.025:
         return {"status": "ambiguous-multiple-matches", "x": None, "y": None,
                 "correlation": round(peak, 5), "peakMargin": round(margin, 5)}
-    return {"status": "matched-template", "x": xmin + column, "y": ymin + row,
-            "correlation": round(peak, 5), "peakMargin": round(margin, 5)}
+    result = {"status": "matched-template", "x": xmin + column, "y": ymin + row,
+              "correlation": round(peak, 5), "peakMargin": round(margin, 5)}
+    if subpixel_peak:
+        # A local mathematical interpolation, not a new observation or an
+        # independently backward-verified fractional correspondence.
+        xoff = (_parabolic_peak_offset(float(scores[row, column - 1]), peak,
+                                       float(scores[row, column + 1]))
+                if 0 < column < scores.shape[1] - 1 else None)
+        yoff = (_parabolic_peak_offset(float(scores[row - 1, column]), peak,
+                                       float(scores[row + 1, column]))
+                if 0 < row < scores.shape[0] - 1 else None)
+        if xoff is None or yoff is None:
+            result.update({"subpixelPeakStatus": "integer-fallback",
+                           "subpixelPeakOffset": None})
+        else:
+            result.update({"subpixelPeakStatus": "candidate-1d-parabola",
+                           "subpixelPeakOffset": {"dx": round(xoff, 4),
+                                                  "dy": round(yoff, 4)}})
+    return result

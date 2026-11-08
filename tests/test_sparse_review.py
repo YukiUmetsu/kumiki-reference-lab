@@ -158,6 +158,19 @@ class SparseReviewIntegrationTests(unittest.TestCase):
                 build_sparse_flow_review(source, report_path, runs, max_frames=13)
             self.assertFalse(runs.exists())
 
+    def test_fractional_candidate_vectors_remain_source_linked(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source.mkv"
+            self._video(source)
+            report_path = root / "sparse-flow.json"
+            report_path.write_text(json.dumps(analyze_sparse_flow(
+                source, seconds=2, max_samples=6, subpixel_refinement=True)),
+                encoding="utf-8")
+            index = build_sparse_flow_review(source, report_path, root / "reviews")
+            self.assertTrue(index.is_file())
+            self.assertIn("not an artistic grade", index.read_text())
+
 
 if __name__ == "__main__":
     unittest.main()

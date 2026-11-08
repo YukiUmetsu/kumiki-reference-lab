@@ -129,6 +129,7 @@ def run_analysis(
     sparse_flow: bool = False, sparse_samples: int = 24,
     sparse_points: int = 40, sparse_radius: int = 8,
     sparse_correlation: float = 0.68, sparse_pyramid_levels: int = 1,
+    sparse_subpixel_refinement: bool = False,
     appearance: bool = False, appearance_samples: int = 24,
     threshold: float = 0.25, ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
     rights_status: str = "review-required",
@@ -157,6 +158,8 @@ def run_analysis(
             raise ValueError("sparse-flow radius must be 2..12")
         if type(sparse_pyramid_levels) is not int or sparse_pyramid_levels not in (1, 2):
             raise ValueError("sparse-flow pyramid levels must be 1 or 2")
+        if type(sparse_subpixel_refinement) is not bool:
+            raise ValueError("sparse-flow subpixel refinement must be a boolean")
         if (not isinstance(sparse_correlation, (int, float)) or
                 not 0 < sparse_correlation < 1):
             raise ValueError("sparse-flow correlation must be between zero and one")
@@ -192,6 +195,8 @@ def run_analysis(
                          "sparseCorrelation": float(sparse_correlation)})
         if sparse_pyramid_levels == 2:
             settings["sparsePyramidLevels"] = 2
+        if sparse_subpixel_refinement:
+            settings["sparseSubpixelRefinement"] = True
         settings["versions"]["sparseFlow"] = SPARSE_FLOW_VERSION
     if appearance:
         settings.update({"appearance": True, "appearanceSamples": appearance_samples})
@@ -249,6 +254,7 @@ def run_analysis(
                 height=height, max_points=sparse_points, radius=sparse_radius,
                 correlation=sparse_correlation, threshold=threshold,
                 pyramid_levels=sparse_pyramid_levels,
+                subpixel_refinement=sparse_subpixel_refinement,
                 ffmpeg=ffmpeg, ffprobe=ffprobe, rights_status=rights_status,
             )
             write_json_artifact(staging, _STAGES["sparseFlow"], sparse)
