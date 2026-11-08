@@ -9,6 +9,7 @@ from pathlib import Path
 
 from kumiki_reference_lab.analyzers.media.inspect import inspect_source
 from kumiki_reference_lab.analyzers.appearance.analyze import analyze_appearance
+from kumiki_reference_lab.analyzers.audio.timeline import analyze_audio_timeline
 from kumiki_reference_lab.analyzers.comparison.appearance import compare_appearance
 from kumiki_reference_lab.analyzers.comparison.frames import build_frame_comparison
 from kumiki_reference_lab.analyzers.techniques.propose import propose_techniques
@@ -121,6 +122,15 @@ def build_parser() -> argparse.ArgumentParser:
     appearance.add_argument("--ffmpeg", default="ffmpeg")
     appearance.add_argument("--ffprobe", default="ffprobe")
     appearance.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
+
+    audio = commands.add_parser(
+        "audio-timeline", help="inspect bounded, original-PTS audio frame timing without AI")
+    audio.add_argument("source", type=Path)
+    audio.add_argument("--out", type=Path)
+    audio.add_argument("--max-seconds", type=int, default=10)
+    audio.add_argument("--max-frames", type=int, default=4096)
+    audio.add_argument("--ffprobe", default="ffprobe")
+    audio.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
 
     comparison = commands.add_parser("compare-appearance",
                                      help="compare two appearance reports using explicit time anchors")
@@ -404,6 +414,11 @@ def main(argv: list[str] | None = None) -> int:
                 ffmpeg=args.ffmpeg, ffprobe=args.ffprobe, rights_status=args.rights_status,
             )
             filename = "appearance.json"
+        elif args.command == "audio-timeline":
+            artifact = analyze_audio_timeline(
+                args.source, seconds=args.max_seconds, max_frames=args.max_frames,
+                ffprobe=args.ffprobe, rights_status=args.rights_status)
+            filename = "audio-timeline.json"
         else:
             artifact = analyze_hard_cuts(args.source, seconds=args.max_seconds,
                                          threshold=args.threshold, ffmpeg=args.ffmpeg,

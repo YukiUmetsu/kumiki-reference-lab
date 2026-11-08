@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/audio-timeline.schema.json",
+  "title": "Kumiki Original Audio Frame Timeline v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "sourceSha256", "sourceVideoStreamIndex", "scanWindowSeconds", "maxFrameBudget", "rightsStatus", "coverage", "limits", "status", "audioStreamIndex", "sourceTimebase", "sampleRateHz", "channels", "frames", "ptsAnomalies"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.audio-timeline.v1"},
+    "sourceSha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "sourceVideoStreamIndex": {"type": "integer", "minimum": 0},
+    "scanWindowSeconds": {"type": "integer", "minimum": 1, "maximum": 30},
+    "maxFrameBudget": {"type": "integer", "minimum": 1, "maximum": 10000},
+    "rightsStatus": {"enum": ["review-required", "user-declared-authorized"]},
+    "coverage": {"const": "bounded-from-start-not-necessarily-full-audio"},
+    "limits": {"type": "string", "minLength": 1},
+    "status": {"enum": ["no-audio-stream", "source-timing-candidate", "audio-timing-incomplete"]},
+    "audioStreamIndex": {"type": ["integer", "null"], "minimum": 0},
+    "sourceTimebase": {"anyOf": [{"$ref": "#/$defs/rational"}, {"type": "null"}]},
+    "sampleRateHz": {"type": ["integer", "null"], "minimum": 1},
+    "channels": {"type": ["integer", "null"], "minimum": 1},
+    "frames": {
+      "type": "array", "maxItems": 10000,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["sampleOrdinal", "sourcePts", "ptsSource", "decodedSampleCount", "sourceSeconds", "decodedDurationSeconds"],
+        "properties": {
+          "sampleOrdinal": {"type": "integer", "minimum": 0},
+          "sourcePts": {"type": ["integer", "null"]},
+          "ptsSource": {"enum": ["best_effort_timestamp", "pts-fallback", "missing"]},
+          "decodedSampleCount": {"type": ["integer", "null"], "minimum": 1},
+          "sourceSeconds": {"anyOf": [{"$ref": "#/$defs/rational"}, {"type": "null"}]},
+          "decodedDurationSeconds": {"anyOf": [{"$ref": "#/$defs/rational"}, {"type": "null"}]}
+        }
+      }
+    },
+    "ptsAnomalies": {
+      "type": "array", "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["sampleOrdinal", "reason"],
+        "properties": {
+          "sampleOrdinal": {"type": "integer", "minimum": 0},
+          "reason": {"enum": ["missing-source-pts", "nonincreasing-source-pts", "missing-or-invalid-sample-count"]}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "rational": {"type": "object", "additionalProperties": false,
+                 "required": ["numerator", "denominator"],
+                 "properties": {
+                   "numerator": {"type": "integer"},
+                   "denominator": {"type": "integer", "minimum": 1}
+                 }}
+  }
+}
