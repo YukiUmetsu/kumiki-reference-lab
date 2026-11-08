@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "kumiki.cinematic-technique.v1",
+  "id": "lighting.softbox-curvature-reveal",
+  "revision": 1,
+  "category": "lighting",
+  "name": "Softbox Curvature Reveal",
+  "status": "research-candidate",
+  "summary": "Make glossy or metallic form readable through large, controlled reflection gradients instead of a uniform ambient wash or exaggerated bloom.",
+  "intent": {
+    "storyPurposes": ["reveal-material-shape", "show-craftsmanship", "guide-attention"],
+    "viewerQuestion": "What is the object's true volume, finish and surface detail?",
+    "desiredPerceptualResult": "Soft moving reflection gradients disclose curvature and surface transitions while the material retains physically plausible contrast and texture.",
+    "avoidWhen": ["Object has intentionally diffuse, light-absorbing material.", "Unresolved normal-map or mesh artifacts would become more visible under grazing highlights.", "The light sweep would compete with a critical explanatory diagram."]
+  },
+  "mechanism": {
+    "visibleCues": ["A broad highlight band follows visible surface normals and tapers over curved edges.", "Shadow regions retain controlled fill and useful microtexture.", "No isolated emissive outline falsely replaces actual reflection behavior."],
+    "plausibleCauses": ["One or more large area/strip light sources and a PBR BRDF.", "Environment-lighting gradients with roughness-dependent reflections.", "A moving light, object, or camera; highlight travel alone cannot identify which one moved."],
+    "unknowns": ["An observed highlight cannot reveal the precise hidden softbox size or location uniquely.", "Brushed anisotropy may require renderer-specific material capability and carefully oriented UVs."]
+  },
+  "recipe": {
+    "beats": [
+      {"id": "shape-baseline", "start": 0, "end": 0.25, "direction": "Establish the silhouette in a dark but non-crushed studio setting. A broad key defines one major curvature plane; low fill keeps recesses readable.", "attentionTarget": "Object contour and rough material family"},
+      {"id": "curvature-pass", "start": 0.25, "end": 0.78, "direction": "Move a broad highlight across the informative surface using a renderer-supported light or environment transform; control angular speed and keep energy bounded.", "attentionTarget": "Curved hero surface, edge bevel and machine finish"},
+      {"id": "material-hold", "start": 0.78, "end": 1, "direction": "Settle the light and camera. Keep readable reflection gradients, contact shadows and fine surface detail while the viewer inspects the final material.", "attentionTarget": "Final shape and crafted texture"}
+    ],
+    "craftNotes": ["Judge the actual BRDF, reflection and roughness response at final export resolution, including moving specular aliasing.", "Prefer one large key with restrained fill and silhouette separation over many small unmotivated point lights.", "For highly metallic materials, reflections describe form; a flat baseColor plus bloom does not reproduce that effect.", "Do not pretend an unsupported renderer area light casts soft shadows: use a verified fallback or fail capability validation."],
+    "fallback": "Use an approved static studio environment map and a slow, motivated object turn if reliable animated area-light shadows are unavailable."
+  },
+  "parameters": [
+    {"name": "keySourceAngularSize", "unit": "degrees", "min": 8, "max": 75, "authoredDefault": 32, "visualImpact": "Controls broadness and smoothness of the highlight gradient.", "failureSigns": ["Tiny hard white dot reflections overpower the surface."]},
+    {"name": "fillToKeyRelativeEnergy", "unit": "ratio", "min": 0.05, "max": 0.70, "authoredDefault": 0.25, "visualImpact": "Preserves shadow detail without destroying depth contrast.", "failureSigns": ["Shadows fully clip or form looks flat and evenly lit."]},
+    {"name": "highlightTravelFraction", "unit": "normalized-shot-time", "min": 0.25, "max": 0.70, "authoredDefault": 0.53, "visualImpact": "Sets the reveal's visual tempo relative to the final inspection hold.", "failureSigns": ["Specular stripe races too fast to read the geometry or pauses in an uninformative region."]}
+  ],
+  "evidence": [],
+  "kumiki": {"registryId": null, "implementationStatus": "not-implemented", "adapterNotes": "Use existing lighting controls, PBR material and capability checks. Store authored light/object paths in the shared absolute-frame timeline; do not add a second lighting clock."},
+  "qa": {"acceptanceChecks": ["A reviewer can identify bevels and curvature from reflections without bloom, emissive outlines or labels.", "Metal/gloss highlights remain stable without temporal shimmer at final resolution.", "Shadows, contact and fill are visually motivated; no unsupported light capability is silently approximated."], "humanApproved": false, "referenceCompared": false}
+}

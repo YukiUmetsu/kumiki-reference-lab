@@ -2,9 +2,9 @@
 
 **Reference-video analysis, cinematic technique research, and reproducible motion reconstruction for the Kumiki ecosystem.**
 
-> **Project status: early working foundation.** The `inspect`, `frames`, `cuts`, `contact-sheet`, and `motion` commands are implemented and tested. The broader video-understanding, technique-catalog, and Kumiki-export features described here remain a roadmap.
+> **Project status: early working foundation.** The `inspect`, `frames`, `cuts`, `contact-sheet`, `motion`, and `catalog` commands are implemented and tested. Automatic video-to-technique interpretation, verified reference matching, and Kumiki export remain planned.
 
-**Implemented foundation:** Python commands read local video metadata, extract real presentation timestamps, detect bounded hard-cut *candidates*, produce timecoded HTML/JPEG contact sheets, and optionally measure global image-plane translation and simple easing candidates using NumPy. Object-specific tracking, physical camera inference, semantic analysis, treatment compilation and reference comparison remain planned.
+**Implemented foundation:** Python commands read local video metadata, extract real presentation timestamps, detect bounded hard-cut *candidates*, produce timecoded HTML/JPEG contact sheets, and optionally measure global image-plane translation and simple easing candidates using NumPy. A validated, searchable Cinematic Techniques Catalog now includes five original research candidates. Object-specific tracking, physical camera inference, semantic interpretation, treatment compilation and reference comparison remain planned.
 
 Kumiki Reference Lab studies legally obtained motion-graphics, product-film, documentary, and explainer-video references. It extracts measurable characteristics, identifies reusable filmmaking techniques, and produces evidence-backed reports that can guide implementations in [kumiki-ui](https://github.com/YukiUmetsu/kumiki-ui).
 
@@ -180,6 +180,8 @@ Stores:
 
 The **canonical research catalog lives here**. Kumiki UI owns the executable component or recipe and may consume a **generated, versioned, metadata-only index** without depending on this repository at runtime.
 
+**Implemented:** Strict JSON entry validation, purpose-first lexical search, deterministic index generation and five detailed original research candidates. They are **not yet backed by measured source-video evidence or verified Kumiki implementations**. See the [catalog authoring and promotion guide](docs/catalog.md).
+
 Each catalog entry should answer:
 
 1. **What does the technique communicate?** Story purpose, viewer-attention role, and appropriate circumstances.
@@ -240,6 +242,9 @@ PYTHONPATH=src python -m kumiki_reference_lab inspect ./reference.mp4 --out ./ru
 PYTHONPATH=src python -m kumiki_reference_lab frames ./reference.mp4 --max-seconds 60 --out ./runs/example
 PYTHONPATH=src python -m kumiki_reference_lab cuts ./reference.mp4 --max-seconds 60 --threshold 0.25 --out ./runs/example
 PYTHONPATH=src python -m kumiki_reference_lab contact-sheet ./reference.mp4 --max-seconds 30 --max-thumbnails 12 --width 480 --out ./runs/example
+PYTHONPATH=src python -m kumiki_reference_lab catalog validate
+PYTHONPATH=src python -m kumiki_reference_lab catalog search "reveal material shape"
+PYTHONPATH=src python -m kumiki_reference_lab catalog index --out ./runs/catalog-r001
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
@@ -252,6 +257,8 @@ kumiki-ref motion ./reference.mp4 --max-seconds 10 --max-samples 48 --out ./runs
 `inspect` records metadata and SHA-256, while honestly marking frame-by-frame PTS and VFR status as unknown until sampled. `frames` extracts source PTS within a bounded window, preserving exact rational timestamps and reporting missing/nonincreasing values. `cuts` detects **possible hard cuts**, not proven edits; fast subject or camera motion may produce false positives, and fades are not yet classified. `contact-sheet` automatically prioritizes frames at opening/closing and around candidate edits, then covers remaining visual gaps. It creates an immutable `contact-sheet-<source>-<settings>/` directory containing `index.html`, `contact-sheet.json`, and up to 24 labeled JPEGs. The JSON records exact rational source timestamps, each evidence image's hash, and the sampling options. Existing bundles are checked for modification, never silently replaced. `--rights-status user-declared-authorized` is an **assertion by the user**, not automated legal verification. No model download or external service is required.
 
 `motion` decodes at most 120 original frames over a 30-second source window into bounded grayscale buffers; every decoded PTS must match FFprobe. It outputs `image-motion.json` containing measured global image translation, explicit ambiguous/unobservable/cut-boundary pairs, normalized displacement, cumulative segments, and residual-ranked candidate easing curves. This cannot determine whether the displacement came from the camera, a foreground subject, a background, or a mixture; it also does not measure zoom, rotation, parallax, 3D paths, or separate subjects. Curve fits are observations of rendered motion, **not recovered source keyframes**. The stage uses NumPy only when invoked; the other commands remain dependency-free.
+
+`catalog` loads canonical research entries from `catalog/entries/` when run from the repository root; provide `--root` when invoked elsewhere. `validate` rejects malformed or improperly promoted entries, `search` ranks story-purpose matches, and `index` emits a versioned metadata-only `catalog-index.json`. Research candidates do not claim verified renderer support or reference-video measurements.
 
 **Planned interfaces (not implemented):**
 
@@ -309,11 +316,11 @@ kumiki-reference-lab/
 │   ├── optimization/               # Future: bounded parameter fitting
 │   └── integrations/kumiki/       # Future: export; no second renderer
 ├── schemas/v1/                    # Interchange schemas
-├── catalog/entries/               # Future: approved research metadata only
+├── catalog/entries/               # Implemented: versioned research candidate definitions
 ├── fixtures/                       # Original or explicitly licensed test videos
 ├── tests/
 ├── examples/treatments/
-└── docs/architecture.md
+└── docs/architecture.md + catalog.md
 ```
 
 The tree is a **target layout**, not a list of directories to create immediately. `core` and `contracts` must not import model backends; analyzers use capability interfaces, while the pipeline chooses backends. Keep generated footage, checkpoints, masks and run artifacts out of Git. See [architecture](docs/architecture.md) for ownership and dependency rules.

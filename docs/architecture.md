@@ -10,7 +10,7 @@
 - `backends`: concrete implementations of subprocess, CV and ML ports. Optional ML backends are loaded only when requested.
 - `pipeline` (future): orchestrates analyzer stages, caching, retry and outputs; never owns an algorithm.
 - `interpretation` (future): creates proposals/hypotheses, never modifies observations.
-- `catalog` (future): canonical technique research metadata, not animation implementations.
+- `catalog`: validated canonical technique research metadata, purpose search and exported index; not animation implementations.
 - `integrations/kumiki` (future): maps a supported subset of treatment fields into Kumiki-owned executable contracts, without a separate render clock.
 - `cli`: thin command dispatch; no algorithm implemented in CLI handlers.
 
@@ -85,4 +85,4 @@ Detection is a **bounded first-stage heuristic**, not comprehensive scene segmen
 
 ## Planned next slice
 
-Complete an interoperable `analyze` pipeline: join reviewed shots and global motion measurements, add robust local feature/optical-flow tracking with multiple-motion separation, and produce draft technique-catalog evidence records. Before full-volume processing, add streaming analysis and explicit cancellation so long inputs never need to be decoded or captured entirely in memory.
+Complete an interoperable `analyze` pipeline: join reviewed shots and global motion measurements, add robust local feature/optical-flow tracking with multiple-motion separation, and generate reviewed technique **evidence proposals** for the existing canonical catalog. The catalog itself now validates and indexes original authored recipes, but does not infer a technique from arbitrary footage. See [catalog guide](catalog.md). Before full-volume processing, add streaming analysis and explicit cancellation so long inputs never need to be decoded or captured entirely in memory.

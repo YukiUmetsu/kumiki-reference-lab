@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "kumiki.cinematic-technique.v1",
+  "id": "motion.anticipation-impact-settle",
+  "revision": 1,
+  "category": "motion",
+  "name": "Anticipation, Impact and Physical Settle",
+  "status": "research-candidate",
+  "summary": "Use a clear preparation cue, a decisive primary action, and restrained secondary settling to convey causality, mass, and physical consequence.",
+  "intent": {
+    "storyPurposes": ["show-cause-and-effect", "communicate-weight", "demonstrate-mechanism"],
+    "viewerQuestion": "What caused this movement, and how heavy or forceful does it feel?",
+    "desiredPerceptualResult": "The primary action reads instantly, impact lands at an exact frame, and secondary motion acknowledges real constraints without distracting from the explanation.",
+    "avoidWhen": ["The subject must move with engineering-accurate constant velocity.", "Extra squash or overshoot would imply false mechanical flexibility.", "The event's factual timing must be precisely synchronized to narration or telemetry without art-directed retiming."]
+  },
+  "mechanism": {
+    "visibleCues": ["A small pre-action displacement or pause establishes intent.", "Primary movement accelerates toward a readable contact or endpoint.", "Impact may cause bounded vibration, flexible secondary follow-through or damped settle according to material and geometry."],
+    "plausibleCauses": ["Hand-authored keyframe spacing and graph-editor tangents.", "Deterministic spring/damping curves and collision constraints.", "A physical solver or animation rig with artist-controlled contact timing."],
+    "unknowns": ["Rendered motion does not uniquely reveal spring constants, object mass or authoring tool.", "Stylized recoil may exaggerate actual dynamics and must not be described as a measured physical force."]
+  },
+  "recipe": {
+    "beats": [
+      {"id": "anticipate", "start": 0, "end": 0.20, "direction": "Establish rest state, then make a small opposite-direction preload only if the rig/material supports it. Preserve the silhouette and direct attention to the impending contact.", "attentionTarget": "Actuating subject and point of future contact"},
+      {"id": "primary-impact", "start": 0.20, "end": 0.68, "direction": "Drive one dominant motion toward a specific keyed impact frame; preserve pivots and mechanical constraints, and synchronize the principal sound transient to contact.", "attentionTarget": "Contact point and immediate result"},
+      {"id": "settle", "start": 0.68, "end": 1, "direction": "Apply bounded, damped secondary response only to components that can physically move. Reduce visible motion below a chosen screen-space threshold before cutting.", "attentionTarget": "Final state and consequence"}
+    ],
+    "craftNotes": ["Animate and review at fixed absolute frames; seeking to frame 80 must equal playback through frame 80.", "Differentiate rigid-body inertia from soft appendage springiness; do not wobble metal gears or stone as rubber.", "Enforce collision/contact and pivot continuity; clear spacing matters more than adding more effects.", "Use the visual impact frame as the authoritative synchronization cue for SFX and other characters' reactions."],
+    "fallback": "Use a simple physically plausible eased primary action with a brief static hold if the rig cannot support secondary motion without intersections."
+  },
+  "parameters": [
+    {"name": "anticipationTravelRelative", "unit": "fraction-of-primary-travel", "min": 0, "max": 0.15, "authoredDefault": 0.045, "visualImpact": "Makes intent readable without appearing like arbitrary reverse motion.", "failureSigns": ["Large reverse motion feels cartoonish or reverses the factual mechanism."]},
+    {"name": "impactFrameFraction", "unit": "normalized-shot-time", "min": 0.45, "max": 0.78, "authoredDefault": 0.68, "visualImpact": "Anchors physical contact and exact sound sync.", "failureSigns": ["Sound effect leads/lags contact or action has no clear moment of consequence."]},
+    {"name": "settleDampingRatio", "unit": "dimensionless", "min": 0.25, "max": 1.0, "authoredDefault": 0.72, "visualImpact": "Controls how visibly a flexible secondary element overshoots before resting.", "failureSigns": ["Perpetual oscillation, snapping stop, or rigid metal moving like soft rubber."]}
+  ],
+  "evidence": [],
+  "kumiki": {"registryId": null, "implementationStatus": "not-implemented", "adapterNotes": "Bind to existing MG1/MD1 absolute-frame motion and physically grounded animation constraints. SFX event timing belongs to the same shot clock."},
+  "qa": {"acceptanceChecks": ["Contact occurs at the authored frame and SFX transient aligns within one output frame.", "No pivot jumping, geometry penetration or impossible secondary motion occurs at normal speed.", "Final state settles before the edit and remains identical after random-seek playback."], "humanApproved": false, "referenceCompared": false}
+}

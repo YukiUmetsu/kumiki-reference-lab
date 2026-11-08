@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/cinematic-techniques-index.schema.json",
+  "title": "Kumiki Cinematic Techniques Metadata Index v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "entries"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.cinematic-techniques-index.v1"},
+    "entries": {
+      "type": "array", "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "revision", "name", "category", "status", "summary", "storyPurposes", "kumikiRegistryId", "implementationStatus", "entrySha256"],
+        "properties": {
+          "id": {"type": "string"},
+          "revision": {"type": "integer", "minimum": 1},
+          "name": {"type": "string"},
+          "category": {"type": "string"},
+          "status": {"type": "string"},
+          "summary": {"type": "string"},
+          "storyPurposes": {"type": "array", "items": {"type": "string"}},
+          "kumikiRegistryId": {"type": ["string", "null"]},
+          "implementationStatus": {"type": "string"},
+          "entrySha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        }
+      }
+    }
+  }
+}

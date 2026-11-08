@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "kumiki.cinematic-technique.v1",
+  "id": "editing.match-on-action",
+  "revision": 1,
+  "category": "editing",
+  "name": "Match on Action for Clear Causality",
+  "status": "research-candidate",
+  "summary": "Cut between shot scales or viewpoints during a continuous, meaningful action so the audience retains subject identity, screen direction, and cause-and-effect.",
+  "intent": {
+    "storyPurposes": ["explain-cause-and-effect", "preserve-spatial-continuity", "reveal-action-detail"],
+    "viewerQuestion": "How does the action in this close-up connect to the mechanism I just saw?",
+    "desiredPerceptualResult": "One apparently continuous action bridges two views; the edit feels inevitable and the mechanism remains understandable.",
+    "avoidWhen": ["The subject changes identity or position discontinuously.", "Camera viewpoints cross the established action axis without an explicit reorientation beat.", "The motion vector reverses on screen without a meaningful story reason."]
+  },
+  "mechanism": {
+    "visibleCues": ["A meaningful action begins before the cut and completes afterward.", "Subject screen direction and contact relationships persist across the cut.", "An audio transient or action rhythm can bridge the seam without masking a physical inconsistency."],
+    "plausibleCauses": ["Two separately staged cameras share a semantic action time and contact event.", "An edit selects overlapping action frames from two rendered takes.", "One continuous 3D scene is rendered from two camera poses at a common timepoint."],
+    "unknowns": ["A cut alone does not identify whether footage comes from one rig or two different takes.", "Temporal overlap and exact source edit frame need direct frame-by-frame inspection to measure."]
+  },
+  "recipe": {
+    "beats": [
+      {"id": "establish-direction", "start": 0, "end": 0.38, "direction": "Present the full action axis and clearly identify the actor, receiver and direction of movement. Keep contact geometry readable.", "attentionTarget": "Actor, direction and receiver"},
+      {"id": "bridge-action", "start": 0.38, "end": 0.65, "direction": "Begin the semantic motion. Cut at a meaningful phase, preserving pose and velocity direction while the new closer camera reveals the important contact.", "attentionTarget": "Same moving subject across both sides of the cut"},
+      {"id": "complete-and-explain", "start": 0.65, "end": 1, "direction": "Finish the action in the new view. Hold the visible outcome and avoid a new competing camera move until the consequence is legible.", "attentionTarget": "Contact and effect"}
+    ],
+    "craftNotes": ["Do not cut merely because a fixed interval elapsed; the cut must attach to a semantic action or information reveal.", "Render matched frames from both viewpoints and compare screen-space direction, silhouette, scale and contact event position.", "Allow a controlled sound bridge if it clarifies continuity, but do not substitute SFX for consistent geometry or animation.", "Preserve narrator explanation and captions across the edit, including portrait-safe framing."],
+    "fallback": "Maintain one continuous wider camera with a short high-contrast detail emphasis if matched geometry or timing cannot be made coherent."
+  },
+  "parameters": [
+    {"name": "editFrameFraction", "unit": "normalized-sequence-time", "min": 0.30, "max": 0.80, "authoredDefault": 0.56, "visualImpact": "Places the edit inside meaningful action, not before setup or after payoff.", "failureSigns": ["The cut happens with no visible motive or hides the causal moment."]},
+    {"name": "screenDirectionTolerance", "unit": "degrees", "min": 0, "max": 45, "authoredDefault": 12, "visualImpact": "Bounds perceived movement direction discontinuity between cameras.", "failureSigns": ["Motion appears to reverse direction across the edit."]},
+    {"name": "contactTimeAlignmentTolerance", "unit": "output-frames", "min": 0, "max": 2, "authoredDefault": 1, "visualImpact": "Keeps continuous contact timing credible across viewpoints.", "failureSigns": ["Contact seems to happen twice or an actor teleports after the cut."]}
+  ],
+  "evidence": [],
+  "kumiki": {"registryId": null, "implementationStatus": "not-implemented", "adapterNotes": "Share semantic action IDs and absolute frame moments between storyboard shots. Use existing scene/camera contracts; avoid duplicating object clocks across takes."},
+  "qa": {"acceptanceChecks": ["Same actor and receiver are spatially identifiable on both sides of the cut at full speed.", "Contact event and motion vectors are continuous within authored tolerances.", "Narration and SFX cues bridge the transition without frame drift or duplicated impact."], "humanApproved": false, "referenceCompared": false}
+}

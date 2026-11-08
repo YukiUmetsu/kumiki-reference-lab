@@ -13,6 +13,7 @@ from kumiki_reference_lab.analyzers.motion.analyze import analyze_image_motion
 from kumiki_reference_lab.analyzers.media.timeline import analyze_frame_timeline
 from kumiki_reference_lab.analyzers.shots.detect import analyze_hard_cuts
 from kumiki_reference_lab.backends.ffmpeg.probe import ProbeError
+from kumiki_reference_lab.catalog.store import build_catalog_index, load_catalog, search_catalog
 from kumiki_reference_lab.contracts.source import RIGHTS_STATUSES
 from kumiki_reference_lab.core.artifacts import write_json_artifact
 
@@ -64,6 +65,19 @@ def build_parser() -> argparse.ArgumentParser:
     motion.add_argument("--ffmpeg", default="ffmpeg")
     motion.add_argument("--ffprobe", default="ffprobe")
     motion.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
+
+    catalog = commands.add_parser("catalog", help="search and validate cinematic technique research")
+    catalog_actions = catalog.add_subparsers(dest="catalog_action", required=True)
+    for action in ("validate", "search", "index"):
+        sub = catalog_actions.add_parser(action)
+        sub.add_argument("--root", type=Path, default=Path("catalog/entries"),
+                         help="canonical technique JSON directory")
+        if action == "search":
+            sub.add_argument("query", help="free-text intent or visual technique query")
+            sub.add_argument("--limit", type=int, default=20)
+        elif action == "index":
+            sub.add_argument("--out", type=Path, required=True,
+                             help="directory for immutable catalog-index.json")
     return parser
 
 
@@ -71,6 +85,18 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
+        if args.command == "catalog":
+            entries = load_catalog(args.root)
+            if args.catalog_action == "validate":
+                print(json.dumps({"valid": True, "entryCount": len(entries)}, sort_keys=True))
+            elif args.catalog_action == "search":
+                print(json.dumps({"query": args.query, "results": search_catalog(
+                    entries, args.query, args.limit)}, indent=2, sort_keys=True))
+            else:
+                destination = write_json_artifact(args.out, "catalog-index.json",
+                                                  build_catalog_index(entries))
+                print(str(destination))
+            return 0
         if args.command == "contact-sheet":
             index = build_contact_sheet(
                 args.source, args.out, seconds=args.max_seconds,

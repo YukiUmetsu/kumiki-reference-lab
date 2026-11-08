@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "kumiki.cinematic-technique.v1",
+  "id": "camera.motivated-macro-dolly",
+  "revision": 1,
+  "category": "camera",
+  "name": "Motivated Macro Dolly",
+  "status": "research-candidate",
+  "summary": "Physically plausible forward camera movement used to inspect a small but story-critical surface or mechanism while preserving spatial orientation.",
+  "intent": {
+    "storyPurposes": ["reveal-material-detail", "explain-scale", "inspect-mechanism"],
+    "viewerQuestion": "What does this part actually look like up close?",
+    "desiredPerceptualResult": "A detailed, stable close view that increases understanding rather than merely making the scene feel energetic.",
+    "avoidWhen": ["Scene geometry or texture resolution cannot withstand close inspection.", "The camera would cross the action axis or hide the important contact point.", "A flat 2D label must remain the sole subject of attention."]
+  },
+  "mechanism": {
+    "visibleCues": ["A foreground subject grows in frame while near and far planes exhibit depth-consistent parallax.", "The hero detail stays inside a deliberate safe area.", "Motion slows to a readable stable close-up."],
+    "plausibleCauses": ["A physical virtual-camera translation toward a target at approximately fixed focal length.", "A mixture of camera translation and small focal-length adjustment.", "2.5D depth-layer translation with carefully bounded parallax."],
+    "unknowns": ["Source focal length and camera-to-subject distance cannot generally be recovered uniquely.", "A digital crop can mimic enlargement but not correct geometric parallax."]
+  },
+  "recipe": {
+    "beats": [
+      {"id": "orient", "start": 0, "end": 0.22, "direction": "Compose a readable medium-wide view with the intended close-up target visible and correct material scale.", "attentionTarget": "Whole subject and destination detail"},
+      {"id": "approach", "start": 0.22, "end": 0.80, "direction": "Translate the camera toward the chosen target along a collision-free path, using an authored velocity graph. Maintain target screen location, inspect the silhouette and avoid near clipping.", "attentionTarget": "Growing region of genuine geometric detail"},
+      {"id": "inspect", "start": 0.80, "end": 1, "direction": "Reach zero apparent drift and hold the detail; allow lighting gradients and textures to convey shape without extra camera wobble.", "attentionTarget": "Final surface, joint, or engraved feature"}
+    ],
+    "craftNotes": ["Use camera position + target constraints, not a zoom-only replacement, when real parallax matters.", "Inspect near plane, focus distance, shadow map precision and texture texel density at the final dolly position.", "Keep target screen-space trajectory smooth and test both landscape and portrait re-composition.", "Prefer low angular velocity during close inspection to prevent visual fatigue."],
+    "fallback": "Use a shorter forward move ending earlier at a quality-verified distance; add an explicit 2D detail inset if asset geometry cannot pass macro inspection."
+  },
+  "parameters": [
+    {"name": "forwardTravelFractionOfStartingDistance", "unit": "ratio", "min": 0.08, "max": 0.55, "authoredDefault": 0.30, "visualImpact": "Controls magnification and parallax; requires bounds and clipping preflight.", "failureSigns": ["Camera clips through the model or shallow geometry becomes obvious."]},
+    {"name": "dollyDurationFraction", "unit": "normalized-shot-time", "min": 0.35, "max": 0.75, "authoredDefault": 0.58, "visualImpact": "Balances sense of investigation with viewer orientation.", "failureSigns": ["Move feels like a sudden digital punch or continues into the next edit."]},
+    {"name": "detailHoldFraction", "unit": "normalized-shot-time", "min": 0.15, "max": 0.40, "authoredDefault": 0.20, "visualImpact": "Reserves still time for the eye to inspect fine detail.", "failureSigns": ["Image cuts before detail can be understood."]}
+  ],
+  "evidence": [],
+  "kumiki": {"registryId": null, "implementationStatus": "not-implemented", "adapterNotes": "Map to CC1 camera path, existing shot frame clock and collision/visibility checks; validate 2.5D alternative without claiming true 3D parallax."},
+  "qa": {"acceptanceChecks": ["Near/far planes show consistent geometric parallax during the dolly, or the shot is explicitly labeled a 2.5D alternative.", "No near-plane clipping, texture blur, specular aliasing or missing normals in the final hold.", "The hero detail remains inside safe framing throughout the shot and both aspect-ratio variants pass review."], "humanApproved": false, "referenceCompared": false}
+}
