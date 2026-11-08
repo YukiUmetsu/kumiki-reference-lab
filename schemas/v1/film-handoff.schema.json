@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/film-handoff.schema.json",
+  "title": "Kumiki FD1 authoring evidence handoff, not an executable FilmDocument",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "status", "study", "target", "timing", "boundaries", "interiorWindows", "audioAttackCandidates", "catalogTechniqueCues", "authoringGates"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.film-handoff.v1"},
+    "status": {"const": "candidate-drafting-evidence-not-an-executable-film"},
+    "study": {
+      "type": "object", "additionalProperties": false,
+      "required": ["manifestSha256", "sourceSha256", "analysisRunSha256"],
+      "properties": {
+        "manifestSha256": {"$ref": "#/$defs/hash"},
+        "sourceSha256": {"$ref": "#/$defs/hash"},
+        "analysisRunSha256": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "target": {
+      "type": "object", "additionalProperties": false,
+      "required": ["repository", "contract", "schemaPath", "validationCommand", "executableDocument", "installedCapabilitiesVerified"],
+      "properties": {
+        "repository": {"const": "YukiUmetsu/kumiki-ui"},
+        "contract": {"const": "FD1 FilmDocument schemaVersion 1"},
+        "schemaPath": {"const": "registry/video/film-document.schema.json"},
+        "validationCommand": {"const": "npm run film:check -- <authored-film.json>"},
+        "executableDocument": {"const": false},
+        "installedCapabilitiesVerified": {"const": false}
+      }
+    },
+    "timing": {
+      "type": "object", "additionalProperties": false,
+      "required": ["videoSourceTimebase", "suggestedFilmFps", "rounding", "audioVideoClockRelation"],
+      "properties": {
+        "videoSourceTimebase": {"$ref": "#/$defs/rational"},
+        "suggestedFilmFps": {
+          "type": "object", "additionalProperties": false,
+          "required": ["num", "den"],
+          "properties": {"num": {"type": "integer", "minimum": 1, "maximum": 240000},
+                         "den": {"type": "integer", "minimum": 1, "maximum": 1001}}
+        },
+        "rounding": {"const": "nearest-half-up-for-positive-durations"},
+        "audioVideoClockRelation": {"const": "not-independently-synchronized"}
+      }
+    },
+    "boundaries": {
+      "type": "object", "additionalProperties": false,
+      "required": ["candidateCutCount", "censoring"],
+      "properties": {
+        "candidateCutCount": {"type": "integer", "minimum": 0},
+        "censoring": {"const": "scan-start-and-final-observed-region-excluded"}
+      }
+    },
+    "interiorWindows": {
+      "type": "array", "maxItems": 10000,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "sourceRegionId", "startCutCandidatePts", "endCutCandidatePts", "sourceStartSeconds", "sourceEndSeconds", "sourceDurationSeconds", "suggestedFilmFrames", "roundingErrorSeconds", "renderability", "sceneRecipeId", "sceneContent", "reviewStatus"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^candidate-interval-[0-9]{3,}$"},
+          "sourceRegionId": {"type": "string", "minLength": 1},
+          "startCutCandidatePts": {"type": "integer"},
+          "endCutCandidatePts": {"type": "integer"},
+          "sourceStartSeconds": {"$ref": "#/$defs/rational"},
+          "sourceEndSeconds": {"$ref": "#/$defs/rational"},
+          "sourceDurationSeconds": {"$ref": "#/$defs/rational"},
+          "suggestedFilmFrames": {"type": "integer", "minimum": 0},
+          "roundingErrorSeconds": {"$ref": "#/$defs/rational"},
+          "renderability": {"enum": ["candidate-duration", "requires-authored-retiming"]},
+          "sceneRecipeId": {"type": "null"},
+          "sceneContent": {"type": "null"},
+          "reviewStatus": {"const": "not-reviewed"}
+        }
+      }
+    },
+    "audioAttackCandidates": {
+      "type": "array", "maxItems": 10000,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "audioSourcePts", "audioSourceSeconds", "supportWindow", "signal", "filmCue"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "audioSourcePts": {"type": "integer"},
+          "audioSourceSeconds": {"$ref": "#/$defs/rational"},
+          "supportWindow": {
+            "type": "object", "additionalProperties": false,
+            "required": ["startSeconds", "endSeconds"],
+            "properties": {"startSeconds": {"$ref": "#/$defs/rational"},
+                           "endSeconds": {"$ref": "#/$defs/rational"}}
+          },
+          "signal": {"type": "string", "minLength": 1},
+          "filmCue": {"type": "null"}
+        }
+      }
+    },
+    "catalogTechniqueCues": {
+      "type": "array", "maxItems": 10000,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "catalogTechniqueId", "sourcePtsRange", "implementationId"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "catalogTechniqueId": {"type": "string", "minLength": 1},
+          "sourcePtsRange": {
+            "type": "object", "additionalProperties": false,
+            "required": ["startPts", "endPts"],
+            "properties": {"startPts": {"type": "integer"},
+                           "endPts": {"type": "integer"}}
+          },
+          "implementationId": {"type": "null"}
+        }
+      }
+    },
+    "authoringGates": {"type": "array", "minItems": 5, "maxItems": 5,
+                       "items": {"type": "string", "minLength": 1}}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "rational": {"type": "object", "additionalProperties": false,
+                 "required": ["numerator", "denominator"],
+                 "properties": {"numerator": {"type": "integer"},
+                                "denominator": {"type": "integer", "minimum": 1}}}
+  }
+}

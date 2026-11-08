@@ -26,6 +26,7 @@ from kumiki_reference_lab.contracts.analysis import (
     REFERENCE_STUDY_V4_VERSION,
 )
 from kumiki_reference_lab.catalog.validate import TECHNIQUE_SCHEMA_VERSION, INDEX_SCHEMA_VERSION
+from kumiki_reference_lab.integrations.kumiki.film_handoff import FILM_HANDOFF_VERSION
 
 
 class SchemaTests(unittest.TestCase):
@@ -83,6 +84,9 @@ class SchemaTests(unittest.TestCase):
         timeline_v2 = json.loads((root.parent / "v2/timeline-review.schema.json").read_text())
         self.assertEqual(timeline_v2["properties"]["schemaVersion"]["const"],
                          TIMELINE_REVIEW_VERSION)
+        handoff = json.loads((root / "film-handoff.schema.json").read_text())
+        self.assertEqual(handoff["properties"]["schemaVersion"]["const"],
+                         FILM_HANDOFF_VERSION)
 
     def test_catalog_schema_versions(self):
         root = Path(__file__).resolve().parents[1] / "schemas/v1"
