@@ -53,6 +53,23 @@ method contributed. This increases reachable displacement to roughly
 2× the declared local radius plus 2px refinement; it does **not** guarantee
 recovery under blur, occlusion, repeated texture, zoom or camera rotation.
 
+For small motions that fall between full pixels, add `--subpixel-refinement` to
+`sparse-flow`, or `--sparse-subpixel-refinement` to `analyze --sparse-flow`.
+This optional refinement fits independent three-point parabolas around each
+accepted integer normalized-cross-correlation peak. If either axis lacks a
+stable concave neighborhood (including at a search edge), the vector keeps
+its original integer displacement and reports `integer-fallback`.
+Otherwise `dx` and `dy` include the bounded (±0.75px) fractional offsets and
+the vector reports `candidate-1d-parabola` plus the original interpolation
+offset. The source patch selection, acceptance thresholds and **reverse
+consistency check remain at integer patch centers**; fractional offsets have
+not been independently backward-verified. They are candidate measurements,
+not ground-truth subpixel tracks, calibrated accuracy or camera velocity.
+The option works with `--pyramid-levels 2` and produces a distinct analysis
+run identity; when omitted, all prior integer outputs and run IDs remain
+unchanged. Read the per-vector `subpixelReverseVerification` before interpreting
+small changes in trajectory or apparent affine geometry.
+
 ## What it actually measures
 
 1. Preserve the source stream's integer presentation timestamps (PTS) and
@@ -155,6 +172,9 @@ and are **not** verified identities.
   evidence, not an automatic correction to physics or film technique labels.
 - Patch NCC assumes locally stable texture and modest translations. Rotation,
 perspective, rescaling, motion blur, occlusion and crossfades degrade it.
+- Fractional peak fitting assumes locally smooth, concave correlation around
+  a valid integer match. It can be biased by resampling, noise and patch
+  changes; an integer-peak backward gate cannot certify fractional accuracy.
 - Grouping uses translation only. Affine hypotheses help characterize apparent
   scale/rotation, but camera movement plus parallax, perspective, depth,
   rotating props and deformation require more careful geometric modeling.

@@ -7,7 +7,16 @@
   "required": ["schemaVersion", "sourceSha256", "sourceStreamIndex", "sourceTimebase", "scanWindowSeconds", "coverage", "analyzer", "cutCandidatePts", "samples", "pairs"],
   "allOf": [{
     "if": {"properties": {"analyzer": {"properties": {
-      "method": {"enum": ["shi-tomasi-approx-patch-ncc-fb-consensus-affine-v1", "shi-tomasi-approx-patch-ncc-fb-consensus-affine-pyramid2-v1"]}
+      "method": {"enum": ["shi-tomasi-approx-patch-ncc-fb-consensus-v1", "shi-tomasi-approx-patch-ncc-fb-consensus-affine-v1", "shi-tomasi-approx-patch-ncc-fb-consensus-affine-pyramid2-v1"]}
+    }}}},
+    "then": {"properties": {"pairs": {"items": {"properties": {
+      "vectors": {"items": {"properties": {
+        "dx": {"type": "integer"}, "dy": {"type": "integer"}
+      }}}
+    }}}}}
+  }, {
+    "if": {"properties": {"analyzer": {"properties": {
+      "method": {"enum": ["shi-tomasi-approx-patch-ncc-fb-consensus-affine-v1", "shi-tomasi-approx-patch-ncc-fb-consensus-affine-pyramid2-v1", "shi-tomasi-approx-patch-ncc-fb-consensus-affine-subpixel-v1", "shi-tomasi-approx-patch-ncc-fb-consensus-affine-pyramid2-subpixel-v1"]}
     }}}},
     "then": {"properties": {
       "analyzer": {"required": ["affineInlierTolerancePixels", "affineMaxHypotheses"]},
@@ -15,12 +24,22 @@
     }}
   }, {
     "if": {"properties": {"analyzer": {"properties": {
-      "method": {"const": "shi-tomasi-approx-patch-ncc-fb-consensus-affine-pyramid2-v1"}
+      "method": {"enum": ["shi-tomasi-approx-patch-ncc-fb-consensus-affine-pyramid2-v1", "shi-tomasi-approx-patch-ncc-fb-consensus-affine-pyramid2-subpixel-v1"]}
     }}}},
     "then": {"properties": {
       "analyzer": {"required": ["pyramidLevels", "coarseRefinementRadiusPixels"]},
       "pairs": {"items": {"properties": {
         "vectors": {"items": {"required": ["searchLevel"]}}
+      }}}
+    }}
+  }, {
+    "if": {"properties": {"analyzer": {"properties": {
+      "method": {"enum": ["shi-tomasi-approx-patch-ncc-fb-consensus-affine-subpixel-v1", "shi-tomasi-approx-patch-ncc-fb-consensus-affine-pyramid2-subpixel-v1"]}
+    }}}},
+    "then": {"properties": {
+      "analyzer": {"required": ["subpixelPeakModel", "subpixelReverseVerification"]},
+      "pairs": {"items": {"properties": {
+        "vectors": {"items": {"required": ["subpixelPeakStatus", "subpixelPeakOffsetPixels", "subpixelReverseVerification"]}}
       }}}
     }}
   }],
@@ -35,7 +54,7 @@
       "type": "object", "additionalProperties": false,
       "required": ["method", "numpyVersion", "ffmpegExecutable", "ffprobeExecutable", "resolution", "maxSamples", "maxCornersPerFramePair", "searchRadiusPixels", "patchSizePixels", "minimumAppearanceCorrelation", "roundtripTolerancePixels", "consensusTolerancePixels", "cutThreshold", "observedFrameCount", "missingSourcePtsCount", "selection", "calibratedConfidence", "limits"],
       "properties": {
-        "method": {"enum": ["shi-tomasi-approx-patch-ncc-fb-consensus-v1", "shi-tomasi-approx-patch-ncc-fb-consensus-affine-v1", "shi-tomasi-approx-patch-ncc-fb-consensus-affine-pyramid2-v1"]},
+        "method": {"enum": ["shi-tomasi-approx-patch-ncc-fb-consensus-v1", "shi-tomasi-approx-patch-ncc-fb-consensus-affine-v1", "shi-tomasi-approx-patch-ncc-fb-consensus-affine-pyramid2-v1", "shi-tomasi-approx-patch-ncc-fb-consensus-affine-subpixel-v1", "shi-tomasi-approx-patch-ncc-fb-consensus-affine-pyramid2-subpixel-v1"]},
         "numpyVersion": {"type": "string", "minLength": 1},
         "ffmpegExecutable": {"type": "string", "minLength": 1},
         "ffprobeExecutable": {"type": "string", "minLength": 1},
@@ -48,6 +67,8 @@
         "searchRadiusPixels": {"type": "integer", "minimum": 2, "maximum": 12},
         "pyramidLevels": {"const": 2},
         "coarseRefinementRadiusPixels": {"const": 2},
+        "subpixelPeakModel": {"const": "separable-3-point-ncc-parabola-v1"},
+        "subpixelReverseVerification": {"const": "integer-peak-only"},
         "patchSizePixels": {"const": 9},
         "minimumAppearanceCorrelation": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
         "roundtripTolerancePixels": {"const": 1.5},
@@ -157,12 +178,22 @@
       "required": ["x", "y", "dx", "dy", "forwardCorrelation", "backwardCorrelation", "roundtripErrorPixels", "group"],
       "properties": {"x": {"type": "integer", "minimum": 0},
                      "y": {"type": "integer", "minimum": 0},
-                     "dx": {"type": "integer"}, "dy": {"type": "integer"},
+                     "dx": {"type": "number"}, "dy": {"type": "number"},
                      "forwardCorrelation": {"type": "number", "minimum": -1, "maximum": 1},
                      "backwardCorrelation": {"type": "number", "minimum": -1, "maximum": 1},
                      "roundtripErrorPixels": {"type": "number", "minimum": 0, "maximum": 1.5},
                      "searchLevel": {"enum": [1, 2]},
+                     "subpixelPeakStatus": {"enum": ["candidate-1d-parabola", "integer-fallback"]},
+                     "subpixelPeakOffsetPixels": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/subpixelOffset"}]},
+                     "subpixelReverseVerification": {"const": "integer-peak-only"},
                      "group": {"enum": ["dominant", "secondary", "unclassified"]}}},
+    "subpixelOffset": {"type": "object", "additionalProperties": false,
+      "required": ["dx", "dy"],
+      "properties": {
+        "dx": {"type": "number", "minimum": -0.75, "maximum": 0.75},
+        "dy": {"type": "number", "minimum": -0.75, "maximum": 0.75}
+      }
+    },
     "consensus": {"type": "object", "additionalProperties": false,
       "required": ["status", "clusters", "unclassifiedCount"],
       "properties": {"status": {"enum": ["insufficient-consensus", "ambiguous-dominant-group", "multiple-image-translations", "single-image-translation-candidate"]},

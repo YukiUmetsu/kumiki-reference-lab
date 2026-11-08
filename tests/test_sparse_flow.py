@@ -150,6 +150,10 @@ class FeatureTrackingTests(unittest.TestCase):
         self.assertEqual(result["detectedCorners"], 64)
         self.assertEqual(result["accepted"], [])
         self.assertEqual(result["rejected"]["forward-failed"], 64)
+        refined = sparse_patch_flows(original.tobytes(), translated.tobytes(),
+                                     160, 90, max_points=64, radius=8,
+                                     pyramid_levels=2, subpixel_refinement=True)
+        self.assertEqual(refined["accepted"], [])
 
     def test_affine_fit_recovers_controlled_image_zoom_without_calling_it_a_camera(self):
         points = [{"x": x, "y": y,
@@ -264,6 +268,30 @@ class SparseFlowIntegrationTests(unittest.TestCase):
             self.assertEqual(artifact["analyzer"]["pyramidLevels"], 2)
             self.assertTrue(all("searchLevel" in vector
                                 for pair in artifact["pairs"] for vector in pair["vectors"]))
+            json.dumps(artifact, allow_nan=False)
+
+    def test_real_video_opt_in_subpixel_contract_is_explicitly_integer_reverse_only(self):
+        with tempfile.TemporaryDirectory() as directory:
+            video = Path(directory) / "source.mkv"
+            self._create_clip(video, vfr=True)
+            artifact = analyze_sparse_flow(video, seconds=2, max_samples=6,
+                                           subpixel_refinement=True)
+            self.assertEqual(artifact["analyzer"]["method"],
+                             "shi-tomasi-approx-patch-ncc-fb-consensus-affine-subpixel-v1")
+            self.assertEqual(artifact["analyzer"]["subpixelReverseVerification"],
+                             "integer-peak-only")
+            vectors = [v for pair in artifact["pairs"] for v in pair["vectors"]]
+            self.assertGreaterEqual(len(vectors), 1)
+            self.assertTrue(all(v["subpixelReverseVerification"] == "integer-peak-only"
+                                and v["subpixelPeakStatus"] in
+                                ("candidate-1d-parabola", "integer-fallback")
+                                for v in vectors))
+            multiscale = analyze_sparse_flow(video, seconds=2, max_samples=5,
+                                             pyramid_levels=2,
+                                             subpixel_refinement=True)
+            self.assertEqual(multiscale["analyzer"]["method"],
+                             "shi-tomasi-approx-patch-ncc-fb-consensus-affine-pyramid2-subpixel-v1")
+            self.assertEqual(multiscale["analyzer"]["pyramidLevels"], 2)
             json.dumps(artifact, allow_nan=False)
 
     def test_flat_video_does_not_invent_vectors(self):

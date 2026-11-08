@@ -146,6 +146,30 @@ class AnalysisPipelineIntegrationTests(unittest.TestCase):
                                           sparse_pyramid_levels=2), multiscale)
 
     @unittest.skipUnless(importlib.util.find_spec("numpy"), "NumPy extra unavailable")
+    def test_opt_in_sparse_subpixel_has_separate_atomic_run_identity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "flat.mkv"
+            self._flat_video(source)
+            runs = root / "runs"
+            baseline = run_analysis(source, runs, seconds=2, thumbnails=4,
+                                    sparse_flow=True, sparse_samples=5)
+            refined = run_analysis(source, runs, seconds=2, thumbnails=4,
+                                   sparse_flow=True, sparse_samples=5,
+                                   sparse_subpixel_refinement=True)
+            self.assertNotEqual(baseline, refined)
+            self.assertNotIn("sparseSubpixelRefinement",
+                             json.loads(baseline.read_text())["settings"])
+            self.assertTrue(json.loads(refined.read_text())["settings"]
+                            ["sparseSubpixelRefinement"])
+            report = json.loads((refined.parent / "sparse-flow.json").read_text())
+            self.assertEqual(report["analyzer"]["subpixelPeakModel"],
+                             "separable-3-point-ncc-parabola-v1")
+            self.assertEqual(run_analysis(
+                source, runs, seconds=2, thumbnails=4, sparse_flow=True,
+                sparse_samples=5, sparse_subpixel_refinement=True), refined)
+
+    @unittest.skipUnless(importlib.util.find_spec("numpy"), "NumPy extra unavailable")
     def test_appearance_bundle_is_atomic_and_may_combine_with_sparse_flow(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

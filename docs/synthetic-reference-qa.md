@@ -1,6 +1,6 @@
 # Procedural reference-video validation
 
-The end-to-end fixtures in `tests/test_technique_end_to_end.py` use original, deterministic RGB frame sequences encoded with FFmpeg's lossless FFV1 codec. They are generated in a temporary directory for each test; no third-party footage, learned model, or paid API is used. The second GitHub Actions job installs the optional NumPy analysis extra and explicitly requires FFmpeg/FFprobe before running these tests, so they cannot silently pass as skipped due to absent dependencies.
+The end-to-end fixtures in `tests/test_technique_end_to_end.py` use original, deterministic RGB frame sequences encoded with FFmpeg's lossless FFV1 codec. They are generated in a temporary directory for each test; no third-party footage, learned model, or paid API is used. These heavier FFmpeg/NumPy tests run locally; the credit-conscious GitHub Actions workflow executes only selected fast checks. Run the full suite locally with FFmpeg/FFprobe and the NumPy extra installed so optional tests do not skip.
 
 Run locally:
 

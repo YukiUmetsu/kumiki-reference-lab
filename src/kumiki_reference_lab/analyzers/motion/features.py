@@ -76,16 +76,20 @@ def sparse_patch_flows(
     before: bytes, after: bytes, width: int, height: int, *,
     max_points: int = 48, patch_size: int = 9, radius: int = 8,
     minimum_correlation: float = 0.68, pyramid_levels: int = 1,
+    subpixel_refinement: bool = False,
 ) -> dict[str, Any]:
     """Track source-frame corners with forward/backward patch consistency.
 
-    Every accepted vector has an exact pixel origin, integer displacement,
-    similarity diagnostic and roundtrip error. No semantic ID is assigned.
+    By default accepted displacements are integer pixels. Optional subpixel
+    peak interpolation is a candidate, not a fractionally verified match;
+    the reverse consistency gate still operates on integer patch centers.
     """
     if not 0 < minimum_correlation < 1:
         raise ValueError("minimum_correlation must be between 0 and 1")
     if type(pyramid_levels) is not int or pyramid_levels not in (1, 2):
         raise ValueError("sparse-flow pyramid_levels must be 1 or 2")
+    if type(subpixel_refinement) is not bool:
+        raise ValueError("sparse-flow subpixel_refinement must be a boolean")
     corners = select_corners(before, width, height, max_points=max_points,
                              patch_size=patch_size, radius=radius)
     half = patch_size // 2
@@ -129,7 +133,8 @@ def sparse_patch_flows(
         predicted_y = y - half + 2 * (candidate["y"] - (cy - half))
         refined = track_template(template, after, width, height,
                                  patch_size, patch_size, predicted_x, predicted_y,
-                                 radius=2, minimum_correlation=minimum_correlation)
+                                 radius=2, minimum_correlation=minimum_correlation,
+                                 subpixel_peak=subpixel_refinement)
         return refined if refined["status"] == "matched-template" else None
 
     accepted: list[dict[str, Any]] = []
@@ -140,7 +145,8 @@ def sparse_patch_flows(
         start_x, start_y = x - half, y - half
         initial = track_template(template, after, width, height,
                                  patch_size, patch_size, start_x, start_y,
-                                 radius=radius, minimum_correlation=minimum_correlation)
+                                 radius=radius, minimum_correlation=minimum_correlation,
+                                 subpixel_peak=subpixel_refinement)
         failure = ("low-texture" if initial["status"] == "unobservable-low-texture"
                    else "forward-failed")
         for search_level in range(1, pyramid_levels + 1):
@@ -168,6 +174,14 @@ def sparse_patch_flows(
                       "forwardCorrelation": forward["correlation"],
                       "backwardCorrelation": backward["correlation"],
                       "roundtripErrorPixels": round(error, 4)}
+            if subpixel_refinement:
+                offset = forward["subpixelPeakOffset"]
+                if offset is not None:
+                    vector["dx"] = round(vector["dx"] + offset["dx"], 4)
+                    vector["dy"] = round(vector["dy"] + offset["dy"], 4)
+                vector.update({"subpixelPeakStatus": forward["subpixelPeakStatus"],
+                               "subpixelPeakOffsetPixels": offset,
+                               "subpixelReverseVerification": "integer-peak-only"})
             if pyramid_levels == 2:
                 vector["searchLevel"] = search_level
             accepted.append(vector)
