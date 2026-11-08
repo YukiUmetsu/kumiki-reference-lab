@@ -55,7 +55,7 @@ python -m pip install -e '.[motion]'
 kumiki-ref study-reference ./reference.mp4 --max-seconds 10 --out ./runs
 ```
 
-This produces a verified analysis bundle, cautious technique proposals, candidate edit-region summaries and a local HTML gallery. It never claims to infer the source's actual camera, lights, objects or story purpose. See [one-command study usage](docs/reference-study.md).
+This produces a verified analysis bundle, cautious technique proposals, candidate edit-region summaries and a local HTML **study overview** linking both a candidate-shot storyboard and a separate technique review gallery. Storyboard frames are available even with zero technique cues. It never claims to infer the source's actual camera, lights, objects or story purpose. See [one-command study usage](docs/reference-study.md).
 
 To document human observations or optional AI hypotheses in a separate, source-verified draft, use `kumiki-ref review-notes init <study-manifest.json> --reviewer-id NAME --out reviews/`, then `review-notes validate <study-manifest.json> reviews/review-notes.json`. Exact original frame PTS, cue/region identity and study hashes are checked, but no semantic truth or human approval is implied. See [review notes contract](docs/review-notes.md).
 

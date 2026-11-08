@@ -8,6 +8,10 @@ from pathlib import Path
 
 from kumiki_reference_lab.cli.app import build_parser
 from kumiki_reference_lab.pipeline.study import study_reference
+from kumiki_reference_lab.pipeline.study import _verify_study
+from kumiki_reference_lab.pipeline.analyze import _file_records
+from kumiki_reference_lab.contracts.analysis import REFERENCE_STUDY_V1_VERSION
+from kumiki_reference_lab.core.artifacts import write_json_artifact
 
 
 CATALOG = Path(__file__).resolve().parents[1] / "catalog" / "entries"
@@ -46,13 +50,16 @@ class StudyReferenceIntegrationTests(unittest.TestCase):
             gallery = study_reference(source, output, catalog_root=CATALOG,
                                       seconds=2, thumbnails=4)
             self.assertTrue(gallery.is_file())
-            manifest = gallery.parents[2] / "study-manifest.json"
+            manifest = gallery.parent / "study-manifest.json"
             report = json.loads(manifest.read_text())
-            self.assertEqual(report["schemaVersion"], "kumiki.reference-study.v1")
+            self.assertEqual(report["schemaVersion"], "kumiki.reference-study.v2")
             self.assertEqual(report["humanReviewStatus"], "unreviewed")
             self.assertEqual(report["qualityVerdict"], "not-performed")
             self.assertTrue((manifest.parent / report["artifacts"]["shotEvidence"]).is_file())
             self.assertTrue((manifest.parent / report["artifacts"]["techniqueProposals"]).is_file())
+            self.assertTrue((manifest.parent / report["artifacts"]["shotGallery"]).is_file())
+            self.assertTrue((manifest.parent / report["artifacts"]["reviewGallery"]).is_file())
+            self.assertIn("Shot storyboard", gallery.read_text())
             self.assertEqual(study_reference(source, output, catalog_root=CATALOG,
                                              seconds=2, thumbnails=4), gallery)
             # Image review files are immutable; damage must be reported on reuse.
@@ -61,6 +68,40 @@ class StudyReferenceIntegrationTests(unittest.TestCase):
                 study_reference(source, output, catalog_root=CATALOG,
                                 seconds=2, thumbnails=4)
             self.assertEqual(len(list(output.glob("analysis/analysis-*"))), 1)
+
+    def test_v1_study_remains_readable_after_v2_upgrade(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "source.mkv"
+            process = subprocess.run([
+                "ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin", "-y",
+                "-f", "lavfi", "-i", "color=c=black:s=160x90:r=10:d=1",
+                "-c:v", "ffv1", str(source),
+            ], capture_output=True, timeout=30)
+            self.assertEqual(process.returncode, 0)
+            output = root / "runs"
+            overview = study_reference(source, output, catalog_root=CATALOG,
+                                       seconds=2, thumbnails=4)
+            study = json.loads((overview.parent / "study-manifest.json").read_text())
+            legacy = output / "study-legacy-example"
+            legacy.mkdir()
+            shutil.copy2(overview.parent / "technique-proposals.json", legacy)
+            shutil.copy2(overview.parent / "shot-evidence.json", legacy)
+            gallery_source = overview.parent / study["artifacts"]["reviewGallery"]
+            gallery_destination = legacy / study["artifacts"]["reviewGallery"]
+            shutil.copytree(gallery_source.parent, gallery_destination.parent)
+            old_settings = study["settings"] | {"studyVersion": REFERENCE_STUDY_V1_VERSION}
+            old_study = {
+                "schemaVersion": REFERENCE_STUDY_V1_VERSION,
+                "settings": old_settings,
+                "artifacts": {k: study["artifacts"][k] for k in (
+                    "techniqueProposals", "shotEvidence", "reviewGallery")},
+                "files": _file_records(legacy),
+                "humanReviewStatus": "unreviewed",
+                "qualityVerdict": "not-performed",
+            }
+            write_json_artifact(legacy, "study-manifest.json", old_study)
+            self.assertEqual(_verify_study(legacy, old_settings), gallery_destination)
 
 
 if __name__ == "__main__":
