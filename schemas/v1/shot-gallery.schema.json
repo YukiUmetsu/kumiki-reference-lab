@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/shot-gallery.schema.json",
+  "title": "Kumiki Candidate Shot Storyboard v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "settings", "regions", "totalRegionCount", "humanReviewStatus", "qualityVerdict", "files"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.shot-gallery.v1"},
+    "humanReviewStatus": {"const": "unreviewed"},
+    "qualityVerdict": {"const": "not-performed"},
+    "totalRegionCount": {"type": "integer", "minimum": 1},
+    "settings": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sourceSha256", "sourceStreamIndex", "sourceTimebase", "analysisRunSha256", "shotEvidenceSha256", "seconds", "maxRegions", "regionOffset", "width", "ffmpeg", "ffprobe", "selectedRegionIds", "imageSelections", "sampling"],
+      "properties": {
+        "sourceSha256": {"$ref": "#/$defs/hash"},
+        "sourceStreamIndex": {"type": "integer", "minimum": 0},
+        "sourceTimebase": {"$ref": "#/$defs/rational"},
+        "analysisRunSha256": {"$ref": "#/$defs/hash"},
+        "shotEvidenceSha256": {"$ref": "#/$defs/hash"},
+        "seconds": {"type": "integer", "minimum": 1, "maximum": 30},
+        "maxRegions": {"type": "integer", "minimum": 1, "maximum": 8},
+        "regionOffset": {"type": "integer", "minimum": 0, "maximum": 63},
+        "width": {"type": "integer", "minimum": 128, "maximum": 800},
+        "ffmpeg": {"type": "string", "minLength": 1},
+        "ffprobe": {"type": "string", "minLength": 1},
+        "selectedRegionIds": {"type": "array", "maxItems": 8,
+                              "items": {"type": "string", "pattern": "^region-[0-9]{3}$"}},
+        "imageSelections": {"type": "array", "maxItems": 8, "items": {
+          "type": "array", "minItems": 1, "maxItems": 3,
+          "items": {"type": "array", "minItems": 2, "maxItems": 2,
+                    "prefixItems": [
+                      {"type": "integer"}, {"$ref": "#/$defs/imagePath"}
+                    ], "items": false}
+        }},
+        "sampling": {"const": "per-candidate-region-start-middle-last-observed-v1"}
+      }
+    },
+    "regions": {
+      "type": "array", "maxItems": 8, "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "evidence", "images"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^region-[0-9]{3}$"},
+          "evidence": {"type": "object", "description": "Exact complete corresponding entry from checksum-verified shot-evidence.json"},
+          "images": {"type": "array", "minItems": 1, "maxItems": 3, "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["role", "sourcePts", "sourceSeconds", "path"],
+            "properties": {
+              "role": {"enum": ["start", "middle", "end"]},
+              "sourcePts": {"type": "integer"},
+              "sourceSeconds": {"$ref": "#/$defs/rational"},
+              "path": {"$ref": "#/$defs/imagePath"}
+            }
+          }}
+        }
+      }
+    },
+    "files": {
+      "type": "array", "minItems": 2, "maxItems": 26,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"anyOf": [{"enum": ["index.html", "shot-evidence.json"]},
+                             {"$ref": "#/$defs/imagePath"}]},
+          "sha256": {"$ref": "#/$defs/hash"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "imagePath": {"type": "string", "pattern": "^frames/frame-[0-9]{3}\\.jpg$"},
+    "rational": {"type": "object", "additionalProperties": false,
+                 "required": ["numerator", "denominator"],
+                 "properties": {"numerator": {"type": "integer"},
+                                "denominator": {"type": "integer", "minimum": 1}}}
+  }
+}
