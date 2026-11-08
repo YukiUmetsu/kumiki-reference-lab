@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from kumiki_reference_lab.analyzers.media.inspect import inspect_source
+from kumiki_reference_lab.analyzers.media.contact_sheet import build_contact_sheet
 from kumiki_reference_lab.analyzers.media.timeline import analyze_frame_timeline
 from kumiki_reference_lab.analyzers.shots.detect import analyze_hard_cuts
 from kumiki_reference_lab.backends.ffmpeg.probe import ProbeError
@@ -39,6 +40,17 @@ def build_parser() -> argparse.ArgumentParser:
     cuts.add_argument("--ffmpeg", default="ffmpeg")
     cuts.add_argument("--ffprobe", default="ffprobe")
     cuts.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
+
+    sheet = commands.add_parser("contact-sheet", help="create bounded timecoded JPEG/HTML evidence")
+    sheet.add_argument("source", type=Path)
+    sheet.add_argument("--out", type=Path, required=True, help="parent directory for immutable bundle")
+    sheet.add_argument("--max-seconds", type=int, default=30)
+    sheet.add_argument("--max-thumbnails", type=int, default=12)
+    sheet.add_argument("--width", type=int, default=480)
+    sheet.add_argument("--threshold", type=float, default=0.25)
+    sheet.add_argument("--ffmpeg", default="ffmpeg")
+    sheet.add_argument("--ffprobe", default="ffprobe")
+    sheet.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
     return parser
 
 
@@ -46,6 +58,14 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
+        if args.command == "contact-sheet":
+            index = build_contact_sheet(
+                args.source, args.out, seconds=args.max_seconds,
+                limit=args.max_thumbnails, width=args.width, threshold=args.threshold,
+                ffmpeg=args.ffmpeg, ffprobe=args.ffprobe, rights_status=args.rights_status,
+            )
+            print(str(index))
+            return 0
         if args.command == "inspect":
             artifact = inspect_source(args.source, ffprobe=args.ffprobe,
                                       rights_status=args.rights_status)
