@@ -6,6 +6,7 @@ from kumiki_reference_lab.contracts.source import SCHEMA_VERSION
 from kumiki_reference_lab.contracts.analysis import (
     FRAME_TIMELINE_VERSION, SHOT_CANDIDATES_VERSION, CONTACT_SHEET_VERSION,
     IMAGE_MOTION_VERSION, ROI_TRACK_VERSION, ANALYSIS_RUN_VERSION, SPARSE_FLOW_VERSION,
+    SPARSE_FLOW_REVIEW_VERSION,
     APPEARANCE_VERSION, APPEARANCE_COMPARISON_VERSION, FRAME_COMPARISON_VERSION,
     TECHNIQUE_PROPOSALS_VERSION,
     TECHNIQUE_REVIEW_VERSION,
@@ -48,6 +49,7 @@ class SchemaTests(unittest.TestCase):
                               ("contact-sheet", CONTACT_SHEET_VERSION),
                               ("image-motion", IMAGE_MOTION_VERSION),
                               ("sparse-flow", SPARSE_FLOW_VERSION),
+                              ("sparse-flow-review", SPARSE_FLOW_REVIEW_VERSION),
                               ("appearance", APPEARANCE_VERSION),
                               ("appearance-comparison", APPEARANCE_COMPARISON_VERSION),
                               ("frame-comparison", FRAME_COMPARISON_VERSION),

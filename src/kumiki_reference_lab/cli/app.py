@@ -24,6 +24,7 @@ from kumiki_reference_lab.analyzers.shots.gallery import build_shot_gallery
 from kumiki_reference_lab.analyzers.media.contact_sheet import build_contact_sheet
 from kumiki_reference_lab.analyzers.motion.analyze import analyze_image_motion
 from kumiki_reference_lab.analyzers.motion.sparse import analyze_sparse_flow
+from kumiki_reference_lab.analyzers.motion.review import build_sparse_flow_review
 from kumiki_reference_lab.analyzers.subjects.roi import analyze_roi_track
 from kumiki_reference_lab.analyzers.media.timeline import analyze_frame_timeline
 from kumiki_reference_lab.analyzers.shots.detect import analyze_hard_cuts
@@ -122,6 +123,16 @@ def build_parser() -> argparse.ArgumentParser:
     sparse.add_argument("--ffmpeg", default="ffmpeg")
     sparse.add_argument("--ffprobe", default="ffprobe")
     sparse.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
+
+    sparse_review = commands.add_parser(
+        "review-sparse-flow", help="inspect source-verified sparse motion on original frames")
+    sparse_review.add_argument("source", type=Path)
+    sparse_review.add_argument("sparse_report", type=Path)
+    sparse_review.add_argument("--out", type=Path, required=True)
+    sparse_review.add_argument("--max-frames", type=int, default=8)
+    sparse_review.add_argument("--max-tracklets", type=int, default=12)
+    sparse_review.add_argument("--ffmpeg", default="ffmpeg")
+    sparse_review.add_argument("--ffprobe", default="ffprobe")
 
     appearance = commands.add_parser("appearance", help="measure RGB palette, contrast, highlight, and color changes")
     appearance.add_argument("source", type=Path)
@@ -458,6 +469,12 @@ def main(argv: list[str] | None = None) -> int:
                 args.source, args.analysis_run, args.out,
                 max_regions=args.max_regions, region_offset=args.region_offset,
                 width=args.width, ffmpeg=args.ffmpeg, ffprobe=args.ffprobe))
+            return 0
+        if args.command == "review-sparse-flow":
+            print(build_sparse_flow_review(
+                args.source, args.sparse_report, args.out,
+                max_frames=args.max_frames, max_tracklets=args.max_tracklets,
+                ffmpeg=args.ffmpeg, ffprobe=args.ffprobe))
             return 0
         if args.command == "review-timeline":
             print(build_timeline_view(
