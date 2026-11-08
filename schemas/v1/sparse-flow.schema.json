@@ -57,12 +57,22 @@
     }}
   }, {
     "if": {"required": ["temporalTracklets"], "properties": {
-      "temporalTracklets": {"properties": {"method": {"const": "mutual-nearest-adjacent-endpoint-motion-gated-v1"}}}
+      "temporalTracklets": {"properties": {"method": {"enum": ["mutual-nearest-adjacent-endpoint-motion-gated-v1", "mutual-nearest-adjacent-endpoint-motion-gated-appearance-gated-v1"]}}}
     }},
     "then": {"properties": {"temporalTracklets": {
       "required": ["motionMinimumTolerancePixels", "motionRelativeTolerance", "motionInconsistentLinkCandidates"],
       "properties": {"tracklets": {"items": {"properties": {"observations": {
         "items": {"required": ["motionResidualPixels", "motionAllowancePixels"]}
+      }}}}}
+    }}}
+  }, {
+    "if": {"required": ["temporalTracklets"], "properties": {"temporalTracklets": {
+      "properties": {"method": {"enum": ["mutual-nearest-adjacent-endpoint-appearance-gated-v1", "mutual-nearest-adjacent-endpoint-motion-gated-appearance-gated-v1"]}}
+    }}},
+    "then": {"properties": {"temporalTracklets": {
+      "required": ["appearancePatchSizePixels", "appearanceMaxEndpointShiftPixels", "appearanceMinCorrelation", "appearanceInconsistentLinkCandidates", "appearanceUnobservableLinkCandidates"],
+      "properties": {"tracklets": {"items": {"properties": {"observations": {
+        "items": {"required": ["twoHopAppearanceCorrelation", "twoHopAppearanceShiftPixels"]}
       }}}}}
     }}}
   }],
@@ -145,12 +155,17 @@
       "required": ["status", "method", "linkTolerancePixels", "ambiguityMarginPixels", "minConsecutivePairs", "calibratedConfidence", "semanticIdentityVerified", "singlePairCandidatesDiscarded", "tracklets"],
       "properties": {
         "status": {"enum": ["candidate-only", "insufficient-continuity"]},
-        "method": {"enum": ["mutual-nearest-adjacent-endpoint-v1", "mutual-nearest-adjacent-endpoint-motion-gated-v1"]},
+        "method": {"enum": ["mutual-nearest-adjacent-endpoint-v1", "mutual-nearest-adjacent-endpoint-motion-gated-v1", "mutual-nearest-adjacent-endpoint-appearance-gated-v1", "mutual-nearest-adjacent-endpoint-motion-gated-appearance-gated-v1"]},
         "linkTolerancePixels": {"const": 2.0},
         "ambiguityMarginPixels": {"const": 0.5},
         "motionMinimumTolerancePixels": {"const": 2.5},
         "motionRelativeTolerance": {"const": 0.6},
         "motionInconsistentLinkCandidates": {"type": "integer", "minimum": 0},
+        "appearancePatchSizePixels": {"const": 9},
+        "appearanceMaxEndpointShiftPixels": {"const": 1},
+        "appearanceMinCorrelation": {"const": 0.62},
+        "appearanceInconsistentLinkCandidates": {"type": "integer", "minimum": 0},
+        "appearanceUnobservableLinkCandidates": {"type": "integer", "minimum": 0},
         "minConsecutivePairs": {"const": 2},
         "calibratedConfidence": {"const": false},
         "semanticIdentityVerified": {"const": false},
@@ -176,6 +191,12 @@
                   "handoffErrorPixels": {"type": ["number", "null"], "minimum": 0, "maximum": 2},
                   "motionResidualPixels": {"type": ["number", "null"], "minimum": 0},
                   "motionAllowancePixels": {"type": ["number", "null"], "minimum": 0},
+                  "twoHopAppearanceCorrelation": {"type": ["number", "null"], "minimum": -1, "maximum": 1},
+                  "twoHopAppearanceShiftPixels": {"oneOf": [{"type": "null"}, {
+                    "type": "object", "additionalProperties": false, "required": ["dx", "dy"],
+                    "properties": {"dx": {"type": "integer", "minimum": -1, "maximum": 1},
+                                   "dy": {"type": "integer", "minimum": -1, "maximum": 1}}
+                  }]},
                   "group": {"enum": ["dominant", "secondary", "unclassified"]}
                 }
               }}

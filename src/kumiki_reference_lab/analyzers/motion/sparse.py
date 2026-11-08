@@ -31,6 +31,7 @@ def analyze_sparse_flow(
     pyramid_levels: int = 1, subpixel_refinement: bool = False,
     subpixel_reverse_check: bool = False, projective_hypotheses: bool = False,
     tracklet_motion_consistency: bool = False,
+    tracklet_appearance_consistency: bool = False,
     ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
     rights_status: str = "review-required",
 ) -> dict[str, Any]:
@@ -56,6 +57,8 @@ def analyze_sparse_flow(
         raise ValueError("sparse-flow projective_hypotheses must be a boolean")
     if type(tracklet_motion_consistency) is not bool:
         raise ValueError("sparse-flow tracklet_motion_consistency must be a boolean")
+    if type(tracklet_appearance_consistency) is not bool:
+        raise ValueError("sparse-flow tracklet_appearance_consistency must be a boolean")
     if not all(math.isfinite(v) and 0 < v < 1 for v in (correlation, threshold)):
         raise ValueError("sparse-flow correlation/threshold must be between zero and one")
     if importlib.util.find_spec("numpy") is None:
@@ -162,5 +165,9 @@ def analyze_sparse_flow(
                      "sourceSeconds": as_rational_dict(int(f.pts) * timebase)} for f in samples],
         "pairs": pairs,
         "temporalTracklets": build_sparse_tracklets(
-            pairs, timebase=timebase, motion_consistency=tracklet_motion_consistency),
+            pairs, timebase=timebase, motion_consistency=tracklet_motion_consistency,
+            appearance_consistency=tracklet_appearance_consistency,
+            appearance_frames=planes if tracklet_appearance_consistency else None,
+            frame_width=width if tracklet_appearance_consistency else None,
+            frame_height=height if tracklet_appearance_consistency else None),
     }

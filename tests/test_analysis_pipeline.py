@@ -227,6 +227,16 @@ class AnalysisPipelineIntegrationTests(unittest.TestCase):
             self.assertEqual(run_analysis(
                 source, runs, seconds=2, thumbnails=4, sparse_flow=True,
                 sparse_samples=5, sparse_tracklet_motion_consistency=True), checked)
+            appearance = run_analysis(source, runs, seconds=2, thumbnails=4,
+                                      sparse_flow=True, sparse_samples=5,
+                                      sparse_tracklet_appearance_consistency=True)
+            self.assertNotEqual(appearance, checked)
+            self.assertNotEqual(appearance, original)
+            self.assertTrue(json.loads(appearance.read_text())["settings"]
+                            ["sparseTrackletAppearanceConsistency"])
+            self.assertEqual(json.loads((appearance.parent / "sparse-flow.json").read_text())
+                             ["temporalTracklets"]["method"],
+                             "mutual-nearest-adjacent-endpoint-appearance-gated-v1")
 
     @unittest.skipUnless(importlib.util.find_spec("numpy"), "NumPy extra unavailable")
     def test_appearance_bundle_is_atomic_and_may_combine_with_sparse_flow(self):
