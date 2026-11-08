@@ -168,6 +168,17 @@ class AnalysisPipelineIntegrationTests(unittest.TestCase):
             self.assertEqual(run_analysis(
                 source, runs, seconds=2, thumbnails=4, sparse_flow=True,
                 sparse_samples=5, sparse_subpixel_refinement=True), refined)
+            checked = run_analysis(
+                source, runs, seconds=2, thumbnails=4, sparse_flow=True,
+                sparse_samples=5, sparse_subpixel_refinement=True,
+                sparse_subpixel_reverse_check=True)
+            self.assertNotEqual(refined, checked)
+            self.assertTrue(json.loads(checked.read_text())["settings"]
+                            ["sparseSubpixelReverseCheck"])
+            with self.assertRaisesRegex(ValueError, "reverse check requires"):
+                run_analysis(source, runs, seconds=2, thumbnails=4,
+                             sparse_flow=True, sparse_samples=5,
+                             sparse_subpixel_reverse_check=True)
 
     @unittest.skipUnless(importlib.util.find_spec("numpy"), "NumPy extra unavailable")
     def test_appearance_bundle_is_atomic_and_may_combine_with_sparse_flow(self):

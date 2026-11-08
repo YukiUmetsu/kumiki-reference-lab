@@ -72,11 +72,30 @@ def select_corners(
     return sorted(chosen, key=lambda point: (point[1], point[0]))
 
 
+def _fractional_patch(
+    plane: bytes, width: int, height: int, x: float, y: float, size: int,
+) -> bytes | None:
+    """Bilinear sample at fractional patch origin for a strict reverse check."""
+    import numpy as np
+
+    left, top = math.floor(x), math.floor(y)
+    if left < 0 or top < 0 or left + size >= width or top + size >= height:
+        return None
+    fx, fy = x - left, y - top
+    image = np.frombuffer(plane, dtype=np.uint8).reshape(height, width)
+    region = image[top:top + size + 1, left:left + size + 1].astype(np.float64)
+    values = ((1 - fx) * (1 - fy) * region[:-1, :-1] +
+              fx * (1 - fy) * region[:-1, 1:] +
+              (1 - fx) * fy * region[1:, :-1] +
+              fx * fy * region[1:, 1:])
+    return np.rint(values).clip(0, 255).astype(np.uint8).tobytes()
+
+
 def sparse_patch_flows(
     before: bytes, after: bytes, width: int, height: int, *,
     max_points: int = 48, patch_size: int = 9, radius: int = 8,
     minimum_correlation: float = 0.68, pyramid_levels: int = 1,
-    subpixel_refinement: bool = False,
+    subpixel_refinement: bool = False, subpixel_reverse_check: bool = False,
 ) -> dict[str, Any]:
     """Track source-frame corners with forward/backward patch consistency.
 
@@ -90,6 +109,9 @@ def sparse_patch_flows(
         raise ValueError("sparse-flow pyramid_levels must be 1 or 2")
     if type(subpixel_refinement) is not bool:
         raise ValueError("sparse-flow subpixel_refinement must be a boolean")
+    if type(subpixel_reverse_check) is not bool or (subpixel_reverse_check and
+                                                    not subpixel_refinement):
+        raise ValueError("sparse-flow subpixel_reverse_check requires subpixel_refinement")
     corners = select_corners(before, width, height, max_points=max_points,
                              patch_size=patch_size, radius=radius)
     half = patch_size // 2
@@ -176,12 +198,44 @@ def sparse_patch_flows(
                       "roundtripErrorPixels": round(error, 4)}
             if subpixel_refinement:
                 offset = forward["subpixelPeakOffset"]
+                fractional_error = None
+                verification = "integer-peak-only"
+                if subpixel_reverse_check:
+                    verification = "fractional-unavailable-integer-fallback"
+                    if offset is not None:
+                        fractional_template = _fractional_patch(
+                            after, width, height,
+                            forward["x"] + offset["dx"],
+                            forward["y"] + offset["dy"], patch_size)
+                        if fractional_template is not None:
+                            reverse_fractional = track_template(
+                                fractional_template, before, width, height,
+                                patch_size, patch_size, start_x, start_y,
+                                radius=radius, minimum_correlation=minimum_correlation,
+                                subpixel_peak=True)
+                            if (reverse_fractional["status"] == "matched-template" and
+                                    reverse_fractional["subpixelPeakOffset"] is not None):
+                                reverse_offset = reverse_fractional["subpixelPeakOffset"]
+                                fractional_error = math.hypot(
+                                    reverse_fractional["x"] + reverse_offset["dx"] - start_x,
+                                    reverse_fractional["y"] + reverse_offset["dy"] - start_y)
+                                if fractional_error <= 0.75:
+                                    verification = "fractional-bilinear-patch-checked"
+                        if verification != "fractional-bilinear-patch-checked":
+                            verification = "fractional-check-failed-integer-fallback"
+                            offset = None
                 if offset is not None:
                     vector["dx"] = round(vector["dx"] + offset["dx"], 4)
                     vector["dy"] = round(vector["dy"] + offset["dy"], 4)
-                vector.update({"subpixelPeakStatus": forward["subpixelPeakStatus"],
+                vector.update({"subpixelPeakStatus": ("candidate-1d-parabola"
+                                                       if offset is not None else
+                                                       "integer-fallback"),
                                "subpixelPeakOffsetPixels": offset,
-                               "subpixelReverseVerification": "integer-peak-only"})
+                               "subpixelReverseVerification": verification})
+                if subpixel_reverse_check:
+                    vector["subpixelReverseErrorPixels"] = (
+                        round(fractional_error, 4)
+                        if verification == "fractional-bilinear-patch-checked" else None)
             if pyramid_levels == 2:
                 vector["searchLevel"] = search_level
             accepted.append(vector)
