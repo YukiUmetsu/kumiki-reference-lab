@@ -14,6 +14,7 @@ from kumiki_reference_lab.pipeline.analyze import _file_records
 from kumiki_reference_lab.contracts.analysis import (
     REFERENCE_STUDY_V1_VERSION, REFERENCE_STUDY_V2_VERSION,
     REFERENCE_STUDY_V3_VERSION,
+    REFERENCE_STUDY_V4_VERSION,
 )
 from kumiki_reference_lab.core.artifacts import write_json_artifact
 
@@ -79,7 +80,9 @@ class StudyReferenceIntegrationTests(unittest.TestCase):
             manifest = json.loads((overview.parent / "study-manifest.json").read_text())
             timeline = overview.parent / manifest["artifacts"]["timelineView"]
             av = json.loads((timeline.parent / "av-cut-evidence.json").read_text())
+            onsets = json.loads((timeline.parent / "audio-onsets.json").read_text())
             self.assertEqual(av["status"], "candidate-cross-stream-pts-association")
+            self.assertEqual(onsets["status"], "source-pts-aligned-level-attack-candidates")
             self.assertIn("Audio near cuts", timeline.read_text())
 
     def test_one_command_publishes_complete_reusable_gallery(self):
@@ -98,7 +101,7 @@ class StudyReferenceIntegrationTests(unittest.TestCase):
             self.assertTrue(gallery.is_file())
             manifest = gallery.parent / "study-manifest.json"
             report = json.loads(manifest.read_text())
-            self.assertEqual(report["schemaVersion"], "kumiki.reference-study.v4")
+            self.assertEqual(report["schemaVersion"], "kumiki.reference-study.v5")
             self.assertEqual(report["humanReviewStatus"], "unreviewed")
             self.assertEqual(report["qualityVerdict"], "not-performed")
             self.assertTrue((manifest.parent / report["artifacts"]["shotEvidence"]).is_file())
@@ -112,6 +115,10 @@ class StudyReferenceIntegrationTests(unittest.TestCase):
             self.assertIn("No audio stream", timeline.read_text())
             self.assertEqual(
                 json.loads((timeline.parent / "av-cut-evidence.json").read_text())["status"],
+                "no-audio-stream",
+            )
+            self.assertEqual(
+                json.loads((timeline.parent / "audio-onsets.json").read_text())["status"],
                 "no-audio-stream",
             )
             self.assertEqual(report["settings"]["timelineWindowMs"], 400)
@@ -130,7 +137,7 @@ class StudyReferenceIntegrationTests(unittest.TestCase):
                                 seconds=2, thumbnails=4)
             self.assertEqual(len(list(output.glob("analysis/analysis-*"))), 1)
 
-    def test_v1_v2_and_v3_studies_remain_readable_after_v4_upgrade(self):
+    def test_v1_through_v4_studies_remain_readable_after_v5_upgrade(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             source = root / "source.mkv"
@@ -152,7 +159,8 @@ class StudyReferenceIntegrationTests(unittest.TestCase):
             gallery_destination = legacy / study["artifacts"]["reviewGallery"]
             shutil.copytree(gallery_source.parent, gallery_destination.parent)
             timeline_keys = {"timelineStyleRevision", "timelineWindowMs",
-                             "timelineMaxAudioFrames"}
+                             "timelineMaxAudioFrames", "timelineOnsetMinRiseDb",
+                             "timelineOnsetMinPeakDbFs", "timelineOnsetCooldownMs"}
             old_settings = {k: v for k, v in study["settings"].items()
                             if k != "editRhythmSha256" and k not in timeline_keys}
             old_settings["studyVersion"] = REFERENCE_STUDY_V1_VERSION
@@ -212,6 +220,32 @@ class StudyReferenceIntegrationTests(unittest.TestCase):
             }
             write_json_artifact(v3, "study-manifest.json", v3_study)
             self.assertEqual(_verify_study(v3, v3_settings), v3 / "index.html")
+
+            v4 = output / "study-v4-legacy-example"
+            v4.mkdir()
+            for name in ("technique-proposals.json", "shot-evidence.json",
+                         "edit-rhythm.json", "index.html"):
+                shutil.copy2(overview.parent / name, v4)
+            for key in ("reviewGallery", "shotGallery", "timelineView"):
+                source_html = overview.parent / study["artifacts"][key]
+                destination_html = v4 / study["artifacts"][key]
+                shutil.copytree(source_html.parent, destination_html.parent)
+            onset_keys = {"timelineOnsetMinRiseDb", "timelineOnsetMinPeakDbFs",
+                          "timelineOnsetCooldownMs"}
+            v4_settings = {k: v for k, v in study["settings"].items()
+                           if k not in onset_keys}
+            v4_settings["studyVersion"] = REFERENCE_STUDY_V4_VERSION
+            v4_settings["timelineStyleRevision"] = "offline-observation-tracks-v1"
+            v4_study = {
+                "schemaVersion": REFERENCE_STUDY_V4_VERSION,
+                "settings": v4_settings,
+                "artifacts": study["artifacts"],
+                "files": _file_records(v4),
+                "humanReviewStatus": "unreviewed",
+                "qualityVerdict": "not-performed",
+            }
+            write_json_artifact(v4, "study-manifest.json", v4_study)
+            self.assertEqual(_verify_study(v4, v4_settings), v4 / "index.html")
 
 
 if __name__ == "__main__":

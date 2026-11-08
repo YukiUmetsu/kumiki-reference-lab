@@ -46,6 +46,8 @@ See [`schemas/v1/audio-onsets.schema.json`](../schemas/v1/audio-onsets.schema.js
 
 This technique is intentionally simple and transparent. Future spectral-flux, multiband transients, ASR, beat hypotheses and speaker labels should be added as separately versioned optional analyzers with known synthetic fixtures, not retrofitted into the interpretation of these RMS candidates.
 
+The same audio attack candidates appear on the [offline visual timeline](timeline-review.md) as green diamond markers and an evidence table. The timeline reuses one audio-level measurement for both near-cut quietness and level attacks.
+
 ## Verification
 
 `PYTHONPATH=src python -m unittest tests.test_audio_onsets -v` exercises known tone entrances, no-audio files, timestamp gaps, floor transitions, cooldown and strict thresholds. The FFmpeg integration tests remain local; hosted CI continues running only the small smoke suite.

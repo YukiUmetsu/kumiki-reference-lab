@@ -19,9 +19,11 @@ from kumiki_reference_lab.contracts.analysis import (
     AV_CUT_EVIDENCE_VERSION,
     EDIT_RHYTHM_VERSION,
     TIMELINE_REVIEW_VERSION,
+    TIMELINE_REVIEW_V1_VERSION,
     REFERENCE_STUDY_V1_VERSION,
     REFERENCE_STUDY_V2_VERSION,
     REFERENCE_STUDY_V3_VERSION,
+    REFERENCE_STUDY_V4_VERSION,
 )
 from kumiki_reference_lab.catalog.validate import TECHNIQUE_SCHEMA_VERSION, INDEX_SCHEMA_VERSION
 
@@ -56,7 +58,6 @@ class SchemaTests(unittest.TestCase):
                               ("audio-onsets", AUDIO_ONSETS_VERSION),
                               ("av-cut-evidence", AV_CUT_EVIDENCE_VERSION),
                               ("edit-rhythm", EDIT_RHYTHM_VERSION),
-                              ("timeline-review", TIMELINE_REVIEW_VERSION),
                               ("roi-track", ROI_TRACK_VERSION),
                               ("analysis-run", ANALYSIS_RUN_VERSION)):
             schema = json.loads((root / (name + ".schema.json")).read_text(encoding="utf-8"))
@@ -70,9 +71,18 @@ class SchemaTests(unittest.TestCase):
         v3 = json.loads((root.parent / "v3/reference-study.schema.json").read_text())
         self.assertEqual(v3["properties"]["schemaVersion"]["const"],
                          REFERENCE_STUDY_V3_VERSION)
-        current = json.loads((root.parent / "v4/reference-study.schema.json").read_text())
+        v4 = json.loads((root.parent / "v4/reference-study.schema.json").read_text())
+        self.assertEqual(v4["properties"]["schemaVersion"]["const"],
+                         REFERENCE_STUDY_V4_VERSION)
+        current = json.loads((root.parent / "v5/reference-study.schema.json").read_text())
         self.assertEqual(current["properties"]["schemaVersion"]["const"],
                          REFERENCE_STUDY_VERSION)
+        timeline_v1 = json.loads((root / "timeline-review.schema.json").read_text())
+        self.assertEqual(timeline_v1["properties"]["schemaVersion"]["const"],
+                         TIMELINE_REVIEW_V1_VERSION)
+        timeline_v2 = json.loads((root.parent / "v2/timeline-review.schema.json").read_text())
+        self.assertEqual(timeline_v2["properties"]["schemaVersion"]["const"],
+                         TIMELINE_REVIEW_VERSION)
 
     def test_catalog_schema_versions(self):
         root = Path(__file__).resolve().parents[1] / "schemas/v1"

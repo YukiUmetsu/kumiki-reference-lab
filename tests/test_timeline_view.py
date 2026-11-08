@@ -4,7 +4,9 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
+from kumiki_reference_lab.analyzers.audio.levels import analyze_audio_levels
 from kumiki_reference_lab.analyzers.shots.timeline_view import (
     _timing, build_timeline_view, render_timeline_html,
 )
@@ -31,12 +33,27 @@ def reports(*, audio=True):
     rhythm = {**identity, "sourceTimebase": rat(1), "videoCutCandidateCount": 1,
               "intervals": []}
     av = {**identity, "videoSourceTimebase": rat(1), "videoCutCandidateCount": 1,
+          "audioStreamIndex": 1 if audio else None,
+          "audioSourceTimebase": rat(1) if audio else None,
+          "scanWindowSeconds": 2,
           "status": "candidate-cross-stream-pts-association" if audio else "no-audio-stream",
           "cutCandidates": ([{"videoRegionId": "region-002", "status": "candidate-quiet-level-contrast",
                               "before": {"quietFrameFraction": 0.0, "frameCount": 3},
                               "after": {"quietFrameFraction": 1.0, "frameCount": 4}}]
                             if audio else [])}
-    return shot, rhythm, av
+    onsets = {"sourceSha256": identity["sourceSha256"],
+              "audioStreamIndex": 1 if audio else None,
+              "sourceTimebase": rat(1) if audio else None,
+              "scanWindowSeconds": 2,
+              "status": ("source-pts-aligned-level-attack-candidates" if audio else
+                         "no-audio-stream"),
+              "candidates": ([{"id": "onset-001", "anchorSourcePts": 1,
+                               "anchorSourceSeconds": rat(1),
+                               "supportWindow": {"startSeconds": rat(0),
+                                                 "endSeconds": rat(2)},
+                               "measuredRmsRiseDb": 20.0,
+                               "signal": "candidate-rms-rise"}] if audio else [])}
+    return shot, rhythm, av, onsets
 
 
 class TimelinePureTests(unittest.TestCase):
@@ -47,6 +64,9 @@ class TimelinePureTests(unittest.TestCase):
         self.assertIn('<th scope="col">', rendered)
         self.assertIn("Image-plane motion", rendered)
         self.assertIn("Quiet-level contrast candidate", rendered)
+        self.assertIn("Audio level attack candidate", rendered)
+        self.assertIn("onset-001", rendered)
+        self.assertIn("+20.0 dB", rendered)
         self.assertIn("0% (3 frames)", rendered)
         self.assertIn("100% (4 frames)", rendered)
         self.assertNotIn("<script>", rendered)
@@ -58,15 +78,28 @@ class TimelinePureTests(unittest.TestCase):
         self.assertIn("No audio stream", rendered)
         self.assertNotIn("Quiet-level contrast candidate</td>", rendered)
 
+    def test_onset_outside_video_axis_is_listed_without_plotting_offscreen(self):
+        shot, rhythm, av, onsets = reports()
+        onsets["candidates"][0]["anchorSourceSeconds"] = rat(3)
+        rendered = render_timeline_html(shot, rhythm, av, onsets, source_label="test.mkv")
+        self.assertIn("onset-001", rendered)
+        self.assertIn("In plotted video range", rendered)
+        self.assertIn("<td>No</td>", rendered)
+        self.assertNotIn('fill="#81e3b5"', rendered)
+
     def test_mismatched_run_and_cut_identity_are_rejected(self):
-        shot, rhythm, av = reports()
+        shot, rhythm, av, onsets = reports()
         av["analysisRunSha256"] = "c" * 64
         with self.assertRaisesRegex(ValueError, "sources or analysis runs disagree"):
-            _timing(shot, rhythm, av)
+            _timing(shot, rhythm, av, onsets)
         av["analysisRunSha256"] = "b" * 64
         av["cutCandidates"][0]["videoRegionId"] = "region-evil"
         with self.assertRaisesRegex(ValueError, "candidate identities disagree"):
-            _timing(shot, rhythm, av)
+            _timing(shot, rhythm, av, onsets)
+        av["cutCandidates"][0]["videoRegionId"] = "region-002"
+        onsets["sourceSha256"] = "f" * 64
+        with self.assertRaisesRegex(ValueError, "audio onset evidence identity"):
+            _timing(shot, rhythm, av, onsets)
 
     def test_cli_command_and_require_output(self):
         args = build_parser().parse_args([
@@ -113,16 +146,20 @@ class TimelineIntegrationTests(unittest.TestCase):
             source = self.render(root, with_audio=True)
             analysis = run_analysis(source, root / "runs", seconds=2, thumbnails=4,
                                     threshold=.12)
-            page = build_timeline_view(source, analysis, root / "timelines")
+            with patch("kumiki_reference_lab.analyzers.shots.timeline_view.analyze_audio_levels",
+                       wraps=analyze_audio_levels) as audio_decode:
+                page = build_timeline_view(source, analysis, root / "timelines")
+                audio_decode.assert_called_once()
             self.assertTrue(page.is_file())
             self.assertIn("Candidate cut intervals", page.read_text())
             self.assertIn("quiet before", page.read_text().lower())
             self.assertIn("100%", page.read_text())
             manifest = json.loads((page.parent / "timeline-review.json").read_text())
-            self.assertEqual(manifest["schemaVersion"], "kumiki.timeline-review.v1")
-            self.assertEqual(len(manifest["files"]), 4)
+            self.assertEqual(manifest["schemaVersion"], "kumiki.timeline-review.v2")
+            self.assertEqual(len(manifest["files"]), 5)
+            self.assertTrue((page.parent / "audio-onsets.json").is_file())
             self.assertEqual(page, build_timeline_view(source, analysis, root / "timelines"))
-            (page.parent / "av-cut-evidence.json").write_text("{}")
+            (page.parent / "audio-onsets.json").write_text("{}")
             with self.assertRaisesRegex(ValueError, "altered"):
                 build_timeline_view(source, analysis, root / "timelines")
 

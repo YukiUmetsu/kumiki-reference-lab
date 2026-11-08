@@ -23,6 +23,7 @@ from kumiki_reference_lab.core.artifacts import write_json_artifact
 from kumiki_reference_lab.contracts.analysis import (
     REFERENCE_STUDY_VERSION, REFERENCE_STUDY_V1_VERSION, REFERENCE_STUDY_V2_VERSION,
     REFERENCE_STUDY_V3_VERSION,
+    REFERENCE_STUDY_V4_VERSION,
 )
 from kumiki_reference_lab.pipeline.analyze import _file_records, _json_bytes, run_analysis
 
@@ -42,7 +43,8 @@ def _verify_study(destination: Path, settings: dict[str, Any]) -> Path:
         raise ValueError("study manifest JSON is unreadable") from exc
     version = payload.get("schemaVersion") if isinstance(payload, dict) else None
     if (version not in (REFERENCE_STUDY_V1_VERSION, REFERENCE_STUDY_V2_VERSION,
-                       REFERENCE_STUDY_V3_VERSION, STUDY_VERSION) or
+                       REFERENCE_STUDY_V3_VERSION, REFERENCE_STUDY_V4_VERSION,
+                       STUDY_VERSION) or
             payload.get("settings") != settings or
             settings.get("studyVersion") != version or
             payload.get("qualityVerdict") != "not-performed" or
@@ -52,9 +54,10 @@ def _verify_study(destination: Path, settings: dict[str, Any]) -> Path:
     expected_keys = {"techniqueProposals", "shotEvidence", "reviewGallery"}
     if version != REFERENCE_STUDY_V1_VERSION:
         expected_keys.update(("shotGallery", "studyOverview"))
-    if version in (REFERENCE_STUDY_V3_VERSION, STUDY_VERSION):
+    if version in (REFERENCE_STUDY_V3_VERSION, REFERENCE_STUDY_V4_VERSION,
+                   STUDY_VERSION):
         expected_keys.add("editRhythm")
-    if version == STUDY_VERSION:
+    if version in (REFERENCE_STUDY_V4_VERSION, STUDY_VERSION):
         expected_keys.add("timelineView")
     if (not isinstance(artifacts, dict) or set(artifacts) != expected_keys or
             artifacts.get("techniqueProposals") != "technique-proposals.json" or
@@ -76,11 +79,12 @@ def _verify_study(destination: Path, settings: dict[str, Any]) -> Path:
                 artifacts["studyOverview"] != "index.html"):
             raise ValueError("study shot gallery or overview path is unsafe")
         expected.update(("index.html", artifacts["shotGallery"]))
-    if version in (REFERENCE_STUDY_V3_VERSION, STUDY_VERSION):
+    if version in (REFERENCE_STUDY_V3_VERSION, REFERENCE_STUDY_V4_VERSION,
+                   STUDY_VERSION):
         if artifacts["editRhythm"] != "edit-rhythm.json":
             raise ValueError("study edit rhythm artifact path was modified")
         expected.add("edit-rhythm.json")
-    if version == STUDY_VERSION:
+    if version in (REFERENCE_STUDY_V4_VERSION, STUDY_VERSION):
         if not valid_gallery(artifacts["timelineView"], "timeline-"):
             raise ValueError("study timeline path is unsafe")
         expected.add(artifacts["timelineView"])
@@ -95,7 +99,8 @@ def _verify_study(destination: Path, settings: dict[str, Any]) -> Path:
             sha256_file(destination / "shot-evidence.json") !=
             settings["shotEvidenceSha256"]):
         raise ValueError("study evidence does not match its verified identity")
-    if (version in (REFERENCE_STUDY_V3_VERSION, STUDY_VERSION) and
+    if (version in (REFERENCE_STUDY_V3_VERSION, REFERENCE_STUDY_V4_VERSION,
+                   STUDY_VERSION) and
             sha256_file(destination / "edit-rhythm.json") != settings["editRhythmSha256"]):
         raise ValueError("study edit rhythm does not match its verified identity")
     return destination / artifacts.get("studyOverview", gallery)
@@ -150,6 +155,8 @@ def study_reference(
                      "sparsePoints": 40, "width": 160, "height": 90},
         "timelineStyleRevision": TIMELINE_STYLE_REVISION,
         "timelineWindowMs": 400, "timelineMaxAudioFrames": 4096,
+        "timelineOnsetMinRiseDb": 12.0, "timelineOnsetMinPeakDbFs": -40.0,
+        "timelineOnsetCooldownMs": 120,
         "studyVersion": STUDY_VERSION,
     }
     digest = hashlib.sha256(_json_bytes(settings)).hexdigest()[:16]
@@ -174,6 +181,9 @@ def study_reference(
             source, analysis, staging / "visual",
             window_ms=settings["timelineWindowMs"],
             max_audio_frames=settings["timelineMaxAudioFrames"],
+            onset_min_rise_db=settings["timelineOnsetMinRiseDb"],
+            onset_min_peak_dbfs=settings["timelineOnsetMinPeakDbFs"],
+            onset_cooldown_ms=settings["timelineOnsetCooldownMs"],
             ffmpeg=ffmpeg, ffprobe=ffprobe,
         )
         artifact_paths = {
@@ -197,8 +207,8 @@ def study_reference(
             'establish physical camera/light rigs, artistic intent or quality.</p>'
             '<ul><li><a href="' +
             html.escape(artifact_paths["timelineView"], quote=True) +
-            '">Evidence timeline: source-time cut markers, motion, pacing and '
-            'audio near cuts</a></li>'
+            '">Evidence timeline: source-time cuts, motion, pacing, quietness '
+            'and audio attacks</a></li>'
             '<li><a href="' +
             html.escape(artifact_paths["shotGallery"], quote=True) +
             '">Shot storyboard: chronological composition and story questions</a></li>'

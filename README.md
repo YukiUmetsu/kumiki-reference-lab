@@ -57,7 +57,7 @@ python -m pip install -e '.[motion]'
 kumiki-ref study-reference ./reference.mp4 --max-seconds 10 --out ./runs
 ```
 
-This produces a verified analysis bundle, cautious technique proposals, candidate edit-region and cut-to-cut timing summaries, and a local HTML **study overview** linking an audiovisual evidence timeline, a candidate-shot storyboard and a separate technique review gallery. Storyboard frames are available even with zero technique cues. Absent audio is shown explicitly; unreliable audio decoding fails transparently. It never claims to infer the source's actual camera, lights, objects or story purpose. See [one-command study usage](docs/reference-study.md).
+This produces a verified analysis bundle, cautious technique proposals, candidate edit-region and cut-to-cut timing summaries, and a local HTML **study overview** linking a five-track audiovisual evidence timeline, a candidate-shot storyboard and a separate technique review gallery. Storyboard frames are available even with zero technique cues. Absent audio is shown explicitly; unreliable audio decoding fails transparently. It never claims to infer the source's actual camera, lights, objects or story purpose. See [one-command study usage](docs/reference-study.md).
 
 To document human observations or optional AI hypotheses in a separate, source-verified draft, use `kumiki-ref review-notes init <study-manifest.json> --reviewer-id NAME --out reviews/`, then `review-notes validate <study-manifest.json> reviews/review-notes.json`. Exact original frame PTS, cue/region identity and study hashes are checked, but no semantic truth or human approval is implied. See [review notes contract](docs/review-notes.md).
 
@@ -90,7 +90,7 @@ Use `kumiki-ref av-cut-evidence reference.mp4 <analysis-run.json> --window-ms 40
 
 Use `kumiki-ref edit-rhythm <analysis-run.json> --out ./runs/rhythm` to measure **exact candidate cut-to-cut durations**, their ratios, and shorter/longer intervals. Only interior candidate-cut gaps count: the first and last bounded regions are deliberately censored. No story or editing quality verdict is generated. See [edit rhythm methodology](docs/edit-rhythm.md).
 
-Use `kumiki-ref review-timeline reference.mp4 <analysis-run.json> --out ./runs/timelines` for a **self-contained audiovisual evidence timeline** with source-timecode cut markers, motion and pacing tracks, audio quiet-level contrast candidates, and accessible numeric tables. The report checks source/run identity and inventory hashes; it does not prove audio/video sync or edit intent. See [visual timeline workflow](docs/timeline-review.md).
+Use `kumiki-ref review-timeline reference.mp4 <analysis-run.json> --out ./runs/timelines` for a **self-contained audiovisual evidence timeline** with source-timecode cut markers, motion/pacing tracks, audio quiet-level contrasts and onset candidates, and accessible numeric tables. One audio decode serves both audio reports. The timeline checks source/run identity and inventory hashes; it does not prove audio/video sync, identify SFX or establish edit intent. See [visual timeline workflow](docs/timeline-review.md).
 
 ```text
 Authorized reference video
@@ -330,7 +330,7 @@ kumiki-ref study-reference ./reference.mp4 --max-seconds 10 --out ./runs
 
 `shot-evidence` groups already measured frame data into candidate edit regions, summarizes available appearance/translation/sparse-flow measurements and records explicit uncertainty. It refuses unreliable source timestamp timelines and does not manufacture a final exclusive end PTS. See [shot evidence and semantic limits](docs/shot-evidence.md).
 
-`study-reference` orchestrates `analyze` with bounded optional numeric stages, technique proposal generation, shot-region summaries, censored candidate cut-to-cut intervals, a source-linked audiovisual timeline and two source-verified galleries. The derived v4 study is published atomically with checksummed files, and a successful analysis remains reusable if a later review step fails. See [command contracts and output layout](docs/reference-study.md).
+`study-reference` orchestrates `analyze` with bounded optional numeric stages, technique proposal generation, shot-region summaries, censored candidate cut-to-cut intervals, a source-linked audiovisual timeline including possible level attacks, and two source-verified galleries. The derived v5 study is published atomically with checksummed files; v1–v4 studies remain readable, and a successful analysis remains reusable if a later review step fails. See [command contracts and output layout](docs/reference-study.md).
 
 **Regression evidence:** Three procedurally generated reference-video fixtures exercise the actual FFmpeg → analysis → proposal → HTML gallery / shot-region path with known causes, including misleading visual lookalikes. These and all FFmpeg/NumPy integration tests remain available for **local testing**; the streamlined GitHub CI runs only inexpensive core smoke tests. See [synthetic source validation](docs/synthetic-reference-qa.md).
 
