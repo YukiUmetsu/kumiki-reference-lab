@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from kumiki_reference_lab.analyzers.media.inspect import inspect_source
+from kumiki_reference_lab.analyzers.appearance.analyze import analyze_appearance
 from kumiki_reference_lab.analyzers.media.contact_sheet import build_contact_sheet
 from kumiki_reference_lab.analyzers.motion.analyze import analyze_image_motion
 from kumiki_reference_lab.analyzers.motion.sparse import analyze_sparse_flow
@@ -100,6 +101,18 @@ def build_parser() -> argparse.ArgumentParser:
     sparse.add_argument("--ffmpeg", default="ffmpeg")
     sparse.add_argument("--ffprobe", default="ffprobe")
     sparse.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
+
+    appearance = commands.add_parser("appearance", help="measure RGB palette, contrast, highlight, and color changes")
+    appearance.add_argument("source", type=Path)
+    appearance.add_argument("--out", type=Path)
+    appearance.add_argument("--max-seconds", type=int, default=10)
+    appearance.add_argument("--max-samples", type=int, default=24)
+    appearance.add_argument("--width", type=int, default=160)
+    appearance.add_argument("--height", type=int, default=90)
+    appearance.add_argument("--threshold", type=float, default=0.25)
+    appearance.add_argument("--ffmpeg", default="ffmpeg")
+    appearance.add_argument("--ffprobe", default="ffprobe")
+    appearance.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
 
     analyze = commands.add_parser("analyze", help="run a bounded, atomic multi-stage reference analysis")
     analyze.add_argument("source", type=Path)
@@ -208,6 +221,13 @@ def main(argv: list[str] | None = None) -> int:
                 ffmpeg=args.ffmpeg, ffprobe=args.ffprobe, rights_status=args.rights_status,
             )
             filename = "sparse-flow.json"
+        elif args.command == "appearance":
+            artifact = analyze_appearance(
+                args.source, seconds=args.max_seconds, max_samples=args.max_samples,
+                width=args.width, height=args.height, threshold=args.threshold,
+                ffmpeg=args.ffmpeg, ffprobe=args.ffprobe, rights_status=args.rights_status,
+            )
+            filename = "appearance.json"
         else:
             artifact = analyze_hard_cuts(args.source, seconds=args.max_seconds,
                                          threshold=args.threshold, ffmpeg=args.ffmpeg,
