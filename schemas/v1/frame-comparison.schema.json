@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/frame-comparison.schema.json",
+  "title": "Kumiki Aligned Frame Evidence Bundle v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "settings", "status", "qualityVerdict", "matchedPairs", "unmatchedReferenceSamples", "unmatchedCandidateSamples", "pairs", "files"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.frame-comparison.v1"},
+    "settings": {"type": "object", "additionalProperties": false,
+      "required": ["referenceSha256", "candidateSha256", "referenceStreamIndex", "candidateStreamIndex", "referenceTimebase", "candidateTimebase", "seconds", "samples", "width", "ffmpeg", "ffprobe", "rightsStatus", "referenceAnchorSeconds", "candidateAnchorSeconds", "timeScale", "toleranceSeconds", "alignmentMethod", "samplingMethod", "selectedReferenceCount", "selectedCandidateCount", "matchedSampleIdentity"],
+      "properties": {
+        "referenceSha256": {"$ref": "#/$defs/sha"},
+        "candidateSha256": {"$ref": "#/$defs/sha"},
+        "referenceStreamIndex": {"type": "integer", "minimum": 0},
+        "candidateStreamIndex": {"type": "integer", "minimum": 0},
+        "referenceTimebase": {"$ref": "#/$defs/rational"},
+        "candidateTimebase": {"$ref": "#/$defs/rational"},
+        "seconds": {"type": "integer", "minimum": 1, "maximum": 20},
+        "samples": {"type": "integer", "minimum": 5, "maximum": 12},
+        "width": {"type": "integer", "minimum": 128, "maximum": 800},
+        "ffmpeg": {"type": "string", "minLength": 1},
+        "ffprobe": {"type": "string", "minLength": 1},
+        "rightsStatus": {"type": "string", "minLength": 1},
+        "referenceAnchorSeconds": {"$ref": "#/$defs/rational"},
+        "candidateAnchorSeconds": {"$ref": "#/$defs/rational"},
+        "timeScale": {"$ref": "#/$defs/rational"},
+        "toleranceSeconds": {"$ref": "#/$defs/rational"},
+        "alignmentMethod": {"const": "explicit-two-anchor-max-cardinality-min-error-monotonic-pts-v1"},
+        "samplingMethod": {"const": "uniform-original-pts-nearest-frame"},
+        "selectedReferenceCount": {"type": "integer", "minimum": 2, "maximum": 12},
+        "selectedCandidateCount": {"type": "integer", "minimum": 2, "maximum": 12},
+        "matchedSampleIdentity": {"type": "array", "minItems": 1, "maxItems": 12,
+          "items": {"$ref": "#/$defs/pairIdentity"}}
+      }
+    },
+    "status": {"const": "time-aligned-frame-evidence"},
+    "qualityVerdict": {"const": "not-performed"},
+    "matchedPairs": {"type": "integer", "minimum": 1, "maximum": 12},
+    "unmatchedReferenceSamples": {"type": "integer", "minimum": 0, "maximum": 12},
+    "unmatchedCandidateSamples": {"type": "integer", "minimum": 0, "maximum": 12},
+    "pairs": {"type": "array", "minItems": 1, "maxItems": 12,
+      "items": {"type": "object", "additionalProperties": false,
+        "required": ["referenceOrdinal", "referencePts", "referenceSeconds", "candidateOrdinal", "candidatePts", "candidateSeconds", "signedAlignmentErrorSeconds", "referenceImage", "candidateImage"],
+        "properties": {
+          "referenceOrdinal": {"type": "integer", "minimum": 0},
+          "referencePts": {"type": "integer"},
+          "referenceSeconds": {"$ref": "#/$defs/rational"},
+          "candidateOrdinal": {"type": "integer", "minimum": 0},
+          "candidatePts": {"type": "integer"},
+          "candidateSeconds": {"$ref": "#/$defs/rational"},
+          "signedAlignmentErrorSeconds": {"$ref": "#/$defs/rational"},
+          "referenceImage": {"type": "string", "pattern": "^reference/frame-[0-9]{3}\\.jpg$"},
+          "candidateImage": {"type": "string", "pattern": "^candidate/frame-[0-9]{3}\\.jpg$"}
+        }
+      }
+    },
+    "files": {"type": "array", "minItems": 3, "maxItems": 25,
+      "items": {"type": "object", "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {"path": {"type": "string", "pattern": "^(index\\.html|(reference|candidate)/frame-[0-9]{3}\\.jpg)$"},
+                       "sha256": {"$ref": "#/$defs/sha"}}}}
+  },
+  "$defs": {
+    "sha": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "pairIdentity": {"type": "object", "additionalProperties": false,
+      "required": ["referenceOrdinal", "referencePts", "referenceSeconds", "candidateOrdinal", "candidatePts", "candidateSeconds", "signedAlignmentErrorSeconds"],
+      "properties": {
+        "referenceOrdinal": {"type": "integer", "minimum": 0},
+        "referencePts": {"type": "integer"},
+        "referenceSeconds": {"$ref": "#/$defs/rational"},
+        "candidateOrdinal": {"type": "integer", "minimum": 0},
+        "candidatePts": {"type": "integer"},
+        "candidateSeconds": {"$ref": "#/$defs/rational"},
+        "signedAlignmentErrorSeconds": {"$ref": "#/$defs/rational"}
+      }
+    },
+    "rational": {"type": "object", "additionalProperties": false,
+      "required": ["numerator", "denominator"],
+      "properties": {"numerator": {"type": "integer"},
+                     "denominator": {"type": "integer", "minimum": 1}}}
+  }
+}
