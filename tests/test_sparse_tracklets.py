@@ -146,6 +146,55 @@ class SparseTrackletTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             build_sparse_tracklets(pairs, timebase=Fraction(-1, 100))
 
+    def test_optional_pts_scaled_motion_check_preserves_variable_frame_intervals(self):
+        pairs = [
+            _pair(5, 15, _vector(10, 20, 2, 1)),
+            _pair(15, 35, _vector(12, 21, 4, 2)),
+            _pair(35, 40, _vector(16, 23, 1, 0.5)),
+        ]
+        original = _build(pairs)
+        self.assertNotIn("motionMinimumTolerancePixels", original)
+        self.assertNotIn("motionResidualPixels", original["tracklets"][0]["observations"][0])
+        checked = build_sparse_tracklets(
+            pairs, timebase=Fraction(1, 100), motion_consistency=True)
+        self.assertEqual(checked["method"],
+                         "mutual-nearest-adjacent-endpoint-motion-gated-v1")
+        self.assertEqual(checked["motionInconsistentLinkCandidates"], 0)
+        self.assertEqual(checked["tracklets"][0]["pairCount"], 3)
+        self.assertEqual([o["motionResidualPixels"]
+                          for o in checked["tracklets"][0]["observations"]],
+                         [None, 0.0, 0.0])
+        self.assertEqual(checked["tracklets"][0]["kinematics"]["durationSeconds"],
+                         {"numerator": 7, "denominator": 20})
+        json.dumps(checked, allow_nan=False)
+
+    def test_optional_motion_check_abstains_on_endpoint_identity_switch(self):
+        pairs = [
+            _pair(0, 10, _vector(30, 40, 4, 0)),
+            _pair(10, 20, _vector(34, 40, -4, 0)),
+        ]
+        self.assertEqual(_build(pairs)["tracklets"][0]["pairCount"], 2)
+        checked = build_sparse_tracklets(
+            pairs, timebase=Fraction(1, 100), motion_consistency=True)
+        self.assertEqual(checked["status"], "insufficient-continuity")
+        self.assertEqual(checked["tracklets"], [])
+        self.assertEqual(checked["motionInconsistentLinkCandidates"], 1)
+        self.assertEqual(checked["singlePairCandidatesDiscarded"], 2)
+
+    def test_motion_check_cannot_override_mutual_nearest_ambiguity(self):
+        pairs = [
+            _pair(0, 10, _vector(30, 40, 4, 0)),
+            _pair(10, 20, _vector(34, 40, 4, 0),
+                  _vector(34, 40, -4, 0)),
+        ]
+        checked = build_sparse_tracklets(
+            pairs, timebase=Fraction(1, 100), motion_consistency=True)
+        self.assertEqual(checked["tracklets"], [])
+        self.assertEqual(checked["motionInconsistentLinkCandidates"], 0)
+        with self.assertRaisesRegex(ValueError, "boolean"):
+            build_sparse_tracklets(pairs, timebase=Fraction(1, 100),
+                                   motion_consistency=1)
+
 
 if __name__ == "__main__":
     unittest.main()

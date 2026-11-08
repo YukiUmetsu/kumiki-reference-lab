@@ -19,6 +19,13 @@ class ImageHomographyTests(unittest.TestCase):
             "analyze", "source.mp4", "--out", "runs", "--sparse-flow",
             "--sparse-projective-hypotheses"
         ]).sparse_projective_hypotheses)
+        self.assertTrue(parser.parse_args([
+            "sparse-flow", "source.mp4", "--tracklet-motion-consistency"
+        ]).tracklet_motion_consistency)
+        self.assertTrue(parser.parse_args([
+            "analyze", "source.mp4", "--out", "runs", "--sparse-flow",
+            "--sparse-tracklet-motion-consistency"
+        ]).sparse_tracklet_motion_consistency)
 
     @staticmethod
     def _projective_points():

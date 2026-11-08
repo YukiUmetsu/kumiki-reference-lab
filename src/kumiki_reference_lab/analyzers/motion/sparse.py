@@ -30,6 +30,7 @@ def analyze_sparse_flow(
     radius: int = 8, correlation: float = 0.68, threshold: float = 0.25,
     pyramid_levels: int = 1, subpixel_refinement: bool = False,
     subpixel_reverse_check: bool = False, projective_hypotheses: bool = False,
+    tracklet_motion_consistency: bool = False,
     ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
     rights_status: str = "review-required",
 ) -> dict[str, Any]:
@@ -53,6 +54,8 @@ def analyze_sparse_flow(
         raise ValueError("sparse-flow subpixel_reverse_check requires subpixel_refinement")
     if type(projective_hypotheses) is not bool:
         raise ValueError("sparse-flow projective_hypotheses must be a boolean")
+    if type(tracklet_motion_consistency) is not bool:
+        raise ValueError("sparse-flow tracklet_motion_consistency must be a boolean")
     if not all(math.isfinite(v) and 0 < v < 1 for v in (correlation, threshold)):
         raise ValueError("sparse-flow correlation/threshold must be between zero and one")
     if importlib.util.find_spec("numpy") is None:
@@ -158,5 +161,6 @@ def analyze_sparse_flow(
         "samples": [{"sampleOrdinal": f.ordinal, "sourcePts": f.pts,
                      "sourceSeconds": as_rational_dict(int(f.pts) * timebase)} for f in samples],
         "pairs": pairs,
-        "temporalTracklets": build_sparse_tracklets(pairs, timebase=timebase),
+        "temporalTracklets": build_sparse_tracklets(
+            pairs, timebase=timebase, motion_consistency=tracklet_motion_consistency),
     }

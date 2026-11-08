@@ -55,6 +55,16 @@
       "analyzer": {"required": ["projectiveInlierTolerancePixels", "projectiveMaxHypotheses"]},
       "pairs": {"items": {"required": ["projectiveHypothesis"]}}
     }}
+  }, {
+    "if": {"required": ["temporalTracklets"], "properties": {
+      "temporalTracklets": {"properties": {"method": {"const": "mutual-nearest-adjacent-endpoint-motion-gated-v1"}}}
+    }},
+    "then": {"properties": {"temporalTracklets": {
+      "required": ["motionMinimumTolerancePixels", "motionRelativeTolerance", "motionInconsistentLinkCandidates"],
+      "properties": {"tracklets": {"items": {"properties": {"observations": {
+        "items": {"required": ["motionResidualPixels", "motionAllowancePixels"]}
+      }}}}}
+    }}}
   }],
   "properties": {
     "schemaVersion": {"const": "kumiki.sparse-flow.v1"},
@@ -135,9 +145,12 @@
       "required": ["status", "method", "linkTolerancePixels", "ambiguityMarginPixels", "minConsecutivePairs", "calibratedConfidence", "semanticIdentityVerified", "singlePairCandidatesDiscarded", "tracklets"],
       "properties": {
         "status": {"enum": ["candidate-only", "insufficient-continuity"]},
-        "method": {"const": "mutual-nearest-adjacent-endpoint-v1"},
+        "method": {"enum": ["mutual-nearest-adjacent-endpoint-v1", "mutual-nearest-adjacent-endpoint-motion-gated-v1"]},
         "linkTolerancePixels": {"const": 2.0},
         "ambiguityMarginPixels": {"const": 0.5},
+        "motionMinimumTolerancePixels": {"const": 2.5},
+        "motionRelativeTolerance": {"const": 0.6},
+        "motionInconsistentLinkCandidates": {"type": "integer", "minimum": 0},
         "minConsecutivePairs": {"const": 2},
         "calibratedConfidence": {"const": false},
         "semanticIdentityVerified": {"const": false},
@@ -161,6 +174,8 @@
                   "startPixels": {"$ref": "#/$defs/trackPoint"},
                   "endPixels": {"$ref": "#/$defs/trackPoint"},
                   "handoffErrorPixels": {"type": ["number", "null"], "minimum": 0, "maximum": 2},
+                  "motionResidualPixels": {"type": ["number", "null"], "minimum": 0},
+                  "motionAllowancePixels": {"type": ["number", "null"], "minimum": 0},
                   "group": {"enum": ["dominant", "secondary", "unclassified"]}
                 }
               }}

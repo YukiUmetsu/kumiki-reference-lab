@@ -13,13 +13,17 @@ from typing import Any
 LINK_TOLERANCE_PIXELS = 2.0
 AMBIGUITY_MARGIN_PIXELS = 0.5
 MIN_TRACK_PAIRS = 2
+MOTION_MIN_TOLERANCE_PIXELS = 2.5
+MOTION_RELATIVE_TOLERANCE = 0.6
 
 
 def _observation(pair: dict[str, Any], pair_index: int, vector_index: int,
-                 handoff_error: float | None) -> dict[str, Any]:
+                 handoff_error: float | None, *, motion_check: bool = False,
+                 motion_residual: float | None = None,
+                 motion_allowance: float | None = None) -> dict[str, Any]:
     vector = pair["vectors"][vector_index]
     x, y = vector["x"], vector["y"]
-    return {
+    observation = {
         "pairIndex": pair_index, "vectorIndex": vector_index,
         "startPts": pair["startPts"], "endPts": pair["endPts"],
         "startPixels": {"x": x, "y": y},
@@ -27,13 +31,49 @@ def _observation(pair: dict[str, Any], pair_index: int, vector_index: int,
         "handoffErrorPixels": round(handoff_error, 4) if handoff_error is not None else None,
         "group": vector.get("group", "unclassified"),
     }
+    if motion_check:
+        observation.update({"motionResidualPixels": (round(motion_residual, 4)
+                                                      if motion_residual is not None else None),
+                            "motionAllowancePixels": (round(motion_allowance, 4)
+                                                       if motion_allowance is not None else None)})
+    return observation
+
+
+def _motion_agreement(track: dict[str, Any], pair: dict[str, Any],
+                      vector: dict[str, Any]) -> tuple[float, float]:
+    """Compare two observed offsets over their *actual* source-PTS durations.
+
+    Constant image-plane velocity is merely a cautious linking prior, not a
+    physical object model; abrupt motion or occlusion can produce abstention.
+    """
+    prior = track["observations"][-1]
+    old_duration = prior["endPts"] - prior["startPts"]
+    new_duration = pair["endPts"] - pair["startPts"]
+    if old_duration <= 0 or new_duration <= 0:
+        raise ValueError("motion continuity requires increasing source PTS")
+    ratio = new_duration / old_duration
+    expected_x = (prior["endPixels"]["x"] - prior["startPixels"]["x"]) * ratio
+    expected_y = (prior["endPixels"]["y"] - prior["startPixels"]["y"]) * ratio
+    observed_x, observed_y = vector["dx"], vector["dy"]
+    residual = math.hypot(observed_x - expected_x, observed_y - expected_y)
+    tolerance = max(MOTION_MIN_TOLERANCE_PIXELS,
+                    MOTION_RELATIVE_TOLERANCE * max(math.hypot(expected_x, expected_y),
+                                                    math.hypot(observed_x, observed_y)))
+    if not math.isfinite(residual) or not math.isfinite(tolerance):
+        raise ValueError("motion continuity requires finite displacements")
+    return residual, tolerance
 
 
 def _unambiguous_links(
     previous: list[dict[str, Any]], vectors: list[dict[str, Any]],
-) -> dict[int, tuple[int, float]]:
+    *, pair: dict[str, Any] | None = None,
+    motion_consistency: bool = False,
+) -> tuple[dict[int, tuple[int, float, float | None, float | None]], int]:
     """Return mutual nearest neighbors whose alternatives are not nearly as good."""
     candidates: list[tuple[float, int, int]] = []
+    rejected_motion = 0
+    if motion_consistency and pair is None:
+        raise ValueError("motion continuity requires the current source-PTS pair")
     for old_index, track in enumerate(previous):
         end = track["observations"][-1]["endPixels"]
         for new_index, vector in enumerate(vectors):
@@ -48,7 +88,7 @@ def _unambiguous_links(
     for options in (*by_old.values(), *by_new.values()):
         options.sort()
 
-    links: dict[int, tuple[int, float]] = {}
+    links: dict[int, tuple[int, float, float | None, float | None]] = {}
     for old_index, options in sorted(by_old.items()):
         distance, new_index = options[0]
         back = by_new[new_index]
@@ -57,12 +97,20 @@ def _unambiguous_links(
         if ((len(options) > 1 and options[1][0] - distance < AMBIGUITY_MARGIN_PIXELS) or
                 (len(back) > 1 and back[1][0] - back[0][0] < AMBIGUITY_MARGIN_PIXELS)):
             continue
-        links[old_index] = (new_index, distance)
-    return links
+        residual, allowance = (None, None)
+        if motion_consistency:
+            residual, allowance = _motion_agreement(previous[old_index], pair,
+                                                     vectors[new_index])
+            if residual > allowance:
+                rejected_motion += 1
+                continue
+        links[old_index] = (new_index, distance, residual, allowance)
+    return links, rejected_motion
 
 
 def build_sparse_tracklets(
     pairs: list[dict[str, Any]], *, timebase: Fraction,
+    motion_consistency: bool = False,
 ) -> dict[str, Any]:
     """Link evidence across adjacent decoded samples with no guessed gap filling.
 
@@ -71,10 +119,13 @@ def build_sparse_tracklets(
     """
     if not isinstance(timebase, Fraction) or timebase <= 0:
         raise ValueError("sparse tracklet source timebase must be a positive rational")
+    if type(motion_consistency) is not bool:
+        raise ValueError("motion_consistency must be a boolean")
 
     active: list[dict[str, Any]] = []
     completed: list[dict[str, Any]] = []
     singletons = 0
+    motion_rejections = 0
     next_id = 1
 
     def finish(track: dict[str, Any], reason: str) -> None:
@@ -134,22 +185,28 @@ def build_sparse_tracklets(
         if is_cut:
             continue
 
-        links = _unambiguous_links(active, vectors) if adjacent else {}
+        links, rejected = (_unambiguous_links(active, vectors, pair=pair,
+                                              motion_consistency=motion_consistency)
+                           if adjacent else ({}, 0))
+        motion_rejections += rejected
         next_active: list[dict[str, Any]] = []
         linked_new: set[int] = set()
         for old_index, track in enumerate(active):
             if old_index not in links:
                 finish(track, "no-safe-match")
                 continue
-            vector_index, error = links[old_index]
-            track["observations"].append(_observation(pair, pair_index, vector_index, error))
+            vector_index, error, residual, allowance = links[old_index]
+            track["observations"].append(_observation(
+                pair, pair_index, vector_index, error, motion_check=motion_consistency,
+                motion_residual=residual, motion_allowance=allowance))
             next_active.append(track)
             linked_new.add(vector_index)
         for vector_index in range(len(vectors)):
             if vector_index in linked_new:
                 continue
             track = {"id": f"tracklet-{next_id:04d}",
-                     "observations": [_observation(pair, pair_index, vector_index, None)]}
+                     "observations": [_observation(pair, pair_index, vector_index, None,
+                                                   motion_check=motion_consistency)]}
             next_id += 1
             next_active.append(track)
         active = next_active
@@ -157,9 +214,10 @@ def build_sparse_tracklets(
     for track in active:
         finish(track, "scan-end")
     completed.sort(key=lambda track: int(track["id"].split("-")[1]))
-    return {
+    result = {
         "status": "candidate-only" if completed else "insufficient-continuity",
-        "method": "mutual-nearest-adjacent-endpoint-v1",
+        "method": ("mutual-nearest-adjacent-endpoint-motion-gated-v1"
+                   if motion_consistency else "mutual-nearest-adjacent-endpoint-v1"),
         "linkTolerancePixels": LINK_TOLERANCE_PIXELS,
         "ambiguityMarginPixels": AMBIGUITY_MARGIN_PIXELS,
         "minConsecutivePairs": MIN_TRACK_PAIRS,
@@ -168,3 +226,8 @@ def build_sparse_tracklets(
         "singlePairCandidatesDiscarded": singletons,
         "tracklets": completed,
     }
+    if motion_consistency:
+        result.update({"motionMinimumTolerancePixels": MOTION_MIN_TOLERANCE_PIXELS,
+                       "motionRelativeTolerance": MOTION_RELATIVE_TOLERANCE,
+                       "motionInconsistentLinkCandidates": motion_rejections})
+    return result
