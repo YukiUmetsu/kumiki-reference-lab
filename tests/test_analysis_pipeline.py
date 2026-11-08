@@ -90,6 +90,39 @@ class AnalysisPipelineIntegrationTests(unittest.TestCase):
                 run_analysis(Path("missing.mp4"), output, seconds=200)
             self.assertFalse(output.exists())
 
+    @unittest.skipUnless(importlib.util.find_spec("numpy"), "NumPy extra unavailable")
+    def test_sparse_flow_stage_is_opt_in_atomic_and_checksummed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "flat.mkv"
+            self._flat_video(source)
+            output = root / "runs"
+            manifest_path = run_analysis(source, output, seconds=2, thumbnails=4,
+                                         sparse_flow=True, sparse_samples=6)
+            manifest = json.loads(manifest_path.read_text())
+            self.assertEqual(manifest["artifacts"]["sparseFlow"], "sparse-flow.json")
+            self.assertEqual(manifest["settings"]["sparseSamples"], 6)
+            self.assertEqual(manifest["settings"]["versions"]["sparseFlow"],
+                             "kumiki.sparse-flow.v1")
+            sparse_path = manifest_path.parent / "sparse-flow.json"
+            sparse = json.loads(sparse_path.read_text())
+            self.assertEqual(sparse["schemaVersion"], "kumiki.sparse-flow.v1")
+            self.assertTrue(all(pair["status"] == "insufficient-consensus"
+                                for pair in sparse["pairs"]))
+            self.assertEqual(run_analysis(source, output, seconds=2, thumbnails=4,
+                                          sparse_flow=True, sparse_samples=6), manifest_path)
+            sparse_path.write_text("{}")
+            with self.assertRaisesRegex(ValueError, "missing or modified"):
+                run_analysis(source, output, seconds=2, thumbnails=4,
+                             sparse_flow=True, sparse_samples=6)
+
+    def test_invalid_sparse_budget_does_not_publish_directory(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "runs"
+            with self.assertRaisesRegex(ValueError, "sparse-flow requires"):
+                run_analysis(Path("missing.mp4"), output, seconds=30, sparse_flow=True)
+            self.assertFalse(output.exists())
+
 
 if __name__ == "__main__":
     unittest.main()
