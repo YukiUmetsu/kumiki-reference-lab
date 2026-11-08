@@ -10,6 +10,7 @@ from pathlib import Path
 from kumiki_reference_lab.analyzers.media.inspect import inspect_source
 from kumiki_reference_lab.analyzers.media.contact_sheet import build_contact_sheet
 from kumiki_reference_lab.analyzers.motion.analyze import analyze_image_motion
+from kumiki_reference_lab.analyzers.motion.sparse import analyze_sparse_flow
 from kumiki_reference_lab.analyzers.subjects.roi import analyze_roi_track
 from kumiki_reference_lab.analyzers.media.timeline import analyze_frame_timeline
 from kumiki_reference_lab.analyzers.shots.detect import analyze_hard_cuts
@@ -84,6 +85,21 @@ def build_parser() -> argparse.ArgumentParser:
     roi.add_argument("--ffmpeg", default="ffmpeg")
     roi.add_argument("--ffprobe", default="ffprobe")
     roi.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
+
+    sparse = commands.add_parser("sparse-flow", help="track distributed 2D features and motion groups")
+    sparse.add_argument("source", type=Path)
+    sparse.add_argument("--out", type=Path)
+    sparse.add_argument("--max-seconds", type=int, default=10)
+    sparse.add_argument("--max-samples", type=int, default=24)
+    sparse.add_argument("--width", type=int, default=160)
+    sparse.add_argument("--height", type=int, default=90)
+    sparse.add_argument("--max-points", type=int, default=40)
+    sparse.add_argument("--radius", type=int, default=8)
+    sparse.add_argument("--correlation", type=float, default=0.68)
+    sparse.add_argument("--threshold", type=float, default=0.25)
+    sparse.add_argument("--ffmpeg", default="ffmpeg")
+    sparse.add_argument("--ffprobe", default="ffprobe")
+    sparse.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
 
     analyze = commands.add_parser("analyze", help="run a bounded, atomic multi-stage reference analysis")
     analyze.add_argument("source", type=Path)
@@ -175,6 +191,14 @@ def main(argv: list[str] | None = None) -> int:
                 ffmpeg=args.ffmpeg, ffprobe=args.ffprobe, rights_status=args.rights_status,
             )
             filename = "roi-track.json"
+        elif args.command == "sparse-flow":
+            artifact = analyze_sparse_flow(
+                args.source, seconds=args.max_seconds, max_samples=args.max_samples,
+                width=args.width, height=args.height, max_points=args.max_points,
+                radius=args.radius, correlation=args.correlation, threshold=args.threshold,
+                ffmpeg=args.ffmpeg, ffprobe=args.ffprobe, rights_status=args.rights_status,
+            )
+            filename = "sparse-flow.json"
         else:
             artifact = analyze_hard_cuts(args.source, seconds=args.max_seconds,
                                          threshold=args.threshold, ffmpeg=args.ffmpeg,
