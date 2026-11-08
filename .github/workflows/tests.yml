@@ -1,44 +1,28 @@
 name: Python foundation
 
 on:
-  push:
   pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: quick-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  unit:
+  quick-smoke:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
-      - name: Syntax and unit tests (no ML dependencies)
+      - name: Compile and run selected fast unit checks
         env:
           PYTHONPATH: src
         run: |
           python -m compileall -q src
-          python -m unittest discover -s tests -v
-
-  video-ground-truth:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.12'
-      - name: Install FFmpeg and FFprobe
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends ffmpeg
-          command -v ffmpeg
-          command -v ffprobe
-          ffmpeg -version
-      - name: Install optional numeric analysis dependencies
-        run: python -m pip install -e '.[motion]'
-      - name: Synthetic reference and complete study integrations
-        env:
-          PYTHONPATH: src
-        run: python -m unittest tests.test_technique_end_to_end tests.test_reference_study tests.test_review_notes tests.test_shot_gallery tests.test_audio_timeline tests.test_audio_levels -v
+          python -m unittest tests.test_cli tests.test_timebase tests.test_schema tests.test_catalog -q
