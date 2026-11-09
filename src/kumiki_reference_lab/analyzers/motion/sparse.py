@@ -30,6 +30,7 @@ def analyze_sparse_flow(
     radius: int = 8, correlation: float = 0.68, threshold: float = 0.25,
     pyramid_levels: int = 1, subpixel_refinement: bool = False,
     subpixel_reverse_check: bool = False, lk_refinement: bool = False,
+    quadrant_consistency: bool = False,
     projective_hypotheses: bool = False,
     tracklet_motion_consistency: bool = False,
     tracklet_appearance_consistency: bool = False,
@@ -56,6 +57,8 @@ def analyze_sparse_flow(
         raise ValueError("sparse-flow subpixel_reverse_check requires subpixel_refinement")
     if type(lk_refinement) is not bool or (lk_refinement and subpixel_refinement):
         raise ValueError("LK refinement must be a boolean and cannot combine with peak refinement")
+    if type(quadrant_consistency) is not bool:
+        raise ValueError("quadrant_consistency must be a boolean")
     if type(projective_hypotheses) is not bool:
         raise ValueError("sparse-flow projective_hypotheses must be a boolean")
     if type(tracklet_motion_consistency) is not bool:
@@ -97,7 +100,8 @@ def analyze_sparse_flow(
             result.update({"status": "cut-boundary", "detectedCorners": 0,
                            "rejected": {key: 0 for key in (
                                "low-texture", "forward-failed", "backward-failed",
-                               "roundtrip-inconsistent")},
+                               "roundtrip-inconsistent") +
+                               (("quadrant-inconsistent",) if quadrant_consistency else ())},
                            "vectors": [], "consensus": None, "geometryHypothesis": None})
             if projective_hypotheses:
                 result["projectiveHypothesis"] = None
@@ -108,7 +112,8 @@ def analyze_sparse_flow(
                                        pyramid_levels=pyramid_levels,
                                        subpixel_refinement=subpixel_refinement,
                                        subpixel_reverse_check=subpixel_reverse_check,
-                                       lk_refinement=lk_refinement)
+                                       lk_refinement=lk_refinement,
+                                       quadrant_consistency=quadrant_consistency)
             grouped = group_sparse_flows(tracks["accepted"], width, height)
             geometry = fit_image_affine(tracks["accepted"], width, height)
             projective = (fit_image_homography(tracks["accepted"], width, height)
@@ -158,6 +163,10 @@ def analyze_sparse_flow(
                 "lkMaxFractionalDeparturePixels": 1.25,
                 "lkReverseTolerancePixels": 0.75}
                if lk_refinement else {}),
+            **({"quadrantGuardModel": "overlapping-5x5-local-ncc-v1",
+                "quadrantGuardMinimumCorrelation": 0.65,
+                "quadrantGuardMinimumSupport": 3}
+               if quadrant_consistency else {}),
             "minimumAppearanceCorrelation": correlation,
             "roundtripTolerancePixels": 1.5,
             "consensusTolerancePixels": 1.5,

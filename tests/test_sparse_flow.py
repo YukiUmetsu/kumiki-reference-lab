@@ -380,6 +380,26 @@ class SparseFlowIntegrationTests(unittest.TestCase):
                                 for v in p["vectors"]))
             json.dumps(refined, allow_nan=False)
 
+    def test_optional_quadrant_guard_preserves_pts_and_reports_local_support(self):
+        with tempfile.TemporaryDirectory() as directory:
+            video = Path(directory) / "source.mkv"
+            self._create_clip(video, vfr=True)
+            original = analyze_sparse_flow(video, seconds=2, max_samples=6)
+            guarded = analyze_sparse_flow(video, seconds=2, max_samples=6,
+                                          quadrant_consistency=True)
+            self.assertEqual(original["samples"], guarded["samples"])
+            self.assertEqual(guarded["analyzer"]["quadrantGuardModel"],
+                             "overlapping-5x5-local-ncc-v1")
+            self.assertNotIn("quadrantGuardModel", original["analyzer"])
+            self.assertTrue(all("quadrant-inconsistent" in pair["rejected"]
+                                for pair in guarded["pairs"]))
+            self.assertTrue(all("quadrantSupportCount" in vector and
+                                len(vector["quadrantCorrelations"]) == 4
+                                for pair in guarded["pairs"]
+                                for vector in pair["vectors"]))
+            self.assertFalse(guarded["temporalTracklets"]["semanticIdentityVerified"])
+            json.dumps(guarded, allow_nan=False)
+
     def test_flat_video_does_not_invent_vectors(self):
         with tempfile.TemporaryDirectory() as directory:
             video = Path(directory) / "flat.mkv"

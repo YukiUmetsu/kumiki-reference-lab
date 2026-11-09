@@ -131,6 +131,7 @@ def run_analysis(
     sparse_correlation: float = 0.68, sparse_pyramid_levels: int = 1,
     sparse_subpixel_refinement: bool = False, sparse_subpixel_reverse_check: bool = False,
     sparse_lk_refinement: bool = False,
+    sparse_quadrant_consistency: bool = False,
     sparse_projective_hypotheses: bool = False,
     sparse_tracklet_motion_consistency: bool = False,
     sparse_tracklet_appearance_consistency: bool = False,
@@ -170,6 +171,8 @@ def run_analysis(
         if type(sparse_lk_refinement) is not bool or (sparse_lk_refinement and
                                                      sparse_subpixel_refinement):
             raise ValueError("LK refinement cannot combine with subpixel peak refinement")
+        if type(sparse_quadrant_consistency) is not bool:
+            raise ValueError("sparse-flow quadrant consistency must be a boolean")
         if type(sparse_projective_hypotheses) is not bool:
             raise ValueError("sparse-flow projective hypotheses must be a boolean")
         if type(sparse_tracklet_motion_consistency) is not bool:
@@ -217,6 +220,8 @@ def run_analysis(
             settings["sparseSubpixelReverseCheck"] = True
         if sparse_lk_refinement:
             settings["sparseLkRefinement"] = True
+        if sparse_quadrant_consistency:
+            settings["sparseQuadrantConsistency"] = True
         if sparse_projective_hypotheses:
             settings["sparseProjectiveHypotheses"] = True
         if sparse_tracklet_motion_consistency:
@@ -283,6 +288,7 @@ def run_analysis(
                 subpixel_refinement=sparse_subpixel_refinement,
                 subpixel_reverse_check=sparse_subpixel_reverse_check,
                 lk_refinement=sparse_lk_refinement,
+                quadrant_consistency=sparse_quadrant_consistency,
                 projective_hypotheses=sparse_projective_hypotheses,
                 tracklet_motion_consistency=sparse_tracklet_motion_consistency,
                 tracklet_appearance_consistency=sparse_tracklet_appearance_consistency,

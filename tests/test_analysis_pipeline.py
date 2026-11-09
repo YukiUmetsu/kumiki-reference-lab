@@ -265,6 +265,29 @@ class AnalysisPipelineIntegrationTests(unittest.TestCase):
                              sparse_lk_refinement=True, sparse_subpixel_refinement=True)
 
     @unittest.skipUnless(importlib.util.find_spec("numpy"), "NumPy extra unavailable")
+    def test_quadrant_appearance_guard_has_distinct_immutable_run(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "flat.mkv"
+            self._flat_video(source)
+            runs = root / "runs"
+            original = run_analysis(source, runs, seconds=2, thumbnails=4,
+                                    sparse_flow=True, sparse_samples=5)
+            guarded = run_analysis(source, runs, seconds=2, thumbnails=4,
+                                   sparse_flow=True, sparse_samples=5,
+                                   sparse_quadrant_consistency=True)
+            self.assertNotEqual(original, guarded)
+            self.assertNotIn("sparseQuadrantConsistency",
+                             json.loads(original.read_text())["settings"])
+            self.assertTrue(json.loads(guarded.read_text())["settings"]
+                            ["sparseQuadrantConsistency"])
+            self.assertEqual(json.loads((guarded.parent / "sparse-flow.json").read_text())
+                             ["analyzer"]["quadrantGuardMinimumSupport"], 3)
+            self.assertEqual(run_analysis(
+                source, runs, seconds=2, thumbnails=4, sparse_flow=True,
+                sparse_samples=5, sparse_quadrant_consistency=True), guarded)
+
+    @unittest.skipUnless(importlib.util.find_spec("numpy"), "NumPy extra unavailable")
     def test_appearance_bundle_is_atomic_and_may_combine_with_sparse_flow(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

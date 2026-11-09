@@ -108,6 +108,28 @@ Fallback is safer than silently replacing a verified integer observation.
 No trained model, GPU, or hosted API is required; the default and its immutable
 run identity are unchanged.
 
+## Optional local subpatch support guard
+
+Use `--quadrant-consistency` with `sparse-flow` or
+`--sparse-quadrant-consistency` with `analyze --sparse-flow` to make already
+forward/backward-verified patch matches pass a *second* appearance test.
+The 9×9 source and matched destination patches are split into four overlapping
+5×5 local regions. At least three must have measurable texture and
+zero-mean normalized correlation of at least 0.65. Otherwise the match is
+discarded and counted as `quadrant-inconsistent`. Supported vectors expose
+`quadrantSupportCount` and four `quadrantCorrelations` (null for untextured
+regions). The option has its own immutable analysis-run identity; all default
+vectors, metrics and rejected counters remain unchanged.
+
+This detects **localized appearance disagreement**, not occlusion itself.
+Lighting changes, blur, resampling, deforming surfaces and partial foreground
+coverage can cause disagreement; some genuine matches will be rejected and
+some occluded patches will still pass. The four overlapping tests reuse the
+same pixels, so their agreement is not four independent confirmations. The
+guard may combine with the coarse pyramid, subpixel peaks or LK, but checks
+the original *integer* matched patches before fractional refinement. No
+discarded feature is reidentified across an occlusion gap.
+
 ## Optional perspective hypothesis
 
 Use `--projective-hypotheses` with `sparse-flow` or

@@ -10,6 +10,7 @@ import math
 from typing import Any
 
 from kumiki_reference_lab.analyzers.motion.optical_flow_lk import BoundedLKPair
+from kumiki_reference_lab.analyzers.motion.patch_support import assess_patch_support
 from kumiki_reference_lab.analyzers.subjects.template import track_template
 
 
@@ -97,7 +98,7 @@ def sparse_patch_flows(
     max_points: int = 48, patch_size: int = 9, radius: int = 8,
     minimum_correlation: float = 0.68, pyramid_levels: int = 1,
     subpixel_refinement: bool = False, subpixel_reverse_check: bool = False,
-    lk_refinement: bool = False,
+    lk_refinement: bool = False, quadrant_consistency: bool = False,
 ) -> dict[str, Any]:
     """Track source-frame corners with forward/backward patch consistency.
 
@@ -116,6 +117,8 @@ def sparse_patch_flows(
         raise ValueError("sparse-flow subpixel_reverse_check requires subpixel_refinement")
     if type(lk_refinement) is not bool or (lk_refinement and subpixel_refinement):
         raise ValueError("LK refinement must be a boolean and cannot combine with peak refinement")
+    if type(quadrant_consistency) is not bool:
+        raise ValueError("quadrant_consistency must be a boolean")
     if lk_refinement and patch_size != 9:
         raise ValueError("LK refinement requires the fixed 9-pixel patch model")
     corners = select_corners(before, width, height, max_points=max_points,
@@ -169,6 +172,8 @@ def sparse_patch_flows(
     accepted: list[dict[str, Any]] = []
     rejected = {"low-texture": 0, "forward-failed": 0, "backward-failed": 0,
                 "roundtrip-inconsistent": 0}
+    if quadrant_consistency:
+        rejected["quadrant-inconsistent"] = 0
     for x, y in corners:
         template = patch(before, x, y)
         start_x, start_y = x - half, y - half
@@ -199,10 +204,19 @@ def sparse_patch_flows(
             if error > 1.5:
                 failure = "roundtrip-inconsistent"
                 continue
+            local_support = None
+            if quadrant_consistency:
+                local_support = assess_patch_support(template, reverse_template)
+                if local_support["status"] != "supported":
+                    failure = "quadrant-inconsistent"
+                    continue
             vector = {"x": x, "y": y, "dx": next_x - x, "dy": next_y - y,
                       "forwardCorrelation": forward["correlation"],
                       "backwardCorrelation": backward["correlation"],
                       "roundtripErrorPixels": round(error, 4)}
+            if local_support is not None:
+                vector["quadrantSupportCount"] = local_support["supportingQuadrants"]
+                vector["quadrantCorrelations"] = local_support["quadrantCorrelations"]
             if subpixel_refinement:
                 offset = forward["subpixelPeakOffset"]
                 fractional_error = None
