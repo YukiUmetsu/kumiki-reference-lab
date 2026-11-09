@@ -60,6 +60,28 @@ affect only a few spatial cells and one-frame brightness jumps are not
 automatically called fades. This stage does not classify dissolves or match
 underlying shots.
 
+## Five-frame linear image-blend candidates
+
+`imageBlendCandidates` describes sampled windows where three intermediate RGB
+frames closely resemble a **time-weighted linear mix of two distinct endpoint
+images**. The model uses the five frames' actual source PTS to choose blend
+weights, never nominal frame indices. It requires at least 0.2 seconds of
+observed duration; textured and substantially different endpoints (RGB RMS
+difference at least 30 code values, mean of per-channel spatial standard
+deviations at least 18, endpoint correlation no greater than 0.8); and intermediate
+prediction error at most 8 RGB code values RMS and 16% of the endpoint
+difference. No candidate may cross a hard-cut candidate. Overlapping windows
+are reduced to the lowest-residual evidence window without reusing frames.
+
+`linear-image-blend-candidate` is **not proof of an editorial dissolve**.
+Animated opacity, layered graphics, a digital overlay, and color/compositing
+effects can produce the same pixels. It specifically does not recover the
+source layers or exact transition endpoints. Nonlinear blends, moving
+underlying shots, a camera pan, fades to black and short or sparsely sampled
+transitions may be rejected or missed. Residual metrics are deterministic
+image-code differences, not perceptual quality scores or confidence
+probabilities. Review the actual sampled frames before inferring anything.
+
 ### Example: design analysis, not inverse-rendering
 
 An increasing `brightPixelFraction` with a moving `brightPixelCentroid`

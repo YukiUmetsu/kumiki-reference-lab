@@ -102,7 +102,7 @@ kumiki-ref analyze ./reference.mp4 --max-seconds 10 --motion --box 0.19 0.22 0.1
 
 No AI inference or technique classification is performed by this command. `catalogProposals` is explicitly empty, `interpretationStatus` is `not-performed`, and the existing catalog candidates remain separate authored research. Future models may propose an interpretation **referencing** this manifest and verified PTS; they must never rewrite the observed measurements or silently promote catalog verification state.
 
-Detection is a **bounded first-stage heuristic**, not comprehensive scene segmentation: it does not classify fades or dissolve transitions, reconstruct frame geometry, or prove that fast image changes are cuts. More robust detectors can later be swapped behind the analyzer interface.
+Detection is a **bounded first-stage heuristic**, not comprehensive scene segmentation: appearance evidence can now suggest global brightness ramps and linear image-blend windows, but cannot verify fades or dissolve transitions, reconstruct frame geometry, or prove that fast image changes are cuts. More robust detectors can later be swapped behind the analyzer interface.
 
 ## Planned next slice
 
