@@ -9,6 +9,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
+from kumiki_reference_lab.analyzers.motion.optical_flow_lk import BoundedLKPair
 from kumiki_reference_lab.analyzers.subjects.template import track_template
 
 
@@ -96,6 +97,7 @@ def sparse_patch_flows(
     max_points: int = 48, patch_size: int = 9, radius: int = 8,
     minimum_correlation: float = 0.68, pyramid_levels: int = 1,
     subpixel_refinement: bool = False, subpixel_reverse_check: bool = False,
+    lk_refinement: bool = False,
 ) -> dict[str, Any]:
     """Track source-frame corners with forward/backward patch consistency.
 
@@ -112,8 +114,13 @@ def sparse_patch_flows(
     if type(subpixel_reverse_check) is not bool or (subpixel_reverse_check and
                                                     not subpixel_refinement):
         raise ValueError("sparse-flow subpixel_reverse_check requires subpixel_refinement")
+    if type(lk_refinement) is not bool or (lk_refinement and subpixel_refinement):
+        raise ValueError("LK refinement must be a boolean and cannot combine with peak refinement")
+    if lk_refinement and patch_size != 9:
+        raise ValueError("LK refinement requires the fixed 9-pixel patch model")
     corners = select_corners(before, width, height, max_points=max_points,
                              patch_size=patch_size, radius=radius)
+    lk_pair = BoundedLKPair(before, after, width, height) if lk_refinement else None
     half = patch_size // 2
 
     coarse_before: bytes | None = None
@@ -238,6 +245,17 @@ def sparse_patch_flows(
                         if verification == "fractional-bilinear-patch-checked" else None)
             if pyramid_levels == 2:
                 vector["searchLevel"] = search_level
+            if lk_pair is not None:
+                lk = lk_pair.refine(x, y, vector["dx"], vector["dy"])
+                vector.update({"lkStatus": lk["status"],
+                               "lkFailureReason": lk["reason"],
+                               "lkOffsetPixels": lk["offsetPixels"],
+                               "lkReverseErrorPixels": lk["reverseErrorPixels"],
+                               "lkPhotometricRmsGray": lk["photometricRmsGray"],
+                               "lkIterations": lk["iterations"]})
+                if lk["offsetPixels"] is not None:
+                    vector["dx"] = round(vector["dx"] + lk["offsetPixels"]["dx"], 4)
+                    vector["dy"] = round(vector["dy"] + lk["offsetPixels"]["dy"], 4)
             accepted.append(vector)
             break
         else:

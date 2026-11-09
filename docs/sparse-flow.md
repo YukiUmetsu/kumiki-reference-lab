@@ -84,6 +84,30 @@ forward-guided cross-check is still not independent calibrated validation,
 true optical-flow ground truth, or recovery of object or camera identity.
 It adds bounded CPU work and preserves prior output/run identities by default.
 
+## Optional bidirectional Lucas-Kanade refinement
+
+Use `--lk-refinement` with `sparse-flow` or `--sparse-lk-refinement` with
+`analyze --sparse-flow`. This is a separate opt-in alternative to the NCC
+parabolic `--subpixel-refinement` flag; the two cannot be combined. Each point
+must **first pass the original integer forward/backward NCC gates**. The LK
+solver then iteratively fits small fractional translations over the same 9×9
+grayscale patch, compensating for simple brightness offsets. It checks local
+gradient conditioning, allows at most eight iterations and 1.25 pixels of
+departure from the accepted integer offset, requires a meaningful reduction
+in measured photometric RMS, and independently attempts the fractional
+reverse fit. A reverse disagreement over 0.75 pixels discards the refinement.
+
+Every accepted integer vector remains present. `lkStatus`, `lkFailureReason`,
+`lkOffsetPixels`, `lkPhotometricRmsGray`, `lkReverseErrorPixels` and
+`lkIterations` disclose either a **bidirectional fractional candidate** or
+an integer fallback. `--pyramid-levels 2` can supply an initial larger-match
+integer location, but LK itself is strictly local and not a full dense or
+calibrated optical-flow estimator. Strong perspective/rotation, occlusion,
+blur, repeated textures and changing light can still fool or disable it.
+Fallback is safer than silently replacing a verified integer observation.
+No trained model, GPU, or hosted API is required; the default and its immutable
+run identity are unchanged.
+
 ## Optional perspective hypothesis
 
 Use `--projective-hypotheses` with `sparse-flow` or

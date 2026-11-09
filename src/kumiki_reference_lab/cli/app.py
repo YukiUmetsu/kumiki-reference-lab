@@ -122,6 +122,8 @@ def build_parser() -> argparse.ArgumentParser:
                         help="candidate fractional NCC peak offsets; reverse gate stays integer")
     sparse.add_argument("--subpixel-reverse-check", action="store_true",
                         help="also check fractional peaks with reverse bilinear patch matching")
+    sparse.add_argument("--lk-refinement", action="store_true",
+                        help="optional bounded bidirectional Lucas-Kanade refinement of accepted matches")
     sparse.add_argument("--projective-hypotheses", action="store_true",
                         help="optional bounded projective image-plane fit; never a camera claim")
     sparse.add_argument("--tracklet-motion-consistency", action="store_true",
@@ -357,6 +359,7 @@ def build_parser() -> argparse.ArgumentParser:
     analyze.add_argument("--sparse-pyramid-levels", type=int, choices=(1, 2), default=1)
     analyze.add_argument("--sparse-subpixel-refinement", action="store_true")
     analyze.add_argument("--sparse-subpixel-reverse-check", action="store_true")
+    analyze.add_argument("--sparse-lk-refinement", action="store_true")
     analyze.add_argument("--sparse-projective-hypotheses", action="store_true")
     analyze.add_argument("--sparse-tracklet-motion-consistency", action="store_true")
     analyze.add_argument("--sparse-tracklet-appearance-consistency", action="store_true")
@@ -435,6 +438,7 @@ def main(argv: list[str] | None = None) -> int:
                 sparse_pyramid_levels=args.sparse_pyramid_levels,
                 sparse_subpixel_refinement=args.sparse_subpixel_refinement,
                 sparse_subpixel_reverse_check=args.sparse_subpixel_reverse_check,
+                sparse_lk_refinement=args.sparse_lk_refinement,
                 sparse_projective_hypotheses=args.sparse_projective_hypotheses,
                 sparse_tracklet_motion_consistency=args.sparse_tracklet_motion_consistency,
                 sparse_tracklet_appearance_consistency=args.sparse_tracklet_appearance_consistency,
@@ -590,6 +594,7 @@ def main(argv: list[str] | None = None) -> int:
                 pyramid_levels=args.pyramid_levels,
                 subpixel_refinement=args.subpixel_refinement,
                 subpixel_reverse_check=args.subpixel_reverse_check,
+                lk_refinement=args.lk_refinement,
                 projective_hypotheses=args.projective_hypotheses,
                 tracklet_motion_consistency=args.tracklet_motion_consistency,
                 tracklet_appearance_consistency=args.tracklet_appearance_consistency,

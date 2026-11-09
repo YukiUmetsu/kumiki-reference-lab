@@ -29,7 +29,8 @@ def analyze_sparse_flow(
     width: int = 160, height: int = 90, max_points: int = 40,
     radius: int = 8, correlation: float = 0.68, threshold: float = 0.25,
     pyramid_levels: int = 1, subpixel_refinement: bool = False,
-    subpixel_reverse_check: bool = False, projective_hypotheses: bool = False,
+    subpixel_reverse_check: bool = False, lk_refinement: bool = False,
+    projective_hypotheses: bool = False,
     tracklet_motion_consistency: bool = False,
     tracklet_appearance_consistency: bool = False,
     ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
@@ -53,6 +54,8 @@ def analyze_sparse_flow(
     if type(subpixel_reverse_check) is not bool or (subpixel_reverse_check and
                                                     not subpixel_refinement):
         raise ValueError("sparse-flow subpixel_reverse_check requires subpixel_refinement")
+    if type(lk_refinement) is not bool or (lk_refinement and subpixel_refinement):
+        raise ValueError("LK refinement must be a boolean and cannot combine with peak refinement")
     if type(projective_hypotheses) is not bool:
         raise ValueError("sparse-flow projective_hypotheses must be a boolean")
     if type(tracklet_motion_consistency) is not bool:
@@ -104,7 +107,8 @@ def analyze_sparse_flow(
                                        minimum_correlation=correlation,
                                        pyramid_levels=pyramid_levels,
                                        subpixel_refinement=subpixel_refinement,
-                                       subpixel_reverse_check=subpixel_reverse_check)
+                                       subpixel_reverse_check=subpixel_reverse_check,
+                                       lk_refinement=lk_refinement)
             grouped = group_sparse_flows(tracks["accepted"], width, height)
             geometry = fit_image_affine(tracks["accepted"], width, height)
             projective = (fit_image_homography(tracks["accepted"], width, height)
@@ -130,7 +134,8 @@ def analyze_sparse_flow(
             "method": ("shi-tomasi-approx-patch-ncc-fb-consensus-affine-pyramid2"
                        if pyramid_levels == 2 else
                        "shi-tomasi-approx-patch-ncc-fb-consensus-affine") +
-                      ("-subpixel-bidir-v1" if subpixel_reverse_check else
+                      ("-lk-v1" if lk_refinement else
+                       "-subpixel-bidir-v1" if subpixel_reverse_check else
                        "-subpixel-v1" if subpixel_refinement else "-v1"),
             "numpyVersion": np.__version__,
             "ffmpegExecutable": ffmpeg, "ffprobeExecutable": ffprobe,
@@ -148,6 +153,11 @@ def analyze_sparse_flow(
                 "projectiveInlierTolerancePixels": 1.5,
                 "projectiveMaxHypotheses": 256}
                if projective_hypotheses else {}),
+            **({"lkModel": "bounded-bidirectional-translation-lk-v1",
+                "lkMaxIterations": 8,
+                "lkMaxFractionalDeparturePixels": 1.25,
+                "lkReverseTolerancePixels": 0.75}
+               if lk_refinement else {}),
             "minimumAppearanceCorrelation": correlation,
             "roundtripTolerancePixels": 1.5,
             "consensusTolerancePixels": 1.5,
