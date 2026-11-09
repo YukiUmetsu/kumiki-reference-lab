@@ -5,7 +5,7 @@ from pathlib import Path
 from kumiki_reference_lab.contracts.source import SCHEMA_VERSION
 from kumiki_reference_lab.contracts.analysis import (
     FRAME_TIMELINE_VERSION, SHOT_CANDIDATES_VERSION, CONTACT_SHEET_VERSION,
-    IMAGE_MOTION_VERSION, ROI_TRACK_VERSION, ANALYSIS_RUN_VERSION, SPARSE_FLOW_VERSION,
+    IMAGE_MOTION_VERSION, ROI_TRACK_VERSION, ROI_REVIEW_VERSION, ANALYSIS_RUN_VERSION, SPARSE_FLOW_VERSION,
     SPARSE_FLOW_REVIEW_VERSION,
     APPEARANCE_VERSION, APPEARANCE_COMPARISON_VERSION, FRAME_COMPARISON_VERSION,
     TECHNIQUE_PROPOSALS_VERSION,
@@ -64,6 +64,7 @@ class SchemaTests(unittest.TestCase):
                               ("av-cut-evidence", AV_CUT_EVIDENCE_VERSION),
                               ("edit-rhythm", EDIT_RHYTHM_VERSION),
                               ("roi-track", ROI_TRACK_VERSION),
+                              ("roi-review", ROI_REVIEW_VERSION),
                               ("analysis-run", ANALYSIS_RUN_VERSION)):
             schema = json.loads((root / (name + ".schema.json")).read_text(encoding="utf-8"))
             self.assertEqual(schema["properties"]["schemaVersion"]["const"], version)

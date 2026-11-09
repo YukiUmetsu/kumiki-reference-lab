@@ -91,6 +91,8 @@ The four `--box` values are normalized X, Y, width and height **on the first sam
 
 Compute is bounded by source duration (30 s), sample count (120), resize dimensions, search radius and a per-frame correlation budget. No neural model is required. An ROI track is an appearance path, **not guaranteed to follow a named physical object**; its box can include background, deform or leave view. It can eventually be compared with global image shift as *evidence for differential motion*, but camera-versus-object attribution still requires independent background tracks, geometric checks and explicit uncertainty.
 
+[`review-roi`](roi-review.md) independently verifies the selected source frames against their recorded ordinals/PTS, then overlays only explicitly present boxes in an immutable offline HTML gallery. Unobserved intervals remain visibly blank, and manually reseeded segments are colored separately without implying cross-gap identity. The review manifest remains `unreviewed` with no quality approval.
+
 ## Transactional analysis bundles
 
 ```bash

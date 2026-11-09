@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/roi-review.schema.json",
+  "title": "Kumiki Source-Linked ROI Visual Review v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "settings", "humanReviewStatus", "qualityVerdict", "files"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.roi-review.v1"},
+    "humanReviewStatus": {"const": "unreviewed"},
+    "qualityVerdict": {"const": "not-performed"},
+    "settings": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sourceSha256", "reportSha256", "sourceStreamIndex", "sourceTimebase", "sourceTrackVersion", "scanWindowSeconds", "selectedFrames", "maxFrames", "analysisResolution", "ffmpeg", "ffprobe", "renderRevision"],
+      "properties": {
+        "sourceSha256": {"$ref": "#/$defs/hash"},
+        "reportSha256": {"$ref": "#/$defs/hash"},
+        "sourceStreamIndex": {"type": "integer", "minimum": 0},
+        "sourceTimebase": {"$ref": "#/$defs/rational"},
+        "sourceTrackVersion": {"enum": ["kumiki.roi-track.v1", "kumiki.roi-track.v2"]},
+        "scanWindowSeconds": {"type": "integer", "minimum": 1, "maximum": 30},
+        "selectedFrames": {"type": "array", "minItems": 2, "maxItems": 12,
+          "items": {"type": "object", "additionalProperties": false,
+            "required": ["sampleIndex", "sourcePts", "path"],
+            "properties": {
+              "sampleIndex": {"type": "integer", "minimum": 0, "maximum": 119},
+              "sourcePts": {"type": "integer"},
+              "path": {"$ref": "#/$defs/framePath"}
+            }
+          }
+        },
+        "maxFrames": {"type": "integer", "minimum": 2, "maximum": 12},
+        "analysisResolution": {"type": "object", "additionalProperties": false,
+          "required": ["width", "height"],
+          "properties": {
+            "width": {"type": "integer", "minimum": 64, "maximum": 320},
+            "height": {"type": "integer", "minimum": 36, "maximum": 180}
+          }
+        },
+        "ffmpeg": {"type": "string", "minLength": 1},
+        "ffprobe": {"type": "string", "minLength": 1},
+        "renderRevision": {"const": "observed-roi-box-overlay-v1"}
+      }
+    },
+    "files": {"type": "array", "minItems": 4, "maxItems": 14,
+      "items": {"type": "object", "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"anyOf": [{"enum": ["index.html", "roi-track.json"]},
+                             {"$ref": "#/$defs/framePath"}]},
+          "sha256": {"$ref": "#/$defs/hash"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "framePath": {"type": "string", "pattern": "^frames/frame-[0-9]{3}\\.png$"},
+    "rational": {"type": "object", "additionalProperties": false,
+      "required": ["numerator", "denominator"],
+      "properties": {
+        "numerator": {"type": "integer"},
+        "denominator": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}
