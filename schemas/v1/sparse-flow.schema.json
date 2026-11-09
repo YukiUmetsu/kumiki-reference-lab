@@ -56,6 +56,12 @@
       "pairs": {"items": {"required": ["projectiveHypothesis"]}}
     }}
   }, {
+    "if": {"properties": {"analyzer": {"required": ["modelValidationMethod"]}}},
+    "then": {"properties": {
+      "analyzer": {"required": ["modelValidationMinimumPoints", "modelValidationMaximumRmsPixels"]},
+      "pairs": {"items": {"required": ["modelValidation"]}}
+    }}
+  }, {
     "if": {"properties": {"analyzer": {"properties": {"method": {"enum": ["shi-tomasi-approx-patch-ncc-fb-consensus-affine-lk-v1", "shi-tomasi-approx-patch-ncc-fb-consensus-affine-pyramid2-lk-v1"]}}}}},
     "then": {"properties": {
       "analyzer": {"required": ["lkModel", "lkMaxIterations", "lkMaxFractionalDeparturePixels", "lkReverseTolerancePixels"]},
@@ -111,6 +117,9 @@
         "projectiveModel": {"const": "normalized-dlt-bounded-ransac-v1"},
         "projectiveInlierTolerancePixels": {"const": 1.5},
         "projectiveMaxHypotheses": {"const": 256},
+        "modelValidationMethod": {"const": "spatial-three-fold-out-of-sample-v1"},
+        "modelValidationMinimumPoints": {"const": 18},
+        "modelValidationMaximumRmsPixels": {"const": 1.5},
         "lkModel": {"const": "bounded-bidirectional-translation-lk-v1"},
         "lkMaxIterations": {"const": 8},
         "lkMaxFractionalDeparturePixels": {"const": 1.25},
@@ -158,12 +167,43 @@
           "vectors": {"type": "array", "maxItems": 64, "items": {"$ref": "#/$defs/vector"}},
           "consensus": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/consensus"}]},
           "geometryHypothesis": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/geometry"}]},
-          "projectiveHypothesis": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/projective"}]}
+          "projectiveHypothesis": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/projective"}]},
+          "modelValidation": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/modelValidation"}]}
         }
       }
     }
   },
   "$defs": {
+    "modelValidation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "preferredModel", "method", "correspondences", "validationPoints", "models", "calibratedConfidence", "physicalCameraVerified"],
+      "properties": {
+        "status": {"enum": ["insufficient-correspondences", "insufficient-spatial-validation", "unreliable-holdout", "holdout-supported"]},
+        "preferredModel": {"enum": [null, "translation", "affine", "projective"]},
+        "method": {"const": "spatial-three-fold-out-of-sample-v1"},
+        "correspondences": {"type": "integer", "minimum": 0, "maximum": 64},
+        "validationPoints": {"type": "integer", "minimum": 0, "maximum": 64},
+        "models": {
+          "type": "object", "additionalProperties": false,
+          "required": ["translation", "affine", "projective"],
+          "properties": {
+            "translation": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/heldoutModelErrors"}]},
+            "affine": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/heldoutModelErrors"}]},
+            "projective": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/heldoutModelErrors"}]}
+          }
+        },
+        "calibratedConfidence": {"const": false},
+        "physicalCameraVerified": {"const": false}
+      }
+    },
+    "heldoutModelErrors": {
+      "type": "object", "additionalProperties": false,
+      "required": ["rmsPixels", "p90Pixels"],
+      "properties": {
+        "rmsPixels": {"type": "number", "minimum": 0},
+        "p90Pixels": {"type": "number", "minimum": 0}
+      }
+    },
     "temporalTracklets": {
       "type": "object", "additionalProperties": false,
       "required": ["status", "method", "linkTolerancePixels", "ambiguityMarginPixels", "minConsecutivePairs", "calibratedConfidence", "semanticIdentityVerified", "singlePairCandidatesDiscarded", "tracklets"],

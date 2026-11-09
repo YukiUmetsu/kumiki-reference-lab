@@ -15,6 +15,7 @@ from kumiki_reference_lab.analyzers.motion.consensus import group_sparse_flows
 from kumiki_reference_lab.analyzers.motion.features import sparse_patch_flows
 from kumiki_reference_lab.analyzers.motion.geometry import fit_image_affine
 from kumiki_reference_lab.analyzers.motion.homography import fit_image_homography
+from kumiki_reference_lab.analyzers.motion.model_validation import compare_motion_models
 from kumiki_reference_lab.analyzers.motion.tracklets import build_sparse_tracklets
 from kumiki_reference_lab.backends.ffmpeg.frames import read_frame_pts
 from kumiki_reference_lab.backends.ffmpeg.raw_frames import read_gray_frames
@@ -31,7 +32,7 @@ def analyze_sparse_flow(
     pyramid_levels: int = 1, subpixel_refinement: bool = False,
     subpixel_reverse_check: bool = False, lk_refinement: bool = False,
     quadrant_consistency: bool = False,
-    projective_hypotheses: bool = False,
+    projective_hypotheses: bool = False, model_validation: bool = False,
     tracklet_motion_consistency: bool = False,
     tracklet_appearance_consistency: bool = False,
     ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
@@ -61,6 +62,8 @@ def analyze_sparse_flow(
         raise ValueError("quadrant_consistency must be a boolean")
     if type(projective_hypotheses) is not bool:
         raise ValueError("sparse-flow projective_hypotheses must be a boolean")
+    if type(model_validation) is not bool:
+        raise ValueError("sparse-flow model_validation must be a boolean")
     if type(tracklet_motion_consistency) is not bool:
         raise ValueError("sparse-flow tracklet_motion_consistency must be a boolean")
     if type(tracklet_appearance_consistency) is not bool:
@@ -105,6 +108,8 @@ def analyze_sparse_flow(
                            "vectors": [], "consensus": None, "geometryHypothesis": None})
             if projective_hypotheses:
                 result["projectiveHypothesis"] = None
+            if model_validation:
+                result["modelValidation"] = None
         else:
             tracks = sparse_patch_flows(planes[index - 1], planes[index], width, height,
                                        max_points=max_points, radius=radius,
@@ -128,6 +133,9 @@ def analyze_sparse_flow(
                            "geometryHypothesis": geometry})
             if projective_hypotheses:
                 result["projectiveHypothesis"] = projective
+            if model_validation:
+                result["modelValidation"] = compare_motion_models(tracks["accepted"],
+                                                                   width, height)
         pairs.append(result)
     return {
         "schemaVersion": SPARSE_FLOW_VERSION,
@@ -158,6 +166,10 @@ def analyze_sparse_flow(
                 "projectiveInlierTolerancePixels": 1.5,
                 "projectiveMaxHypotheses": 256}
                if projective_hypotheses else {}),
+            **({"modelValidationMethod": "spatial-three-fold-out-of-sample-v1",
+                "modelValidationMinimumPoints": 18,
+                "modelValidationMaximumRmsPixels": 1.5}
+               if model_validation else {}),
             **({"lkModel": "bounded-bidirectional-translation-lk-v1",
                 "lkMaxIterations": 8,
                 "lkMaxFractionalDeparturePixels": 1.25,
