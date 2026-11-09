@@ -72,6 +72,26 @@ class EncodedMotionCounterexamplesTests(unittest.TestCase):
         frames[3:6] = [np.full((90, 160), 116, dtype=np.uint8) for _ in range(3)]
         return frames
 
+    @staticmethod
+    def _partially_occluded_layers() -> list[object]:
+        """A foreground strip passes behind an opaque, fixed image-plane bar."""
+        import numpy as np
+
+        rng = np.random.default_rng(20261112)
+        background = rng.integers(15, 240, (90, 160), dtype=np.uint8)
+        foreground = rng.integers(15, 240, (36, 46), dtype=np.uint8)
+        frames = []
+        for index in range(9):
+            image = np.roll(background, index * 2, axis=1)
+            left = 100 - index * 5
+            image[28:64, left:left + 46] = foreground
+            if 2 <= index <= 6:
+                # The occluding bar covers a portion of the independently
+                # moving foreground. Pixels behind it are not observed.
+                image[27:50, 75:107] = 118
+            frames.append(image)
+        return frames
+
     def test_independent_foreground_motion_remains_unattributed(self):
         with tempfile.TemporaryDirectory() as directory:
             video = Path(directory) / "two-layers.mkv"
@@ -121,6 +141,58 @@ class EncodedMotionCounterexamplesTests(unittest.TestCase):
                                  "observed-pairs-only-no-gap-filling")
             self.assertFalse(result["temporalTracklets"]["semanticIdentityVerified"])
             json.dumps(result, allow_nan=False)
+
+    def test_partial_occlusion_guard_abstains_but_keeps_visible_motion(self):
+        with tempfile.TemporaryDirectory() as directory:
+            video = Path(directory) / "partial-occlusion.mkv"
+            self._encode(video, self._partially_occluded_layers())
+            original = analyze_sparse_flow(video, seconds=2, max_samples=9,
+                                           max_points=64, threshold=0.95)
+            guarded = analyze_sparse_flow(video, seconds=2, max_samples=9,
+                                          max_points=64, threshold=0.95,
+                                          quadrant_consistency=True)
+            self.assertEqual([sample["sourcePts"] for sample in original["samples"]],
+                             [sample["sourcePts"] for sample in guarded["samples"]])
+            rejected = sum(pair["rejected"].get("quadrant-inconsistent", 0)
+                           for pair in guarded["pairs"])
+            self.assertGreater(rejected, 0)
+            self.assertGreater(sum(guarded["pairs"][i]["rejected"]["quadrant-inconsistent"]
+                                   for i in range(2, 6)), 0)
+            for original_pair, guarded_pair in zip(original["pairs"], guarded["pairs"]):
+                original_vectors = {(v["x"], v["y"], v["dx"], v["dy"])
+                                    for v in original_pair["vectors"]}
+                guarded_vectors = {(v["x"], v["y"], v["dx"], v["dy"])
+                                   for v in guarded_pair["vectors"]}
+                self.assertTrue(guarded_vectors <= original_vectors)
+            self.assertTrue(all(v["quadrantSupportCount"] >= 3
+                                for pair in guarded["pairs"] for v in pair["vectors"]))
+            self.assertGreater(sum(len(pair["vectors"]) for pair in guarded["pairs"]), 15)
+            self.assertFalse(guarded["temporalTracklets"]["semanticIdentityVerified"])
+            self.assertFalse(guarded["analyzer"]["calibratedConfidence"])
+            json.dumps(guarded, allow_nan=False)
+
+    def test_brightness_shift_is_not_assumed_to_be_local_occlusion(self):
+        import numpy as np
+
+        with tempfile.TemporaryDirectory() as directory:
+            video = Path(directory) / "global-exposure-change.mkv"
+            base = np.random.default_rng(20261113).integers(
+                40, 211, (90, 160), dtype=np.uint8)
+            frames = [np.roll((base.astype(np.int16) + index * 4 - 16)
+                              .astype(np.uint8), 2 * index, axis=1)
+                      for index in range(9)]
+            self._encode(video, frames)
+            guarded = analyze_sparse_flow(video, seconds=2, max_samples=9,
+                                          max_points=64, threshold=0.95,
+                                          quadrant_consistency=True)
+            self.assertEqual(sum(pair["rejected"]["quadrant-inconsistent"]
+                                 for pair in guarded["pairs"]), 0)
+            vectors = [vector for pair in guarded["pairs"]
+                       for vector in pair["vectors"]]
+            self.assertGreater(len(vectors), 50)
+            self.assertTrue(all(vector["dx"] == 2 and vector["dy"] == 0
+                                for vector in vectors))
+            self.assertFalse(guarded["temporalTracklets"]["semanticIdentityVerified"])
 
     def test_vfr_source_time_is_not_replaced_by_nominal_frame_rate(self):
         with tempfile.TemporaryDirectory() as directory:
