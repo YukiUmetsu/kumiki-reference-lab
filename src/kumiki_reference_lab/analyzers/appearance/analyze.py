@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from kumiki_reference_lab.analyzers.appearance.statistics import describe_rgb_frame
+from kumiki_reference_lab.analyzers.appearance.ramps import detect_luma_ramp_candidates
 from kumiki_reference_lab.analyzers.media.inspect import inspect_source
 from kumiki_reference_lab.analyzers.motion.analyze import select_motion_samples
 from kumiki_reference_lab.backends.ffmpeg.frames import read_frame_pts
@@ -90,6 +91,7 @@ def analyze_appearance(
         "coverage": "bounded-from-start-not-necessarily-full-video",
         "analyzer": {
             "method": "rgb-display-proxy-statistics-v1",
+            "rampModel": "spatially-coherent-luma-ramp-candidate-v1",
             "numpyVersion": np.__version__,
             "ffmpegExecutable": ffmpeg, "ffprobeExecutable": ffprobe,
             "resolution": {"width": width, "height": height},
@@ -105,4 +107,6 @@ def analyze_appearance(
         "cutCandidatePts": cut_pts,
         "samples": observations,
         "changes": changes,
+        "lumaRampCandidates": detect_luma_ramp_candidates(
+            observations, changes, timebase=timebase),
     }

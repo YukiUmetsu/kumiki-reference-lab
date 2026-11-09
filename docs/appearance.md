@@ -36,6 +36,30 @@ brightness proxy and hue histogram total variation. Edits are never blended
 into a purported continuous lighting animation; `cut-boundary` means no
 change is estimated across the cut candidate.
 
+## Global brightness ramps and possible fades
+
+`lumaRampCandidates` is an additional, *review-only* timeline of sampled
+brightness transitions. It requires at least four consecutive observations,
+each step moving mean luma by at least 0.025 in one direction, with at least
+eight of nine spatial grid cells changing by 0.012 in the same direction.
+The observed total luma change must reach 0.20 over at least 0.2 seconds.
+Runs stop at cut candidates,
+reversals or unsupported intervals; timestamps and durations come directly
+from original source PTS.
+
+- `fade-to-black-candidate`: coherent darkening ending at or below 0.12 luma.
+- `fade-from-black-candidate`: coherent brightening starting at or below 0.12.
+- `global-brightness-ramp-candidate`: coherent darkening/brightening without
+  evidence of a black endpoint.
+
+These are **global pixel-change patterns, not verified edit effects**. A camera
+exposure adjustment, lighting cue, animated opacity, color grade, or even a
+large moving subject can reproduce them. Sampled start/end PTS do not prove
+where a transition began or ended between samples. Moving highlights that
+affect only a few spatial cells and one-frame brightness jumps are not
+automatically called fades. This stage does not classify dissolves or match
+underlying shots.
+
 ### Example: design analysis, not inverse-rendering
 
 An increasing `brightPixelFraction` with a moving `brightPixelCentroid`

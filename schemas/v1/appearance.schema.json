@@ -15,6 +15,7 @@
       "required": ["method", "numpyVersion", "ffmpegExecutable", "ffprobeExecutable", "resolution", "pixelFormat", "maxSamples", "cutThreshold", "observedFrameCount", "missingSourcePtsCount", "selection", "physicalPhotometry", "calibratedConfidence", "limits"],
       "properties": {
         "method": {"const": "rgb-display-proxy-statistics-v1"},
+        "rampModel": {"const": "spatially-coherent-luma-ramp-candidate-v1"},
         "numpyVersion": {"type": "string", "minLength": 1},
         "ffmpegExecutable": {"type": "string", "minLength": 1},
         "ffprobeExecutable": {"type": "string", "minLength": 1},
@@ -50,7 +51,20 @@
                        "meanLumaProxyDelta": {"type": ["number", "null"], "minimum": -1, "maximum": 1},
                        "meanRgbDelta": {"oneOf": [{"type": "null"}, {"type": "array", "minItems": 3, "maxItems": 3,
                                           "items": {"type": "number", "minimum": -1, "maximum": 1}}]},
-                       "hueHistogramTotalVariation": {"type": ["number", "null"], "minimum": 0, "maximum": 1}}}}
+                       "hueHistogramTotalVariation": {"type": ["number", "null"], "minimum": 0, "maximum": 1}}}},
+    "lumaRampCandidates": {"type": "array", "maxItems": 13, "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "startPts", "endPts", "durationSeconds", "observedSampleCount", "startMeanLumaProxy", "endMeanLumaProxy", "interpretationStatus"],
+      "properties": {
+        "kind": {"enum": ["fade-to-black-candidate", "fade-from-black-candidate", "global-brightness-ramp-candidate"]},
+        "startPts": {"type": "integer"}, "endPts": {"type": "integer"},
+        "durationSeconds": {"$ref": "#/$defs/rational"},
+        "observedSampleCount": {"type": "integer", "minimum": 4, "maximum": 40},
+        "startMeanLumaProxy": {"$ref": "#/$defs/fraction"},
+        "endMeanLumaProxy": {"$ref": "#/$defs/fraction"},
+        "interpretationStatus": {"const": "review-required-not-verified"}
+      }
+    }}
   },
   "$defs": {
     "rational": {"type": "object", "additionalProperties": false,
