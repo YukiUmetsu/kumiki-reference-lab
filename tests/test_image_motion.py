@@ -48,6 +48,45 @@ class EasingFitTests(unittest.TestCase):
         fitted = fit_easing_candidates(observations)
         self.assertEqual(fitted["status"], "candidate-only")
         self.assertEqual(fitted["bestCandidate"], "linear")
+        self.assertEqual(fitted["maxLateralDeviationPixels"], 0)
+        self.assertEqual(fitted["pathLengthRatio"], 1)
+
+    def test_straight_diagonal_image_motion_can_still_fit_easing(self):
+        observations = [(Fraction(i, 10), i * 2.0, i * 1.5) for i in range(11)]
+        fitted = fit_easing_candidates(observations)
+        self.assertEqual(fitted["bestCandidate"], "linear")
+        self.assertAlmostEqual(fitted["pathLengthRatio"], 1)
+
+    def test_bent_path_does_not_get_a_false_perfect_linear_ease(self):
+        # The x projection is perfectly linear, but the actual image path
+        # rises 6 px off the start-to-end direction and comes back down.
+        observations = [(Fraction(i, 10), i * 2.0, float(5 - abs(i - 5)) * 1.2)
+                        for i in range(11)]
+        fitted = fit_easing_candidates(observations)
+        self.assertEqual(fitted["status"], "nonlinear-image-path")
+        self.assertIsNone(fitted["bestCandidate"])
+        self.assertEqual(fitted["candidates"], [])
+        self.assertAlmostEqual(fitted["maxLateralDeviationPixels"], 6, delta=0.01)
+        self.assertGreater(fitted["pathLengthRatio"], 1.1)
+
+    def test_small_sideways_noise_is_tolerated_but_repeated_detours_are_not(self):
+        subtle = [(Fraction(i, 10), i * 2.0, (i % 2) * 0.25)
+                  for i in range(11)]
+        self.assertEqual(fit_easing_candidates(subtle)["bestCandidate"], "linear")
+        zigzag = [(Fraction(i, 10), i * 2.0, 1.6 if i % 2 else 0.0)
+                  for i in range(11)]
+        result = fit_easing_candidates(zigzag)
+        self.assertEqual(result["status"], "nonlinear-image-path")
+        self.assertLess(result["maxLateralDeviationPixels"], 2)
+        self.assertGreater(result["pathLengthRatio"], 1.2)
+
+    def test_nonfinite_image_positions_fail_closed(self):
+        observations = [(Fraction(i), float(i), 0.0) for i in range(5)]
+        observations[2] = (Fraction(2), float("nan"), 0.0)
+        fitted = fit_easing_candidates(observations)
+        self.assertEqual(fitted["status"], "invalid-observations")
+        self.assertEqual(fitted["candidates"], [])
+        json.dumps(fitted, allow_nan=False)
 
     def test_smoothstep_motion_has_cubic_candidate(self):
         observations = []
@@ -100,6 +139,8 @@ class ImageMotionIntegrationTests(unittest.TestCase):
             result = analyze_image_motion(source, seconds=2, max_samples=10, threshold=0.95)
             self.assertEqual(len(result["samples"]), 10)
             self.assertEqual(len(result["pairs"]), 9)
+            self.assertEqual(result["analysis"]["easingModel"],
+                             "net-path-projection-with-geometry-abstention-v2")
             self.assertTrue(all(item["deltaTimeSeconds"]["numerator"] > 0
                                 for item in result["pairs"]))
             self.assertEqual(result["analysis"]["calibratedConfidence"], False)
