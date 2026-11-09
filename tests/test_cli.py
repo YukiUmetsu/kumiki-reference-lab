@@ -1,5 +1,6 @@
 import contextlib
 import io
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -16,6 +17,30 @@ class CliTests(unittest.TestCase):
                 self.assertEqual(main(["review-roi", "reference.mkv", "track.json",
                                        "--out", "reviews", "--max-frames", "7"]), 0)
         self.assertEqual(builder.call_args.kwargs["max_frames"], 7)
+
+    def test_track_roi_loads_bounded_manual_reseed_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            reseeds = Path(directory) / "reseeds.json"
+            anchors = [{"sourcePts": 700, "box": [0.2, 0.3, 0.15, 0.2]}]
+            reseeds.write_text(json.dumps(anchors), encoding="utf-8")
+            with patch("kumiki_reference_lab.cli.app.analyze_roi_track",
+                       return_value={"schemaVersion": "test"}) as tracker:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = main(["track-roi", "video.mkv", "--box", "0.1", "0.2", "0.15", "0.2",
+                                 "--reseeds", str(reseeds)])
+                self.assertEqual(code, 0)
+                self.assertEqual(tracker.call_args.kwargs["reseeds"], anchors)
+
+    def test_cli_rejects_oversized_reseed_file_without_tracking(self):
+        with tempfile.TemporaryDirectory() as directory:
+            reseeds = Path(directory) / "reseeds.json"
+            reseeds.write_text(" " * 33000, encoding="utf-8")
+            with patch("kumiki_reference_lab.cli.app.analyze_roi_track") as tracker:
+                with contextlib.redirect_stderr(io.StringIO()):
+                    code = main(["track-roi", "video.mkv", "--box", "0.1", "0.2", "0.15", "0.2",
+                                 "--reseeds", str(reseeds)])
+                self.assertEqual(code, 2)
+                tracker.assert_not_called()
 
     def test_output_is_idempotent_and_never_overwritten(self):
         with tempfile.TemporaryDirectory() as directory:

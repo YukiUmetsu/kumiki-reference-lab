@@ -6,6 +6,7 @@ from kumiki_reference_lab.contracts.source import SCHEMA_VERSION
 from kumiki_reference_lab.contracts.analysis import (
     FRAME_TIMELINE_VERSION, SHOT_CANDIDATES_VERSION, CONTACT_SHEET_VERSION,
     IMAGE_MOTION_VERSION, ROI_TRACK_VERSION, ROI_REVIEW_VERSION, ANALYSIS_RUN_VERSION, SPARSE_FLOW_VERSION,
+    ROI_TRACK_RESEED_VERSION, ANALYSIS_RUN_RESEED_VERSION,
     SPARSE_FLOW_REVIEW_VERSION,
     APPEARANCE_VERSION, APPEARANCE_COMPARISON_VERSION, FRAME_COMPARISON_VERSION,
     TECHNIQUE_PROPOSALS_VERSION,
@@ -108,6 +109,27 @@ class SchemaTests(unittest.TestCase):
                               ("cinematic-techniques-index", INDEX_SCHEMA_VERSION)):
             schema = json.loads((root / (name + ".schema.json")).read_text(encoding="utf-8"))
             self.assertEqual(schema["properties"]["schemaVersion"]["const"], version)
+
+    def test_manual_roi_reseed_has_v2_contract_while_v1_remains_strict(self):
+        root = Path(__file__).resolve().parents[1]
+        roi = json.loads((root / "schemas/v1/roi-track.schema.json").read_text())
+        run = json.loads((root / "schemas/v1/analysis-run.schema.json").read_text())
+        roi_v2 = json.loads((root / "schemas/v2/roi-track.schema.json").read_text())
+        run_v2 = json.loads((root / "schemas/v2/analysis-run.schema.json").read_text())
+        example = json.loads((root / "examples/roi-reseeds.example.json").read_text())
+        self.assertEqual(roi["properties"]["schemaVersion"]["const"], ROI_TRACK_VERSION)
+        self.assertNotIn("manualReseeds", roi["properties"]["analyzer"]["properties"])
+        self.assertNotIn("segmentIndex", roi["properties"]["observations"]["items"]["properties"])
+        self.assertEqual(roi_v2["properties"]["schemaVersion"]["const"], ROI_TRACK_RESEED_VERSION)
+        self.assertIn("manualReseeds", roi_v2["properties"]["analyzer"]["required"])
+        self.assertIn("segmentIndex", roi_v2["properties"]["observations"]["items"]["required"])
+        self.assertIn("manual-reseed", roi_v2["properties"]["observations"]["items"]
+                      ["properties"]["status"]["enum"])
+        self.assertNotIn("roiReseeds", run["properties"]["settings"]["properties"])
+        self.assertEqual(run_v2["properties"]["schemaVersion"]["const"], ANALYSIS_RUN_RESEED_VERSION)
+        self.assertIn("roiReseeds", run_v2["properties"]["settings"]["required"])
+        self.assertEqual(example[0]["sourcePts"], 700)
+        self.assertEqual(len(example), 2)
 
 
 if __name__ == "__main__":

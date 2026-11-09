@@ -105,6 +105,24 @@ class RoiReviewIntegrationTests(unittest.TestCase):
             self.assertIn("segment 1", document)
             self.assertIn("not verified as the same physical object", document)
 
+    def test_real_reseed_v2_report_is_accepted_end_to_end(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source, path, baseline = self._source_and_report(root)
+            seed = (30/160, 20/90, 24/160, 18/90)
+            anchor_pts = baseline["observations"][7]["sourcePts"]
+            result = analyze_roi_track(
+                source, seed, seconds=2, max_samples=12, radius=5,
+                cut_threshold=0.95,
+                reseeds=[{"sourcePts": anchor_pts, "box": [44/160, 27/90, 24/160, 18/90]}])
+            self.assertEqual(result["schemaVersion"], "kumiki.roi-track.v2")
+            path.write_text(json.dumps(result), encoding="utf-8")
+            index = build_roi_review(source, path, root / "reviews", max_frames=12)
+            self.assertIn("manual-reseed", index.read_text())
+            self.assertIn("segment 1", index.read_text())
+            self.assertEqual(json.loads((index.parent / "roi-review.json").read_text())
+                             ["settings"]["sourceTrackVersion"], "kumiki.roi-track.v2")
+
     def test_invalid_limits_are_rejected_before_io(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
