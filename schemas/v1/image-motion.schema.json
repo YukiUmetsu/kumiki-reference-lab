@@ -18,6 +18,7 @@
       "required": ["method", "numpyVersion", "ffmpegExecutable", "ffprobeExecutable", "resolution", "maxSamples", "observedFrameCount", "missingSourcePtsCount", "selection", "cutThreshold", "calibratedConfidence", "limits"],
       "properties": {
         "method": {"const": "fft-phase-correlation-global-translation-v1"},
+        "easingModel": {"const": "net-path-projection-with-geometry-abstention-v2"},
         "numpyVersion": {"type": "string", "minLength": 1},
         "ffmpegExecutable": {"type": "string", "minLength": 1},
         "ffprobeExecutable": {"type": "string", "minLength": 1},
@@ -85,10 +86,12 @@
           }},
           "easing": {"type": "object", "required": ["status", "candidates", "bestCandidate"],
             "properties": {
-              "status": {"enum": ["insufficient-samples", "invalid-source-times", "insufficient-net-motion", "nonmonotonic-or-overshooting", "poor-simple-curve-fit", "ambiguous-curve-family", "candidate-only"]},
+              "status": {"enum": ["insufficient-samples", "invalid-source-times", "invalid-observations", "insufficient-net-motion", "nonmonotonic-or-overshooting", "nonlinear-image-path", "poor-simple-curve-fit", "ambiguous-curve-family", "candidate-only"]},
               "bestCandidate": {"type": ["string", "null"]},
               "netDisplacementPixels": {"type": "number"},
               "sampleCount": {"type": "integer", "minimum": 5},
+              "maxLateralDeviationPixels": {"type": "number", "minimum": 0},
+              "pathLengthRatio": {"type": "number", "minimum": 1},
               "candidates": {"type": "array", "items": {
                 "type": "object", "additionalProperties": false,
                 "required": ["name", "normalizedRms", "maxAbsoluteResidual"],

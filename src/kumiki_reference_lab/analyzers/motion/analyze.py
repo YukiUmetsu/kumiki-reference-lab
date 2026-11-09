@@ -149,6 +149,7 @@ def analyze_image_motion(
         "coverage": "bounded-from-start-not-necessarily-full-video",
         "analysis": {
             "method": "fft-phase-correlation-global-translation-v1",
+            "easingModel": "net-path-projection-with-geometry-abstention-v2",
             "numpyVersion": np.__version__,
             "ffmpegExecutable": ffmpeg,
             "ffprobeExecutable": ffprobe,

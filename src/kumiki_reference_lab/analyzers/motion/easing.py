@@ -20,7 +20,7 @@ def _curves(t: float) -> dict[str, float]:
 def fit_easing_candidates(
     observations: list[tuple[Fraction, float, float]],
 ) -> dict[str, Any]:
-    """Fit named reference curves to global translation along its net path.
+    """Fit named reference curves only when image motion follows its net path.
 
     Candidate fits describe *measured pixels*, not the source project's true
     keyframes or a unique physical cause. Curvature can come from camera,
@@ -35,6 +35,9 @@ def fit_easing_candidates(
     distance_squared = dx * dx + dy * dy
     if duration <= 0:
         return {"status": "invalid-source-times", "candidates": [], "bestCandidate": None}
+    if (not math.isfinite(distance_squared) or
+            any(not math.isfinite(value) for _, x, y in observations for value in (x, y))):
+        return {"status": "invalid-observations", "candidates": [], "bestCandidate": None}
     if distance_squared < 4.0:
         return {"status": "insufficient-net-motion", "candidates": [], "bestCandidate": None}
     times: list[float] = []
@@ -46,6 +49,25 @@ def fit_easing_candidates(
             min(progress) < -0.12 or max(progress) > 1.12 or
             any(b + 0.12 < a for a, b in zip(progress, progress[1:]))):
         return {"status": "nonmonotonic-or-overshooting", "candidates": [], "bestCandidate": None}
+
+    # Projecting a curved 2D path onto its start-to-end direction can yield a
+    # deceptively perfect linear/ease curve. Guard the *unmodeled* sideways
+    # excursion and repeated detours before ranking any one-dimensional fit.
+    distance = math.sqrt(distance_squared)
+    lateral = max(abs((x - start_x) * dy - (y - start_y) * dx) / distance
+                  for _, x, y in observations)
+    traveled = sum(math.hypot(bx - ax, by - ay)
+                   for (_, ax, ay), (_, bx, by) in zip(observations, observations[1:]))
+    if not math.isfinite(lateral) or not math.isfinite(traveled):
+        return {"status": "invalid-observations", "candidates": [], "bestCandidate": None}
+    geometry = {"netDisplacementPixels": round(distance, 5),
+                "sampleCount": len(observations),
+                "maxLateralDeviationPixels": round(lateral, 5),
+                "pathLengthRatio": round(traveled / distance, 5)}
+    if lateral > max(2.0, distance * 0.15) or traveled > max(distance + 3.0,
+                                                             distance * 1.2):
+        return {"status": "nonlinear-image-path", "bestCandidate": None,
+                "candidates": [], **geometry}
 
     curves = _curves(0.0)
     candidates: list[dict[str, Any]] = []
@@ -66,5 +88,4 @@ def fit_easing_candidates(
         status = "candidate-only"
         best_name = best["name"]
     return {"status": status, "bestCandidate": best_name,
-            "netDisplacementPixels": round(math.sqrt(distance_squared), 5),
-            "sampleCount": len(observations), "candidates": candidates}
+            "candidates": candidates, **geometry}

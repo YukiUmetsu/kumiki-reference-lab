@@ -13,6 +13,7 @@ from fractions import Fraction
 from pathlib import Path
 
 from kumiki_reference_lab.analyzers.motion.sparse import analyze_sparse_flow
+from kumiki_reference_lab.analyzers.motion.analyze import analyze_image_motion
 
 
 @unittest.skipUnless(
@@ -145,6 +146,28 @@ class EncodedMotionCounterexamplesTests(unittest.TestCase):
             self.assertIn(Fraction(2, 5), durations)
             self.assertIn(Fraction(1, 10), durations)
             self.assertFalse(result["temporalTracklets"]["semanticIdentityVerified"])
+            json.dumps(result, allow_nan=False)
+
+    def test_encoded_bent_image_path_is_not_misnamed_as_linear_easing(self):
+        import numpy as np
+
+        with tempfile.TemporaryDirectory() as directory:
+            video = Path(directory) / "bent-trajectory.mkv"
+            base = np.random.default_rng(20261111).integers(
+                15, 240, (90, 160), dtype=np.uint8)
+            frames = [np.roll(np.roll(base, 2 * index, axis=1),
+                              5 - abs(index - 5), axis=0)
+                      for index in range(11)]
+            self._encode(video, frames)
+            result = analyze_image_motion(video, seconds=2, max_samples=11,
+                                          threshold=0.95)
+            self.assertEqual(len(result["segments"]), 1)
+            segment = result["segments"][0]
+            self.assertEqual(len(segment["samples"]), 11)
+            self.assertEqual(segment["easing"]["status"], "nonlinear-image-path")
+            self.assertIsNone(segment["easing"]["bestCandidate"])
+            self.assertGreater(segment["easing"]["maxLateralDeviationPixels"], 4)
+            self.assertFalse(result["analysis"]["calibratedConfidence"])
             json.dumps(result, allow_nan=False)
 
 
