@@ -42,6 +42,19 @@ from kumiki_reference_lab.integrations.kumiki.film_feedback import (
 from kumiki_reference_lab.reviews.notes import review_notes_template, validate_review_notes
 
 
+def _read_roi_reseeds(path: Path | None) -> list[dict] | None:
+    if path is None:
+        return None
+    with path.open("rb") as handle:
+        payload = handle.read(32769)
+    if len(payload) > 32768:
+        raise ValueError("ROI reseed JSON must be at most 32 KiB")
+    try:
+        return json.loads(payload.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError("ROI reseed file is not valid UTF-8 JSON") from exc
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="kumiki-ref", description="Kumiki Reference Lab")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -95,6 +108,8 @@ def build_parser() -> argparse.ArgumentParser:
     roi.add_argument("--box", type=float, nargs=4, required=True,
                      metavar=("X", "Y", "WIDTH", "HEIGHT"),
                      help="normalized bounding box on the first sampled frame")
+    roi.add_argument("--reseeds", type=Path,
+                     help="JSON array of additional {sourcePts,box} manual anchors")
     roi.add_argument("--out", type=Path)
     roi.add_argument("--max-seconds", type=int, default=10)
     roi.add_argument("--max-samples", type=int, default=48)
@@ -373,6 +388,8 @@ def build_parser() -> argparse.ArgumentParser:
     analyze.add_argument("--box", type=float, nargs=4,
                          metavar=("X", "Y", "WIDTH", "HEIGHT"),
                          help="optional seeded ROI in normalized image coordinates")
+    analyze.add_argument("--roi-reseeds", type=Path,
+                         help="JSON array of manual ROI anchors after the initial box")
     analyze.add_argument("--max-samples", type=int, default=48)
     analyze.add_argument("--width", type=int, default=160)
     analyze.add_argument("--height", type=int, default=90)
@@ -434,6 +451,7 @@ def main(argv: list[str] | None = None) -> int:
             manifest = run_analysis(
                 args.source, args.out, seconds=args.max_seconds, thumbnails=args.thumbnails,
                 motion=args.motion, roi=(tuple(args.box) if args.box is not None else None),
+                roi_reseeds=_read_roi_reseeds(args.roi_reseeds),
                 samples=args.max_samples, width=args.width, height=args.height,
                 sparse_flow=args.sparse_flow, sparse_samples=args.sparse_samples,
                 sparse_points=args.sparse_points, sparse_radius=args.sparse_radius,
@@ -588,6 +606,7 @@ def main(argv: list[str] | None = None) -> int:
                 max_samples=args.max_samples, width=args.width, height=args.height,
                 radius=args.radius, correlation=args.correlation, cut_threshold=args.threshold,
                 ffmpeg=args.ffmpeg, ffprobe=args.ffprobe, rights_status=args.rights_status,
+                reseeds=_read_roi_reseeds(args.reseeds),
             )
             filename = "roi-track.json"
         elif args.command == "sparse-flow":
