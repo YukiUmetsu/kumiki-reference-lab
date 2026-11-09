@@ -14,13 +14,14 @@ from kumiki_reference_lab.analyzers.appearance.analyze import analyze_appearance
 from kumiki_reference_lab.analyzers.media.inspect import inspect_source, sha256_file
 from kumiki_reference_lab.analyzers.media.timeline import analyze_frame_timeline
 from kumiki_reference_lab.analyzers.motion.analyze import analyze_image_motion
+from kumiki_reference_lab.analyzers.motion.dense import analyze_dense_flow
 from kumiki_reference_lab.analyzers.motion.sparse import analyze_sparse_flow
 from kumiki_reference_lab.analyzers.shots.detect import analyze_hard_cuts
 from kumiki_reference_lab.analyzers.subjects.roi import analyze_roi_track
 from kumiki_reference_lab.contracts.analysis import (
     ANALYSIS_RUN_VERSION, CONTACT_SHEET_VERSION, FRAME_TIMELINE_VERSION,
     IMAGE_MOTION_VERSION, ROI_TRACK_VERSION, SHOT_CANDIDATES_VERSION, SPARSE_FLOW_VERSION,
-    APPEARANCE_VERSION,
+    APPEARANCE_VERSION, DENSE_FLOW_VERSION,
 )
 from kumiki_reference_lab.contracts.source import SCHEMA_VERSION as SOURCE_MANIFEST_VERSION
 from kumiki_reference_lab.core.artifacts import write_json_artifact
@@ -34,6 +35,7 @@ _STAGES = {
     "motion": "image-motion.json",
     "trackRoi": "roi-track.json",
     "sparseFlow": "sparse-flow.json",
+    "denseFlow": "dense-flow.json",
     "appearance": "appearance.json",
 }
 
@@ -76,6 +78,8 @@ def _validate_existing(destination: Path, settings: dict[str, Any]) -> Path:
         expected_artifacts["trackRoi"] = _STAGES["trackRoi"]
     if settings.get("sparseFlow", False):
         expected_artifacts["sparseFlow"] = _STAGES["sparseFlow"]
+    if settings.get("denseFlow", False):
+        expected_artifacts["denseFlow"] = _STAGES["denseFlow"]
     if settings.get("appearance", False):
         expected_artifacts["appearance"] = _STAGES["appearance"]
     artifacts = manifest.get("artifacts")
@@ -135,6 +139,8 @@ def run_analysis(
     sparse_projective_hypotheses: bool = False,
     sparse_tracklet_motion_consistency: bool = False,
     sparse_tracklet_appearance_consistency: bool = False,
+    dense_flow: bool = False, dense_samples: int = 24,
+    dense_grid_step: int = 12,
     appearance: bool = False, appearance_samples: int = 24,
     threshold: float = 0.25, ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
     rights_status: str = "review-required",
@@ -152,6 +158,15 @@ def run_analysis(
         raise ValueError("motion must be a boolean")
     if not isinstance(sparse_flow, bool):
         raise ValueError("sparse_flow must be a boolean")
+    if type(dense_flow) is not bool:
+        raise ValueError("dense_flow must be a boolean")
+    if dense_flow:
+        if seconds > 20 or width > 240 or height > 135:
+            raise ValueError("dense-flow requires seconds <=20, width <=240 and height <=135")
+        if type(dense_samples) is not int or not 5 <= dense_samples <= 40:
+            raise ValueError("dense-flow samples must be 5..40")
+        if type(dense_grid_step) is not int or not 8 <= dense_grid_step <= 24:
+            raise ValueError("dense-flow grid step must be 8..24")
     if sparse_flow:
         if seconds > 20 or width > 240 or height > 135:
             raise ValueError("sparse-flow requires seconds <=20, width <=240 and height <=135")
@@ -229,6 +244,10 @@ def run_analysis(
         if sparse_tracklet_appearance_consistency:
             settings["sparseTrackletAppearanceConsistency"] = True
         settings["versions"]["sparseFlow"] = SPARSE_FLOW_VERSION
+    if dense_flow:
+        settings.update({"denseFlow": True, "denseSamples": dense_samples,
+                         "denseGridStep": dense_grid_step})
+        settings["versions"]["denseFlow"] = DENSE_FLOW_VERSION
     if appearance:
         settings.update({"appearance": True, "appearanceSamples": appearance_samples})
         settings["versions"]["appearance"] = APPEARANCE_VERSION
@@ -296,6 +315,13 @@ def run_analysis(
             )
             write_json_artifact(staging, _STAGES["sparseFlow"], sparse)
             artifacts["sparseFlow"] = _STAGES["sparseFlow"]
+        if dense_flow:
+            dense = analyze_dense_flow(source, seconds=seconds, max_samples=dense_samples,
+                                       width=width, height=height, grid_step=dense_grid_step,
+                                       threshold=threshold, ffmpeg=ffmpeg, ffprobe=ffprobe,
+                                       rights_status=rights_status)
+            write_json_artifact(staging, _STAGES["denseFlow"], dense)
+            artifacts["denseFlow"] = _STAGES["denseFlow"]
         if appearance:
             report = analyze_appearance(
                 source, seconds=seconds, max_samples=appearance_samples,

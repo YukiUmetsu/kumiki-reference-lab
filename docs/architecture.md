@@ -81,6 +81,8 @@ The `motion` command produces a versioned `image-motion.json`. Sampling targets 
 
 Measured global image shift is **not** interchangeable with optical flow, subject tracking or reconstructed camera motion. Planar translation can come from any dominant moving content; panning, dolly, parallax, changing geometry, zoom and multiple independently moving objects are not disentangled. The separate [`sparse-flow` experiment](sparse-flow.md) now detects distributed 2D point translations and up to two motion groups; these still do not establish physical camera motion or semantic identities.
 
+The optional [`dense-flow` experiment](dense-flow.md) adds three-level OpenCV Farneback pixel flow with source-PTS-verified sampling, output grid bounds, two-sided local-texture and reverse-flow guards, and an immutable `analyze --dense-flow` stage. It does not rewrite sparse evidence or claim physical cameras, complete visibility masks or recovered object identity. OpenCV stays outside the default dependency set.
+
 ## Seeded image-region tracking
 
 ```bash

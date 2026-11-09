@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/dense-flow.schema.json",
+  "title": "Kumiki Dense Image-Plane Flow v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "sourceSha256", "sourceStreamIndex", "sourceTimebase", "scanWindowSeconds", "coverage", "analyzer", "cutCandidatePts", "samples", "pairs"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.dense-flow.v1"},
+    "sourceSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "sourceStreamIndex": {"type": "integer", "minimum": 0},
+    "sourceTimebase": {"$ref": "#/$defs/rational"},
+    "scanWindowSeconds": {"type": "integer", "minimum": 1, "maximum": 20},
+    "coverage": {"const": "bounded-from-start-not-necessarily-full-video"},
+    "analyzer": {
+      "type": "object", "additionalProperties": false,
+      "required": ["method", "opencvVersion", "numpyVersion", "ffmpegExecutable", "ffprobeExecutable", "resolution", "maxSamples", "gridStepPixels", "pyramidLevels", "windowSizePixels", "localTextureWindowPixels", "minimumTextureStdGray", "appearancePatchSizePixels", "minimumAppearanceCorrelation", "forwardBackwardTolerancePixels", "maximumImageDisplacementPixels", "cutThreshold", "observedFrameCount", "missingSourcePtsCount", "selection", "calibratedConfidence", "physicalCameraVerified", "semanticIdentityVerified", "limits"],
+      "properties": {
+        "method": {"const": "farneback-pyramid3-fb-texture-v1"},
+        "opencvVersion": {"type": "string", "minLength": 1},
+        "numpyVersion": {"type": "string", "minLength": 1},
+        "ffmpegExecutable": {"type": "string", "minLength": 1},
+        "ffprobeExecutable": {"type": "string", "minLength": 1},
+        "resolution": {"type": "object", "additionalProperties": false,
+          "required": ["width", "height"],
+          "properties": {"width": {"type": "integer", "minimum": 64, "maximum": 240},
+                         "height": {"type": "integer", "minimum": 36, "maximum": 135}}},
+        "maxSamples": {"type": "integer", "minimum": 5, "maximum": 40},
+        "gridStepPixels": {"type": "integer", "minimum": 8, "maximum": 24},
+        "pyramidLevels": {"const": 3},
+        "windowSizePixels": {"const": 15},
+        "localTextureWindowPixels": {"const": 9},
+        "minimumTextureStdGray": {"const": 8.0},
+        "appearancePatchSizePixels": {"const": 9},
+        "minimumAppearanceCorrelation": {"const": 0.62},
+        "forwardBackwardTolerancePixels": {"const": 1.5},
+        "maximumImageDisplacementPixels": {"const": 24},
+        "cutThreshold": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
+        "observedFrameCount": {"type": "integer", "minimum": 2},
+        "missingSourcePtsCount": {"type": "integer", "minimum": 0},
+        "selection": {"const": "uniform-original-pts-nearest-frame"},
+        "calibratedConfidence": {"const": false},
+        "physicalCameraVerified": {"const": false},
+        "semanticIdentityVerified": {"const": false},
+        "limits": {"type": "string", "minLength": 1}
+      }
+    },
+    "cutCandidatePts": {"type": "array", "items": {"type": "integer"}},
+    "samples": {"type": "array", "minItems": 2, "maxItems": 40,
+      "items": {"type": "object", "additionalProperties": false,
+        "required": ["sampleOrdinal", "sourcePts", "sourceSeconds"],
+        "properties": {"sampleOrdinal": {"type": "integer", "minimum": 0},
+                       "sourcePts": {"type": "integer"},
+                       "sourceSeconds": {"$ref": "#/$defs/rational"}}}},
+    "pairs": {"type": "array", "minItems": 1, "maxItems": 39,
+      "items": {"type": "object", "additionalProperties": false,
+        "required": ["startPts", "endPts", "deltaTimeSeconds", "status", "candidateCount", "rejected", "vectors", "acceptedFraction"],
+        "properties": {
+          "startPts": {"type": "integer"}, "endPts": {"type": "integer"},
+          "deltaTimeSeconds": {"$ref": "#/$defs/rational"},
+          "status": {"enum": ["cut-boundary", "unobservable", "insufficient-grid-support", "flow-observed"]},
+          "candidateCount": {"type": "integer", "minimum": 0, "maximum": 512},
+          "rejected": {"type": "object", "additionalProperties": false,
+            "required": ["low-texture", "out-of-frame", "roundtrip-inconsistent", "implausible-displacement", "appearance-inconsistent"],
+            "properties": {
+              "low-texture": {"type": "integer", "minimum": 0},
+              "out-of-frame": {"type": "integer", "minimum": 0},
+              "roundtrip-inconsistent": {"type": "integer", "minimum": 0},
+              "implausible-displacement": {"type": "integer", "minimum": 0},
+              "appearance-inconsistent": {"type": "integer", "minimum": 0}
+            }},
+          "vectors": {"type": "array", "maxItems": 512,
+            "items": {"type": "object", "additionalProperties": false,
+              "required": ["x", "y", "dx", "dy", "roundtripErrorPixels"],
+              "properties": {
+                "x": {"type": "integer", "minimum": 0, "maximum": 239},
+                "y": {"type": "integer", "minimum": 0, "maximum": 134},
+                "dx": {"type": "number", "minimum": -24, "maximum": 24},
+                "dy": {"type": "number", "minimum": -24, "maximum": 24},
+                "roundtripErrorPixels": {"type": "number", "minimum": 0, "maximum": 1.5}
+              }}},
+          "acceptedFraction": {"type": "number", "minimum": 0, "maximum": 1}
+        }
+      }}
+  },
+  "$defs": {
+    "rational": {"type": "object", "additionalProperties": false,
+      "required": ["numerator", "denominator"],
+      "properties": {"numerator": {"type": "integer"},
+                     "denominator": {"type": "integer", "minimum": 1}}}
+  }
+}
