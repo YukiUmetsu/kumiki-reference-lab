@@ -239,6 +239,32 @@ class AnalysisPipelineIntegrationTests(unittest.TestCase):
                              "mutual-nearest-adjacent-endpoint-appearance-gated-v1")
 
     @unittest.skipUnless(importlib.util.find_spec("numpy"), "NumPy extra unavailable")
+    def test_lk_refinement_opt_in_has_separate_immutable_run(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "flat.mkv"
+            self._flat_video(source)
+            runs = root / "runs"
+            original = run_analysis(source, runs, seconds=2, thumbnails=4,
+                                    sparse_flow=True, sparse_samples=5)
+            lk = run_analysis(source, runs, seconds=2, thumbnails=4,
+                              sparse_flow=True, sparse_samples=5,
+                              sparse_lk_refinement=True)
+            self.assertNotEqual(original, lk)
+            self.assertNotIn("sparseLkRefinement", json.loads(original.read_text())["settings"])
+            self.assertTrue(json.loads(lk.read_text())["settings"]["sparseLkRefinement"])
+            sparse = json.loads((lk.parent / "sparse-flow.json").read_text())
+            self.assertEqual(sparse["analyzer"]["method"],
+                             "shi-tomasi-approx-patch-ncc-fb-consensus-affine-lk-v1")
+            self.assertEqual(run_analysis(
+                source, runs, seconds=2, thumbnails=4, sparse_flow=True,
+                sparse_samples=5, sparse_lk_refinement=True), lk)
+            with self.assertRaisesRegex(ValueError, "cannot combine"):
+                run_analysis(source, runs, seconds=2, thumbnails=4,
+                             sparse_flow=True, sparse_samples=5,
+                             sparse_lk_refinement=True, sparse_subpixel_refinement=True)
+
+    @unittest.skipUnless(importlib.util.find_spec("numpy"), "NumPy extra unavailable")
     def test_appearance_bundle_is_atomic_and_may_combine_with_sparse_flow(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

@@ -358,6 +358,28 @@ class SparseFlowIntegrationTests(unittest.TestCase):
             self.assertEqual(checked["pairs"], baseline["pairs"])
             json.dumps(checked, allow_nan=False)
 
+    def test_opt_in_lk_refinement_retains_source_pts_and_cut_boundaries(self):
+        with tempfile.TemporaryDirectory() as directory:
+            video = Path(directory) / "source.mkv"
+            self._create_clip(video, vfr=True)
+            default = analyze_sparse_flow(video, seconds=2, max_samples=6)
+            refined = analyze_sparse_flow(video, seconds=2, max_samples=6,
+                                          lk_refinement=True)
+            self.assertEqual(refined["analyzer"]["lkModel"],
+                             "bounded-bidirectional-translation-lk-v1")
+            self.assertEqual(refined["analyzer"]["lkMaxIterations"], 8)
+            self.assertEqual(default["samples"], refined["samples"])
+            self.assertEqual([p["startPts"] for p in default["pairs"]],
+                             [p["startPts"] for p in refined["pairs"]])
+            self.assertEqual([len(p["vectors"]) for p in default["pairs"]],
+                             [len(p["vectors"]) for p in refined["pairs"]])
+            self.assertTrue(all((p["status"] == "cut-boundary") ==
+                                (p["geometryHypothesis"] is None)
+                                for p in refined["pairs"]))
+            self.assertTrue(all("lkStatus" in v for p in refined["pairs"]
+                                for v in p["vectors"]))
+            json.dumps(refined, allow_nan=False)
+
     def test_flat_video_does_not_invent_vectors(self):
         with tempfile.TemporaryDirectory() as directory:
             video = Path(directory) / "flat.mkv"
