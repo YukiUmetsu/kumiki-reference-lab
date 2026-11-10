@@ -28,6 +28,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Popular, evidence-linked videos to study:** the [19-film explainer collection](docs/popular-reference-videos.md) and [21-film cinematic collection](docs/cinematic-reference-videos.md) cover 40 films from 26 creator/channel labels, ranging from 3D engineering and mathematics to animated character shorts, title sequences, game cinematics, product launches, ads and choreographed music videos. The films have ~2.54 billion *combined reported plays*, **not unique viewers**; some counts are historical. Two [versioned](research/popular-explainer-videos.v1.json) [cohorts](research/popular-cinematic-videos.v1.json) and a `video-references` CLI support unified, offline search. Entries are **inspiration-only editorial candidates**, neither frame-validated techniques nor reusable media assets.
 
+**Broader comparison data:** [300 latest-upload source rows across six channels](docs/audience-benchmark-methodology.md) add public runtimes, upload dates, views, likes and comments, including ordinary releases rather than just hits (not 300 verified distinct new films). `audience-benchmarks` produces per-channel, source-age-matched descriptive comparisons and clearly labels confounders; it does **not** infer causal virality or evaluate unseen visual techniques. [Versioned source snapshot](research/audience-recent-uploads.v1.json).
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
@@ -297,6 +299,8 @@ PYTHONPATH=src python -m kumiki_reference_lab catalog search "reveal material sh
 PYTHONPATH=src python -m kumiki_reference_lab catalog index --out ./runs/catalog-r001
 PYTHONPATH=src python -m kumiki_reference_lab video-references validate
 PYTHONPATH=src python -m kumiki_reference_lab video-references search "camera scale"
+PYTHONPATH=src python -m kumiki_reference_lab audience-benchmarks validate
+PYTHONPATH=src python -m kumiki_reference_lab audience-benchmarks report
 PYTHONPATH=src python -m kumiki_reference_lab analyze ./reference.mp4 --max-seconds 10 --out ./runs
 PYTHONPATH=src python -m kumiki_reference_lab audio-onsets ./reference.mp4 --max-seconds 10 --out ./runs/onsets
 PYTHONPATH=src python -m unittest discover -s tests -v

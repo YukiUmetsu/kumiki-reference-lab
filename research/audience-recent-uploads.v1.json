@@ -1,0 +1,2455 @@
+{
+  "schemaVersion": "kumiki.audience-benchmark.v1",
+  "retrievedOn": "2026-11-10",
+  "methodology": "The 50 latest listed uploads for each of six deliberately selected channels on independently provided Digital Creators pages. Snapshot is the source's Last Updated date, not a simultaneous YouTube API query. Not a random sample of YouTube or a matched causal experiment. All counts are observations from the source, including livestreams, shorts and compilations. The source's runtime 00:00:00 is preserved as unknown (null) rather than assumed zero. Engagement counts do not establish audience retention, unique viewers or creative quality. Titles identify rows within this source; no video IDs or direct video links are claimed.",
+  "channels": [
+    {
+      "id": "alan-becker",
+      "name": "Alan Becker",
+      "sourceUrl": "https://digitalcreators.jp/en/channel/en/UCbKWv2x9t6u8yZoB3KcPtnw/videos/",
+      "sourceLastUpdatedOn": "2026-10-24",
+      "videos": [
+        {
+          "title": "Alan Becker lofi radio - beats to animate to",
+          "publishedOn": "2026-09-08",
+          "durationSeconds": null,
+          "views": 2027249,
+          "likes": 31037,
+          "comments": 0
+        },
+        {
+          "title": "Creeper Clan - Animation vs. Minecraft Shorts Ep 40",
+          "publishedOn": "2026-08-29",
+          "durationSeconds": 735,
+          "views": 22659424,
+          "likes": 195217,
+          "comments": 11750
+        },
+        {
+          "title": "Animation vs. Geometry Dash",
+          "publishedOn": "2026-07-18",
+          "durationSeconds": 144,
+          "views": 15514010,
+          "likes": 286380,
+          "comments": 20791
+        },
+        {
+          "title": "The Machine - Animator vs. Animation 13",
+          "publishedOn": "2026-05-30",
+          "durationSeconds": 1097,
+          "views": 20758001,
+          "likes": 593378,
+          "comments": 61037
+        },
+        {
+          "title": "Alan Becker TV - 24/7 Livestream",
+          "publishedOn": "2026-04-25",
+          "durationSeconds": null,
+          "views": 10817303,
+          "likes": 134072,
+          "comments": 0
+        },
+        {
+          "title": "The Aether - Animation vs. Minecraft Shorts Ep 39",
+          "publishedOn": "2026-04-18",
+          "durationSeconds": 764,
+          "views": 17119426,
+          "likes": 260133,
+          "comments": 16393
+        },
+        {
+          "title": "Alan Becker TV - 24/7 Livestream",
+          "publishedOn": "2026-04-01",
+          "durationSeconds": 73147,
+          "views": 1132690,
+          "likes": 20088,
+          "comments": 54
+        },
+        {
+          "title": "Would you look at that...",
+          "publishedOn": "2026-03-21",
+          "durationSeconds": 30,
+          "views": 4643411,
+          "likes": 191933,
+          "comments": 2600
+        },
+        {
+          "title": "Alan Becker TV - 24/7 Livestream",
+          "publishedOn": "2026-02-19",
+          "durationSeconds": 57942,
+          "views": 314033,
+          "likes": 7210,
+          "comments": 26
+        },
+        {
+          "title": "Alan Becker TV - 24/7 Livestream",
+          "publishedOn": "2026-01-29",
+          "durationSeconds": 22128,
+          "views": 1159165,
+          "likes": 20375,
+          "comments": 21
+        },
+        {
+          "title": "Trial Chamber - An Actual Short",
+          "publishedOn": "2026-01-24",
+          "durationSeconds": 31,
+          "views": 6907162,
+          "likes": 220856,
+          "comments": 6033
+        },
+        {
+          "title": "An Actual Short Compilation - Season 3 (official)",
+          "publishedOn": "2026-01-24",
+          "durationSeconds": 909,
+          "views": 9610897,
+          "likes": 72805,
+          "comments": 2909
+        },
+        {
+          "title": "Mission Impossible - An Actual Short",
+          "publishedOn": "2026-01-10",
+          "durationSeconds": 52,
+          "views": 13465088,
+          "likes": 452996,
+          "comments": 5014
+        },
+        {
+          "title": "Alan Becker TV - 24/7 Livestream",
+          "publishedOn": "2025-12-31",
+          "durationSeconds": 31924,
+          "views": 1267218,
+          "likes": 23547,
+          "comments": 24
+        },
+        {
+          "title": "How To: Survive A Fall - An Actual Short",
+          "publishedOn": "2025-12-27",
+          "durationSeconds": 39,
+          "views": 8219488,
+          "likes": 294259,
+          "comments": 4454
+        },
+        {
+          "title": "The Far Lands - Animation vs. Minecraft Shorts Ep 38",
+          "publishedOn": "2025-12-20",
+          "durationSeconds": 550,
+          "views": 26814650,
+          "likes": 329748,
+          "comments": 19824
+        },
+        {
+          "title": "Introducing...",
+          "publishedOn": "2025-12-06",
+          "durationSeconds": 32,
+          "views": 9439514,
+          "likes": 407191,
+          "comments": 4090
+        },
+        {
+          "title": "Egg - An Actual Short",
+          "publishedOn": "2025-11-22",
+          "durationSeconds": 34,
+          "views": 7684638,
+          "likes": 264387,
+          "comments": 4062
+        },
+        {
+          "title": "Animation vs. Game Design",
+          "publishedOn": "2025-11-15",
+          "durationSeconds": 192,
+          "views": 12395492,
+          "likes": 193824,
+          "comments": 5867
+        },
+        {
+          "title": "Allay - An Actual Short",
+          "publishedOn": "2025-11-01",
+          "durationSeconds": 44,
+          "views": 6626980,
+          "likes": 242904,
+          "comments": 1415
+        },
+        {
+          "title": "Alan Becker lofi radio - beats to animate to",
+          "publishedOn": "2025-10-25",
+          "durationSeconds": null,
+          "views": 5710867,
+          "likes": 147995,
+          "comments": 0
+        },
+        {
+          "title": "How To: Open Doors - An Actual Short",
+          "publishedOn": "2025-10-18",
+          "durationSeconds": 28,
+          "views": 17906332,
+          "likes": 513745,
+          "comments": 6606
+        },
+        {
+          "title": "Hardcore Manhunt - Animation vs. Minecraft Shorts Ep 37",
+          "publishedOn": "2025-10-11",
+          "durationSeconds": 713,
+          "views": 36249808,
+          "likes": 425288,
+          "comments": 22259
+        },
+        {
+          "title": "Walk Cycles - An Actual Short",
+          "publishedOn": "2025-10-04",
+          "durationSeconds": 32,
+          "views": 17218655,
+          "likes": 486760,
+          "comments": 8439
+        },
+        {
+          "title": "Alan Becker TV - 24/7 Livestream",
+          "publishedOn": "2025-10-01",
+          "durationSeconds": 16584,
+          "views": 2726291,
+          "likes": 41421,
+          "comments": 167
+        },
+        {
+          "title": "Day & Night - An Actual Short",
+          "publishedOn": "2025-09-20",
+          "durationSeconds": 39,
+          "views": 16466364,
+          "likes": 469232,
+          "comments": 4815
+        },
+        {
+          "title": "Hacker - Animator vs. Animation 12",
+          "publishedOn": "2025-09-13",
+          "durationSeconds": 984,
+          "views": 20062615,
+          "likes": 467654,
+          "comments": 38787
+        },
+        {
+          "title": "Alan Becker TV - 24/7 Livestream",
+          "publishedOn": "2025-09-04",
+          "durationSeconds": 27884,
+          "views": 1980220,
+          "likes": 39119,
+          "comments": 55
+        },
+        {
+          "title": "Fork vs Spoon - An Actual Short",
+          "publishedOn": "2025-08-30",
+          "durationSeconds": 32,
+          "views": 6792908,
+          "likes": 282649,
+          "comments": 6567
+        },
+        {
+          "title": "Fingers - An Actual Short",
+          "publishedOn": "2025-08-16",
+          "durationSeconds": 40,
+          "views": 11780969,
+          "likes": 494704,
+          "comments": 6909
+        },
+        {
+          "title": "Animation vs. Water - #TeamWater",
+          "publishedOn": "2025-08-09",
+          "durationSeconds": 171,
+          "views": 11265669,
+          "likes": 169700,
+          "comments": 6688
+        },
+        {
+          "title": "Couples Discount - An Actual Short",
+          "publishedOn": "2025-07-26",
+          "durationSeconds": 36,
+          "views": 11375268,
+          "likes": 424569,
+          "comments": 5976
+        },
+        {
+          "title": "Flip The Screen - An Actual Short",
+          "publishedOn": "2025-07-12",
+          "durationSeconds": 28,
+          "views": 12716864,
+          "likes": 408211,
+          "comments": 4602
+        },
+        {
+          "title": "Beta - Animation vs. Minecraft Shorts Ep 0",
+          "publishedOn": "2025-07-05",
+          "durationSeconds": 256,
+          "views": 9392858,
+          "likes": 205107,
+          "comments": 10663
+        },
+        {
+          "title": "Mercenary Tryouts",
+          "publishedOn": "2025-06-21",
+          "durationSeconds": 146,
+          "views": 10390946,
+          "likes": 172834,
+          "comments": 11756
+        },
+        {
+          "title": "Block Beats - An Actual Short",
+          "publishedOn": "2025-06-14",
+          "durationSeconds": 42,
+          "views": 10565594,
+          "likes": 376456,
+          "comments": 4583
+        },
+        {
+          "title": "Speedrun Competition",
+          "publishedOn": "2025-05-31",
+          "durationSeconds": 345,
+          "views": 14353468,
+          "likes": 158754,
+          "comments": 6447
+        },
+        {
+          "title": "App Staff",
+          "publishedOn": "2025-05-24",
+          "durationSeconds": 173,
+          "views": 18940232,
+          "likes": 181279,
+          "comments": 9159
+        },
+        {
+          "title": "Arcade Cosplay - An Actual Short",
+          "publishedOn": "2025-05-17",
+          "durationSeconds": 19,
+          "views": 9711726,
+          "likes": 383506,
+          "comments": 6365
+        },
+        {
+          "title": "Animation vs. Minecraft Shorts Season 4 - All Episodes (31-36)",
+          "publishedOn": "2025-05-04",
+          "durationSeconds": 4599,
+          "views": 17829623,
+          "likes": 105746,
+          "comments": 3952
+        },
+        {
+          "title": "Purple's Speedrun - An Actual Short",
+          "publishedOn": "2025-04-26",
+          "durationSeconds": 54,
+          "views": 22528843,
+          "likes": 569468,
+          "comments": 5578
+        },
+        {
+          "title": "48 Hours Left + NEW Character Reveals! - Animation VERSUS",
+          "publishedOn": "2025-04-22",
+          "durationSeconds": 4441,
+          "views": 1015995,
+          "likes": 24283,
+          "comments": 1553
+        },
+        {
+          "title": "Bedwars - Animation vs. Minecraft Shorts Ep 36",
+          "publishedOn": "2025-04-19",
+          "durationSeconds": 933,
+          "views": 21831736,
+          "likes": 390064,
+          "comments": 21848
+        },
+        {
+          "title": "Group Chat - An Actual Short",
+          "publishedOn": "2025-04-12",
+          "durationSeconds": 55,
+          "views": 19671984,
+          "likes": 689573,
+          "comments": 7417
+        },
+        {
+          "title": "ABTV - All Livestream Bumpers",
+          "publishedOn": "2025-04-05",
+          "durationSeconds": 214,
+          "views": 8814246,
+          "likes": 96027,
+          "comments": 4075
+        },
+        {
+          "title": "30 Million Subscriber Q&A",
+          "publishedOn": "2025-03-30",
+          "durationSeconds": 7496,
+          "views": 571042,
+          "likes": 21111,
+          "comments": 935
+        },
+        {
+          "title": "Animation VERSUS! - Reveal Trailer - Kickstarter",
+          "publishedOn": "2025-03-26",
+          "durationSeconds": 179,
+          "views": 4633636,
+          "likes": 229499,
+          "comments": 13292
+        },
+        {
+          "title": "Handshake - An Actual Short",
+          "publishedOn": "2025-03-22",
+          "durationSeconds": 39,
+          "views": 22309726,
+          "likes": 894996,
+          "comments": 7889
+        },
+        {
+          "title": "Animation vs. Addiction",
+          "publishedOn": "2025-03-15",
+          "durationSeconds": 688,
+          "views": 21749871,
+          "likes": 568035,
+          "comments": 23717
+        },
+        {
+          "title": "Blue's Speedrun - An Actual Short",
+          "publishedOn": "2025-03-08",
+          "durationSeconds": 49,
+          "views": 11311196,
+          "likes": 428973,
+          "comments": 4515
+        }
+      ]
+    },
+    {
+      "id": "kurzgesagt",
+      "name": "Kurzgesagt – In a Nutshell",
+      "sourceUrl": "https://digitalcreators.jp/en/channel/en/UCsXVk37bltHxD1rDPwtNM8Q/videos/",
+      "sourceLastUpdatedOn": "2026-11-09",
+      "videos": [
+        {
+          "title": "How Does Ketamine Work?",
+          "publishedOn": "2026-10-30",
+          "durationSeconds": 72,
+          "views": 889184,
+          "likes": 33558,
+          "comments": 738
+        },
+        {
+          "title": "How I Survived Late-Stage Cancer (A Fun Story)",
+          "publishedOn": "2026-10-28",
+          "durationSeconds": 894,
+          "views": 7996158,
+          "likes": 164354,
+          "comments": 5861
+        },
+        {
+          "title": "What If We Cool Down the Sun?",
+          "publishedOn": "2026-10-24",
+          "durationSeconds": 79,
+          "views": 990965,
+          "likes": 36836,
+          "comments": 1066
+        },
+        {
+          "title": "You Will Only Like Half of This Video",
+          "publishedOn": "2026-10-20",
+          "durationSeconds": 214,
+          "views": 5778978,
+          "likes": 246279,
+          "comments": 8115
+        },
+        {
+          "title": "We Finally Know More About Humanity’s First Civilization",
+          "publishedOn": "2026-10-08",
+          "durationSeconds": 1051,
+          "views": 11992001,
+          "likes": 172211,
+          "comments": 8592
+        },
+        {
+          "title": "AI Just Crossed the Terrifying Line - Now What?",
+          "publishedOn": "2026-10-05",
+          "durationSeconds": 1304,
+          "views": 23777243,
+          "likes": 522363,
+          "comments": 40391
+        },
+        {
+          "title": "Your Brain on Magic Mushrooms",
+          "publishedOn": "2026-09-28",
+          "durationSeconds": 71,
+          "views": 1356367,
+          "likes": 49193,
+          "comments": 1152
+        },
+        {
+          "title": "Humans Can Regrow an Organ",
+          "publishedOn": "2026-09-26",
+          "durationSeconds": 74,
+          "views": 1575057,
+          "likes": 69785,
+          "comments": 2996
+        },
+        {
+          "title": "Your Skeleton Is Electric",
+          "publishedOn": "2026-09-25",
+          "durationSeconds": 72,
+          "views": 545522,
+          "likes": 25981,
+          "comments": 325
+        },
+        {
+          "title": "This Is What a Godlike Civilization Would Look Like",
+          "publishedOn": "2026-09-22",
+          "durationSeconds": 852,
+          "views": 9544844,
+          "likes": 174575,
+          "comments": 7130
+        },
+        {
+          "title": "This Woman Cured Her Cancer with an Insane Method",
+          "publishedOn": "2026-09-15",
+          "durationSeconds": 914,
+          "views": 21397455,
+          "likes": 231960,
+          "comments": 11517
+        },
+        {
+          "title": "How ADHD Medication Works",
+          "publishedOn": "2026-09-05",
+          "durationSeconds": 71,
+          "views": 1000324,
+          "likes": 46145,
+          "comments": 1348
+        },
+        {
+          "title": "What If You Never Slept?",
+          "publishedOn": "2026-09-03",
+          "durationSeconds": 71,
+          "views": 3013654,
+          "likes": 107667,
+          "comments": 1404
+        },
+        {
+          "title": "Can Earth Run Out of Water?",
+          "publishedOn": "2026-08-31",
+          "durationSeconds": 79,
+          "views": 4147583,
+          "likes": 200267,
+          "comments": 7390
+        },
+        {
+          "title": "What If Gravity Was 10% Stronger?",
+          "publishedOn": "2026-08-29",
+          "durationSeconds": 70,
+          "views": 1481296,
+          "likes": 55873,
+          "comments": 1192
+        },
+        {
+          "title": "Dust Is Not What You Think",
+          "publishedOn": "2026-08-27",
+          "durationSeconds": 71,
+          "views": 3050263,
+          "likes": 120125,
+          "comments": 1216
+        },
+        {
+          "title": "Why Ebola Keeps Coming Back",
+          "publishedOn": "2026-08-24",
+          "durationSeconds": 72,
+          "views": 982592,
+          "likes": 42688,
+          "comments": 994
+        },
+        {
+          "title": "How Stress Changes Your Brain",
+          "publishedOn": "2026-08-22",
+          "durationSeconds": 71,
+          "views": 2058297,
+          "likes": 103539,
+          "comments": 1091
+        },
+        {
+          "title": "How Antidepressants Work",
+          "publishedOn": "2026-08-20",
+          "durationSeconds": 78,
+          "views": 1370514,
+          "likes": 69967,
+          "comments": 1298
+        },
+        {
+          "title": "What the Flu Does to Your Body",
+          "publishedOn": "2026-08-17",
+          "durationSeconds": 74,
+          "views": 769789,
+          "likes": 35587,
+          "comments": 777
+        },
+        {
+          "title": "Why Humanity Will Never Leave The Solar System",
+          "publishedOn": "2026-08-04",
+          "durationSeconds": 764,
+          "views": 10955489,
+          "likes": 236474,
+          "comments": 17230
+        },
+        {
+          "title": "Building a Secret Moon Base",
+          "publishedOn": "2026-07-27",
+          "durationSeconds": 68,
+          "views": 694494,
+          "likes": 28625,
+          "comments": 538
+        },
+        {
+          "title": "The Deadliest Thing in Your Kitchen",
+          "publishedOn": "2026-07-23",
+          "durationSeconds": 68,
+          "views": 5267105,
+          "likes": 194903,
+          "comments": 4365
+        },
+        {
+          "title": "What’s It Like to Be Killed by Nature’s Most Brutal Predator",
+          "publishedOn": "2026-07-07",
+          "durationSeconds": 742,
+          "views": 127215,
+          "likes": 13683,
+          "comments": 633
+        },
+        {
+          "title": "The True Cost of War",
+          "publishedOn": "2026-07-06",
+          "durationSeconds": 72,
+          "views": 1025557,
+          "likes": 56600,
+          "comments": 1509
+        },
+        {
+          "title": "What is El Niño?",
+          "publishedOn": "2026-07-01",
+          "durationSeconds": 61,
+          "views": 2143577,
+          "likes": 83039,
+          "comments": 1303
+        },
+        {
+          "title": "The World’s Most Average Person",
+          "publishedOn": "2026-06-29",
+          "durationSeconds": 71,
+          "views": 3773486,
+          "likes": 139111,
+          "comments": 2896
+        },
+        {
+          "title": "Processed Food Won’t Kill You",
+          "publishedOn": "2026-06-22",
+          "durationSeconds": 68,
+          "views": 3286899,
+          "likes": 151743,
+          "comments": 5817
+        },
+        {
+          "title": "How Are Memories Stored Inside Your Brain?",
+          "publishedOn": "2026-06-16",
+          "durationSeconds": 836,
+          "views": 3591358,
+          "likes": 120878,
+          "comments": 4515
+        },
+        {
+          "title": "The Power of 1%",
+          "publishedOn": "2026-06-15",
+          "durationSeconds": 78,
+          "views": 2018183,
+          "likes": 109531,
+          "comments": 3779
+        },
+        {
+          "title": "Let’s Steal a New Moon",
+          "publishedOn": "2026-06-10",
+          "durationSeconds": 71,
+          "views": 1303503,
+          "likes": 57284,
+          "comments": 778
+        },
+        {
+          "title": "Your Brain Peaked at Birth",
+          "publishedOn": "2026-06-04",
+          "durationSeconds": 73,
+          "views": 1750125,
+          "likes": 79692,
+          "comments": 932
+        },
+        {
+          "title": "The Deadliest Year of Your Life",
+          "publishedOn": "2026-06-01",
+          "durationSeconds": 75,
+          "views": 2140762,
+          "likes": 94112,
+          "comments": 1533
+        },
+        {
+          "title": "Why Earth Sucks Compared to the Planet Hestia",
+          "publishedOn": "2026-05-26",
+          "durationSeconds": 893,
+          "views": 8127521,
+          "likes": 210063,
+          "comments": 13996
+        },
+        {
+          "title": "The Uncomfortable Truth About Ozempic (Updated Version)",
+          "publishedOn": "2026-05-19",
+          "durationSeconds": 953,
+          "views": 7037272,
+          "likes": 158136,
+          "comments": 9033
+        },
+        {
+          "title": "Where Did the Antimatter Go?",
+          "publishedOn": "2026-05-18",
+          "durationSeconds": 76,
+          "views": 1395740,
+          "likes": 57684,
+          "comments": 1143
+        },
+        {
+          "title": "Could Humans Evolve Flight?",
+          "publishedOn": "2026-05-14",
+          "durationSeconds": 73,
+          "views": 3153496,
+          "likes": 125998,
+          "comments": 1826
+        },
+        {
+          "title": "Why Malaria is Winning (For Now)",
+          "publishedOn": "2026-05-11",
+          "durationSeconds": 68,
+          "views": 1233783,
+          "likes": 53047,
+          "comments": 540
+        },
+        {
+          "title": "This Parasite Suffocates You",
+          "publishedOn": "2026-05-08",
+          "durationSeconds": 78,
+          "views": 1099995,
+          "likes": 50924,
+          "comments": 759
+        },
+        {
+          "title": "GERMANY IS OVER",
+          "publishedOn": "2026-05-05",
+          "durationSeconds": 845,
+          "views": 5250103,
+          "likes": 226861,
+          "comments": 33255
+        },
+        {
+          "title": "Pigeons Are GPS Drones",
+          "publishedOn": "2026-04-30",
+          "durationSeconds": 67,
+          "views": 775147,
+          "likes": 36905,
+          "comments": 600
+        },
+        {
+          "title": "Laughing Gas Is Not So Funny",
+          "publishedOn": "2026-04-27",
+          "durationSeconds": 75,
+          "views": 1322430,
+          "likes": 62729,
+          "comments": 1229
+        },
+        {
+          "title": "Fast-Forward Your Life",
+          "publishedOn": "2026-04-23",
+          "durationSeconds": 65,
+          "views": 871762,
+          "likes": 30605,
+          "comments": 999
+        },
+        {
+          "title": "Our Minds Are Weirder than You Think",
+          "publishedOn": "2026-04-21",
+          "durationSeconds": 742,
+          "views": 3032945,
+          "likes": 115331,
+          "comments": 3883
+        },
+        {
+          "title": "Why Being Poor Is Expensive",
+          "publishedOn": "2026-04-16",
+          "durationSeconds": 73,
+          "views": 3836203,
+          "likes": 210988,
+          "comments": 4390
+        },
+        {
+          "title": "How Caffeine Works",
+          "publishedOn": "2026-04-13",
+          "durationSeconds": 72,
+          "views": 1358496,
+          "likes": 60946,
+          "comments": 1019
+        },
+        {
+          "title": "The World’s Deadliest Diseases",
+          "publishedOn": "2026-04-09",
+          "durationSeconds": 72,
+          "views": 1353360,
+          "likes": 59919,
+          "comments": 1056
+        },
+        {
+          "title": "The Most Insane Megaproject You Never Heard About",
+          "publishedOn": "2026-03-30",
+          "durationSeconds": 786,
+          "views": 3768015,
+          "likes": 120712,
+          "comments": 5205
+        },
+        {
+          "title": "Spaceships Powered by Nukes",
+          "publishedOn": "2026-03-24",
+          "durationSeconds": 69,
+          "views": 1382309,
+          "likes": 55795,
+          "comments": 979
+        },
+        {
+          "title": "Queen Ant Clones Another Species",
+          "publishedOn": "2026-03-17",
+          "durationSeconds": 70,
+          "views": 720957,
+          "likes": 34411,
+          "comments": 546
+        }
+      ]
+    },
+    {
+      "id": "league-of-legends",
+      "name": "League of Legends",
+      "sourceUrl": "https://digitalcreators.jp/en/channel/en/UC2t5bjwHdUX4vM2g8TRDq5g/videos/",
+      "sourceLastUpdatedOn": "2026-10-20",
+      "videos": [
+        {
+          "title": "K/DA - FIRESTARTER ft. MIYEON and SOYEON of i-dle, Sophie Powers, Mimi Webb (Official Music Video)",
+          "publishedOn": "2026-10-19",
+          "durationSeconds": 207,
+          "views": 6265948,
+          "likes": 415385,
+          "comments": 19659
+        },
+        {
+          "title": "when your eyes deceive you @Noway4u",
+          "publishedOn": "2026-10-17",
+          "durationSeconds": 21,
+          "views": 1101503,
+          "likes": 26273,
+          "comments": 342
+        },
+        {
+          "title": "Drop the Beat with True Damage Know My Name Yasuo | Worlds 2026",
+          "publishedOn": "2026-10-16",
+          "durationSeconds": 32,
+          "views": 175829,
+          "likes": 1228,
+          "comments": 64
+        },
+        {
+          "title": "some things never change @Arkyy",
+          "publishedOn": "2026-10-15",
+          "durationSeconds": 38,
+          "views": 45537,
+          "likes": 581,
+          "comments": 17
+        },
+        {
+          "title": "calmest league player @JoeBartolozzi",
+          "publishedOn": "2026-10-15",
+          "durationSeconds": 23,
+          "views": 62542,
+          "likes": 854,
+          "comments": 33
+        },
+        {
+          "title": "what an assist from @Kadeem718",
+          "publishedOn": "2026-10-15",
+          "durationSeconds": 29,
+          "views": 105307,
+          "likes": 1591,
+          "comments": 39
+        },
+        {
+          "title": "Worlds 2026 | Orchestral Theme Ft. Pentakill - League of Legends",
+          "publishedOn": "2026-10-13",
+          "durationSeconds": 254,
+          "views": 1241834,
+          "likes": 35798,
+          "comments": 1797
+        },
+        {
+          "title": "the cosplay buff is real @soymamuu",
+          "publishedOn": "2026-10-13",
+          "durationSeconds": 23,
+          "views": 212823,
+          "likes": 3780,
+          "comments": 50
+        },
+        {
+          "title": "Know My Name ft. True Damage (Official Music Video) | League of Legends Worlds 2026 Anthem",
+          "publishedOn": "2026-10-09",
+          "durationSeconds": 257,
+          "views": 36995148,
+          "likes": 304774,
+          "comments": 16612
+        },
+        {
+          "title": "Bruiser Irelia and Aatrox’s Revive Return in League Classic",
+          "publishedOn": "2026-10-09",
+          "durationSeconds": 48,
+          "views": 210999,
+          "likes": 1271,
+          "comments": 236
+        },
+        {
+          "title": "*drumroll* Meet your new Headliners for ARAM: Mayhem! Live on Patch 26.21.",
+          "publishedOn": "2026-10-08",
+          "durationSeconds": 38,
+          "views": 114610,
+          "likes": 2361,
+          "comments": 75
+        },
+        {
+          "title": "True Damage: Know My Name | Skins Trailer - League of Legends",
+          "publishedOn": "2026-10-07",
+          "durationSeconds": 101,
+          "views": 667583,
+          "likes": 11182,
+          "comments": 538
+        },
+        {
+          "title": "True Damage: Know My Name Gameplay Trailer",
+          "publishedOn": "2026-10-07",
+          "durationSeconds": 60,
+          "views": 148140,
+          "likes": 4569,
+          "comments": 86
+        },
+        {
+          "title": "New Augments Coming to ARAM: Mayhem",
+          "publishedOn": "2026-10-06",
+          "durationSeconds": 30,
+          "views": 488213,
+          "likes": 5679,
+          "comments": 155
+        },
+        {
+          "title": "that support is gonna need support after that play @Esnoob1",
+          "publishedOn": "2026-10-01",
+          "durationSeconds": 19,
+          "views": 703675,
+          "likes": 14156,
+          "comments": 224
+        },
+        {
+          "title": "small update from your Worlds artists (quick before Akali sees)",
+          "publishedOn": "2026-09-30",
+          "durationSeconds": 19,
+          "views": 577089,
+          "likes": 16498,
+          "comments": 467
+        },
+        {
+          "title": "Poppy’s hammer packs a lot more punch than I remember @Cowsep",
+          "publishedOn": "2026-09-29",
+          "durationSeconds": 39,
+          "views": 94537,
+          "likes": 1005,
+          "comments": 33
+        },
+        {
+          "title": "Bilgewater Legends Set Sail for League Classic",
+          "publishedOn": "2026-09-29",
+          "durationSeconds": 52,
+          "views": 145972,
+          "likes": 766,
+          "comments": 134
+        },
+        {
+          "title": "Qiyana go brrrrrrrrr",
+          "publishedOn": "2026-09-26",
+          "durationSeconds": 15,
+          "views": 750255,
+          "likes": 13557,
+          "comments": 200
+        },
+        {
+          "title": "off the clock",
+          "publishedOn": "2026-09-25",
+          "durationSeconds": 83,
+          "views": 95063,
+          "likes": 4075,
+          "comments": 122
+        },
+        {
+          "title": "SEE YOU AROUND",
+          "publishedOn": "2026-09-25",
+          "durationSeconds": 83,
+          "views": 524944,
+          "likes": 17418,
+          "comments": 635
+        },
+        {
+          "title": "it’s an emotional roller coaster",
+          "publishedOn": "2026-09-24",
+          "durationSeconds": 34,
+          "views": 95040,
+          "likes": 1221,
+          "comments": 18
+        },
+        {
+          "title": "HEARTSTEEL Live My Life | Skins Trailer - League of Legends",
+          "publishedOn": "2026-09-23",
+          "durationSeconds": 60,
+          "views": 132951,
+          "likes": 3387,
+          "comments": 100
+        },
+        {
+          "title": "HEARTSTEEL Live My Life | Skins Trailer - League of Legends",
+          "publishedOn": "2026-09-23",
+          "durationSeconds": 84,
+          "views": 258463,
+          "likes": 5298,
+          "comments": 414
+        },
+        {
+          "title": "music video debrief time with HEARTSTEEL 🍕🏀",
+          "publishedOn": "2026-09-21",
+          "durationSeconds": 114,
+          "views": 96456,
+          "likes": 4331,
+          "comments": 168
+        },
+        {
+          "title": "HEARTSTEEL - Live My Life ft. Anderson .Paak, BAEKHYUN, Connor Price, Nic D (Official Music Video)",
+          "publishedOn": "2026-09-19",
+          "durationSeconds": 173,
+          "views": 6357286,
+          "likes": 162209,
+          "comments": 19972
+        },
+        {
+          "title": "@ShiphturLOL makes it look easy",
+          "publishedOn": "2026-09-17",
+          "durationSeconds": 24,
+          "views": 86268,
+          "likes": 707,
+          "comments": 19
+        },
+        {
+          "title": "Demacia’s Greatest Heroes Have Arrived in League Classic",
+          "publishedOn": "2026-09-16",
+          "durationSeconds": 57,
+          "views": 157156,
+          "likes": 988,
+          "comments": 147
+        },
+        {
+          "title": "TXT’s SOOBIN vs. BEOMGYU run the 1v1",
+          "publishedOn": "2026-09-12",
+          "durationSeconds": 72,
+          "views": 83274,
+          "likes": 1138,
+          "comments": 42
+        },
+        {
+          "title": "Hall of Legends: Caps",
+          "publishedOn": "2026-09-11",
+          "durationSeconds": 2839,
+          "views": 1156568,
+          "likes": 24043,
+          "comments": 1354
+        },
+        {
+          "title": "Leave a message after the beep",
+          "publishedOn": "2026-09-10",
+          "durationSeconds": 106,
+          "views": 95331,
+          "likes": 3377,
+          "comments": 174
+        },
+        {
+          "title": "Dev Update: Team Voice, Classic & More",
+          "publishedOn": "2026-09-09",
+          "durationSeconds": 56,
+          "views": 38820,
+          "likes": 311,
+          "comments": 23
+        },
+        {
+          "title": "Team Voice, Classic & More | Dev Update - League of Legends",
+          "publishedOn": "2026-09-09",
+          "durationSeconds": 357,
+          "views": 484221,
+          "likes": 8208,
+          "comments": 1201
+        },
+        {
+          "title": "it’s the thought that counts @emilyywang @imaqtpie",
+          "publishedOn": "2026-09-08",
+          "durationSeconds": 26,
+          "views": 68279,
+          "likes": 625,
+          "comments": 13
+        },
+        {
+          "title": "unleashed his inner Faker @WaoLoL",
+          "publishedOn": "2026-09-05",
+          "durationSeconds": 19,
+          "views": 184321,
+          "likes": 2054,
+          "comments": 57
+        },
+        {
+          "title": "@pobelt can’t keep getting away with it",
+          "publishedOn": "2026-09-03",
+          "durationSeconds": 26,
+          "views": 94624,
+          "likes": 940,
+          "comments": 31
+        },
+        {
+          "title": "please Soobin needs this",
+          "publishedOn": "2026-09-02",
+          "durationSeconds": 70,
+          "views": 111628,
+          "likes": 3050,
+          "comments": 95
+        },
+        {
+          "title": "so close, yet so far @AloisNL",
+          "publishedOn": "2026-08-29",
+          "durationSeconds": 12,
+          "views": 189423,
+          "likes": 1685,
+          "comments": 32
+        },
+        {
+          "title": "A behind-the-scenes chat with Caps about the inspiration behind his take on Tristana.",
+          "publishedOn": "2026-08-26",
+          "durationSeconds": 121,
+          "views": 74884,
+          "likes": 2046,
+          "comments": 67
+        },
+        {
+          "title": "The Beacon of Hope | Hall of Legends Event Trailer - League of Legends",
+          "publishedOn": "2026-08-25",
+          "durationSeconds": 165,
+          "views": 169661,
+          "likes": 4052,
+          "comments": 389
+        },
+        {
+          "title": "bffs (best feeders 4ver)",
+          "publishedOn": "2026-08-20",
+          "durationSeconds": 11,
+          "views": 218376,
+          "likes": 4161,
+          "comments": 84
+        },
+        {
+          "title": "Hall of Legends: Caps | Trailer",
+          "publishedOn": "2026-08-16",
+          "durationSeconds": 115,
+          "views": 289598,
+          "likes": 11424,
+          "comments": 833
+        },
+        {
+          "title": "who wins: a giant yeti, a demon in heels, or a large rocky boi 🤔",
+          "publishedOn": "2026-08-11",
+          "durationSeconds": 25,
+          "views": 79973,
+          "likes": 715,
+          "comments": 20
+        },
+        {
+          "title": "ARAM: MAYHEM CLASSIC-ISH HAS ARRIVED",
+          "publishedOn": "2026-08-08",
+          "durationSeconds": 69,
+          "views": 38254,
+          "likes": 793,
+          "comments": 67
+        },
+        {
+          "title": "a tale of two bush ganks 🤫",
+          "publishedOn": "2026-08-07",
+          "durationSeconds": 47,
+          "views": 121193,
+          "likes": 1570,
+          "comments": 30
+        },
+        {
+          "title": "How to Get the Best Item Build | League of Legends Classic",
+          "publishedOn": "2026-08-06",
+          "durationSeconds": 143,
+          "views": 33755,
+          "likes": 949,
+          "comments": 115
+        },
+        {
+          "title": "How to Get the Best Item Build",
+          "publishedOn": "2026-08-06",
+          "durationSeconds": 124,
+          "views": 36932,
+          "likes": 883,
+          "comments": 32
+        },
+        {
+          "title": "How to Pick the Perfect Runes and Masteries | League of Legends Classic",
+          "publishedOn": "2026-08-05",
+          "durationSeconds": 136,
+          "views": 29177,
+          "likes": 772,
+          "comments": 112
+        },
+        {
+          "title": "How to Pick the Perfect Runes and Masteries",
+          "publishedOn": "2026-08-05",
+          "durationSeconds": 117,
+          "views": 42138,
+          "likes": 1422,
+          "comments": 33
+        },
+        {
+          "title": "Classic jungle hits different 🥊",
+          "publishedOn": "2026-08-04",
+          "durationSeconds": 17,
+          "views": 90502,
+          "likes": 1215,
+          "comments": 30
+        }
+      ]
+    },
+    {
+      "id": "real-engineering",
+      "name": "Real Engineering",
+      "sourceUrl": "https://digitalcreators.jp/en/channel/en/UCR1IuLEqb6UEA_zQ81kwXfg/videos/",
+      "sourceLastUpdatedOn": "2026-11-07",
+      "videos": [
+        {
+          "title": "The Rise and Fall of the Concorde",
+          "publishedOn": "2026-10-31",
+          "durationSeconds": 2409,
+          "views": 533464,
+          "likes": 11961,
+          "comments": 744
+        },
+        {
+          "title": "The Plane That's 38% Nose",
+          "publishedOn": "2026-09-27",
+          "durationSeconds": 1216,
+          "views": 2587266,
+          "likes": 28679,
+          "comments": 1306
+        },
+        {
+          "title": "NASA’s Next Monster Telescope",
+          "publishedOn": "2026-08-29",
+          "durationSeconds": 1311,
+          "views": 736841,
+          "likes": 15113,
+          "comments": 685
+        },
+        {
+          "title": "How We Could Reach Proxima Centauri B in 20 Years",
+          "publishedOn": "2026-08-23",
+          "durationSeconds": 1075,
+          "views": 644832,
+          "likes": 21417,
+          "comments": 1320
+        },
+        {
+          "title": "Sagrada Familia - Full Documentary",
+          "publishedOn": "2026-08-03",
+          "durationSeconds": 1459,
+          "views": 457467,
+          "likes": 21023,
+          "comments": 1023
+        },
+        {
+          "title": "The Kurzgesagt Situation is Insane",
+          "publishedOn": "2026-08-01",
+          "durationSeconds": 696,
+          "views": 661491,
+          "likes": 49970,
+          "comments": 4809
+        },
+        {
+          "title": "The Forbidden Alloy of WW2",
+          "publishedOn": "2026-07-02",
+          "durationSeconds": 75,
+          "views": 3832019,
+          "likes": 0,
+          "comments": 630
+        },
+        {
+          "title": "This isn’t the original Statue of Liberty",
+          "publishedOn": "2026-07-01",
+          "durationSeconds": 89,
+          "views": 102900,
+          "likes": 0,
+          "comments": 83
+        },
+        {
+          "title": "Reading StarCloud’s Whitepaper So You Don’t Have To",
+          "publishedOn": "2026-06-28",
+          "durationSeconds": 1261,
+          "views": 735758,
+          "likes": 32391,
+          "comments": 3863
+        },
+        {
+          "title": "$1 vs $50 Phone Charger. What’s the difference?",
+          "publishedOn": "2026-06-23",
+          "durationSeconds": 127,
+          "views": 169622,
+          "likes": 10418,
+          "comments": 151
+        },
+        {
+          "title": "The Dark Side of the World’s Lightest Structural Metal",
+          "publishedOn": "2026-06-07",
+          "durationSeconds": 908,
+          "views": 577617,
+          "likes": 18593,
+          "comments": 588
+        },
+        {
+          "title": "The V-22’s prototype was even more dangerous",
+          "publishedOn": "2026-05-14",
+          "durationSeconds": 156,
+          "views": 583226,
+          "likes": 40424,
+          "comments": 407
+        },
+        {
+          "title": "Why the Nokia 3310 was so Durable",
+          "publishedOn": "2026-04-29",
+          "durationSeconds": 135,
+          "views": 517645,
+          "likes": 37051,
+          "comments": 618
+        },
+        {
+          "title": "The Insane Engineering of the V-22 Osprey",
+          "publishedOn": "2026-04-26",
+          "durationSeconds": 1388,
+          "views": 1101424,
+          "likes": 34659,
+          "comments": 1127
+        },
+        {
+          "title": "How American Tanks are being Destroyed in Ukraine",
+          "publishedOn": "2026-03-31",
+          "durationSeconds": 79,
+          "views": 1010001,
+          "likes": 31524,
+          "comments": 2002
+        },
+        {
+          "title": "Tank Engines are Weird",
+          "publishedOn": "2026-03-30",
+          "durationSeconds": 128,
+          "views": 308406,
+          "likes": 19251,
+          "comments": 488
+        },
+        {
+          "title": "How NASA Discovered a Military Base under Greenland",
+          "publishedOn": "2026-03-22",
+          "durationSeconds": 1302,
+          "views": 993501,
+          "likes": 23829,
+          "comments": 1118
+        },
+        {
+          "title": "Why America’s Tank Failed in Ukraine",
+          "publishedOn": "2026-02-22",
+          "durationSeconds": 1371,
+          "views": 1770897,
+          "likes": 45513,
+          "comments": 5683
+        },
+        {
+          "title": "The ISS would be uninhabitable without this",
+          "publishedOn": "2026-02-04",
+          "durationSeconds": 133,
+          "views": 162363,
+          "likes": 9266,
+          "comments": 151
+        },
+        {
+          "title": "Dude where’s my space station?",
+          "publishedOn": "2026-02-01",
+          "durationSeconds": 162,
+          "views": 197522,
+          "likes": 9822,
+          "comments": 169
+        },
+        {
+          "title": "The Weird Orbit of the ISS",
+          "publishedOn": "2026-01-30",
+          "durationSeconds": 110,
+          "views": 201171,
+          "likes": 6282,
+          "comments": 160
+        },
+        {
+          "title": "The Most Dangerous Space Walk",
+          "publishedOn": "2026-01-29",
+          "durationSeconds": 169,
+          "views": 453000,
+          "likes": 14627,
+          "comments": 252
+        },
+        {
+          "title": "How We Built the ISS - Part 2",
+          "publishedOn": "2025-12-21",
+          "durationSeconds": 1704,
+          "views": 671794,
+          "likes": 17489,
+          "comments": 471
+        },
+        {
+          "title": "How We Built The ISS",
+          "publishedOn": "2025-12-07",
+          "durationSeconds": 2165,
+          "views": 1594415,
+          "likes": 31872,
+          "comments": 1148
+        },
+        {
+          "title": "Solar Farms in Space - Reflect Orbital",
+          "publishedOn": "2025-12-03",
+          "durationSeconds": 1878,
+          "views": 546117,
+          "likes": 17679,
+          "comments": 2269
+        },
+        {
+          "title": "The Age of Laser Warfare Has Begun",
+          "publishedOn": "2025-10-25",
+          "durationSeconds": 1400,
+          "views": 1866732,
+          "likes": 51669,
+          "comments": 4433
+        },
+        {
+          "title": "Project Orion: A Nuclear Pulse Rocket",
+          "publishedOn": "2025-09-22",
+          "durationSeconds": 61,
+          "views": 315734,
+          "likes": 14297,
+          "comments": 416
+        },
+        {
+          "title": "Why Landing on the Moon is Confusing",
+          "publishedOn": "2025-09-22",
+          "durationSeconds": 159,
+          "views": 248567,
+          "likes": 12333,
+          "comments": 374
+        },
+        {
+          "title": "Earth to Mars in 10 Days",
+          "publishedOn": "2025-09-21",
+          "durationSeconds": 1580,
+          "views": 1857772,
+          "likes": 44159,
+          "comments": 2204
+        },
+        {
+          "title": "How China is tracking US Submarines",
+          "publishedOn": "2025-09-11",
+          "durationSeconds": 76,
+          "views": 326553,
+          "likes": 10603,
+          "comments": 545
+        },
+        {
+          "title": "This is the Mark 50 Torpedo",
+          "publishedOn": "2025-09-10",
+          "durationSeconds": 90,
+          "views": 1699416,
+          "likes": 55215,
+          "comments": 601
+        },
+        {
+          "title": "Why Deep Holes are So Expensive",
+          "publishedOn": "2025-09-08",
+          "durationSeconds": 101,
+          "views": 130504,
+          "likes": 5239,
+          "comments": 183
+        },
+        {
+          "title": "The Problem with Geothermal Energy",
+          "publishedOn": "2025-09-08",
+          "durationSeconds": 95,
+          "views": 4417197,
+          "likes": 227434,
+          "comments": 3506
+        },
+        {
+          "title": "Drilling Into Rock With Radiation",
+          "publishedOn": "2025-09-07",
+          "durationSeconds": 87,
+          "views": 1064973,
+          "likes": 47148,
+          "comments": 2180
+        },
+        {
+          "title": "NASA's Plutonium Problem",
+          "publishedOn": "2025-09-06",
+          "durationSeconds": 80,
+          "views": 1106722,
+          "likes": 36488,
+          "comments": 1065
+        },
+        {
+          "title": "This is Plutonium 238",
+          "publishedOn": "2025-09-05",
+          "durationSeconds": 110,
+          "views": 1437231,
+          "likes": 73833,
+          "comments": 1096
+        },
+        {
+          "title": "The P-38 has a weird engine design",
+          "publishedOn": "2025-09-04",
+          "durationSeconds": 179,
+          "views": 1173850,
+          "likes": 55121,
+          "comments": 652
+        },
+        {
+          "title": "The World's Deepest Hole is Under This Cover",
+          "publishedOn": "2025-08-30",
+          "durationSeconds": 82,
+          "views": 444873,
+          "likes": 13177,
+          "comments": 290
+        },
+        {
+          "title": "The Insane Story of Operation Vengence",
+          "publishedOn": "2025-08-29",
+          "durationSeconds": 179,
+          "views": 2029765,
+          "likes": 67570,
+          "comments": 981
+        },
+        {
+          "title": "The P-38 Solved an Annoying Problem",
+          "publishedOn": "2025-08-28",
+          "durationSeconds": 166,
+          "views": 8819075,
+          "likes": 304289,
+          "comments": 3107
+        },
+        {
+          "title": "How Apple AirPods Work",
+          "publishedOn": "2025-08-17",
+          "durationSeconds": 1092,
+          "views": 1234518,
+          "likes": 50321,
+          "comments": 1801
+        },
+        {
+          "title": "How Will the Golden Dome Work?",
+          "publishedOn": "2025-07-13",
+          "durationSeconds": 1378,
+          "views": 1782958,
+          "likes": 39059,
+          "comments": 3828
+        },
+        {
+          "title": "The Insane Engineering of the P-38 Lightning",
+          "publishedOn": "2025-06-29",
+          "durationSeconds": 1604,
+          "views": 2872969,
+          "likes": 60205,
+          "comments": 2118
+        },
+        {
+          "title": "How the Boeing 787 Works | Full Documentary",
+          "publishedOn": "2025-06-01",
+          "durationSeconds": 3931,
+          "views": 1953321,
+          "likes": 38964,
+          "comments": 2591
+        },
+        {
+          "title": "The Unlikely Rise of the Indian Space Program",
+          "publishedOn": "2025-05-18",
+          "durationSeconds": 1729,
+          "views": 951451,
+          "likes": 41835,
+          "comments": 6950
+        },
+        {
+          "title": "China’s Plan to Block All Submarines",
+          "publishedOn": "2025-04-19",
+          "durationSeconds": 1254,
+          "views": 1962068,
+          "likes": 42454,
+          "comments": 2406
+        },
+        {
+          "title": "NASA'S Plutonium Problem",
+          "publishedOn": "2025-03-22",
+          "durationSeconds": 1283,
+          "views": 3879186,
+          "likes": 88791,
+          "comments": 3412
+        },
+        {
+          "title": "Geothermal Energy is Changing | Quaise Energy Documentary",
+          "publishedOn": "2025-03-02",
+          "durationSeconds": 1314,
+          "views": 3019394,
+          "likes": 61351,
+          "comments": 4378
+        },
+        {
+          "title": "This technology made the f-14 possible",
+          "publishedOn": "2025-02-20",
+          "durationSeconds": 69,
+          "views": 427671,
+          "likes": 17255,
+          "comments": 290
+        },
+        {
+          "title": "The F-14’s worst feature",
+          "publishedOn": "2025-02-18",
+          "durationSeconds": 112,
+          "views": 1701188,
+          "likes": 92146,
+          "comments": 1072
+        }
+      ]
+    },
+    {
+      "id": "ghs",
+      "name": "GH'S",
+      "sourceUrl": "https://digitalcreators.jp/en/channel/en/UCdrBnBNLsN4_cH32HWbr9qg/videos/",
+      "sourceLastUpdatedOn": "2026-11-08",
+      "videos": [
+        {
+          "title": "John Doe, Jane Doe.. - FORSAKEN | ROBLOX ANIMATION",
+          "publishedOn": "2026-11-06",
+          "durationSeconds": 20,
+          "views": 335105,
+          "likes": 12397,
+          "comments": 245
+        },
+        {
+          "title": "LOSTEN & SOLIA - EMOTIA ESCAPE | ROBLOX",
+          "publishedOn": "2026-11-05",
+          "durationSeconds": 80,
+          "views": 184311,
+          "likes": 2779,
+          "comments": 83
+        },
+        {
+          "title": "LOSTEN & SOLIA - EMOTIA ESCAPE | ROBLOX",
+          "publishedOn": "2026-11-05",
+          "durationSeconds": 80,
+          "views": 1602799,
+          "likes": 43962,
+          "comments": 210
+        },
+        {
+          "title": "Thank you, Mom ❤️ - ROBLOX ANIMATION",
+          "publishedOn": "2026-11-03",
+          "durationSeconds": 29,
+          "views": 6410393,
+          "likes": 136843,
+          "comments": 699
+        },
+        {
+          "title": "THAT'S NOT MY MOM! 😱 - 99 NIGHT IN THE FOREST | ROBLOX ANIMATION",
+          "publishedOn": "2026-11-02",
+          "durationSeconds": 16,
+          "views": 16960203,
+          "likes": 248091,
+          "comments": 615
+        },
+        {
+          "title": "Trick or Scare! 🎃 - 99 NIGHT IN THE FOREST | ROBLOX ANIMATION",
+          "publishedOn": "2026-10-30",
+          "durationSeconds": 14,
+          "views": 893855,
+          "likes": 15304,
+          "comments": 151
+        },
+        {
+          "title": "Halloween in 99 Nights 🎃 - 99 NIGHT IN THE FOREST | ROBLOX ANIMATION",
+          "publishedOn": "2026-10-29",
+          "durationSeconds": 26,
+          "views": 2143732,
+          "likes": 31905,
+          "comments": 162
+        },
+        {
+          "title": "[24] Why Does Everyone Hate Her? 🥺 - Creepy Things | EMOTIA",
+          "publishedOn": "2026-10-27",
+          "durationSeconds": 51,
+          "views": 6111921,
+          "likes": 114416,
+          "comments": 605
+        },
+        {
+          "title": "POV: Home Alone 🏠 - FORSAKEN | ROBLOX ANIMATION",
+          "publishedOn": "2026-10-24",
+          "durationSeconds": 14,
+          "views": 1625236,
+          "likes": 26231,
+          "comments": 191
+        },
+        {
+          "title": "2006 vs 2026 - ROBLOX ANIMATION",
+          "publishedOn": "2026-10-22",
+          "durationSeconds": 17,
+          "views": 3378719,
+          "likes": 40120,
+          "comments": 301
+        },
+        {
+          "title": "MOM vs DAD Be Like - 99 NIGHT IN THE FOREST | ROBLOX ANIMATION",
+          "publishedOn": "2026-10-21",
+          "durationSeconds": 13,
+          "views": 1564186,
+          "likes": 29544,
+          "comments": 177
+        },
+        {
+          "title": "Dad Loves Her More Than Me! 💔 - 99 NIGHT IN THE FOREST | ROBLOX ANIMATION",
+          "publishedOn": "2026-10-19",
+          "durationSeconds": 24,
+          "views": 11368765,
+          "likes": 117453,
+          "comments": 423
+        },
+        {
+          "title": "My Family vs. Cockroach 🪳💀 - 99 NIGHT IN THE FOREST | ROBLOX ANIMATION",
+          "publishedOn": "2026-10-18",
+          "durationSeconds": 14,
+          "views": 4830972,
+          "likes": 45078,
+          "comments": 229
+        },
+        {
+          "title": "Losten: I Can't Lose Anyone Else - EMOTIA ESCAPE | ROBLOX ANIMATION",
+          "publishedOn": "2026-10-15",
+          "durationSeconds": 25,
+          "views": 1772691,
+          "likes": 32184,
+          "comments": 246
+        },
+        {
+          "title": "Two Endings, One Love..🩶 - 99 NIGHT IN THE FOREST | ROBLOX ANIMATION",
+          "publishedOn": "2026-10-12",
+          "durationSeconds": 19,
+          "views": 857423,
+          "likes": 17380,
+          "comments": 396
+        },
+        {
+          "title": "POV: Your Ex Moved On - STEAL AN EGG | ROBLOX ANIMATION",
+          "publishedOn": "2026-10-10",
+          "durationSeconds": 21,
+          "views": 6682390,
+          "likes": 82950,
+          "comments": 530
+        },
+        {
+          "title": "[23] SAVE MY MOM - Creepy Things | EMOTIA",
+          "publishedOn": "2026-10-07",
+          "durationSeconds": 35,
+          "views": 4029755,
+          "likes": 88923,
+          "comments": 760
+        },
+        {
+          "title": "POV: Me Every Morning 💀 - FORSAKEN | ROBLOX ANIMATION",
+          "publishedOn": "2026-10-06",
+          "durationSeconds": 11,
+          "views": 1072152,
+          "likes": 14473,
+          "comments": 177
+        },
+        {
+          "title": "Be happy, my baby - STEAL AN EGG | ROBLOX ANIMATION",
+          "publishedOn": "2026-10-02",
+          "durationSeconds": 17,
+          "views": 6142706,
+          "likes": 74993,
+          "comments": 531
+        },
+        {
+          "title": "BRO CARRIED💀 - EMOTIA ESCAPE | ROBLOX ANIMATION",
+          "publishedOn": "2026-10-01",
+          "durationSeconds": 22,
+          "views": 4312396,
+          "likes": 57594,
+          "comments": 329
+        },
+        {
+          "title": "I Miss When We Played Together.. - STEAL AN EGG | ROBLOX ANIMATION",
+          "publishedOn": "2026-09-30",
+          "durationSeconds": 20,
+          "views": 10972851,
+          "likes": 98395,
+          "comments": 744
+        },
+        {
+          "title": "MY REAL FRIEND.. - STEAL AN EGG | ROBLOX ANIMATION",
+          "publishedOn": "2026-09-29",
+          "durationSeconds": 21,
+          "views": 2075872,
+          "likes": 34074,
+          "comments": 273
+        },
+        {
+          "title": "ROBLOX ANIMATION TOP 25 COMPLETE EDITION",
+          "publishedOn": "2026-09-27",
+          "durationSeconds": 1204,
+          "views": 1015339,
+          "likes": 8210,
+          "comments": 222
+        },
+        {
+          "title": "He Tried to Steal My Egg... 💀 - STEAL AN EGG | ROBLOX ANIMATION",
+          "publishedOn": "2026-09-26",
+          "durationSeconds": 20,
+          "views": 2556685,
+          "likes": 35848,
+          "comments": 286
+        },
+        {
+          "title": "Kindness is the greatest courage - STEAL AN EGG | ROBLOX ANIMATION",
+          "publishedOn": "2026-09-24",
+          "durationSeconds": 30,
+          "views": 8914881,
+          "likes": 103337,
+          "comments": 400
+        },
+        {
+          "title": "What do you want to be when you grow up? - STEAL AN EGG | ROBLOX ANIMATION",
+          "publishedOn": "2026-09-22",
+          "durationSeconds": 21,
+          "views": 4928755,
+          "likes": 67694,
+          "comments": 502
+        },
+        {
+          "title": "MY OLD FRIEND.. - EMOTIA ESCAPE | ROBLOX ANIMATION",
+          "publishedOn": "2026-09-21",
+          "durationSeconds": 25,
+          "views": 3809916,
+          "likes": 78306,
+          "comments": 601
+        },
+        {
+          "title": "DON’T STEAL MY EGG! 🥚😡 - STEAL AN EGG | ROBLOX ANIMATION",
+          "publishedOn": "2026-09-18",
+          "durationSeconds": 22,
+          "views": 4870547,
+          "likes": 66933,
+          "comments": 955
+        },
+        {
+          "title": "[22] That's la peace - STEAL AN EGG | Creepy Things | EMOTIA",
+          "publishedOn": "2026-09-17",
+          "durationSeconds": 18,
+          "views": 1546133,
+          "likes": 27927,
+          "comments": 530
+        },
+        {
+          "title": "Creepy Things COMPLETE EDITION | EMOTIA",
+          "publishedOn": "2026-09-16",
+          "durationSeconds": 841,
+          "views": 2139876,
+          "likes": 21160,
+          "comments": 619
+        },
+        {
+          "title": "Secret Agent’s Nightmare 💀 - ANIMAL HOSPITAL | ROBLOX ANIMATION",
+          "publishedOn": "2026-09-15",
+          "durationSeconds": 23,
+          "views": 8188043,
+          "likes": 101116,
+          "comments": 461
+        },
+        {
+          "title": "LILA🌹 - EMOTIA ESCAPE | ROBLOX ANIMATION",
+          "publishedOn": "2026-09-10",
+          "durationSeconds": 20,
+          "views": 8785183,
+          "likes": 121283,
+          "comments": 1151
+        },
+        {
+          "title": "Dr. Harlow in 99 Nights 🫎 - ANIMAL HOSPITAL | ROBLOX ANIMATION",
+          "publishedOn": "2026-09-08",
+          "durationSeconds": 32,
+          "views": 6156315,
+          "likes": 96714,
+          "comments": 966
+        },
+        {
+          "title": "HOW TO TREAT A PATIENT - ANIMAL HOSPITAL | ROBLOX ANIMATION",
+          "publishedOn": "2026-09-07",
+          "durationSeconds": 15,
+          "views": 21568969,
+          "likes": 201614,
+          "comments": 962
+        },
+        {
+          "title": "Good night, Glee! - EMOTIA ESCAPE | ROBLOX ANIMATION",
+          "publishedOn": "2026-09-04",
+          "durationSeconds": 15,
+          "views": 5877158,
+          "likes": 83538,
+          "comments": 569
+        },
+        {
+          "title": "I just wanna get a kill… - MURDER MYSTERY 2 | ROBLOX ANIMATION",
+          "publishedOn": "2026-09-03",
+          "durationSeconds": 14,
+          "views": 2254588,
+          "likes": 29323,
+          "comments": 271
+        },
+        {
+          "title": "EMPLOYEE OF THE MONTH 🏆 - ANIMAL HOSPITAL | ROBLOX ANIMATION",
+          "publishedOn": "2026-09-01",
+          "durationSeconds": 25,
+          "views": 9482926,
+          "likes": 97080,
+          "comments": 993
+        },
+        {
+          "title": "Where is my mom? - ANIMAL HOSPITAL | ROBLOX ANIMATION",
+          "publishedOn": "2026-08-30",
+          "durationSeconds": 21,
+          "views": 9294430,
+          "likes": 136045,
+          "comments": 1290
+        },
+        {
+          "title": "KINDLE - EMOTIA ESCAPE | ROBLOX ANIMATION",
+          "publishedOn": "2026-08-29",
+          "durationSeconds": 31,
+          "views": 7878775,
+          "likes": 108634,
+          "comments": 1001
+        },
+        {
+          "title": "I'll always protect you.. - ANIMAL HOSPITAL | ROBLOX ANIMATION",
+          "publishedOn": "2026-08-26",
+          "durationSeconds": 30,
+          "views": 14320758,
+          "likes": 184785,
+          "comments": 2088
+        },
+        {
+          "title": "[TWISTED] We must ALWAYS be joyful. - EMOTIA ESCAPE | ROBLOX ANIMATION",
+          "publishedOn": "2026-08-25",
+          "durationSeconds": 15,
+          "views": 14526666,
+          "likes": 160678,
+          "comments": 2715
+        },
+        {
+          "title": "NOOB MURDERER 💀 - MURDER MYSTERY 2 | ROBLOX ANIMATION",
+          "publishedOn": "2026-08-24",
+          "durationSeconds": 19,
+          "views": 8834973,
+          "likes": 84627,
+          "comments": 678
+        },
+        {
+          "title": "My first love 💕 - ANIMAL HOSPITAL | ROBLOX ANIMATION",
+          "publishedOn": "2026-08-22",
+          "durationSeconds": 24,
+          "views": 6173268,
+          "likes": 85899,
+          "comments": 1112
+        },
+        {
+          "title": "[21] I NEED MONEY💰 - Creepy Things | EMOTIA",
+          "publishedOn": "2026-08-20",
+          "durationSeconds": 45,
+          "views": 2096417,
+          "likes": 50415,
+          "comments": 656
+        },
+        {
+          "title": "I JUST NEEDED A COFFEE 😭 - ANIMAL HOSPITAL | ROBLOX ANIMATION",
+          "publishedOn": "2026-08-16",
+          "durationSeconds": 25,
+          "views": 10968803,
+          "likes": 127959,
+          "comments": 841
+        },
+        {
+          "title": "GLEE - EMOTIA ESCAPE | ROBLOX ANIMATION",
+          "publishedOn": "2026-08-13",
+          "durationSeconds": 32,
+          "views": 8779467,
+          "likes": 160656,
+          "comments": 1766
+        },
+        {
+          "title": "To My Best Friend.. - ANIMAL HOSPITAL | ROBLOX ANIMATION",
+          "publishedOn": "2026-08-11",
+          "durationSeconds": 25,
+          "views": 47411474,
+          "likes": 491775,
+          "comments": 4953
+        },
+        {
+          "title": "Never Go AFK 💀 - GROW A GARDEN 2 | ROBLOX ANIMATION",
+          "publishedOn": "2026-08-11",
+          "durationSeconds": 24,
+          "views": 3033695,
+          "likes": 36003,
+          "comments": 236
+        },
+        {
+          "title": "The Intern Is TROLLING 💀 - ANIMAL HOSPITAL | ROBLOX ANIMATION",
+          "publishedOn": "2026-08-09",
+          "durationSeconds": 18,
+          "views": 14470485,
+          "likes": 144123,
+          "comments": 815
+        },
+        {
+          "title": "[20] Queen Never Cry 👑 - Creepy Things | EMOTIA",
+          "publishedOn": "2026-08-08",
+          "durationSeconds": 31,
+          "views": 28837127,
+          "likes": 371183,
+          "comments": 3134
+        }
+      ]
+    },
+    {
+      "id": "daily-dose",
+      "name": "Daily Dose Of Internet",
+      "sourceUrl": "https://digitalcreators.jp/en/channel/en/UCdC0An4ZPNr_YiFiYoVbwaw/videos/",
+      "sourceLastUpdatedOn": "2026-11-09",
+      "videos": [
+        {
+          "title": "He Accidentally Made The Perfect Throw",
+          "publishedOn": "2026-11-08",
+          "durationSeconds": 910,
+          "views": 871386,
+          "likes": 17480,
+          "comments": 1160
+        },
+        {
+          "title": "Lumberjack Met His Match",
+          "publishedOn": "2026-11-06",
+          "durationSeconds": 916,
+          "views": 1017974,
+          "likes": 20826,
+          "comments": 1119
+        },
+        {
+          "title": "Maybe Not The Best Idea",
+          "publishedOn": "2026-11-04",
+          "durationSeconds": 910,
+          "views": 1217591,
+          "likes": 22845,
+          "comments": 1034
+        },
+        {
+          "title": "Best Videos Of The Decade",
+          "publishedOn": "2026-11-01",
+          "durationSeconds": 1859,
+          "views": 2484677,
+          "likes": 42091,
+          "comments": 1823
+        },
+        {
+          "title": "Cooking Steak With A Magnifying Glass",
+          "publishedOn": "2026-10-30",
+          "durationSeconds": 912,
+          "views": 1569826,
+          "likes": 26092,
+          "comments": 1304
+        },
+        {
+          "title": "How Not To Close A Glass Door",
+          "publishedOn": "2026-10-28",
+          "durationSeconds": 915,
+          "views": 1522215,
+          "likes": 27540,
+          "comments": 1065
+        },
+        {
+          "title": "He Missed His Chance Twice",
+          "publishedOn": "2026-10-25",
+          "durationSeconds": 910,
+          "views": 1602617,
+          "likes": 26647,
+          "comments": 1635
+        },
+        {
+          "title": "How Not To Merge Onto A Motorway",
+          "publishedOn": "2026-10-23",
+          "durationSeconds": 908,
+          "views": 1639358,
+          "likes": 27680,
+          "comments": 1326
+        },
+        {
+          "title": "This Baby Doesn't Like Halloween",
+          "publishedOn": "2026-10-21",
+          "durationSeconds": 915,
+          "views": 1282521,
+          "likes": 24341,
+          "comments": 1275
+        },
+        {
+          "title": "One In A Million Throw",
+          "publishedOn": "2026-10-18",
+          "durationSeconds": 902,
+          "views": 3252185,
+          "likes": 41334,
+          "comments": 1474
+        },
+        {
+          "title": "Her Makeup Started Glitching",
+          "publishedOn": "2026-10-16",
+          "durationSeconds": 921,
+          "views": 1594967,
+          "likes": 29275,
+          "comments": 1742
+        },
+        {
+          "title": "Cutting Grass The Smart Way",
+          "publishedOn": "2026-10-14",
+          "durationSeconds": 916,
+          "views": 1293395,
+          "likes": 27337,
+          "comments": 2822
+        },
+        {
+          "title": "They Wanted To Make This Birthday Special",
+          "publishedOn": "2026-10-13",
+          "durationSeconds": 14,
+          "views": 1141355,
+          "likes": 23184,
+          "comments": 277
+        },
+        {
+          "title": "His Brain Hit The Off Switch",
+          "publishedOn": "2026-10-11",
+          "durationSeconds": 903,
+          "views": 1703523,
+          "likes": 27597,
+          "comments": 1348
+        },
+        {
+          "title": "His Pants Had Other Plans",
+          "publishedOn": "2026-10-09",
+          "durationSeconds": 909,
+          "views": 1773868,
+          "likes": 28540,
+          "comments": 1231
+        },
+        {
+          "title": "Baby Turtle Tries to Get to the Ocean",
+          "publishedOn": "2026-10-08",
+          "durationSeconds": 51,
+          "views": 176164,
+          "likes": 5933,
+          "comments": 247
+        },
+        {
+          "title": "She Didn’t Think This Through",
+          "publishedOn": "2026-10-07",
+          "durationSeconds": 902,
+          "views": 2253096,
+          "likes": 35474,
+          "comments": 1605
+        },
+        {
+          "title": "The Absolute Worst Luck Possible",
+          "publishedOn": "2026-10-04",
+          "durationSeconds": 921,
+          "views": 2698604,
+          "likes": 35850,
+          "comments": 1999
+        },
+        {
+          "title": "Takeout Order Immediately Backfires",
+          "publishedOn": "2026-10-02",
+          "durationSeconds": 919,
+          "views": 2577514,
+          "likes": 36745,
+          "comments": 1625
+        },
+        {
+          "title": "This Defied Physics",
+          "publishedOn": "2026-10-01",
+          "durationSeconds": 10,
+          "views": 1064131,
+          "likes": 31592,
+          "comments": 336
+        },
+        {
+          "title": "Buddy Was 100% Wrong",
+          "publishedOn": "2026-09-30",
+          "durationSeconds": 897,
+          "views": 2845432,
+          "likes": 40276,
+          "comments": 2049
+        },
+        {
+          "title": "Funniest Cat Videos on the Internet",
+          "publishedOn": "2026-09-27",
+          "durationSeconds": 1973,
+          "views": 2575552,
+          "likes": 27874,
+          "comments": 918
+        },
+        {
+          "title": "Dumbest Guy Ever",
+          "publishedOn": "2026-09-25",
+          "durationSeconds": 905,
+          "views": 2133658,
+          "likes": 34950,
+          "comments": 2265
+        },
+        {
+          "title": "She Was Not Expecting That",
+          "publishedOn": "2026-09-23",
+          "durationSeconds": 916,
+          "views": 1827268,
+          "likes": 32063,
+          "comments": 1462
+        },
+        {
+          "title": "He Wanted No Part of It",
+          "publishedOn": "2026-09-22",
+          "durationSeconds": 33,
+          "views": 391389,
+          "likes": 11590,
+          "comments": 250
+        },
+        {
+          "title": "Bear Sneaks Up on Delivery Guy",
+          "publishedOn": "2026-09-20",
+          "durationSeconds": 903,
+          "views": 1802342,
+          "likes": 28686,
+          "comments": 1308
+        },
+        {
+          "title": "That's One Way To Use A Parachute",
+          "publishedOn": "2026-09-18",
+          "durationSeconds": 906,
+          "views": 1889420,
+          "likes": 30452,
+          "comments": 1472
+        },
+        {
+          "title": "They Really Didn't Want to Answer This Question",
+          "publishedOn": "2026-09-17",
+          "durationSeconds": 18,
+          "views": 1394936,
+          "likes": 39930,
+          "comments": 577
+        },
+        {
+          "title": "Restaurants Are Evolving",
+          "publishedOn": "2026-09-16",
+          "durationSeconds": 902,
+          "views": 2680714,
+          "likes": 39112,
+          "comments": 1942
+        },
+        {
+          "title": "That's One Way to Cross a River",
+          "publishedOn": "2026-09-14",
+          "durationSeconds": 17,
+          "views": 1334564,
+          "likes": 42090,
+          "comments": 515
+        },
+        {
+          "title": "Absolute Worst Home Inspector",
+          "publishedOn": "2026-09-13",
+          "durationSeconds": 909,
+          "views": 3274323,
+          "likes": 42118,
+          "comments": 2111
+        },
+        {
+          "title": "How Does One Live without Ice Cream Cake?",
+          "publishedOn": "2026-09-12",
+          "durationSeconds": 14,
+          "views": 1575429,
+          "likes": 47198,
+          "comments": 784
+        },
+        {
+          "title": "How Not To Get Your Morning Coffee",
+          "publishedOn": "2026-09-11",
+          "durationSeconds": 901,
+          "views": 1760748,
+          "likes": 30103,
+          "comments": 1817
+        },
+        {
+          "title": "I Guess School Is Cancelled Today",
+          "publishedOn": "2026-09-09",
+          "durationSeconds": 886,
+          "views": 3996989,
+          "likes": 49380,
+          "comments": 2165
+        },
+        {
+          "title": "Glass Door Couldn't Handle The Pressure",
+          "publishedOn": "2026-09-06",
+          "durationSeconds": 923,
+          "views": 1658049,
+          "likes": 31152,
+          "comments": 1330
+        },
+        {
+          "title": "A Motorcylist Made This Kid's Day",
+          "publishedOn": "2026-09-05",
+          "durationSeconds": 14,
+          "views": 431037,
+          "likes": 8959,
+          "comments": 81
+        },
+        {
+          "title": "The Cheeks Of A Professional Glass Blower",
+          "publishedOn": "2026-09-04",
+          "durationSeconds": 902,
+          "views": 1908250,
+          "likes": 34647,
+          "comments": 1590
+        },
+        {
+          "title": "He Made it Rain at Graduation",
+          "publishedOn": "2026-09-03",
+          "durationSeconds": 14,
+          "views": 1827268,
+          "likes": 48215,
+          "comments": 603
+        },
+        {
+          "title": "The Worst Situation To Be In",
+          "publishedOn": "2026-09-02",
+          "durationSeconds": 900,
+          "views": 1744524,
+          "likes": 29430,
+          "comments": 1924
+        },
+        {
+          "title": "He Was Using a Harry Potter Spell",
+          "publishedOn": "2026-09-01",
+          "durationSeconds": 27,
+          "views": 1563099,
+          "likes": 48299,
+          "comments": 658
+        },
+        {
+          "title": "The Dumbest Humans Caught On Camera",
+          "publishedOn": "2026-08-30",
+          "durationSeconds": 1895,
+          "views": 14247359,
+          "likes": 141898,
+          "comments": 10851
+        },
+        {
+          "title": "Worst Time To Fall Asleep At Work",
+          "publishedOn": "2026-08-28",
+          "durationSeconds": 904,
+          "views": 2464370,
+          "likes": 38393,
+          "comments": 1842
+        },
+        {
+          "title": "He Immediately Stopped His Workout",
+          "publishedOn": "2026-08-27",
+          "durationSeconds": 28,
+          "views": 426457,
+          "likes": 10337,
+          "comments": 361
+        },
+        {
+          "title": "Somebody Didn't Follow The Plan",
+          "publishedOn": "2026-08-26",
+          "durationSeconds": 903,
+          "views": 1442840,
+          "likes": 31899,
+          "comments": 1274
+        },
+        {
+          "title": "He Fought Gravity and Won",
+          "publishedOn": "2026-08-24",
+          "durationSeconds": 13,
+          "views": 662828,
+          "likes": 12276,
+          "comments": 400
+        },
+        {
+          "title": "The Car Parked Itself Without Him",
+          "publishedOn": "2026-08-24",
+          "durationSeconds": 56,
+          "views": 355656,
+          "likes": 10349,
+          "comments": 460
+        },
+        {
+          "title": "How To Ruin A Wedding",
+          "publishedOn": "2026-08-23",
+          "durationSeconds": 918,
+          "views": 1326380,
+          "likes": 31169,
+          "comments": 2285
+        },
+        {
+          "title": "He Didn't Know What He Was Facing",
+          "publishedOn": "2026-08-22",
+          "durationSeconds": 8,
+          "views": 535379,
+          "likes": 11381,
+          "comments": 132
+        },
+        {
+          "title": "She Outsmarted Her Neighbors",
+          "publishedOn": "2026-08-21",
+          "durationSeconds": 912,
+          "views": 1775831,
+          "likes": 42698,
+          "comments": 2684
+        },
+        {
+          "title": "Hot Dog's First Time",
+          "publishedOn": "2026-08-20",
+          "durationSeconds": 23,
+          "views": 1997146,
+          "likes": 85824,
+          "comments": 1532
+        }
+      ]
+    }
+  ]
+}
