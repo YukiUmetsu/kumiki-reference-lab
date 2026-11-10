@@ -42,6 +42,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Real footage calibration:** Four [openly licensed video files](docs/open-footage-calibration.md) covering paper cutouts, kinetic type, flat motion graphics and cinematic 3D have been locally downloaded, hashed, probed, and measured across **11 timecoded windows**. `motion` and `appearance` support `--start-seconds` for native, source-PTS-preserving later-window analysis. The `open-footage validate|list|summarize|verify-local` commands check the [calibration dataset](research/open-footage-calibration.v1.json) and summarize proxy activity **separately for main content, opening titles and credit transitions** based on sparse contact-sheet context. These are **not whole-film camera/light frequencies, full-speed reviews, or popularity claims**. Raw footage is not checked in.
 
+**Character and dialogue review (new):** [`character-scene`](docs/character-scene-review.md) validates and summarizes source-PTS-bound character rosters, visible traits, multi-character actions, scene interactions, dialogue with attributed or unknown speakers, and explicitly sourced identity claims. It is **a reviewer/model annotation contract**, not automatic character detection, ASR, diarization, age/ethnicity inference or verified character recognition. The [synthetic example](examples/character-scene.synthetic.example.json) illustrates the input format without representing any actual reference film.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
