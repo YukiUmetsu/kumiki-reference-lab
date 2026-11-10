@@ -15,7 +15,7 @@ from bisect import bisect_right
 from pathlib import Path
 from typing import Any
 
-from kumiki_reference_lab.analyzers.media.inspect import inspect_source
+from kumiki_reference_lab.analyzers.media.inspect import inspect_source, sha256_file
 from kumiki_reference_lab.core.provenance import file_signature, require_unchanged
 from kumiki_reference_lab.reviews.character_scene import (
     SCHEMA_VERSION as SCENE_VERSION, validate_character_scene,
@@ -34,7 +34,11 @@ _CLASS_TO_KIND = {
 
 
 def _check_float(value: Any, field: str, *, lower: float = 0, upper: float = 1) -> float:
-    if type(value) not in (float, int) or not math.isfinite(value) or not lower <= value <= upper:
+    try:
+        finite = type(value) in (float, int) and math.isfinite(value)
+    except (ValueError, OverflowError):
+        finite = False
+    if not finite or not lower <= value <= upper:
         raise ValueError(f"{field} must be a finite number between {lower} and {upper}")
     return float(value)
 
@@ -145,8 +149,6 @@ def validate_subject_detections(data: Any) -> None:
 def _match_previous(active: dict[str, dict[str, Any]], proposed: list[dict[str, Any]],
                     min_iou: float, margin: float) -> dict[int, str]:
     """Mutual best matches only, abstaining on close competitors in either direction."""
-    for idx, p in enumerate(proposed):
-        p["_idx"] = idx
     by_detection: dict[int, list[tuple[float, str]]] = {}
     by_track: dict[str, list[tuple[float, int]]] = {}
     for idx, det in enumerate(proposed):
@@ -291,6 +293,7 @@ def run_subject_detections(source: Path, detections_path: Path, out: Path, *,
     before = file_signature(source)
     input_before = file_signature(detections_path)
     detections = load_subject_detections(detections_path)
+    detections_sha = sha256_file(detections_path)
     metadata = inspect_source(source, ffprobe=ffprobe, rights_status=rights_status)
     expected = {
         "sourceSha256": metadata["source"]["sha256"],
@@ -304,6 +307,7 @@ def run_subject_detections(source: Path, detections_path: Path, out: Path, *,
     require_unchanged(source, before)
     require_unchanged(detections_path, input_before)
     report["rightsStatus"] = rights_status
+    report["detectionFileSha256"] = detections_sha
     out.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".kumiki-detections-", dir=out.parent) as folder:
         temp = Path(folder)
