@@ -62,6 +62,9 @@ from kumiki_reference_lab.integrations.kumiki.film_feedback import (
 )
 from kumiki_reference_lab.reviews.notes import review_notes_template, validate_review_notes
 from kumiki_reference_lab.reviews.visual_events import load_visual_events, summarize_visual_events
+from kumiki_reference_lab.reviews.visual_style_timeline import (
+    load_visual_style_timeline, summarize_visual_style_timeline,
+)
 
 
 def _read_roi_reseeds(path: Path | None) -> list[dict] | None:
@@ -554,6 +557,12 @@ def build_parser() -> argparse.ArgumentParser:
     for action in ("validate", "report"):
         sub = event_actions.add_parser(action)
         sub.add_argument("review_file", type=Path)
+    style_timeline = commands.add_parser(
+        "visual-style-review", help="validate or summarize footage-grounded visual style intervals")
+    style_review_actions = style_timeline.add_subparsers(dest="style_review_action", required=True)
+    for action in ("validate", "report"):
+        sub = style_review_actions.add_parser(action)
+        sub.add_argument("review_file", type=Path)
     return parser
 
 
@@ -659,6 +668,13 @@ def main(argv: list[str] | None = None) -> int:
             review = load_visual_events(args.review_file)
             report = ({"valid": True, "eventCount": len(review["events"])}
                       if args.event_action == "validate" else summarize_visual_events(review))
+            print(json.dumps(report, indent=2, sort_keys=True))
+            return 0
+        if args.command == "visual-style-review":
+            review = load_visual_style_timeline(args.review_file)
+            report = ({"valid": True, "segmentCount": len(review["segments"])}
+                      if args.style_review_action == "validate" else
+                      summarize_visual_style_timeline(review))
             print(json.dumps(report, indent=2, sort_keys=True))
             return 0
         if args.command == "analyze":

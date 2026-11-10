@@ -36,6 +36,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Paired camera/lighting review:** [`audience-benchmarks compare-visual`](docs/visual-study-cohort-plan.md#comparing-reviewed-camera-and-lighting-frequencies) cross-checks two reviewer-supplied, timecoded `visual-events` reports against source-row fingerprints, provisional YouTube IDs and self-declared local media SHA-256 bindings. It calculates paired per-minute differences only when the same reviewer declares near-whole-runtime full-window coverage on both videos. Tests use synthetic review records; no original audience videos have been visually reviewed or approved.
 
+**Style review timeline:** [`visual-style-review`](docs/timecoded-visual-style-review.md) accepts source-PTS-bound, reviewer-declared intervals with primary medium, overlapping paper-cut/collage/2.5D/3D/stop-motion/live-action aesthetic tags, lighting look and shot scale. It computes **time-weighted** distributions and abstains from whole-window estimates for partial or gapped reviews. The example is synthetic; no popular-video style proportions are claimed.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
