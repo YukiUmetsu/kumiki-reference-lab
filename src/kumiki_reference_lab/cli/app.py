@@ -123,6 +123,8 @@ def build_parser() -> argparse.ArgumentParser:
     motion.add_argument("source", type=Path)
     motion.add_argument("--out", type=Path)
     motion.add_argument("--max-seconds", type=int, default=10)
+    motion.add_argument("--start-seconds", type=int, default=0,
+                        help="source-relative start offset; preserves original PTS, total prefix <= 120s")
     motion.add_argument("--max-samples", type=int, default=48)
     motion.add_argument("--width", type=int, default=160)
     motion.add_argument("--height", type=int, default=90)
@@ -241,6 +243,8 @@ def build_parser() -> argparse.ArgumentParser:
     appearance.add_argument("source", type=Path)
     appearance.add_argument("--out", type=Path)
     appearance.add_argument("--max-seconds", type=int, default=10)
+    appearance.add_argument("--start-seconds", type=int, default=0,
+                            help="source-relative start offset; preserves original PTS, total prefix <= 120s")
     appearance.add_argument("--max-samples", type=int, default=24)
     appearance.add_argument("--width", type=int, default=160)
     appearance.add_argument("--height", type=int, default=90)
@@ -896,6 +900,7 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "motion":
             artifact = analyze_image_motion(
                 args.source, seconds=args.max_seconds, max_samples=args.max_samples,
+                start_seconds=args.start_seconds,
                 width=args.width, height=args.height, threshold=args.threshold,
                 ffmpeg=args.ffmpeg, ffprobe=args.ffprobe, rights_status=args.rights_status,
             )
@@ -937,6 +942,7 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "appearance":
             artifact = analyze_appearance(
                 args.source, seconds=args.max_seconds, max_samples=args.max_samples,
+                start_seconds=args.start_seconds,
                 width=args.width, height=args.height, threshold=args.threshold,
                 ffmpeg=args.ffmpeg, ffprobe=args.ffprobe, rights_status=args.rights_status,
             )

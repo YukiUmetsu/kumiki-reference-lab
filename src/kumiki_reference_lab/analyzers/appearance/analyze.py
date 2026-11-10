@@ -27,9 +27,14 @@ def analyze_appearance(
     width: int = 160, height: int = 90, threshold: float = 0.25,
     ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
     rights_status: str = "review-required",
+    start_seconds: int = 0,
 ) -> dict[str, Any]:
     if type(seconds) is not int or not 1 <= seconds <= 20:
         raise ValueError("appearance seconds must be 1..20")
+    if type(start_seconds) is not int or start_seconds < 0:
+        raise ValueError("start_seconds must be a nonnegative integer")
+    if start_seconds + seconds > 120:
+        raise ValueError("appearance source prefix must be at most 120 seconds")
     if type(max_samples) is not int or not 5 <= max_samples <= 40:
         raise ValueError("appearance samples must be 5..40")
     if (type(width) is not int or type(height) is not int or
@@ -46,15 +51,17 @@ def analyze_appearance(
     stream = manifest["video"]["streamIndex"]
     source_timebase = manifest["video"]["sourceTimebase"]
     timebase = Fraction(source_timebase["numerator"], source_timebase["denominator"])
-    frames = read_frame_pts(source, stream, seconds=seconds, ffprobe=ffprobe)
+    frames = read_frame_pts(source, stream, seconds=seconds, ffprobe=ffprobe,
+                            start_seconds=start_seconds, source_timebase=timebase)
     samples = select_motion_samples(frames, max_samples)
-    cuts = detect_hard_cut_pts(source, stream, seconds=seconds,
+    scan_prefix = start_seconds + seconds
+    cuts = detect_hard_cut_pts(source, stream, seconds=scan_prefix,
                                threshold=threshold, ffmpeg=ffmpeg)
     if cuts.timebase != timebase:
         raise ValueError("appearance cut detector changed source timebase")
     planes = read_rgb_frames(source, stream, [f.ordinal for f in samples],
                              [int(f.pts) for f in samples], timebase=timebase,
-                             seconds=seconds, width=width, height=height, ffmpeg=ffmpeg)
+                             seconds=scan_prefix, width=width, height=height, ffmpeg=ffmpeg)
     require_unchanged(source, signature)
 
     observations = []
@@ -65,7 +72,7 @@ def analyze_appearance(
             "sourceSeconds": as_rational_dict(int(frame.pts) * timebase),
             "appearance": describe_rgb_frame(rgb, width, height),
         })
-    cut_pts = sorted(set(cuts.pts))
+    cut_pts = sorted({pts for pts in cuts.pts if samples[0].pts <= pts <= samples[-1].pts})
     changes = []
     for earlier, later in zip(observations, observations[1:]):
         crosses = bisect_right(cut_pts, earlier["sourcePts"]) < bisect_right(
@@ -84,12 +91,13 @@ def analyze_appearance(
                 sum(abs(b - a) for a, b in zip(first["hueHistogram12"],
                                                second["hueHistogram12"], strict=True)) / 2, 5)),
         })
-    return {
+    report = {
         "schemaVersion": APPEARANCE_VERSION,
         "sourceSha256": manifest["source"]["sha256"],
         "sourceStreamIndex": stream, "sourceTimebase": source_timebase,
         "scanWindowSeconds": seconds,
-        "coverage": "bounded-from-start-not-necessarily-full-video",
+        "coverage": ("bounded-source-window-not-necessarily-full-video" if start_seconds
+                     else "bounded-from-start-not-necessarily-full-video"),
         "analyzer": {
             "method": "rgb-display-proxy-statistics-v1",
             "rampModel": "spatially-coherent-luma-ramp-candidate-v1",
@@ -114,3 +122,6 @@ def analyze_appearance(
         "imageBlendCandidates": detect_linear_blend_candidates(
             planes, observations, changes, timebase=timebase),
     }
+    if start_seconds:
+        report["scanStartSeconds"] = start_seconds
+    return report

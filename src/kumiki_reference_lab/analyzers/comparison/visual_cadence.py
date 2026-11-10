@@ -58,7 +58,12 @@ def _validated_pairs(report: dict[str, Any], *, kind: str) -> tuple[list[dict[st
     required_version = IMAGE_MOTION_VERSION if kind == "motion" else APPEARANCE_VERSION
     if report.get("schemaVersion") != required_version:
         raise ValueError(f"{kind} version is not supported")
-    if report.get("coverage") != "bounded-from-start-not-necessarily-full-video":
+    start_seconds = report.get("scanStartSeconds", 0)
+    if (type(start_seconds) is not int or start_seconds < 0 or start_seconds > 119):
+        raise ValueError(f"{kind} scan starting offset invalid")
+    expected_coverage = ("bounded-source-window-not-necessarily-full-video" if start_seconds
+                         else "bounded-from-start-not-necessarily-full-video")
+    if report.get("coverage") != expected_coverage:
         raise ValueError(f"{kind} source coverage is not recognized")
     timebase = _rational(report.get("sourceTimebase"), f"{kind} timebase")
     if timebase <= 0 or timebase > 1:
@@ -79,6 +84,8 @@ def _validated_pairs(report: dict[str, Any], *, kind: str) -> tuple[list[dict[st
     if (type(report.get("scanWindowSeconds")) is not int or
             not 1 <= report["scanWindowSeconds"] <= 30):
         raise ValueError(f"{kind} scan window is invalid")
+    if start_seconds + report["scanWindowSeconds"] > 120:
+        raise ValueError(f"{kind} decoded source prefix exceeds budget")
     if not 0 < (pts[-1] - pts[0]) * timebase <= report["scanWindowSeconds"] + 1:
         raise ValueError(f"{kind} observed span exceeds its declared scan window")
     for index, pair in enumerate(pairs):
@@ -189,9 +196,12 @@ def summarize_visual_cadence(motion: dict[str, Any], appearance: dict[str, Any],
     if _rational(motion.get("sourceTimebase"), "motion timebase") != _rational(
             appearance.get("sourceTimebase"), "appearance timebase"):
         raise ValueError("motion and appearance must have an identical source timebase")
+    scan_start = motion.get("scanStartSeconds", 0)
+    if appearance.get("scanStartSeconds", 0) != scan_start:
+        raise ValueError("motion and appearance must describe the same source window start")
     motion_result = _summarize(motion, kind="motion", threshold=image_motion_threshold)
     appearance_result = _summarize(appearance, kind="appearance", threshold=luma_change_threshold)
-    return {
+    result = {
         "schemaVersion": SCHEMA_VERSION,
         "sourceSha256": source_sha,
         "sourceStreamIndex": motion["sourceStreamIndex"],
@@ -208,3 +218,6 @@ def summarize_visual_cadence(motion: dict[str, Any], appearance: dict[str, Any],
         ],
         "reviewStatus": "measurement-only-no-camera-or-lighting-verification",
     }
+    if scan_start:
+        result["scanStartSeconds"] = scan_start
+    return result
