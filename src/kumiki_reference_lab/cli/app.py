@@ -69,6 +69,7 @@ from kumiki_reference_lab.pipeline.speech_transcribe import transcribe_local_vid
 from kumiki_reference_lab.pipeline.character_motion import run_character_motion
 from kumiki_reference_lab.pipeline.subject_detections import run_subject_detections
 from kumiki_reference_lab.pipeline.subject_tracklet_review import build_subject_tracklet_review
+from kumiki_reference_lab.pipeline.mac_vision_detection import detect_mac_vision_people
 from kumiki_reference_lab.pipeline.speaker_association import associate_speakers
 from kumiki_reference_lab.pipeline.character_speech_link import link_characters_to_speech
 from kumiki_reference_lab.integrations.kumiki.film_handoff import export_film_handoff
@@ -646,6 +647,20 @@ def build_parser() -> argparse.ArgumentParser:
     asr.add_argument("--retain-audio", action="store_true",
                      help="retain hashed decoded WAV so an offline diarizer can use identical audio")
     asr.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
+    mac_humans = commands.add_parser(
+        "mac-vision-humans",
+        help="macOS Vision local human rectangles to provider-neutral detection JSON")
+    mac_humans.add_argument("source", type=Path, help="authorized local video file")
+    mac_humans.add_argument("--out", type=Path, required=True, help="new detection JSON file")
+    mac_humans.add_argument("--max-seconds", type=int, default=10)
+    mac_humans.add_argument("--max-samples", type=int, default=12)
+    mac_humans.add_argument("--width", type=int, default=320)
+    mac_humans.add_argument("--height", type=int, default=180)
+    mac_humans.add_argument("--threshold", type=float, default=0.25)
+    mac_humans.add_argument("--ffmpeg", default="ffmpeg")
+    mac_humans.add_argument("--ffprobe", default="ffprobe")
+    mac_humans.add_argument("--rights-status", choices=RIGHTS_STATUSES,
+                            default="review-required")
     subject_review = commands.add_parser(
         "review-subject-tracklets",
         help="decode source-PTS frames and show external detector tracklet boxes for visual QA")
@@ -860,6 +875,12 @@ def main(argv: list[str] | None = None) -> int:
                 max_seconds=args.max_seconds, timeout_seconds=args.timeout_seconds,
                 language=args.language, rights_status=args.rights_status,
                 retain_audio=args.retain_audio))
+            return 0
+        if args.command == "mac-vision-humans":
+            print(detect_mac_vision_people(
+                args.source, args.out, seconds=args.max_seconds, max_samples=args.max_samples,
+                width=args.width, height=args.height, cut_threshold=args.threshold,
+                ffmpeg=args.ffmpeg, ffprobe=args.ffprobe, rights_status=args.rights_status))
             return 0
         if args.command == "review-subject-tracklets":
             print(build_subject_tracklet_review(
