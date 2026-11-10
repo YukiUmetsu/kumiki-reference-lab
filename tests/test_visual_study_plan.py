@@ -69,22 +69,35 @@ class VisualStudyPlanTests(unittest.TestCase):
     def test_indexed_candidates_are_attached_only_to_exact_source_rows(self):
         candidates = load_video_id_candidates(CANDIDATES, self.source)
         plan = build_visual_study_plan(self.source, identity_candidates=candidates)
-        self.assertEqual(plan["selectedRowsWithIndexedIdCandidates"], 6)
+        self.assertEqual(plan["selectedRowsWithIndexedIdCandidates"], 11)
         candidates_found = []
+        fully_linked = []
         for channel in plan["channels"]:
             for pair in channel["selectedPairs"]:
+                if (pair["higherViewedRow"]["videoIdentityCandidate"] is not None and
+                        pair["lowerViewedRow"]["videoIdentityCandidate"] is not None):
+                    fully_linked.append(pair["id"])
                 for item in (pair["higherViewedRow"], pair["lowerViewedRow"]):
                     if item["videoIdentityCandidate"] is not None:
                         candidates_found.append((channel["channelId"], item["rowIndex"],
                                                  item["videoIdentityCandidate"]["youtubeId"]))
                         self.assertEqual(item["visualReviewStatus"], "not-performed")
         self.assertEqual(candidates_found, [
+            ("alan-becker", 21, "39BPQh6-ZFI"),
             ("alan-becker", 19, "xu0mrfxPhbY"),
+            ("alan-becker", 25, "24iVz8k3lrs"),
+            ("alan-becker", 28, "wUsjDnjg2Xw"),
             ("kurzgesagt", 12, "hiIIGMeMEuE"),
             ("kurzgesagt", 11, "NIifnIP_NnQ"),
+            ("real-engineering", 32, "as9L2q9oYiE"),
+            ("real-engineering", 31, "bYkQn2TpF2k"),
             ("real-engineering", 2, "rCM6dvK2Hjg"),
             ("real-engineering", 23, "j0ZZfIz9R1I"),
             ("real-engineering", 24, "Vf_pS0XSTyo"),
+        ])
+        self.assertEqual(fully_linked, [
+            "alan-becker-21-19", "alan-becker-25-28", "kurzgesagt-12-11",
+            "real-engineering-32-31", "real-engineering-23-24",
         ])
 
     def test_cli_report_is_reproducible_and_bounded(self):

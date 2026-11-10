@@ -1,8 +1,21 @@
 {
   "schemaVersion": "kumiki.video-id-candidates.v1",
   "indexedOn": "2026-11-10",
-  "methodology": "Six source-table rows provisionally linked to exact video IDs by indexed YouTube search results displaying the original channel and matching title and publication date (allowing one local/UTC day and typographic apostrophes). YouTube watch pages could not be independently opened because direct fetches were throttled. These are browsing leads, not frame-verified identities, view-count updates, media permissions, or redistribution rights.",
+  "methodology": "Eleven source-table rows provisionally linked to exact video IDs by indexed YouTube search results displaying the original channel and matching title and publication date (allowing one local/UTC day and typographic apostrophes). YouTube watch pages could not be independently opened because direct fetches were throttled. These are browsing leads, not frame-verified identities, view-count updates, media permissions, or redistribution rights.",
   "entries": [
+    {
+      "channelId": "alan-becker",
+      "rowIndex": 21,
+      "sourceRowSha256": "771b6e6a284be6772ebd402d464d85ad22e12e7f475da93d2c28ec712763e2e3",
+      "youtubeId": "39BPQh6-ZFI",
+      "videoUrl": "https://www.youtube.com/watch?v=39BPQh6-ZFI",
+      "indexedTitle": "How To: Open Doors - An Actual Short",
+      "indexedPublisher": "Alan Becker",
+      "indexedPublishedOn": "2025-10-18",
+      "evidenceKind": "indexed-youtube-search-result",
+      "evidenceUrl": "https://www.youtube.com/watch?v=39BPQh6-ZFI",
+      "reviewStatus": "index-corroborated-watch-page-not-opened"
+    },
     {
       "channelId": "alan-becker",
       "rowIndex": 19,
@@ -14,6 +27,32 @@
       "indexedPublishedOn": "2025-11-01",
       "evidenceKind": "indexed-youtube-search-result",
       "evidenceUrl": "https://www.youtube.com/watch?v=xu0mrfxPhbY",
+      "reviewStatus": "index-corroborated-watch-page-not-opened"
+    },
+    {
+      "channelId": "alan-becker",
+      "rowIndex": 25,
+      "sourceRowSha256": "3950e0f5c4bf65671e6cf9b84bdf42c65864f99292838bcb846281a1d30534fa",
+      "youtubeId": "24iVz8k3lrs",
+      "videoUrl": "https://www.youtube.com/watch?v=24iVz8k3lrs",
+      "indexedTitle": "Day & Night - An Actual Short",
+      "indexedPublisher": "Alan Becker",
+      "indexedPublishedOn": "2025-09-20",
+      "evidenceKind": "indexed-youtube-search-result",
+      "evidenceUrl": "https://www.youtube.com/watch?v=24iVz8k3lrs",
+      "reviewStatus": "index-corroborated-watch-page-not-opened"
+    },
+    {
+      "channelId": "alan-becker",
+      "rowIndex": 28,
+      "sourceRowSha256": "e47e72920d3c135dd19766ea1497589d7b2c6e58220a557797c390fd8e9c7e2b",
+      "youtubeId": "wUsjDnjg2Xw",
+      "videoUrl": "https://www.youtube.com/watch?v=wUsjDnjg2Xw",
+      "indexedTitle": "Fork vs Spoon - An Actual Short",
+      "indexedPublisher": "Alan Becker",
+      "indexedPublishedOn": "2025-08-30",
+      "evidenceKind": "indexed-youtube-search-result",
+      "evidenceUrl": "https://www.youtube.com/watch?v=wUsjDnjg2Xw",
       "reviewStatus": "index-corroborated-watch-page-not-opened"
     },
     {
@@ -40,6 +79,32 @@
       "indexedPublishedOn": "2026-09-05",
       "evidenceKind": "indexed-youtube-search-result",
       "evidenceUrl": "https://www.youtube.com/watch?v=NIifnIP_NnQ",
+      "reviewStatus": "index-corroborated-watch-page-not-opened"
+    },
+    {
+      "channelId": "real-engineering",
+      "rowIndex": 32,
+      "sourceRowSha256": "36f0c94e9350f9a4b483783998c60344deb496acb6b5d736881118bd23d9c224",
+      "youtubeId": "as9L2q9oYiE",
+      "videoUrl": "https://www.youtube.com/watch?v=as9L2q9oYiE",
+      "indexedTitle": "The Problem with Geothermal Energy",
+      "indexedPublisher": "Real Engineering",
+      "indexedPublishedOn": "2025-09-07",
+      "evidenceKind": "indexed-youtube-search-result",
+      "evidenceUrl": "https://www.youtube.com/watch?v=as9L2q9oYiE",
+      "reviewStatus": "index-corroborated-watch-page-not-opened"
+    },
+    {
+      "channelId": "real-engineering",
+      "rowIndex": 31,
+      "sourceRowSha256": "7f1271beecb18a812bd8e8220f508a0a41ec20658a2685b448fb229268ee3b7d",
+      "youtubeId": "bYkQn2TpF2k",
+      "videoUrl": "https://www.youtube.com/watch?v=bYkQn2TpF2k",
+      "indexedTitle": "Why Deep Holes are So Expensive",
+      "indexedPublisher": "Real Engineering",
+      "indexedPublishedOn": "2025-09-08",
+      "evidenceKind": "indexed-youtube-search-result",
+      "evidenceUrl": "https://www.youtube.com/watch?v=bYkQn2TpF2k",
       "reviewStatus": "index-corroborated-watch-page-not-opened"
     },
     {

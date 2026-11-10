@@ -53,7 +53,7 @@ The plan may return **fewer** pairs when there is no qualifying contrast. It nev
 
 ## First clickable research pair
 
-The optional [`video-id-candidates.v1.json`](../research/video-id-candidates.v1.json) contains **six exact row-linked YouTube ID leads** corroborated by YouTube-indexed title, uploader, and publication date. It does not assert that the direct watch pages were opened or media visually reviewed; direct web fetches were throttled during research.
+The optional [`video-id-candidates.v1.json`](../research/video-id-candidates.v1.json) contains **11 exact row-linked YouTube ID leads**, including **five complete two-video comparisons**, corroborated by indexed YouTube titles, uploaders and publication dates. It does not assert that direct watch pages were opened or media visually reviewed; direct web fetches were throttled during research.
 
 | Real Engineering reference | Source-table date / duration | Source-table observed views | Link evidence |
 | --- | --- | ---: | --- |
@@ -62,7 +62,19 @@ The optional [`video-id-candidates.v1.json`](../research/video-id-candidates.v1.
 
 The source-table view-count contrast is **about 2.92×** with a four-day source-date gap and similar runtimes. That ratio alone says nothing about which cinematic or educational methods are better. Confirm the destination channels and exact video identity before annotation, especially if links or titles change. The numeric counts above remain the **frozen third-party snapshot**, not live YouTube API measurements.
 
-An additional **complete, provisional Kurzgesagt comparison** is now linked: [What If You Never Slept?](https://www.youtube.com/watch?v=hiIIGMeMEuE) against [How ADHD Medication Works](https://www.youtube.com/watch?v=NIifnIP_NnQ). Both are short-form animated science videos posted two days apart, and their source-table views differ by about 3.01×. There are also one-sided indexed leads for [Alan Becker's Allay](https://www.youtube.com/watch?v=xu0mrfxPhbY) and [Real Engineering's NASA telescope film](https://www.youtube.com/watch?v=rCM6dvK2Hjg). Those are **not complete linked comparisons**; do not pair them against unidentified videos as if the latter had been checked. The candidate index includes no camera, lighting, or style observations.
+An additional **complete, provisional Kurzgesagt comparison** is linked: [What If You Never Slept?](https://www.youtube.com/watch?v=hiIIGMeMEuE) against [How ADHD Medication Works](https://www.youtube.com/watch?v=NIifnIP_NnQ). Both are short-form animated science videos posted two days apart, and their source-table views differ by about 3.01×. [Real Engineering's NASA telescope film](https://www.youtube.com/watch?v=rCM6dvK2Hjg) is still a one-sided indexed lead in its own selected pair: **do not** treat an unidentified comparison film as verified. The candidate index includes no camera, lighting, or style observations.
+
+### Three more complete source-row comparisons
+
+New YouTube search-index evidence links both sides of these within-channel, similar-runtime contrasts. Public view counts here remain the **frozen third-party source table**, not views re-measured at the indexing date. The direct watch pages were not successfully fetched, so identity is still *provisional*.
+
+| Original-publisher videos (click to inspect) | Source-table dates and lengths | Frozen public views | Observed ratio |
+| --- | --- | ---: | ---: |
+| Alan Becker: [How To: Open Doors](https://www.youtube.com/watch?v=39BPQh6-ZFI) vs [Allay](https://www.youtube.com/watch?v=xu0mrfxPhbY) | 2025-10-18 (28s) vs 2025-11-01 (44s) | 17,906,332 vs 6,626,980 | 2.70× |
+| Alan Becker: [Day & Night](https://www.youtube.com/watch?v=24iVz8k3lrs) vs [Fork vs Spoon](https://www.youtube.com/watch?v=wUsjDnjg2Xw) | 2025-09-20 (39s) vs 2025-08-30 (32s) | 16,466,364 vs 6,792,908 | 2.42× |
+| Real Engineering: [The Problem with Geothermal Energy](https://www.youtube.com/watch?v=as9L2q9oYiE) vs [Why Deep Holes are So Expensive](https://www.youtube.com/watch?v=bYkQn2TpF2k) | 2025-09-08 (95s) vs 2025-09-08 (101s) | 4,417,197 vs 130,504 | 33.85× |
+
+For the geothermal film, YouTube's indexed publication date appears one day earlier than the source table, within the explicitly allowed UTC/local-date difference. The striking 33.85× view difference is **not evidence** that its animation technique caused higher reach: topic, promotion, audience targeting, Shorts distribution, thumbnails and other unobserved factors may differ. Neither member of these comparisons has been decoded or visually reviewed.
 
 Run without `--identity-candidates` to obtain an unlinked queue. The ID catalog loader validates source row index, fingerprint, exact canonical watch URL, unique 11-character ID, creator, title, date alignment (at most one day for source timezone differences), and explicit `index-corroborated-watch-page-not-opened` status. A future source refresh invalidates stale fingerprints rather than silently joining changed metrics.
 
