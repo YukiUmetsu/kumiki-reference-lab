@@ -92,6 +92,97 @@ class EncodedMotionCounterexamplesTests(unittest.TestCase):
             frames.append(image)
         return frames
 
+    @staticmethod
+    def _two_depth_planes() -> tuple[list[object], list[tuple[int, int, int, int]]]:
+        """Known two-plane translation, a bounded 2.5D parallax *proxy*.
+
+        Far and near texture move +2 and +6 px/frame respectively. The near
+        plane occludes the far plane; it is not a simulated lens or 3D camera.
+        """
+        import cv2
+        import numpy as np
+
+        rng = np.random.default_rng(20261114)
+        far = cv2.GaussianBlur(rng.integers(0, 256, (90, 160), dtype=np.uint8),
+                               (5, 5), 0.8)
+        near = cv2.GaussianBlur(rng.integers(0, 256, (42, 52), dtype=np.uint8),
+                                (5, 5), 0.8)
+        frames, bounds = [], []
+        for index in range(8):
+            frame = np.roll(far, index * 2, axis=1)
+            left, top = 36 + index * 6, 24
+            frame[top:top + 42, left:left + 52] = near
+            frames.append(frame)
+            bounds.append((left, top, left + 52, top + 42))
+        return frames, bounds
+
+    @staticmethod
+    def _motion_blur_interval() -> list[object]:
+        """A known simulated temporal exposure interval, not arbitrary noise."""
+        import cv2
+        import numpy as np
+
+        base = cv2.GaussianBlur(np.random.default_rng(20261115).integers(
+            0, 256, (90, 160), dtype=np.uint8), (3, 3), 0.7)
+        frames = [np.roll(base, index * 2, axis=1) for index in range(9)]
+        # Integrate several shifted exposures around frame four, so neither
+        # neighboring frame has matching fine-scale appearance at that time.
+        frames[4] = np.mean([np.roll(base, 8 + displacement, axis=1)
+                             for displacement in range(-18, 19, 3)],
+                            axis=0).astype(np.uint8)
+        return frames
+
+    @unittest.skipUnless(importlib.util.find_spec("cv2"), "OpenCV required")
+    def test_encoded_depth_planes_retain_two_known_image_velocities(self):
+        import numpy as np
+        from kumiki_reference_lab.analyzers.motion.dense import analyze_dense_flow
+
+        with tempfile.TemporaryDirectory() as directory:
+            video = Path(directory) / "two-depth-planes.mkv"
+            frames, bounds = self._two_depth_planes()
+            self._encode(video, frames)
+            report = analyze_dense_flow(video, seconds=2, max_samples=8,
+                                        threshold=0.95)
+            self.assertEqual(len(report["samples"]), 8)
+            self.assertEqual(len(report["pairs"]), 7)
+            # Compare interior points only, avoiding the intentional occlusion
+            # boundary where the far plane is disappearing or reappearing.
+            near_dx, far_dx = [], []
+            for index, pair in enumerate(report["pairs"]):
+                x0, y0, x1, y1 = bounds[index]
+                for vector in pair["vectors"]:
+                    x, y = vector["x"], vector["y"]
+                    if x0 + 10 <= x < x1 - 10 and y0 + 10 <= y < y1 - 10:
+                        near_dx.append(vector["dx"])
+                    elif (y < y0 - 10 or y >= y1 + 10) and 15 <= x < 145:
+                        far_dx.append(vector["dx"])
+            self.assertGreater(len(near_dx), 5)
+            self.assertGreater(len(far_dx), 20)
+            self.assertAlmostEqual(float(np.median(near_dx)), 6, delta=1.4)
+            self.assertAlmostEqual(float(np.median(far_dx)), 2, delta=0.8)
+            self.assertFalse(report["analyzer"]["physicalCameraVerified"])
+            self.assertFalse(report["analyzer"]["semanticIdentityVerified"])
+            json.dumps(report, allow_nan=False)
+
+    @unittest.skipUnless(importlib.util.find_spec("cv2"), "OpenCV required")
+    def test_encoded_temporal_exposure_blur_degrades_support_without_inference(self):
+        from kumiki_reference_lab.analyzers.motion.dense import analyze_dense_flow
+
+        with tempfile.TemporaryDirectory() as directory:
+            video = Path(directory) / "exposure-blur.mkv"
+            self._encode(video, self._motion_blur_interval())
+            report = analyze_dense_flow(video, seconds=2, max_samples=9,
+                                        threshold=0.95)
+            normal = [len(report["pairs"][index]["vectors"]) for index in (0, 1, 6, 7)]
+            blurred = [len(report["pairs"][index]["vectors"]) for index in (3, 4)]
+            self.assertTrue(all(report["pairs"][index]["status"] != "cut-boundary"
+                                for index in (3, 4)))
+            self.assertGreater(min(normal), 20)
+            self.assertLess(max(blurred), min(normal) / 2)
+            self.assertFalse(report["analyzer"]["calibratedConfidence"])
+            self.assertFalse(report["analyzer"]["physicalCameraVerified"])
+            json.dumps(report, allow_nan=False)
+
     def test_independent_foreground_motion_remains_unattributed(self):
         with tempfile.TemporaryDirectory() as directory:
             video = Path(directory) / "two-layers.mkv"
