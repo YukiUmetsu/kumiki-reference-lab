@@ -20,6 +20,16 @@ SCHEMA_VERSION = "kumiki.video-id-candidates.v1"
 _YOUTUBE_ID = re.compile(r"[A-Za-z0-9_-]{11}")
 
 
+def _title_key(title: str) -> str:
+    """Ignore only typography of single quotes, not substantive title edits."""
+    return title.strip().casefold().translate(str.maketrans({"\u2018": "'", "\u2019": "'"}))
+
+
+def _publisher_key(publisher: str) -> str:
+    """Normalize typographic dashes in otherwise exact channel names."""
+    return publisher.strip().casefold().translate(str.maketrans({"\u2013": "-", "\u2014": "-"}))
+
+
 def validate_video_id_candidates(data: Any, audience: dict[str, Any]) -> None:
     """Reject stale or ambiguous row joins, without claiming visual verification."""
     validate_audience_benchmarks(audience)
@@ -77,10 +87,10 @@ def validate_video_id_candidates(data: Any, audience: dict[str, Any]) -> None:
         if raw["evidenceUrl"] != url or raw["evidenceKind"] != "indexed-youtube-search-result":
             raise ValueError(f"candidate {position} evidence must be its exact indexed YouTube listing")
         if (not isinstance(raw["indexedTitle"], str) or
-                raw["indexedTitle"].strip().casefold() != row["title"].strip().casefold()):
+                _title_key(raw["indexedTitle"]) != _title_key(row["title"])):
             raise ValueError(f"candidate {position} source and indexed titles differ")
         if (not isinstance(raw["indexedPublisher"], str) or
-                raw["indexedPublisher"].strip().casefold() != channel["name"].strip().casefold()):
+                _publisher_key(raw["indexedPublisher"]) != _publisher_key(channel["name"])):
             raise ValueError(f"candidate {position} indexed publisher mismatches source channel")
         published = raw["indexedPublishedOn"]
         if not isinstance(published, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", published):

@@ -1,8 +1,60 @@
 {
   "schemaVersion": "kumiki.video-id-candidates.v1",
   "indexedOn": "2026-11-10",
-  "methodology": "Two source-table rows provisionally linked to exact video IDs by indexed YouTube search results displaying the original channel and matching title and publication date (allowing one local/UTC day). YouTube watch pages could not be independently opened because direct fetches were throttled. These are browsing leads, not frame-verified identities, view-count updates, media permissions, or redistribution rights.",
+  "methodology": "Six source-table rows provisionally linked to exact video IDs by indexed YouTube search results displaying the original channel and matching title and publication date (allowing one local/UTC day and typographic apostrophes). YouTube watch pages could not be independently opened because direct fetches were throttled. These are browsing leads, not frame-verified identities, view-count updates, media permissions, or redistribution rights.",
   "entries": [
+    {
+      "channelId": "alan-becker",
+      "rowIndex": 19,
+      "sourceRowSha256": "aa626270ab0d111b41c66f4b576a674c5546aa060280400e045cdc7f2b911b7d",
+      "youtubeId": "xu0mrfxPhbY",
+      "videoUrl": "https://www.youtube.com/watch?v=xu0mrfxPhbY",
+      "indexedTitle": "Allay - An Actual Short",
+      "indexedPublisher": "Alan Becker",
+      "indexedPublishedOn": "2025-11-01",
+      "evidenceKind": "indexed-youtube-search-result",
+      "evidenceUrl": "https://www.youtube.com/watch?v=xu0mrfxPhbY",
+      "reviewStatus": "index-corroborated-watch-page-not-opened"
+    },
+    {
+      "channelId": "kurzgesagt",
+      "rowIndex": 12,
+      "sourceRowSha256": "b704f13981122ed707e7c0db169084ff615d4fb3fbc5b55285492b857a78ced1",
+      "youtubeId": "hiIIGMeMEuE",
+      "videoUrl": "https://www.youtube.com/watch?v=hiIIGMeMEuE",
+      "indexedTitle": "What If You Never Slept?",
+      "indexedPublisher": "Kurzgesagt - In a Nutshell",
+      "indexedPublishedOn": "2026-09-03",
+      "evidenceKind": "indexed-youtube-search-result",
+      "evidenceUrl": "https://www.youtube.com/watch?v=hiIIGMeMEuE",
+      "reviewStatus": "index-corroborated-watch-page-not-opened"
+    },
+    {
+      "channelId": "kurzgesagt",
+      "rowIndex": 11,
+      "sourceRowSha256": "b16825a803011ef76d66e124bb942329c88850ba41bbc167f86b1309bbbfd3ff",
+      "youtubeId": "NIifnIP_NnQ",
+      "videoUrl": "https://www.youtube.com/watch?v=NIifnIP_NnQ",
+      "indexedTitle": "How ADHD Medication Works",
+      "indexedPublisher": "Kurzgesagt - In a Nutshell",
+      "indexedPublishedOn": "2026-09-05",
+      "evidenceKind": "indexed-youtube-search-result",
+      "evidenceUrl": "https://www.youtube.com/watch?v=NIifnIP_NnQ",
+      "reviewStatus": "index-corroborated-watch-page-not-opened"
+    },
+    {
+      "channelId": "real-engineering",
+      "rowIndex": 2,
+      "sourceRowSha256": "1648f35de6ba85182d5b4c216ea5d2e1b40b11bfadfb8333e3ecc3799e1a7bd4",
+      "youtubeId": "rCM6dvK2Hjg",
+      "videoUrl": "https://www.youtube.com/watch?v=rCM6dvK2Hjg",
+      "indexedTitle": "NASA's Next Monster Telescope",
+      "indexedPublisher": "Real Engineering",
+      "indexedPublishedOn": "2026-08-29",
+      "evidenceKind": "indexed-youtube-search-result",
+      "evidenceUrl": "https://www.youtube.com/watch?v=rCM6dvK2Hjg",
+      "reviewStatus": "index-corroborated-watch-page-not-opened"
+    },
     {
       "channelId": "real-engineering",
       "rowIndex": 23,

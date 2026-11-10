@@ -53,7 +53,7 @@ The plan may return **fewer** pairs when there is no qualifying contrast. It nev
 
 ## First clickable research pair
 
-The optional [`video-id-candidates.v1.json`](../research/video-id-candidates.v1.json) contains **two exact row-linked YouTube ID leads** corroborated by YouTube-indexed title, uploader, and publication date. It does not assert that the direct watch pages were opened or media visually reviewed; direct web fetches were throttled during research.
+The optional [`video-id-candidates.v1.json`](../research/video-id-candidates.v1.json) contains **six exact row-linked YouTube ID leads** corroborated by YouTube-indexed title, uploader, and publication date. It does not assert that the direct watch pages were opened or media visually reviewed; direct web fetches were throttled during research.
 
 | Real Engineering reference | Source-table date / duration | Source-table observed views | Link evidence |
 | --- | --- | ---: | --- |
@@ -61,6 +61,8 @@ The optional [`video-id-candidates.v1.json`](../research/video-id-candidates.v1.
 | [Solar Farms in Space - Reflect Orbital](https://www.youtube.com/watch?v=Vf_pS0XSTyo) | 2025-12-03 / 31:18 | 546,117 | Indexed YouTube listing with matching creator, title and calendar date |
 
 The source-table view-count contrast is **about 2.92×** with a four-day source-date gap and similar runtimes. That ratio alone says nothing about which cinematic or educational methods are better. Confirm the destination channels and exact video identity before annotation, especially if links or titles change. The numeric counts above remain the **frozen third-party snapshot**, not live YouTube API measurements.
+
+An additional **complete, provisional Kurzgesagt comparison** is now linked: [What If You Never Slept?](https://www.youtube.com/watch?v=hiIIGMeMEuE) against [How ADHD Medication Works](https://www.youtube.com/watch?v=NIifnIP_NnQ). Both are short-form animated science videos posted two days apart, and their source-table views differ by about 3.01×. There are also one-sided indexed leads for [Alan Becker's Allay](https://www.youtube.com/watch?v=xu0mrfxPhbY) and [Real Engineering's NASA telescope film](https://www.youtube.com/watch?v=rCM6dvK2Hjg). Those are **not complete linked comparisons**; do not pair them against unidentified videos as if the latter had been checked. The candidate index includes no camera, lighting, or style observations.
 
 Run without `--identity-candidates` to obtain an unlinked queue. The ID catalog loader validates source row index, fingerprint, exact canonical watch URL, unique 11-character ID, creator, title, date alignment (at most one day for source timezone differences), and explicit `index-corroborated-watch-page-not-opened` status. A future source refresh invalidates stale fingerprints rather than silently joining changed metrics.
 
