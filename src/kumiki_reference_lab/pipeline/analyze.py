@@ -17,10 +17,11 @@ from kumiki_reference_lab.analyzers.motion.analyze import analyze_image_motion
 from kumiki_reference_lab.analyzers.motion.dense import analyze_dense_flow
 from kumiki_reference_lab.analyzers.motion.sparse import analyze_sparse_flow
 from kumiki_reference_lab.analyzers.shots.detect import analyze_hard_cuts
-from kumiki_reference_lab.analyzers.subjects.roi import analyze_roi_track
+from kumiki_reference_lab.analyzers.subjects.roi import analyze_roi_track, validate_roi_reseeds
 from kumiki_reference_lab.contracts.analysis import (
-    ANALYSIS_RUN_VERSION, CONTACT_SHEET_VERSION, FRAME_TIMELINE_VERSION,
-    IMAGE_MOTION_VERSION, ROI_TRACK_VERSION, SHOT_CANDIDATES_VERSION, SPARSE_FLOW_VERSION,
+    ANALYSIS_RUN_VERSION, ANALYSIS_RUN_RESEED_VERSION, CONTACT_SHEET_VERSION, FRAME_TIMELINE_VERSION,
+    IMAGE_MOTION_VERSION, ROI_TRACK_VERSION, ROI_TRACK_RESEED_VERSION,
+    SHOT_CANDIDATES_VERSION, SPARSE_FLOW_VERSION,
     APPEARANCE_VERSION, DENSE_FLOW_VERSION,
 )
 from kumiki_reference_lab.contracts.source import SCHEMA_VERSION as SOURCE_MANIFEST_VERSION
@@ -67,7 +68,8 @@ def _validate_existing(destination: Path, settings: dict[str, Any]) -> Path:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, UnicodeDecodeError) as exc:
         raise ValueError("analysis destination has invalid JSON") from exc
-    if (not isinstance(manifest, dict) or manifest.get("schemaVersion") != ANALYSIS_RUN_VERSION or
+    if (not isinstance(manifest, dict) or
+            manifest.get("schemaVersion") != settings["versions"]["run"] or
             manifest.get("settings") != settings):
         raise ValueError("analysis destination has mismatched run settings")
     expected_artifacts = {"inspect": _STAGES["inspect"],
@@ -129,6 +131,7 @@ def _validate_existing(destination: Path, settings: dict[str, Any]) -> Path:
 def run_analysis(
     source: Path, output: Path, *, seconds: int = 10, thumbnails: int = 12,
     motion: bool = False, roi: tuple[float, float, float, float] | None = None,
+    roi_reseeds: list[dict[str, Any]] | None = None,
     samples: int = 48, width: int = 160, height: int = 90,
     sparse_flow: bool = False, sparse_samples: int = 24,
     sparse_points: int = 40, sparse_radius: int = 8,
@@ -157,6 +160,9 @@ def run_analysis(
         raise ValueError("analysis width/height are out of range")
     if not isinstance(motion, bool):
         raise ValueError("motion must be a boolean")
+    if roi_reseeds is not None and roi is None:
+        raise ValueError("manual ROI reseeds require an initial ROI box")
+    roi_reseeds = validate_roi_reseeds(roi_reseeds, width=width, height=height)
     if not isinstance(sparse_flow, bool):
         raise ValueError("sparse_flow must be a boolean")
     if type(dense_flow) is not bool:
@@ -226,6 +232,10 @@ def run_analysis(
                      "contact": CONTACT_SHEET_VERSION, "motion": IMAGE_MOTION_VERSION,
                      "roi": ROI_TRACK_VERSION},
     }
+    if roi_reseeds is not None:
+        settings["roiReseeds"] = roi_reseeds
+        settings["versions"]["run"] = ANALYSIS_RUN_RESEED_VERSION
+        settings["versions"]["roi"] = ROI_TRACK_RESEED_VERSION
     # Keep legacy/default run identity unchanged. Sparse-flow settings and its
     # version participate in the run hash only when that stage is requested.
     if sparse_flow:
@@ -301,7 +311,7 @@ def run_analysis(
             tracked = analyze_roi_track(
                 source, roi, seconds=seconds, max_samples=samples, width=width,
                 height=height, cut_threshold=threshold, ffmpeg=ffmpeg,
-                ffprobe=ffprobe, rights_status=rights_status,
+                ffprobe=ffprobe, rights_status=rights_status, reseeds=roi_reseeds,
             )
             write_json_artifact(staging, _STAGES["trackRoi"], tracked)
             artifacts["trackRoi"] = _STAGES["trackRoi"]
@@ -341,7 +351,7 @@ def run_analysis(
         require_unchanged(source, signature)
 
         manifest = {
-            "schemaVersion": ANALYSIS_RUN_VERSION,
+            "schemaVersion": settings["versions"]["run"],
             "settings": settings,
             "sourceTimebase": inspected["video"]["sourceTimebase"],
             "coverage": "bounded-from-start-not-necessarily-full-video",

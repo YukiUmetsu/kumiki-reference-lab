@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 from kumiki_reference_lab.pipeline.analyze import run_analysis
+from kumiki_reference_lab.contracts.analysis import ANALYSIS_RUN_VERSION, ANALYSIS_RUN_RESEED_VERSION
 
 
 @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"),
@@ -88,6 +89,70 @@ class AnalysisPipelineIntegrationTests(unittest.TestCase):
             output = Path(directory) / "runs"
             with self.assertRaisesRegex(ValueError, "between 1 and 30"):
                 run_analysis(Path("missing.mp4"), output, seconds=200)
+            self.assertFalse(output.exists())
+
+    @unittest.skipUnless(importlib.util.find_spec("numpy"), "NumPy motion extra unavailable")
+    def test_roi_reseeds_have_distinct_immutable_run_identity(self):
+        import numpy as np
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "patch.mkv"
+            patch = np.random.default_rng(63).integers(0, 255, (18, 24), dtype=np.uint8)
+            frames = []
+            for i in range(12):
+                frame = np.zeros((90, 160), dtype=np.uint8)
+                if i not in (4, 5, 6):
+                    frame[20+i:38+i, 30+2*i:54+2*i] = patch
+                frames.append(frame.tobytes())
+            process = subprocess.run([
+                "ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin", "-y",
+                "-f", "rawvideo", "-pixel_format", "gray", "-video_size", "160x90",
+                "-framerate", "10", "-i", "-", "-c:v", "ffv1", str(source),
+            ], input=b"".join(frames), capture_output=True, timeout=30)
+            self.assertEqual(process.returncode, 0, process.stderr.decode(errors="replace"))
+            from kumiki_reference_lab.analyzers.subjects.roi import analyze_roi_track
+            seed = (30/160, 20/90, 24/160, 18/90)
+            pts = analyze_roi_track(source, seed, seconds=2, max_samples=12,
+                                    cut_threshold=0.95)["observations"][7]["sourcePts"]
+            reseeds = [{"sourcePts": pts, "box": [44/160, 27/90, 24/160, 18/90]}]
+            runs = root / "runs"
+            default = run_analysis(source, runs, seconds=2, roi=seed, samples=12,
+                                   threshold=0.95)
+            manual = run_analysis(source, runs, seconds=2, roi=seed, samples=12,
+                                  roi_reseeds=reseeds, threshold=0.95)
+            self.assertNotEqual(default, manual)
+            manifest = json.loads(manual.read_text())
+            self.assertEqual(manifest["settings"]["roiReseeds"], reseeds)
+            self.assertEqual(manifest["schemaVersion"], ANALYSIS_RUN_RESEED_VERSION)
+            self.assertEqual(run_analysis(source, runs, seconds=2, roi=seed, samples=12,
+                                          roi_reseeds=reseeds, threshold=0.95), manual)
+            artifact = json.loads((manual.parent / "roi-track.json").read_text())
+            self.assertEqual(artifact["observations"][7]["status"], "manual-reseed")
+            self.assertNotIn("roiReseeds", json.loads(default.read_text())["settings"])
+            self.assertEqual(json.loads(default.read_text())["schemaVersion"], ANALYSIS_RUN_VERSION)
+            if importlib.util.find_spec("cv2") and importlib.util.find_spec("jsonschema"):
+                from jsonschema import Draft202012Validator
+
+                combined = run_analysis(
+                    source, runs, seconds=2, roi=seed, samples=12,
+                    roi_reseeds=reseeds, sparse_flow=True, sparse_samples=8,
+                    sparse_model_validation=True, dense_flow=True, dense_samples=8,
+                    threshold=0.95,
+                )
+                combined_manifest = json.loads(combined.read_text())
+                schema = json.loads((Path(__file__).resolve().parents[1] /
+                                     "schemas/v2/analysis-run.schema.json").read_text())
+                Draft202012Validator(schema).validate(combined_manifest)
+                self.assertEqual({"sparseFlow", "denseFlow", "trackRoi"} &
+                                 combined_manifest["artifacts"].keys(),
+                                 {"sparseFlow", "denseFlow", "trackRoi"})
+
+    def test_roi_reseeds_require_an_initial_seed_before_creating_output(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "runs"
+            with self.assertRaisesRegex(ValueError, "ROI box"):
+                run_analysis(Path("missing.mp4"), output,
+                             roi_reseeds=[{"sourcePts": 20, "box": [0.2, 0.2, 0.2, 0.2]}])
             self.assertFalse(output.exists())
 
     @unittest.skipUnless(importlib.util.find_spec("numpy"), "NumPy extra unavailable")
