@@ -38,13 +38,14 @@ def _unique_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
 def validate_open_footage(document: Any) -> list[str]:
     errors: list[str] = []
 
-    def obj(raw: Any, expected: set[str], prefix: str) -> dict[str, Any]:
+    def obj(raw: Any, expected: set[str], prefix: str, *,
+            optional: frozenset[str] = frozenset()) -> dict[str, Any]:
         if not isinstance(raw, dict):
             errors.append(f"{prefix} must be an object")
             return {}
         for field in sorted(expected - raw.keys()):
             errors.append(f"{prefix}.{field} missing")
-        for field in sorted(raw.keys() - expected):
+        for field in sorted(raw.keys() - expected - optional):
             errors.append(f"{prefix}.{field} unexpected")
         return raw
 
@@ -62,6 +63,37 @@ def validate_open_footage(document: Any) -> list[str]:
                 raise ValueError
         except (TypeError, ValueError, AttributeError):
             errors.append(f"{prefix} must be a safe HTTPS URL")
+
+    def sample_window(raw: Any, prefix: str, *, opening: bool) -> tuple[int, int] | None:
+        sample = obj(raw, {"startSeconds", "requestedSeconds", "imageMotion", "displayLuma"}, prefix)
+        start = sample.get("startSeconds")
+        requested = sample.get("requestedSeconds")
+        if type(start) is not int or not 0 <= start <= 119 or (opening and start != 0):
+            errors.append(f"{prefix}.startSeconds invalid")
+        if type(requested) is not int or not 1 <= requested <= 30:
+            errors.append(f"{prefix}.requestedSeconds must be 1..30")
+        if (type(start) is int and type(requested) is int and
+                start + requested > 120):
+            errors.append(f"{prefix} source prefix exceeds 120s")
+        for field in ("imageMotion", "displayLuma"):
+            measure = obj(sample.get(field), {"activeRuns", "cutCandidates", "sampledSpanSeconds",
+                                              "measuredPairFraction", "activeTimeFractionOfMeasured"},
+                          f"{prefix}.{field}")
+            for key in ("activeRuns", "cutCandidates"):
+                value = measure.get(key)
+                if type(value) is not int or not 0 <= value <= 1000:
+                    errors.append(f"{prefix}.{field}.{key} invalid")
+            for key, low, high in (("sampledSpanSeconds", 0.01,
+                                    requested + 0.2 if type(requested) is int and requested > 0 else 30.2),
+                                   ("measuredPairFraction", 0.0, 1.0),
+                                   ("activeTimeFractionOfMeasured", 0.0, 1.0)):
+                value = measure.get(key)
+                if (type(value) not in (float, int) or not math.isfinite(value)
+                        or not low <= value <= high):
+                    errors.append(f"{prefix}.{field}.{key} invalid")
+        if type(start) is int and type(requested) is int and start >= 0 and requested >= 1:
+            return start, start + requested
+        return None
 
     root = obj(document, {"schemaVersion", "collectedOn", "methodology", "entries"}, "dataset")
     if root.get("schemaVersion") != SCHEMA_VERSION:
@@ -83,7 +115,8 @@ def validate_open_footage(document: Any) -> list[str]:
     for idx, raw in enumerate(entries):
         prefix = f"entries[{idx}]"
         item = obj(raw, {"id", "title", "creator", "rights", "media", "sample",
-                         "frameObservations", "audienceStatus"}, prefix)
+                         "frameObservations", "audienceStatus"}, prefix,
+                   optional=frozenset({"additionalSamples"}))
         identifier = item.get("id")
         if not isinstance(identifier, str) or not _ID.fullmatch(identifier):
             errors.append(f"{prefix}.id invalid")
@@ -135,29 +168,27 @@ def validate_open_footage(document: Any) -> list[str]:
         if (type(base.get("numerator")) is not int or not 1 <= base["numerator"] <= 1_000_000_000 or
                 type(base.get("denominator")) is not int or not 1 <= base["denominator"] <= 1_000_000_000):
             errors.append(f"{prefix}.media.sourceTimebase must have positive bounded integer components")
-        sample = obj(item.get("sample"), {"startSeconds", "requestedSeconds", "imageMotion",
-                                           "displayLuma"}, f"{prefix}.sample")
-        if type(sample.get("startSeconds")) is not int or sample["startSeconds"] != 0:
-            errors.append(f"{prefix}.sample.startSeconds must be 0 (current pipeline limit)")
-        requested = sample.get("requestedSeconds")
-        if type(requested) is not int or not 1 <= requested <= 30:
-            errors.append(f"{prefix}.sample.requestedSeconds must be 1..30")
-        for field in ("imageMotion", "displayLuma"):
-            measure = obj(sample.get(field), {"activeRuns", "cutCandidates", "sampledSpanSeconds",
-                                              "measuredPairFraction", "activeTimeFractionOfMeasured"},
-                          f"{prefix}.sample.{field}")
-            for key in ("activeRuns", "cutCandidates"):
-                value = measure.get(key)
-                if type(value) is not int or not 0 <= value <= 1000:
-                    errors.append(f"{prefix}.sample.{field}.{key} invalid")
-            for key, low, high in (("sampledSpanSeconds", 0.01,
-                                    requested + 0.2 if type(requested) is int and requested > 0 else 30.2),
-                                   ("measuredPairFraction", 0.0, 1.0),
-                                   ("activeTimeFractionOfMeasured", 0.0, 1.0)):
-                value = measure.get(key)
-                if (type(value) not in (float, int) or not math.isfinite(value)
-                        or not low <= value <= high):
-                    errors.append(f"{prefix}.sample.{field}.{key} invalid")
+        windows: list[tuple[int, int]] = []
+        if original := sample_window(item.get("sample"), f"{prefix}.sample", opening=True):
+            windows.append(original)
+        extras = item.get("additionalSamples", [])
+        if not isinstance(extras, list) or len(extras) > 12:
+            errors.append(f"{prefix}.additionalSamples must be a list of at most 12 windows")
+        else:
+            for window_idx, extra in enumerate(extras):
+                if bounds := sample_window(extra, f"{prefix}.additionalSamples[{window_idx}]",
+                                           opening=False):
+                    windows.append(bounds)
+                    if bounds[0] == 0:
+                        errors.append(f"{prefix}.additionalSamples[{window_idx}] must start after opening")
+        duration_ms = media.get("durationMilliseconds")
+        if type(duration_ms) is int:
+            for start, end in windows:
+                if start * 1000 >= duration_ms or end * 1000 > duration_ms + 100:
+                    errors.append(f"{prefix} sampled window exceeds media duration")
+        windows.sort()
+        if any(left[1] > right[0] for left, right in zip(windows, windows[1:])):
+            errors.append(f"{prefix} sampled windows cannot overlap")
         observed = obj(item.get("frameObservations"), {"reviewMode", "sampledWindowNote",
                                                         "secondaryFrameNote", "visibleTags"},
                        f"{prefix}.frameObservations")

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "kumiki.open-footage-calibration.v1",
   "collectedOn": "2026-11-10",
-  "methodology": "Four locally downloaded, source-hashed Wikimedia Commons files were probed and analyzed over only their first ten seconds with the existing bounded analysis pipeline, followed by sparse contact-sheet frame inspection. Counts are sampled display-image proxies, not physical cameras, lights, stylistic proportions, quality scores or popularity evidence.",
+  "methodology": "Four locally downloaded, source-hashed Wikimedia Commons files were probed and analyzed over their first ten seconds, plus 25-35s and 55-65s source-PTS-preserving motion/appearance windows of the paper film, followed by sparse contact-sheet frame inspection. Counts are sampled display-image proxies, not physical cameras, lights, stylistic proportions, quality scores or popularity evidence.",
   "entries": [
     {
       "id": "night-paper-stop-motion",
@@ -30,10 +30,24 @@
         "imageMotion": {"activeRuns": 0, "cutCandidates": 0, "sampledSpanSeconds": 9.943, "measuredPairFraction": 0.510007, "activeTimeFractionOfMeasured": 0.0},
         "displayLuma": {"activeRuns": 0, "cutCandidates": 0, "sampledSpanSeconds": 9.943, "measuredPairFraction": 1.0, "activeTimeFractionOfMeasured": 0.0}
       },
+      "additionalSamples": [
+        {
+          "startSeconds": 25,
+          "requestedSeconds": 10,
+          "imageMotion": {"activeRuns": 3, "cutCandidates": 2, "sampledSpanSeconds": 9.943, "measuredPairFraction": 0.932918, "activeTimeFractionOfMeasured": 0.489112},
+          "displayLuma": {"activeRuns": 2, "cutCandidates": 2, "sampledSpanSeconds": 9.943, "measuredPairFraction": 0.912803, "activeTimeFractionOfMeasured": 0.183781}
+        },
+        {
+          "startSeconds": 55,
+          "requestedSeconds": 10,
+          "imageMotion": {"activeRuns": 4, "cutCandidates": 0, "sampledSpanSeconds": 9.943, "measuredPairFraction": 0.859197, "activeTimeFractionOfMeasured": 0.726443},
+          "displayLuma": {"activeRuns": 4, "cutCandidates": 0, "sampledSpanSeconds": 9.943, "measuredPairFraction": 1.0, "activeTimeFractionOfMeasured": 0.174696}
+        }
+      ],
       "frameObservations": {
         "reviewMode": "contact-sheets-only-no-full-speed-viewing",
         "sampledWindowNote": "The first ten seconds show mostly black title cards and a small white illustrated logo, not a representative animated-paper story scene.",
-        "secondaryFrameNote": "Additional one-frame-per-second contact sheets from about 25-35s and 55-65s show flat outlined character cutouts, a bedroom set, and a dark purple nighttime scene. Later motion frequency was not measured.",
+        "secondaryFrameNote": "Additional one-frame-per-second contact sheets from about 25-35s and 55-65s show flat outlined character cutouts, a bedroom set, and a dark purple nighttime scene. Motion and luma proxies were measured in both later source-PTS windows, but physical-camera and lighting frequency remain unclassified.",
         "visibleTags": ["title-card", "paper-cut"]
       },
       "audienceStatus": "not-measured-for-this-file"

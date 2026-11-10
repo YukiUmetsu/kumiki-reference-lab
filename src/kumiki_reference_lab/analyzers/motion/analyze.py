@@ -52,9 +52,14 @@ def analyze_image_motion(
     width: int = 160, height: int = 90, threshold: float = 0.25,
     ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
     rights_status: str = "review-required",
+    start_seconds: int = 0,
 ) -> dict[str, Any]:
     if type(seconds) is not int or not 1 <= seconds <= 30:
         raise ValueError("seconds must be between 1 and 30")
+    if type(start_seconds) is not int or start_seconds < 0:
+        raise ValueError("start_seconds must be a nonnegative integer")
+    if start_seconds + seconds > 120:
+        raise ValueError("start_seconds plus scan seconds must be at most 120")
     if type(max_samples) is not int or not 5 <= max_samples <= 120:
         raise ValueError("max_samples must be between 5 and 120")
     if (type(width) is not int or type(height) is not int or
@@ -71,16 +76,18 @@ def analyze_image_motion(
     stream = inspected["video"]["streamIndex"]
     rational = inspected["video"]["sourceTimebase"]
     timebase = Fraction(rational["numerator"], rational["denominator"])
-    source_frames = read_frame_pts(source, stream, seconds=seconds, ffprobe=ffprobe)
+    source_frames = read_frame_pts(source, stream, seconds=seconds, ffprobe=ffprobe,
+                                   start_seconds=start_seconds, source_timebase=timebase)
     samples = select_motion_samples(source_frames, max_samples)
-    cuts = detect_hard_cut_pts(source, stream, seconds=seconds,
+    scan_prefix = start_seconds + seconds
+    cuts = detect_hard_cut_pts(source, stream, seconds=scan_prefix,
                                threshold=threshold, ffmpeg=ffmpeg)
     if cuts.timebase != timebase:
         raise ValueError("cut detector changed source timebase")
     planes = read_gray_frames(
         source, stream, [frame.ordinal for frame in samples],
         [int(frame.pts) for frame in samples], timebase=timebase,
-        seconds=seconds, width=width, height=height, ffmpeg=ffmpeg,
+        seconds=scan_prefix, width=width, height=height, ffmpeg=ffmpeg,
     )
     require_unchanged(source, signature)
 
@@ -89,7 +96,8 @@ def analyze_image_motion(
               for frame in samples]
     pairs: list[dict[str, Any]] = []
     segments: list[dict[str, Any]] = []
-    cut_pts = sorted(set(cuts.pts))
+    cut_pts = sorted({pts for pts in cuts.pts
+                      if samples[0].pts <= pts <= samples[-1].pts})
     path: list[tuple[Fraction, float, float]] = [(int(samples[0].pts) * timebase, 0.0, 0.0)]
     path_frames = [samples[0]]
 
@@ -141,12 +149,13 @@ def analyze_image_motion(
                          x + measured["dxPixels"], y + measured["dyPixels"]))
             path_frames.append(after)
     finish_segment()
-    return {
+    report = {
         "schemaVersion": IMAGE_MOTION_VERSION,
         "sourceSha256": inspected["source"]["sha256"],
         "sourceStreamIndex": stream, "sourceTimebase": rational,
         "scanWindowSeconds": seconds,
-        "coverage": "bounded-from-start-not-necessarily-full-video",
+        "coverage": ("bounded-source-window-not-necessarily-full-video" if start_seconds
+                     else "bounded-from-start-not-necessarily-full-video"),
         "analysis": {
             "method": "fft-phase-correlation-global-translation-v1",
             "easingModel": "net-path-projection-with-geometry-abstention-v2",
@@ -167,3 +176,6 @@ def analyze_image_motion(
         "pairs": pairs,
         "segments": segments,
     }
+    if start_seconds:
+        report["scanStartSeconds"] = start_seconds
+    return report

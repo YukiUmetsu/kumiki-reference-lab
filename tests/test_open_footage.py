@@ -39,6 +39,10 @@ class OpenFootageTests(unittest.TestCase):
             self.assertFalse(any(key.lower().startswith("viewcount") for key in item))
         paper = self.dataset["entries"][0]
         self.assertEqual(paper["sample"]["imageMotion"]["activeRuns"], 0)
+        self.assertEqual([sample["startSeconds"] for sample in paper["additionalSamples"]],
+                         [25, 55])
+        self.assertEqual([sample["imageMotion"]["activeRuns"]
+                          for sample in paper["additionalSamples"]], [3, 4])
         self.assertIn("title cards", paper["frameObservations"]["sampledWindowNote"])
 
     def test_fails_closed_for_mutated_source_and_unsupported_claims(self):
@@ -61,6 +65,10 @@ class OpenFootageTests(unittest.TestCase):
             ("changed-start", lambda d: d["entries"][0]["sample"].update(startSeconds=20)),
             ("oversized-window", lambda d: d["entries"][0]["sample"].update(requestedSeconds=100)),
             ("span-beyond-window", lambda d: d["entries"][0]["sample"]["imageMotion"].update(sampledSpanSeconds=20.0)),
+            ("overlapping-windows", lambda d: d["entries"][0]["additionalSamples"][1].update(startSeconds=31)),
+            ("zero-extra-start", lambda d: d["entries"][0]["additionalSamples"][0].update(startSeconds=0)),
+            ("extra-outside-film", lambda d: d["entries"][0]["additionalSamples"][1].update(startSeconds=111)),
+            ("invalid-extra-type", lambda d: d["entries"][0].update(additionalSamples="late")),
         )
         for name, mutation in mutations:
             with self.subTest(name=name):
@@ -96,12 +104,13 @@ class OpenFootageTests(unittest.TestCase):
             dest = Path(tmp)
             path = dest / "paper-stop-motion.webm"
             subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-nostdin", "-y",
-                            "-f", "lavfi", "-i", "testsrc=size=160x90:rate=12:duration=1.5",
+                            "-f", "lavfi", "-i", "testsrc=size=160x90:rate=12:duration=12",
                             "-c:v", "libvpx", "-an", str(path)], check=True, timeout=30)
             detected = inspect_source(path)
             modified = copy.deepcopy(self.dataset)
             modified["entries"] = modified["entries"][:1]
             entry = modified["entries"][0]
+            entry.pop("additionalSamples")  # the synthetic file has no later sections
             media = entry["media"]
             media.update(sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
                          sizeBytes=path.stat().st_size,

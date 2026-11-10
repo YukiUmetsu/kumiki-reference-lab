@@ -49,8 +49,8 @@ def _read_pixel_frames(
 ) -> list[bytes]:
     if (pixel_format, channels) not in (("gray", 1), ("rgb24", 3)):
         raise ValueError("unsupported pixel output format")
-    if type(seconds) is not int or not 1 <= seconds <= 30:
-        raise ValueError("motion scan must be between 1 and 30 seconds")
+    if type(seconds) is not int or not 1 <= seconds <= 120:
+        raise ValueError("decoded source prefix must be between 1 and 120 seconds")
     if (type(width) is not int or type(height) is not int or
             not 64 <= width <= 320 or not 36 <= height <= 180):
         raise ValueError("motion analysis resolution is out of range")
