@@ -20,6 +20,7 @@ The sample has entirely **invented** characters, actions and dialogue and an all
 - Utterances include attributed or unknown speaker, transcribed words, language, time interval, transcript evidence and speaker-attribution evidence. Overlapping speech is supported; unlinked speech stays unattributed instead of being guessed.
 - Names, age, gender identity and ethnicity are not deduced from looks. An identity claim needs an explicit spoken or on-screen statement or creator metadata, with time anchor, quoted/source evidence and uncertainty. These claims remain evidence-bearing assertions, **not verified personal facts**.
 - Counts are of submitted annotations, not whole-film detection or exhaustive narration, even when the review declares a full window. A full-window flag does not independently verify coverage.
+- The report also returns character profile/visible-trait summaries, actor-to-target interaction pairs, timecoded action and dialogue events and identity claims labeled as sourced assertions, so the output can answer concrete questions about **what was annotated**.
 - Reviewer kind can be human or model. Model-proposed labels must remain hypotheses until source-media QA.
 
 ## Next engineering stages
