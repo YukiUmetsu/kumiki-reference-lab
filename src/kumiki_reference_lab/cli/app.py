@@ -44,7 +44,7 @@ from kumiki_reference_lab.catalog.visual_styles import (
     load_visual_styles, search_visual_styles, style_family_counts,
 )
 from kumiki_reference_lab.catalog.open_footage import (
-    load_open_footage, verify_open_footage_media,
+    load_open_footage, summarize_open_footage, verify_open_footage_media,
 )
 from kumiki_reference_lab.catalog.audience_benchmarks import (
     build_audience_insights, load_audience_benchmarks,
@@ -562,7 +562,7 @@ def build_parser() -> argparse.ArgumentParser:
     open_media = commands.add_parser(
         "open-footage", help="validate and locally verify source-hashed real reference video samples")
     open_media_actions = open_media.add_subparsers(dest="open_footage_action", required=True)
-    for action in ("validate", "list", "verify-local"):
+    for action in ("validate", "list", "summarize", "verify-local"):
         sub = open_media_actions.add_parser(action)
         sub.add_argument("--root", type=Path,
                          default=Path("research/open-footage-calibration.v1.json"))
@@ -693,6 +693,8 @@ def main(argv: list[str] | None = None) -> int:
                      "license": item["rights"]["license"],
                      "reviewMode": item["frameObservations"]["reviewMode"]}
                     for item in collection["entries"]]}
+            elif args.open_footage_action == "summarize":
+                result = summarize_open_footage(collection)
             else:
                 result = verify_open_footage_media(
                     collection, args.media_root, ffprobe=args.ffprobe,

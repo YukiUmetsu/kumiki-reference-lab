@@ -24,6 +24,7 @@ _LICENSES = {
 }
 _TAGS = {"paper-cut", "kinetic-typography", "2d-motion-graphics", "3d-rendered",
          "title-card", "stop-motion", "character-animation", "unclassified"}
+_ROLES = {"opening-title", "main-content", "main-to-credits", "credits", "uncertain"}
 
 
 def _unique_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -65,7 +66,8 @@ def validate_open_footage(document: Any) -> list[str]:
             errors.append(f"{prefix} must be a safe HTTPS URL")
 
     def sample_window(raw: Any, prefix: str, *, opening: bool) -> tuple[int, int] | None:
-        sample = obj(raw, {"startSeconds", "requestedSeconds", "imageMotion", "displayLuma"}, prefix)
+        sample = obj(raw, {"startSeconds", "requestedSeconds", "imageMotion", "displayLuma"},
+                     prefix, optional=frozenset({"visualContext"}))
         start = sample.get("startSeconds")
         requested = sample.get("requestedSeconds")
         if type(start) is not int or not 0 <= start <= 119 or (opening and start != 0):
@@ -91,6 +93,21 @@ def validate_open_footage(document: Any) -> list[str]:
                 if (type(value) not in (float, int) or not math.isfinite(value)
                         or not low <= value <= high):
                     errors.append(f"{prefix}.{field}.{key} invalid")
+        context = sample.get("visualContext")
+        if context is not None:
+            context = obj(context, {"role", "visibleTags", "reviewMode", "note"},
+                          f"{prefix}.visualContext")
+            role = context.get("role")
+            if not isinstance(role, str) or role not in _ROLES:
+                errors.append(f"{prefix}.visualContext.role invalid")
+            if context.get("reviewMode") != "contact-sheets-only-no-full-speed-viewing":
+                errors.append(f"{prefix}.visualContext.reviewMode must not assert playback")
+            bounded_text(context.get("note"), f"{prefix}.visualContext.note")
+            tags = context.get("visibleTags")
+            if (not isinstance(tags, list) or not 1 <= len(tags) <= 5 or
+                    any(not isinstance(tag, str) or tag not in _TAGS for tag in tags) or
+                    len(tags) != len(set(tags))):
+                errors.append(f"{prefix}.visualContext.visibleTags invalid")
         if type(start) is int and type(requested) is int and start >= 0 and requested >= 1:
             return start, start + requested
         return None
@@ -202,6 +219,67 @@ def validate_open_footage(document: Any) -> list[str]:
                 len(tags) != len(set(tags))):
             errors.append(f"{prefix}.frameObservations.visibleTags invalid")
     return errors
+
+
+def summarize_open_footage(document: dict[str, Any]) -> dict[str, Any]:
+    """Describe *sampled* motion/luma variation by reviewed content role.
+
+    Never pool opening titles, narrative action and closing credits into an
+    apparent whole-video camera or lighting statistic.
+    """
+    if errors := validate_open_footage(document):
+        raise ValueError("invalid open-footage dataset: " + errors[0])
+    videos = []
+    window_total = 0
+    for item in document["entries"]:
+        windows = [item["sample"], *item.get("additionalSamples", [])]
+        window_total += len(windows)
+        groups: dict[str, list[dict[str, Any]]] = {}
+        for window in windows:
+            context = window.get("visualContext")
+            role = context["role"] if context else "unreviewed"
+            groups.setdefault(role, []).append(window)
+        role_summaries = []
+        for role, group in sorted(groups.items()):
+            proxy_summaries = {}
+            for source_key, dest_key in (("imageMotion", "imagePlaneMotion"),
+                                         ("displayLuma", "displayLumaChange")):
+                sampled_seconds = math.fsum(w[source_key]["sampledSpanSeconds"] for w in group)
+                measured_seconds = math.fsum(w[source_key]["sampledSpanSeconds"] *
+                                             w[source_key]["measuredPairFraction"] for w in group)
+                active_seconds = math.fsum(w[source_key]["sampledSpanSeconds"] *
+                                           w[source_key]["measuredPairFraction"] *
+                                           w[source_key]["activeTimeFractionOfMeasured"] for w in group)
+                runs = sum(w[source_key]["activeRuns"] for w in group)
+                cuts = sum(w[source_key]["cutCandidates"] for w in group)
+                proxy_summaries[dest_key] = {
+                    "detectedRunCount": runs,
+                    "detectedRunsPerSampledMinute": round(60 * runs / sampled_seconds, 5),
+                    "detectedCutCandidateCount": cuts,
+                    "measurablePairFraction": round(measured_seconds / sampled_seconds, 6),
+                    "activeShareOfMeasurablePairs": (round(active_seconds / measured_seconds, 6)
+                                                     if measured_seconds else None),
+                }
+            role_summaries.append({
+                "role": role,
+                "windowCount": len(group),
+                "startSeconds": sorted(w["startSeconds"] for w in group),
+                "sampledSpanSeconds": round(math.fsum(w["imageMotion"]["sampledSpanSeconds"]
+                                                         for w in group), 3),
+                "visibleTags": sorted({tag for w in group for tag in
+                                       (w.get("visualContext") or {}).get("visibleTags", [])}),
+                **proxy_summaries,
+            })
+        videos.append({"id": item["id"], "sourceSha256": item["media"]["sha256"],
+                       "audienceStatus": item["audienceStatus"],
+                       "windowCount": len(windows), "byReviewedRole": role_summaries})
+    return {
+        "schemaVersion": "kumiki.open-footage-sampled-summary.v1",
+        "videoCount": len(videos), "windowCount": window_total, "videos": videos,
+        "interpretation": ("Descriptive non-overlapping sampled-window display-image proxies, grouped "
+                           "by sparse still-frame reviewed content role; not film-wide event rates, "
+                           "camera or lighting events, audience effects or causal comparisons."),
+    }
 
 
 def load_open_footage(path: Path) -> dict[str, Any]:

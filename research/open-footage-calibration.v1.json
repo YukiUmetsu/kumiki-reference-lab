@@ -1,7 +1,7 @@
 {
   "schemaVersion": "kumiki.open-footage-calibration.v1",
   "collectedOn": "2026-11-10",
-  "methodology": "Four locally downloaded, source-hashed Wikimedia Commons files were probed and analyzed over their first ten seconds, plus 25-35s and 55-65s source-PTS-preserving motion/appearance windows of the paper film, followed by sparse contact-sheet frame inspection. Counts are sampled display-image proxies, not physical cameras, lights, stylistic proportions, quality scores or popularity evidence.",
+  "methodology": "Eleven source-PTS-bounded windows across four locally downloaded, source-hashed Wikimedia Commons videos were measured with the same motion/luma thresholds. Sparse 1-fps contact sheets annotate content versus credits separately. No full-speed viewing, physical camera/lighting classification, representative sampling, or audience proof is claimed.",
   "entries": [
     {
       "id": "night-paper-stop-motion",
@@ -28,26 +28,36 @@
         "startSeconds": 0,
         "requestedSeconds": 10,
         "imageMotion": {"activeRuns": 0, "cutCandidates": 0, "sampledSpanSeconds": 9.943, "measuredPairFraction": 0.510007, "activeTimeFractionOfMeasured": 0.0},
-        "displayLuma": {"activeRuns": 0, "cutCandidates": 0, "sampledSpanSeconds": 9.943, "measuredPairFraction": 1.0, "activeTimeFractionOfMeasured": 0.0}
+        "displayLuma": {"activeRuns": 0, "cutCandidates": 0, "sampledSpanSeconds": 9.943, "measuredPairFraction": 1.0, "activeTimeFractionOfMeasured": 0.0},
+        "visualContext": {"role": "opening-title", "visibleTags": ["title-card"], "reviewMode": "contact-sheets-only-no-full-speed-viewing", "note": "Mostly black title cards and a small illustrated logo; not representative paper-animation action."}
       },
       "additionalSamples": [
         {
           "startSeconds": 25,
           "requestedSeconds": 10,
           "imageMotion": {"activeRuns": 3, "cutCandidates": 2, "sampledSpanSeconds": 9.943, "measuredPairFraction": 0.932918, "activeTimeFractionOfMeasured": 0.489112},
-          "displayLuma": {"activeRuns": 2, "cutCandidates": 2, "sampledSpanSeconds": 9.943, "measuredPairFraction": 0.912803, "activeTimeFractionOfMeasured": 0.183781}
+          "displayLuma": {"activeRuns": 2, "cutCandidates": 2, "sampledSpanSeconds": 9.943, "measuredPairFraction": 0.912803, "activeTimeFractionOfMeasured": 0.183781},
+          "visualContext": {"role": "main-content", "visibleTags": ["paper-cut", "character-animation"], "reviewMode": "contact-sheets-only-no-full-speed-viewing", "note": "Sparse frames show illustrated character cutouts in a bedroom and a nighttime scene; no physical camera classification."}
         },
         {
           "startSeconds": 55,
           "requestedSeconds": 10,
           "imageMotion": {"activeRuns": 4, "cutCandidates": 0, "sampledSpanSeconds": 9.943, "measuredPairFraction": 0.859197, "activeTimeFractionOfMeasured": 0.726443},
-          "displayLuma": {"activeRuns": 4, "cutCandidates": 0, "sampledSpanSeconds": 9.943, "measuredPairFraction": 1.0, "activeTimeFractionOfMeasured": 0.174696}
+          "displayLuma": {"activeRuns": 4, "cutCandidates": 0, "sampledSpanSeconds": 9.943, "measuredPairFraction": 1.0, "activeTimeFractionOfMeasured": 0.174696},
+          "visualContext": {"role": "main-content", "visibleTags": ["paper-cut", "character-animation"], "reviewMode": "contact-sheets-only-no-full-speed-viewing", "note": "Sparse frames show flat outlined character art and a dim bedroom; image translation does not prove a camera move."}
+        },
+        {
+          "startSeconds": 85,
+          "requestedSeconds": 10,
+          "imageMotion": {"activeRuns": 0, "cutCandidates": 0, "sampledSpanSeconds": 9.944, "measuredPairFraction": 0.798673, "activeTimeFractionOfMeasured": 0.0},
+          "displayLuma": {"activeRuns": 3, "cutCandidates": 0, "sampledSpanSeconds": 9.944, "measuredPairFraction": 1.0, "activeTimeFractionOfMeasured": 0.349055},
+          "visualContext": {"role": "main-to-credits", "visibleTags": ["paper-cut", "title-card", "character-animation"], "reviewMode": "contact-sheets-only-no-full-speed-viewing", "note": "Frames move from bedroom character art through an END title card to illustrated credits and behind-the-scenes text; not a pure narrative-action window."}
         }
       ],
       "frameObservations": {
         "reviewMode": "contact-sheets-only-no-full-speed-viewing",
         "sampledWindowNote": "The first ten seconds show mostly black title cards and a small white illustrated logo, not a representative animated-paper story scene.",
-        "secondaryFrameNote": "Additional one-frame-per-second contact sheets from about 25-35s and 55-65s show flat outlined character cutouts, a bedroom set, and a dark purple nighttime scene. Motion and luma proxies were measured in both later source-PTS windows, but physical-camera and lighting frequency remain unclassified.",
+        "secondaryFrameNote": "Additional contact sheets from 25-35s and 55-65s show characters and bedroom/night scenes, while 85-95s moves into END and credits. These are distinct sampled visual roles; physical camera/lighting frequency remains unclassified.",
         "visibleTags": ["title-card", "paper-cut"]
       },
       "audienceStatus": "not-measured-for-this-file"
@@ -77,7 +87,8 @@
         "startSeconds": 0,
         "requestedSeconds": 10,
         "imageMotion": {"activeRuns": 6, "cutCandidates": 3, "sampledSpanSeconds": 9.96, "measuredPairFraction": 0.895582, "activeTimeFractionOfMeasured": 0.533632},
-        "displayLuma": {"activeRuns": 5, "cutCandidates": 3, "sampledSpanSeconds": 9.96, "measuredPairFraction": 0.911647, "activeTimeFractionOfMeasured": 0.524229}
+        "displayLuma": {"activeRuns": 5, "cutCandidates": 3, "sampledSpanSeconds": 9.96, "measuredPairFraction": 0.911647, "activeTimeFractionOfMeasured": 0.524229},
+        "visualContext": {"role": "main-content", "visibleTags": ["kinetic-typography", "2d-motion-graphics"], "reviewMode": "contact-sheets-only-no-full-speed-viewing", "note": "Short complete animated typography piece with alternating large black-and-white words and geometric accents."}
       },
       "frameObservations": {
         "reviewMode": "contact-sheets-only-no-full-speed-viewing",
@@ -112,12 +123,29 @@
         "startSeconds": 0,
         "requestedSeconds": 10,
         "imageMotion": {"activeRuns": 2, "cutCandidates": 1, "sampledSpanSeconds": 9.958, "measuredPairFraction": 0.962342, "activeTimeFractionOfMeasured": 0.504331},
-        "displayLuma": {"activeRuns": 0, "cutCandidates": 1, "sampledSpanSeconds": 9.958, "measuredPairFraction": 0.958225, "activeTimeFractionOfMeasured": 0.0}
+        "displayLuma": {"activeRuns": 0, "cutCandidates": 1, "sampledSpanSeconds": 9.958, "measuredPairFraction": 0.958225, "activeTimeFractionOfMeasured": 0.0},
+        "visualContext": {"role": "main-content", "visibleTags": ["3d-rendered", "character-animation"], "reviewMode": "contact-sheets-only-no-full-speed-viewing", "note": "Warm interior with rendered characters, close-up face, and vessel; sparse stills do not identify physical lighting changes."}
       },
+      "additionalSamples": [
+        {
+          "startSeconds": 20,
+          "requestedSeconds": 10,
+          "imageMotion": {"activeRuns": 1, "cutCandidates": 1, "sampledSpanSeconds": 9.958, "measuredPairFraction": 0.552219, "activeTimeFractionOfMeasured": 0.689398},
+          "displayLuma": {"activeRuns": 1, "cutCandidates": 1, "sampledSpanSeconds": 9.958, "measuredPairFraction": 0.954007, "activeTimeFractionOfMeasured": 0.179895},
+          "visualContext": {"role": "main-content", "visibleTags": ["3d-rendered"], "reviewMode": "contact-sheets-only-no-full-speed-viewing", "note": "Sparse frames transition from a very dark interval to a panoramic city establishing image; no camera-rig recovery."}
+        },
+        {
+          "startSeconds": 50,
+          "requestedSeconds": 10,
+          "imageMotion": {"activeRuns": 5, "cutCandidates": 5, "sampledSpanSeconds": 9.958, "measuredPairFraction": 0.828379, "activeTimeFractionOfMeasured": 1.0},
+          "displayLuma": {"activeRuns": 1, "cutCandidates": 5, "sampledSpanSeconds": 9.958, "measuredPairFraction": 0.786704, "activeTimeFractionOfMeasured": 0.164922},
+          "visualContext": {"role": "main-content", "visibleTags": ["3d-rendered", "character-animation"], "reviewMode": "contact-sheets-only-no-full-speed-viewing", "note": "Sparse frames show a young woman moving between streets and rooftops and interacting with a small dragon; cuts and object motion confound camera interpretation."}
+        }
+      ],
       "frameObservations": {
         "reviewMode": "contact-sheets-only-no-full-speed-viewing",
         "sampledWindowNote": "Stylized 3D people in a warm, firelit interior; wide conversational framing is followed by a close-up face and a vessel. Apparent light direction is stable in the sampled images.",
-        "secondaryFrameNote": "The remaining seventy-plus seconds of this excerpt have not yet been visually sampled.",
+        "secondaryFrameNote": "The additional 20-30s contact sheet shows a city panorama and 50-60s shows a character/dragon rooftop sequence. Later windows are sampled, not full-speed watched.",
         "visibleTags": ["3d-rendered", "character-animation"]
       },
       "audienceStatus": "not-measured-for-this-file"
@@ -147,12 +175,29 @@
         "startSeconds": 0,
         "requestedSeconds": 10,
         "imageMotion": {"activeRuns": 5, "cutCandidates": 0, "sampledSpanSeconds": 9.917, "measuredPairFraction": 0.764747, "activeTimeFractionOfMeasured": 0.593486},
-        "displayLuma": {"activeRuns": 4, "cutCandidates": 0, "sampledSpanSeconds": 9.917, "measuredPairFraction": 1.0, "activeTimeFractionOfMeasured": 0.176565}
+        "displayLuma": {"activeRuns": 4, "cutCandidates": 0, "sampledSpanSeconds": 9.917, "measuredPairFraction": 1.0, "activeTimeFractionOfMeasured": 0.176565},
+        "visualContext": {"role": "main-content", "visibleTags": ["2d-motion-graphics", "kinetic-typography"], "reviewMode": "contact-sheets-only-no-full-speed-viewing", "note": "Bright flat backgrounds, Spanish lettering, pink shapes and simple illustrated elements."}
       },
+      "additionalSamples": [
+        {
+          "startSeconds": 15,
+          "requestedSeconds": 10,
+          "imageMotion": {"activeRuns": 2, "cutCandidates": 3, "sampledSpanSeconds": 9.917, "measuredPairFraction": 0.722598, "activeTimeFractionOfMeasured": 0.290678},
+          "displayLuma": {"activeRuns": 3, "cutCandidates": 3, "sampledSpanSeconds": 9.917, "measuredPairFraction": 0.874055, "activeTimeFractionOfMeasured": 0.24054},
+          "visualContext": {"role": "main-content", "visibleTags": ["2d-motion-graphics", "kinetic-typography"], "reviewMode": "contact-sheets-only-no-full-speed-viewing", "note": "Sparse frames show Spanish lettering, an illustrated fox and bird, and pink geometric blocks on flat pastel backgrounds."}
+        },
+        {
+          "startSeconds": 35,
+          "requestedSeconds": 10,
+          "imageMotion": {"activeRuns": 3, "cutCandidates": 0, "sampledSpanSeconds": 9.917, "measuredPairFraction": 0.68912, "activeTimeFractionOfMeasured": 0.353819},
+          "displayLuma": {"activeRuns": 2, "cutCandidates": 0, "sampledSpanSeconds": 9.917, "measuredPairFraction": 1.0, "activeTimeFractionOfMeasured": 0.083896},
+          "visualContext": {"role": "main-to-credits", "visibleTags": ["2d-motion-graphics", "title-card"], "reviewMode": "contact-sheets-only-no-full-speed-viewing", "note": "Sparse frames move from an animated dollar sign and clock through 160 hrs to scrolling production credits; not entirely main-content motion."}
+        }
+      ],
       "frameObservations": {
         "reviewMode": "contact-sheets-only-no-full-speed-viewing",
         "sampledWindowNote": "A bright green flat background holds Spanish typography and pink geometry; the square translates and rotates between sampled images, with sparse white accent lines.",
-        "secondaryFrameNote": "The later portion of the 48-second film has not yet been visually sampled.",
+        "secondaryFrameNote": "New 15-25s frames show illustrated fox and Spanish type; 35-45s begins with graphics but transitions to credits. These contexts are observed from still contact sheets only.",
         "visibleTags": ["2d-motion-graphics", "kinetic-typography"]
       },
       "audienceStatus": "not-measured-for-this-file"

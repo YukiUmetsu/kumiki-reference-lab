@@ -15,7 +15,7 @@ from pathlib import Path
 
 from kumiki_reference_lab.analyzers.media.inspect import inspect_source
 from kumiki_reference_lab.catalog.open_footage import (
-    load_open_footage, validate_open_footage, verify_open_footage_media,
+    load_open_footage, summarize_open_footage, validate_open_footage, verify_open_footage_media,
 )
 from kumiki_reference_lab.cli.app import main
 
@@ -40,10 +40,43 @@ class OpenFootageTests(unittest.TestCase):
         paper = self.dataset["entries"][0]
         self.assertEqual(paper["sample"]["imageMotion"]["activeRuns"], 0)
         self.assertEqual([sample["startSeconds"] for sample in paper["additionalSamples"]],
-                         [25, 55])
+                         [25, 55, 85])
         self.assertEqual([sample["imageMotion"]["activeRuns"]
-                          for sample in paper["additionalSamples"]], [3, 4])
+                          for sample in paper["additionalSamples"]], [3, 4, 0])
+        self.assertEqual(sum(1 + len(item.get("additionalSamples", []))
+                             for item in self.dataset["entries"]), 11)
+        for item in self.dataset["entries"]:
+            for sample in (item["sample"], *item.get("additionalSamples", [])):
+                self.assertIn(sample["visualContext"]["role"],
+                              {"opening-title", "main-content", "main-to-credits"})
         self.assertIn("title cards", paper["frameObservations"]["sampledWindowNote"])
+
+    def test_role_aware_summary_excludes_titles_and_credits_from_main_content(self):
+        summary = summarize_open_footage(self.dataset)
+        self.assertEqual((summary["videoCount"], summary["windowCount"]), (4, 11))
+        paper = summary["videos"][0]
+        grouped = {group["role"]: group for group in paper["byReviewedRole"]}
+        self.assertEqual(set(grouped), {"opening-title", "main-content", "main-to-credits"})
+        self.assertEqual(grouped["main-content"]["startSeconds"], [25, 55])
+        self.assertEqual(grouped["main-content"]["imagePlaneMotion"]["detectedRunCount"], 7)
+        self.assertEqual(grouped["opening-title"]["imagePlaneMotion"]["detectedRunCount"], 0)
+        self.assertEqual(grouped["main-to-credits"]["displayLumaChange"]["detectedRunCount"], 3)
+        self.assertAlmostEqual(grouped["main-content"]["imagePlaneMotion"]
+                               ["activeShareOfMeasurablePairs"], 0.602896)
+        sintel = summary["videos"][2]
+        self.assertEqual(sintel["byReviewedRole"][0]["startSeconds"], [0, 20, 50])
+        self.assertEqual(sintel["byReviewedRole"][0]["imagePlaneMotion"]["detectedRunCount"], 8)
+        unreviewed = copy.deepcopy(self.dataset)
+        unreviewed["entries"][0]["additionalSamples"][0].pop("visualContext")
+        roles = {row["role"] for row in summarize_open_footage(unreviewed)
+                 ["videos"][0]["byReviewedRole"]}
+        self.assertIn("unreviewed", roles)
+        no_pairs = copy.deepcopy(self.dataset)
+        for source in ("imageMotion", "displayLuma"):
+            no_pairs["entries"][1]["sample"][source]["measuredPairFraction"] = 0.0
+        empty = summarize_open_footage(no_pairs)["videos"][1]["byReviewedRole"][0]
+        self.assertIsNone(empty["imagePlaneMotion"]["activeShareOfMeasurablePairs"])
+        self.assertIsNone(empty["displayLumaChange"]["activeShareOfMeasurablePairs"])
 
     def test_fails_closed_for_mutated_source_and_unsupported_claims(self):
         mutations = (
@@ -69,6 +102,11 @@ class OpenFootageTests(unittest.TestCase):
             ("zero-extra-start", lambda d: d["entries"][0]["additionalSamples"][0].update(startSeconds=0)),
             ("extra-outside-film", lambda d: d["entries"][0]["additionalSamples"][1].update(startSeconds=111)),
             ("invalid-extra-type", lambda d: d["entries"][0].update(additionalSamples="late")),
+            ("false-full-playback", lambda d: d["entries"][0]["additionalSamples"][0]["visualContext"].update(reviewMode="full-viewed")),
+            ("unsupported-context-role", lambda d: d["entries"][0]["additionalSamples"][0]["visualContext"].update(role="viral")),
+            ("nonstring-context-role", lambda d: d["entries"][0]["additionalSamples"][0]["visualContext"].update(role=["main-content"])),
+            ("fake-context-tag", lambda d: d["entries"][0]["additionalSamples"][0]["visualContext"].update(visibleTags=["photorealistic-cinema-approved"])),
+            ("context-unsupported-prop", lambda d: d["entries"][0]["additionalSamples"][0]["visualContext"].update(cameraMoves=99)),
         )
         for name, mutation in mutations:
             with self.subTest(name=name):
@@ -77,7 +115,8 @@ class OpenFootageTests(unittest.TestCase):
                 self.assertTrue(validate_open_footage(example))
 
     def test_cli_listing_and_invalid_file_guards(self):
-        for action, key in (("validate", "entryCount"), ("list", "count")):
+        for action, key in (("validate", "entryCount"), ("list", "count"),
+                            ("summarize", "videoCount")):
             with self.subTest(action=action):
                 with io.StringIO() as output, contextlib.redirect_stdout(output):
                     self.assertEqual(main(["open-footage", action, "--root", str(ROOT)]), 0)
