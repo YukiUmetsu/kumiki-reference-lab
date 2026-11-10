@@ -39,6 +39,9 @@ from kumiki_reference_lab.analyzers.media.timeline import analyze_frame_timeline
 from kumiki_reference_lab.analyzers.shots.detect import analyze_hard_cuts
 from kumiki_reference_lab.backends.ffmpeg.probe import ProbeError
 from kumiki_reference_lab.catalog.store import build_catalog_index, load_catalog, search_catalog
+from kumiki_reference_lab.catalog.browser_observations import (
+    load_browser_observations, search_browser_observations,
+)
 from kumiki_reference_lab.catalog.popular_videos import load_popular_videos, search_popular_videos
 from kumiki_reference_lab.catalog.video_sources import (
     get_source_reference, load_source_references, search_source_references,
@@ -522,7 +525,7 @@ def build_parser() -> argparse.ArgumentParser:
     sources = commands.add_parser(
         "video-sources", help="browse normalized YouTube and What Ships references without media downloads")
     source_actions = sources.add_subparsers(dest="source_action", required=True)
-    for action in ("validate", "list", "search", "show", "report"):
+    for action in ("validate", "list", "search", "show", "report", "observations"):
         sub = source_actions.add_parser(action)
         sub.add_argument("--youtube-root", type=Path, default=Path("research"))
         sub.add_argument("--whatships", type=Path,
@@ -535,6 +538,11 @@ def build_parser() -> argparse.ArgumentParser:
             sub.add_argument("query", help="title, creator, category, tags, or source description")
         if action == "show":
             sub.add_argument("identity", help="provider-qualified ID, e.g. whatships:figma-3980")
+        if action == "observations":
+            sub.add_argument("--observations", type=Path,
+                             default=Path("research/whatships-browser-observations-2026-11-10.json"))
+            sub.add_argument("--source-id", default="", help="optional provider-qualified video ID")
+            sub.add_argument("--visual-tag", default="", help="observed style or presentation tag")
     audience = commands.add_parser("audience-benchmarks", help="analyze recent-upload audience metadata without video downloads")
     audience_actions = audience.add_subparsers(dest="audience_action", required=True)
     for action in ("validate", "report", "study-plan", "compare-visual"):
@@ -661,6 +669,12 @@ def main(argv: list[str] | None = None) -> int:
                 response = {"reference": get_source_reference(collection, args.identity)}
             elif args.source_action == "report":
                 response = summarize_source_references(collection)
+            elif args.source_action == "observations":
+                notes = load_browser_observations(collection, args.observations)
+                matches = search_browser_observations(notes, source_id=args.source_id,
+                                                     visual_tag=args.visual_tag)
+                response = {"count": len(matches), "reviewedOn": notes["reviewedOn"],
+                            "methodology": notes["methodology"], "observations": matches}
             else:
                 query = args.query if args.source_action == "search" else ""
                 results = search_source_references(collection, query, provider=args.provider,

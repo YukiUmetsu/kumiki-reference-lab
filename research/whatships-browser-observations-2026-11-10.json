@@ -1,0 +1,115 @@
+{
+  "schemaVersion": "kumiki.browser-video-observations.v1",
+  "reviewedOn": "2026-11-10",
+  "methodology": "A browser was used to view selected public-player moments on What Ships. These notes cover selected moments only, without full-runtime inspection, source-frame hashes, precise shot boundaries, measured camera/lighting changes, or permission to reuse media. Hypotheses are separated from things visible on screen.",
+  "observations": [
+    {
+      "sourceId": "whatships:claude-motion-reel",
+      "reviewedOn": "2026-11-10",
+      "method": "browser-player",
+      "coverage": "selected-moments-only",
+      "visualTags": ["easing-demo", "kinetic-typography", "high-contrast-color"],
+      "visibleMoments": [
+        "A six-row demonstration shows differently shaped easing curves and colored dots on tracks.",
+        "Oversized repeated black NEVER lettering fills a fluorescent yellow composition.",
+        "An orange-coral end card pairs a bold Claude wordmark with a floral mark and serif subline."
+      ],
+      "techniqueHypotheses": ["Try moving visual explanations of easing, followed by a tightly restricted high-contrast typographic reveal."]
+    },
+    {
+      "sourceId": "whatships:paper-mono-code",
+      "reviewedOn": "2026-11-10",
+      "method": "browser-player",
+      "coverage": "selected-moments-only",
+      "visualTags": ["screen-recording", "editorial-collage", "kinetic-typography"],
+      "visibleMoments": [
+        "An editor-like window combines source text, layer controls, a timeline and rendered lettering.",
+        "Another visible moment shows overlapping typographic sheets folding or sliding through a three-dimensional-looking composition."
+      ],
+      "techniqueHypotheses": ["Prototype layered paper/card transforms driven by a reusable compositing timeline."]
+    },
+    {
+      "sourceId": "whatships:applied-electrodynamics",
+      "reviewedOn": "2026-11-10",
+      "method": "browser-player",
+      "coverage": "selected-moments-only",
+      "visualTags": ["cinematic-imagery", "live-action", "technical-illustration"],
+      "visibleMoments": [
+        "A dark, softly lit vintage computer is shown against a black backdrop with short white text.",
+        "Another sampled moment shows a person working on electronics at a cluttered bench.",
+        "A white screen displays a thin black patent-style drawing of a device."
+      ],
+      "techniqueHypotheses": ["Study transitions between atmospheric scenes, documentary footage and sparse technical diagrams."]
+    },
+    {
+      "sourceId": "whatships:grok-bot-icon-in-code",
+      "reviewedOn": "2026-11-10",
+      "method": "browser-player",
+      "coverage": "selected-moments-only",
+      "visualTags": ["character-icon"],
+      "visibleMoments": ["A sampled end frame shows a near-black round face with two long white eye shapes on a pale gray background."],
+      "techniqueHypotheses": ["The site's description suggests icon morphs, but an end-frame sighting cannot verify those transitions."]
+    },
+    {
+      "sourceId": "whatships:figma-3980",
+      "reviewedOn": "2026-11-10",
+      "method": "browser-player",
+      "coverage": "selected-moments-only",
+      "visualTags": ["refractive-ui", "product-ui-demo"],
+      "visibleMoments": ["One sampled composition shows a translucent, refractive sphere-like form over Liquid lettering in a design-interface context."],
+      "techniqueHypotheses": ["Test original refractive-logo overlays inside an otherwise readable product UI composition."]
+    },
+    {
+      "sourceId": "whatships:canva-craft",
+      "reviewedOn": "2026-11-10",
+      "method": "browser-player",
+      "coverage": "selected-moments-only",
+      "visualTags": ["cinematic-imagery", "product-ui-demo", "generated-image-output"],
+      "visibleMoments": [
+        "An orange dune image carries a sparse white headline.",
+        "A purple-to-cyan chart-like screen is followed by a pale gradient prompt interface.",
+        "A later output image contains a blue chair on reflective pink terrain."
+      ],
+      "techniqueHypotheses": ["Test a visual sequence of atmosphere, claimed proof, input interaction and visually distinctive result; independently verify any chart claims."]
+    },
+    {
+      "sourceId": "whatships:gpt-6-1-terra",
+      "reviewedOn": "2026-11-10",
+      "method": "browser-player",
+      "coverage": "selected-moments-only",
+      "visualTags": ["cinematic-imagery", "product-ui-demo", "3d-modeling"],
+      "visibleMoments": [
+        "A globe behind oversized white type introduces the product.",
+        "An aerial city-and-tram image precedes a prompt card asking for a 3D model.",
+        "A later shot displays a yellow tram model in a Blender-style modeling viewport."
+      ],
+      "techniqueHypotheses": ["Test connecting cinematic subject context to a concrete application demonstration without inferring that the film verifies the advertised capability."]
+    },
+    {
+      "sourceId": "whatships:subvocal",
+      "reviewedOn": "2026-11-10",
+      "method": "browser-player",
+      "coverage": "selected-moments-only",
+      "visualTags": ["talking-head", "live-action", "product-demonstration"],
+      "visibleMoments": [
+        "Two people sit in chairs in front of a screen displaying changing text.",
+        "A presenter speaks toward the camera in an office while captions appear near the lower edge.",
+        "Other moments show people using computers in a shared workspace."
+      ],
+      "techniqueHypotheses": ["Compare real-people demonstrations against fully animated explanations for unfamiliar hardware concepts."]
+    },
+    {
+      "sourceId": "whatships:agent-desktop",
+      "reviewedOn": "2026-11-10",
+      "method": "browser-player",
+      "coverage": "selected-moments-only",
+      "visualTags": ["screen-recording", "product-ui-demo", "multi-window-cursor"],
+      "visibleMoments": [
+        "A terminal transcript sits beside a small Tokyo travel-planning app with checklist controls.",
+        "Another visible moment shows multiple desktop windows and labeled colored cursors performing app interactions.",
+        "A native context menu appears during a later screen-recording segment."
+      ],
+      "techniqueHypotheses": ["Test labeled parallel cursors and unobstructed app feedback as a direct capability demonstration."]
+    }
+  ]
+}

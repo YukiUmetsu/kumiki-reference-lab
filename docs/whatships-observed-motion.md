@@ -1,6 +1,8 @@
 # What Ships: browser-observed launch film references (November 10, 2026)
 
-These are **qualitative browser-playback spot checks**, not automatically decoded or timecoded video analyses. The site was opened and the public player was used; no media files were downloaded. Only the visible moments named below were observed. View counts and durations are **separate, historical site metadata** from [`research/whatships-motion-2026-11-10.json`](../research/whatships-motion-2026-11-10.json); they are not measurement of the playback or proof that a visual technique caused popularity.
+These are **qualitative browser-playback spot checks**, not automatically decoded or timecoded video analyses. The site was opened and the public player was used; no media files were downloaded. Only the visible moments named below were observed. View counts and durations are **separate, historical site metadata** from the [full directory index](../research/whatships-index-2026-11-10.json) and its [Motion subset](../research/whatships-motion-2026-11-10.json); they are not measurement of the playback or proof that a visual technique caused popularity.
+
+The nine source-linked observations are also stored as [validated machine-readable notes](../research/whatships-browser-observations-2026-11-10.json); `video-sources observations` can search them without promoting any spot check to a full review.
 
 | Film / source | Site-attributed X views | Duration | Directly visible moments during the spot check | Plausible Kumiki technique to study, **not yet independently measured** |
 | --- | ---: | ---: | --- | --- |
