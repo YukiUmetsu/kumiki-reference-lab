@@ -37,6 +37,9 @@ from kumiki_reference_lab.analyzers.shots.detect import analyze_hard_cuts
 from kumiki_reference_lab.backends.ffmpeg.probe import ProbeError
 from kumiki_reference_lab.catalog.store import build_catalog_index, load_catalog, search_catalog
 from kumiki_reference_lab.catalog.popular_videos import load_popular_videos, search_popular_videos
+from kumiki_reference_lab.catalog.audience_benchmarks import (
+    build_audience_insights, load_audience_benchmarks,
+)
 from kumiki_reference_lab.contracts.source import RIGHTS_STATUSES
 from kumiki_reference_lab.core.artifacts import write_json_artifact
 from kumiki_reference_lab.pipeline.analyze import run_analysis
@@ -490,6 +493,15 @@ def build_parser() -> argparse.ArgumentParser:
             sub.add_argument("--limit", type=int, default=20)
         if action == "search":
             sub.add_argument("query", help="technique, story goal, title or creator")
+    audience = commands.add_parser("audience-benchmarks", help="analyze recent-upload audience metadata without video downloads")
+    audience_actions = audience.add_subparsers(dest="audience_action", required=True)
+    for action in ("validate", "report"):
+        sub = audience_actions.add_parser(action)
+        sub.add_argument("--root", type=Path, default=Path("research/audience-recent-uploads.v1.json"),
+                         help="versioned local recent-upload audience snapshot")
+        if action == "report":
+            sub.add_argument("--min-comparison-count", type=int, default=5,
+                             help="minimum observations per side of an age-matched duration contrast")
     return parser
 
 
@@ -538,6 +550,17 @@ def main(argv: list[str] | None = None) -> int:
                                                 limit=args.limit)
                 print(json.dumps({"query": query, "results": results, "count": len(results),
                                   "retrievedOn": collection["retrievedOn"]}, indent=2, sort_keys=True))
+            return 0
+        if args.command == "audience-benchmarks":
+            collection = load_audience_benchmarks(args.root)
+            if args.audience_action == "validate":
+                print(json.dumps({"valid": True, "channelCount": len(collection["channels"]),
+                                  "sampleCount": sum(len(c["videos"]) for c in collection["channels"]),
+                                  "retrievedOn": collection["retrievedOn"]}, sort_keys=True))
+            else:
+                print(json.dumps(build_audience_insights(
+                    collection, minimum_comparison_count=args.min_comparison_count),
+                    indent=2, sort_keys=True, ensure_ascii=False))
             return 0
         if args.command == "analyze":
             manifest = run_analysis(

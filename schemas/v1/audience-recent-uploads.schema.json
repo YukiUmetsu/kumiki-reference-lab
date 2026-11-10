@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/audience-recent-uploads.schema.json",
+  "title": "Recent-upload audience benchmark source snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "retrievedOn", "methodology", "channels"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.audience-benchmark.v1"},
+    "retrievedOn": {"type": "string", "format": "date"},
+    "methodology": {"type": "string", "minLength": 1},
+    "channels": {
+      "type": "array", "minItems": 1, "maxItems": 32,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "name", "sourceUrl", "sourceLastUpdatedOn", "videos"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]+$"},
+          "name": {"type": "string", "minLength": 1},
+          "sourceUrl": {"type": "string", "pattern": "^https://digitalcreators\\.jp/en/channel/en/[A-Za-z0-9_-]+/videos/$"},
+          "sourceLastUpdatedOn": {"type": "string", "format": "date"},
+          "videos": {
+            "type": "array", "minItems": 1, "maxItems": 50,
+            "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["title", "publishedOn", "durationSeconds", "views", "likes", "comments"],
+              "properties": {
+                "title": {"type": "string", "minLength": 1},
+                "publishedOn": {"type": "string", "format": "date"},
+                "durationSeconds": {"oneOf": [{"type": "null"}, {"type": "integer", "minimum": 1, "maximum": 604800}]},
+                "views": {"type": "integer", "minimum": 1, "maximum": 1000000000000},
+                "likes": {"type": "integer", "minimum": 0, "maximum": 1000000000000},
+                "comments": {"type": "integer", "minimum": 0, "maximum": 1000000000000}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
