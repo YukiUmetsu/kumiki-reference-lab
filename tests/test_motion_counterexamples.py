@@ -167,6 +167,7 @@ class EncodedMotionCounterexamplesTests(unittest.TestCase):
     @unittest.skipUnless(importlib.util.find_spec("cv2"), "OpenCV required")
     def test_encoded_temporal_exposure_blur_degrades_support_without_inference(self):
         from kumiki_reference_lab.analyzers.motion.dense import analyze_dense_flow
+        from kumiki_reference_lab.analyzers.motion.temporal_support import analyze_dense_temporal_support
 
         with tempfile.TemporaryDirectory() as directory:
             video = Path(directory) / "exposure-blur.mkv"
@@ -181,6 +182,12 @@ class EncodedMotionCounterexamplesTests(unittest.TestCase):
             self.assertLess(max(blurred), min(normal) / 2)
             self.assertFalse(report["analyzer"]["calibratedConfidence"])
             self.assertFalse(report["analyzer"]["physicalCameraVerified"])
+            temporal = analyze_dense_temporal_support(report)
+            transitions = [item["previousPairComparison"]["status"] for item in
+                           temporal["pairs"] if item["previousPairComparison"] is not None]
+            self.assertIn("support-drop-candidate", transitions)
+            self.assertIn("support-rise-candidate", transitions)
+            self.assertFalse(temporal["semanticOcclusionVerified"])
             json.dumps(report, allow_nan=False)
 
     def test_independent_foreground_motion_remains_unattributed(self):
