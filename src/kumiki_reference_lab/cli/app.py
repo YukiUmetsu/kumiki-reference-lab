@@ -43,6 +43,9 @@ from kumiki_reference_lab.catalog.popular_videos import load_popular_videos, sea
 from kumiki_reference_lab.catalog.visual_styles import (
     load_visual_styles, search_visual_styles, style_family_counts,
 )
+from kumiki_reference_lab.catalog.open_footage import (
+    load_open_footage, verify_open_footage_media,
+)
 from kumiki_reference_lab.catalog.audience_benchmarks import (
     build_audience_insights, load_audience_benchmarks,
 )
@@ -552,6 +555,17 @@ def build_parser() -> argparse.ArgumentParser:
             sub.add_argument("--limit", type=int, default=20)
         if action == "search":
             sub.add_argument("query")
+    open_media = commands.add_parser(
+        "open-footage", help="validate and locally verify source-hashed real reference video samples")
+    open_media_actions = open_media.add_subparsers(dest="open_footage_action", required=True)
+    for action in ("validate", "list", "verify-local"):
+        sub = open_media_actions.add_parser(action)
+        sub.add_argument("--root", type=Path,
+                         default=Path("research/open-footage-calibration.v1.json"))
+        if action == "verify-local":
+            sub.add_argument("--media-root", type=Path, required=True)
+            sub.add_argument("--id", help="optionally check only one reference ID")
+            sub.add_argument("--ffprobe", default="ffprobe")
     events = commands.add_parser("visual-events", help="summarize explicitly reviewed camera and lighting events")
     event_actions = events.add_subparsers(dest="event_action", required=True)
     for action in ("validate", "report"):
@@ -663,6 +677,23 @@ def main(argv: list[str] | None = None) -> int:
                 result = search_visual_styles(catalog, query, family=args.family, limit=args.limit)
                 print(json.dumps({"query": query, "count": len(result), "results": result},
                                  indent=2, sort_keys=True))
+            return 0
+        if args.command == "open-footage":
+            collection = load_open_footage(args.root)
+            if args.open_footage_action == "validate":
+                result = {"valid": True, "entryCount": len(collection["entries"])}
+            elif args.open_footage_action == "list":
+                result = {"count": len(collection["entries"]), "entries": [
+                    {"id": item["id"], "title": item["title"],
+                     "commonsPage": item["rights"]["commonsPage"],
+                     "license": item["rights"]["license"],
+                     "reviewMode": item["frameObservations"]["reviewMode"]}
+                    for item in collection["entries"]]}
+            else:
+                result = verify_open_footage_media(
+                    collection, args.media_root, ffprobe=args.ffprobe,
+                    reference_id=args.id)
+            print(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
             return 0
         if args.command == "visual-events":
             review = load_visual_events(args.review_file)
