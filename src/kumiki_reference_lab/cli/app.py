@@ -66,6 +66,7 @@ from kumiki_reference_lab.core.artifacts import write_json_artifact
 from kumiki_reference_lab.pipeline.analyze import run_analysis
 from kumiki_reference_lab.pipeline.study import study_reference
 from kumiki_reference_lab.pipeline.speech_transcribe import transcribe_local_video
+from kumiki_reference_lab.pipeline.character_motion import run_character_motion
 from kumiki_reference_lab.pipeline.speaker_association import associate_speakers
 from kumiki_reference_lab.pipeline.character_speech_link import link_characters_to_speech
 from kumiki_reference_lab.integrations.kumiki.film_handoff import export_film_handoff
@@ -643,6 +644,22 @@ def build_parser() -> argparse.ArgumentParser:
     asr.add_argument("--retain-audio", action="store_true",
                      help="retain hashed decoded WAV so an offline diarizer can use identical audio")
     asr.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
+    character_motion = commands.add_parser(
+        "character-motion", help="track 2–6 manually seeded characters and measure screen-space motion")
+    character_motion.add_argument("source", type=Path, help="authorized local reference video")
+    character_motion.add_argument("seeds", type=Path, help="JSON character seed roster and ROI boxes")
+    character_motion.add_argument("--out", type=Path, required=True, help="new immutable output directory")
+    character_motion.add_argument("--max-seconds", type=int, default=10)
+    character_motion.add_argument("--max-samples", type=int, default=40)
+    character_motion.add_argument("--width", type=int, default=160)
+    character_motion.add_argument("--height", type=int, default=90)
+    character_motion.add_argument("--radius", type=int, default=12)
+    character_motion.add_argument("--correlation", type=float, default=0.62)
+    character_motion.add_argument("--threshold", type=float, default=0.25)
+    character_motion.add_argument("--ffmpeg", default="ffmpeg")
+    character_motion.add_argument("--ffprobe", default="ffprobe")
+    character_motion.add_argument("--rights-status", choices=RIGHTS_STATUSES,
+                                  default="review-required")
     character_review = commands.add_parser(
         "character-scene", help="validate or summarize timecoded character and dialogue review declarations")
     character_actions = character_review.add_subparsers(dest="character_action", required=True)
@@ -817,6 +834,14 @@ def main(argv: list[str] | None = None) -> int:
                 max_seconds=args.max_seconds, timeout_seconds=args.timeout_seconds,
                 language=args.language, rights_status=args.rights_status,
                 retain_audio=args.retain_audio))
+            return 0
+        if args.command == "character-motion":
+            print(run_character_motion(
+                args.source, args.seeds, args.out, seconds=args.max_seconds,
+                max_samples=args.max_samples, width=args.width, height=args.height,
+                radius=args.radius, correlation=args.correlation,
+                cut_threshold=args.threshold, ffmpeg=args.ffmpeg,
+                ffprobe=args.ffprobe, rights_status=args.rights_status))
             return 0
         if args.command == "character-scene":
             review = load_character_scene(args.review_file)
