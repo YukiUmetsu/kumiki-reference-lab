@@ -56,7 +56,7 @@ class SpeechTranscribeTests(unittest.TestCase):
         else:
             self.fail("unexpected subprocess")
 
-    def run_fake(self):
+    def run_fake(self, **kwargs):
         with (patch("kumiki_reference_lab.pipeline.speech_transcribe.inspect_source",
                     return_value=self.media_info),
               patch("kumiki_reference_lab.pipeline.speech_transcribe.probe_media",
@@ -64,7 +64,7 @@ class SpeechTranscribeTests(unittest.TestCase):
               patch("kumiki_reference_lab.pipeline.speech_transcribe._run_command",
                     side_effect=self.fake_commands)):
             return transcribe_local_video(self.source, self.out, model=self.model,
-                                          max_seconds=4)
+                                          max_seconds=4, **kwargs)
 
     def test_source_timed_unattributed_scene_and_provenance(self):
         path = self.run_fake()
@@ -89,6 +89,16 @@ class SpeechTranscribeTests(unittest.TestCase):
         self.assertIn("no-speaker-identification", manifest["evidenceStatus"])
         with self.assertRaisesRegex(ValueError, "nonexisting"):
             self.run_fake()
+
+    def test_explicit_audio_retention_is_fingerprinted(self):
+        from kumiki_reference_lab.analyzers.media.inspect import sha256_file
+        path = self.run_fake(retain_audio=True)
+        retained = path.parent / "audio-for-diarization.wav"
+        self.assertTrue(retained.is_file())
+        manifest = json.loads((path.parent / "speech-manifest.json").read_text())
+        self.assertTrue(manifest["retainedAudio"])
+        self.assertEqual(manifest["decodedAudioSha256"], sha256_file(retained))
+        self.assertEqual(manifest["decodedAudioSamples"], 64000)
 
     def test_rational_timebase_mappings(self):
         self.assertEqual(_round_pts(Fraction(1, 1000), Fraction(1, 1001)), 1)
