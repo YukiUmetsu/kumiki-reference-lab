@@ -75,3 +75,47 @@ Run without `--identity-candidates` to obtain an unlinked queue. The ID catalog 
 5. Only after both linked films are coded should we compare measured frequencies within their matched cohort, disclose reviewer disagreement and missing data, and test whether any pattern persists across **multiple** cohorts. No observational comparison can by itself prove what causes popularity.
 
 All third-party work remains **inspiration only**. Public watchability or a video ID does not authorize downloading, extracting or redistributing source footage.
+
+## Comparing reviewed camera and lighting frequencies
+
+After obtaining authorized local copies and **personally reviewing** both matching films, use the existing [`visual-events` review schema](visual-style-camera-lighting-methodology.md#3-camera-and-lighting-event-frequency-after-visual-review) to record actual PTS intervals, observation text, uncertainties and reviewed-window coverage. The new `compare-visual` action joins the two review artifacts to the default study-plan pair by the immutable source-row fingerprint, indexed video ID, reviewer-declared local media SHA-256 and stream index.
+
+Prepare a separate local `bindings.json` with this exact shape (the all-zero/one hashes below are **not actual media hashes** and must be replaced with locally measured digests):
+
+```json
+{
+  "schemaVersion": "kumiki.visual-study-media-bindings.v1",
+  "pairId": "kurzgesagt-12-11",
+  "evidenceStatus": "self-declared-source-video-to-local-media-not-independently-verified",
+  "mediaLinks": {
+    "higherViewedRow": {
+      "sourceRowSha256": "b704f13981122ed707e7c0db169084ff615d4fb3fbc5b55285492b857a78ced1",
+      "youtubeId": "hiIIGMeMEuE",
+      "mediaSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "streamIndex": 0
+    },
+    "lowerViewedRow": {
+      "sourceRowSha256": "b16825a803011ef76d66e124bb942329c88850ba41bbc167f86b1309bbbfd3ff",
+      "youtubeId": "NIifnIP_NnQ",
+      "mediaSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "streamIndex": 0
+    }
+  }
+}
+```
+
+Compute the SHA-256 of each authorized local file (e.g. `shasum -a 256 permitted-video.mp4` on macOS), copy it into the corresponding media link, and use the same hash and actual source PTS timebase in the two completed review JSON files. Copy [the visual-events example](../examples/visual-events-review.example.json) as a starting point, but **never** use its placeholder review as evidence of an actual viewing.
+
+```bash
+PYTHONPATH=src python -m kumiki_reference_lab audience-benchmarks compare-visual \
+  --identity-candidates research/video-id-candidates.v1.json \
+  --pair-id kurzgesagt-12-11 \
+  --bindings ./local/bindings.json \
+  --higher-review ./local/higher-visual-events.json \
+  --lower-review ./local/lower-visual-events.json \
+  --out ./runs/compared-kurzgesagt
+```
+
+The output contains per-source reviewer-interpreted event rates and counts. A **higher-minus-lower event-rate difference** is only calculated when **both** reviews declare the entire stated window was inspected, the stated window is within 95–105% of the frozen catalog runtime, and the two reviews declare the **same reviewer identity**. Otherwise the result explicitly abstains with `pairedEventRateDifferencesAvailable: false` and `pairedEventRateDifferences: null`. These checks do not prove the reviewer watched the entire original film or that the source binding is authentic. A number from a locally reviewed pair does not demonstrate a causal relationship with view counts.
+
+This command intentionally does not score paper-cut style, camera movement percentage, editing frequency, soundtrack, or lighting quality from titles or sparse frames. Separate footage-grounded coding is needed for each additional dimension. The included test reviews are **synthetic fixtures**, not measurements of the referenced Kurzgesagt videos.

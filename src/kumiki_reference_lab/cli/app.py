@@ -48,6 +48,9 @@ from kumiki_reference_lab.catalog.audience_benchmarks import (
 )
 from kumiki_reference_lab.catalog.visual_study_plan import build_visual_study_plan
 from kumiki_reference_lab.catalog.video_id_candidates import load_video_id_candidates
+from kumiki_reference_lab.catalog.paired_visual_review import (
+    compare_paired_visual_reviews, load_visual_study_bindings,
+)
 from kumiki_reference_lab.contracts.source import RIGHTS_STATUSES
 from kumiki_reference_lab.core.artifacts import write_json_artifact
 from kumiki_reference_lab.pipeline.analyze import run_analysis
@@ -504,7 +507,7 @@ def build_parser() -> argparse.ArgumentParser:
             sub.add_argument("query", help="technique, story goal, title or creator")
     audience = commands.add_parser("audience-benchmarks", help="analyze recent-upload audience metadata without video downloads")
     audience_actions = audience.add_subparsers(dest="audience_action", required=True)
-    for action in ("validate", "report", "study-plan"):
+    for action in ("validate", "report", "study-plan", "compare-visual"):
         sub = audience_actions.add_parser(action)
         sub.add_argument("--root", type=Path, default=Path("research/audience-recent-uploads.v1.json"),
                          help="versioned local recent-upload audience snapshot")
@@ -519,6 +522,15 @@ def build_parser() -> argparse.ArgumentParser:
             sub.add_argument("--min-view-ratio", type=float, default=2.0)
             sub.add_argument("--identity-candidates", type=Path,
                              help="optional audited exact-row YouTube index candidates, never inferred by title")
+        if action == "compare-visual":
+            sub.add_argument("--identity-candidates", type=Path, required=True)
+            sub.add_argument("--pair-id", required=True)
+            sub.add_argument("--bindings", type=Path, required=True,
+                             help="self-declared source-row/YouTube-ID/local-media SHA bindings")
+            sub.add_argument("--higher-review", type=Path, required=True)
+            sub.add_argument("--lower-review", type=Path, required=True)
+            sub.add_argument("--out", type=Path,
+                             help="optional directory for immutable paired-visual-review.json")
     cadence = commands.add_parser(
         "visual-cadence", help="summarize sampled image-motion, cut and display-luma proxy rates")
     cadence.add_argument("motion_report", type=Path)
@@ -601,7 +613,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(build_audience_insights(
                     collection, minimum_comparison_count=args.min_comparison_count),
                     indent=2, sort_keys=True, ensure_ascii=False))
-            else:
+            elif args.audience_action == "study-plan":
                 identities = (load_video_id_candidates(args.identity_candidates, collection)
                               if args.identity_candidates is not None else None)
                 plan = build_visual_study_plan(
@@ -613,6 +625,17 @@ def main(argv: list[str] | None = None) -> int:
                     print(json.dumps(plan, indent=2, sort_keys=True, ensure_ascii=False))
                 else:
                     print(write_json_artifact(args.out, "visual-study-plan.json", plan))
+            else:
+                identities = load_video_id_candidates(args.identity_candidates, collection)
+                comparison = compare_paired_visual_reviews(
+                    collection, identities, pair_id=args.pair_id,
+                    bindings=load_visual_study_bindings(args.bindings),
+                    higher_review=load_visual_events(args.higher_review),
+                    lower_review=load_visual_events(args.lower_review))
+                if args.out is None:
+                    print(json.dumps(comparison, indent=2, sort_keys=True, ensure_ascii=False))
+                else:
+                    print(write_json_artifact(args.out, "paired-visual-review.json", comparison))
             return 0
         if args.command == "visual-cadence":
             print(json.dumps(summarize_visual_cadence(
