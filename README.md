@@ -46,6 +46,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **First optional automatic speech stage:** [`speech-transcribe`](docs/local-speech-transcription.md) runs a previously installed local whisper.cpp executable/model on a bounded local video, maps ASR segment offsets to the source video PTS timebase, and emits the existing `character-scene` contract with **unknown speaker IDs**. No remote media, model downloads, diarization, lip-sync or character detection. A model-generated transcript is provisional evidence, not independently verified dialogue.
 
+**Offline voice-cluster association:** [`speech-associate`](docs/offline-speaker-association.md) conservatively joins locally generated RTTM diarization segments to source-PTS-bound ASR utterances. Stable **voice-only** IDs are assigned only when competing voices do not create ambiguity; unknown voices remain unknown. `speech-transcribe --retain-audio` can optionally preserve a fingerprinted decoded WAV for an exact-match offline diarizer. This is not automatic diarization or a visible-character identity classifier.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
