@@ -26,10 +26,14 @@ class PopularVideoTests(unittest.TestCase):
 
     def test_collection_is_diverse_documented_and_not_reuse_licensed(self):
         items = self.catalog["entries"]
-        self.assertEqual(len(items), 12)
-        self.assertGreaterEqual(len({item["creator"] for item in items}), 8)
+        self.assertEqual(len(items), 19)
+        self.assertGreaterEqual(len({item["creator"] for item in items}), 10)
         self.assertTrue(all(item["viewEvidence"]["viewCount"] >= 5_000_000 for item in items))
-        self.assertEqual(sum(item["viewEvidence"]["viewCount"] for item in items), 558_806_051)
+        self.assertEqual(sum(item["viewEvidence"]["viewCount"] for item in items), 726_127_863)
+        self.assertEqual([item["viewEvidence"]["viewCount"] for item in items],
+                         sorted((item["viewEvidence"]["viewCount"] for item in items), reverse=True))
+        self.assertGreaterEqual(sum("three-dimensional-explainer" in item["techniqueTags"]
+                                    for item in items), 7)
         self.assertTrue(all(item["rights"]["usage"] == "inspiration-only" and
                             item["rights"]["redistributionAuthorized"] is False and
                             item["reviewStatus"] == "editorial-candidate-not-frame-reviewed"
@@ -89,9 +93,9 @@ class PopularVideoTests(unittest.TestCase):
 
     def test_cli_validate_list_search_and_errors(self):
         for argv, expected_count in (
-            (["validate"], 12),
+            (["validate"], 19),
             (["list", "--min-views", "100000000"], 2),
-            (["search", "exploded view"], 1),
+            (["search", "exploded view"], 2),
         ):
             stdout = io.StringIO()
             with contextlib.redirect_stdout(stdout):

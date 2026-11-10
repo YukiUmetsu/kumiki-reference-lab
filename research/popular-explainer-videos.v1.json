@@ -30,6 +30,19 @@
       "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
     },
     {
+      "id": "jared-owen-m1a2-tank",
+      "title": "How does a Tank work? (M1A2 Abrams)",
+      "creator": "Jared Owen",
+      "publishedOn": "2020-05-05",
+      "youtubeId": "SdL55HWNPRM",
+      "videoUrl": "https://www.youtube.com/watch?v=SdL55HWNPRM",
+      "viewEvidence": {"viewCount": 64680097, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=SdL55HWNPRM", "sourceSnapshotOn": null},
+      "techniqueTags": ["three-dimensional-explainer", "cutaway-diagram", "mechanical-anatomy", "camera-choreography"],
+      "studyQuestion": "How can a high-detail cutaway expose the interior of a large vehicle while preserving the viewer's exterior-to-interior orientation?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed",
+      "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
       "id": "kurzgesagt-immune-system",
       "title": "The Immune System Explained I – Bacteria Infection",
       "creator": "Kurzgesagt – In a Nutshell",
@@ -82,6 +95,19 @@
       "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
     },
     {
+      "id": "jared-owen-electric-motor",
+      "title": "How does an Electric Motor work? (DC Motor)",
+      "creator": "Jared Owen",
+      "publishedOn": "2020-06-10",
+      "youtubeId": "CWulQ1ZSE3c",
+      "videoUrl": "https://www.youtube.com/watch?v=CWulQ1ZSE3c",
+      "viewEvidence": {"viewCount": 26064415, "approximate": false, "sourceKind": "third-party-video-statistics", "sourceUrl": "https://socialcounts.org/youtube-video-live-view-count/CWulQ1ZSE3c", "sourceSnapshotOn": null},
+      "techniqueTags": ["three-dimensional-explainer", "electromagnetic-mechanism", "animated-process", "visual-hierarchy"],
+      "studyQuestion": "How are invisible current and magnetic forces represented as legible original 3D effects around a physical motor?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed",
+      "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
       "id": "cgp-grey-rules-for-rulers",
       "title": "The Rules for Rulers (subsequently retitled)",
       "creator": "CGP Grey",
@@ -108,6 +134,32 @@
       "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
     },
     {
+      "id": "animagraffs-jet-airliner",
+      "title": "How a Jet Airliner Works",
+      "creator": "Animagraffs",
+      "publishedOn": "2022-06-18",
+      "youtubeId": "NZLbTuBDhJg",
+      "videoUrl": "https://www.youtube.com/watch?v=NZLbTuBDhJg",
+      "viewEvidence": {"viewCount": 19333715, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=NZLbTuBDhJg", "sourceSnapshotOn": null},
+      "techniqueTags": ["three-dimensional-explainer", "cross-section", "system-navigation", "camera-choreography"],
+      "studyQuestion": "How can a camera tour through a full 3D aircraft make multiple interdependent systems feel spatially connected?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed",
+      "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "animagraffs-car-engine",
+      "title": "How a Car Engine Works",
+      "creator": "Animagraffs",
+      "publishedOn": "2021-03-13",
+      "youtubeId": "ZQvfHyfgBtA",
+      "videoUrl": "https://www.youtube.com/watch?v=ZQvfHyfgBtA",
+      "viewEvidence": {"viewCount": 19263732, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=ZQvfHyfgBtA", "sourceSnapshotOn": null},
+      "techniqueTags": ["three-dimensional-explainer", "mechanism-sequencing", "exploded-view", "component-highlighting"],
+      "studyQuestion": "What camera, motion and highlighting choices expose one engine subsystem at a time without losing assembly context?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed",
+      "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
       "id": "domain-of-science-mathematics-map",
       "title": "The Map of Mathematics",
       "creator": "Domain of Science",
@@ -130,6 +182,45 @@
       "viewEvidence": {"viewCount": 14972115, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=dqONk48l5vY", "sourceSnapshotOn": null},
       "techniqueTags": ["biological-metaphor", "illustrated-explainer", "visual-transition", "narration-alignment"],
       "studyQuestion": "How can illustrative metaphors and concise transitions keep a voiced biology lesson visually engaging?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed",
+      "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "animagraffs-hms-victory",
+      "title": "How an 18th Century Sailing Warship Works (HMS Victory)",
+      "creator": "Animagraffs",
+      "publishedOn": "2023-03-10",
+      "youtubeId": "4Nr1AgIfajI",
+      "videoUrl": "https://www.youtube.com/watch?v=4Nr1AgIfajI",
+      "viewEvidence": {"viewCount": 14945889, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=4Nr1AgIfajI", "sourceSnapshotOn": null},
+      "techniqueTags": ["historical-documentary", "three-dimensional-explainer", "cross-section", "architectural-walkthrough"],
+      "studyQuestion": "How can a historically complex wooden vessel be explored deck by deck while maintaining material and scale credibility?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed",
+      "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "branch-education-chip-fabrication",
+      "title": "How are Microchips Made? CPU Manufacturing Process Steps",
+      "creator": "Branch Education",
+      "publishedOn": "2024-05-16",
+      "youtubeId": "dX9CGRZwD-w",
+      "videoUrl": "https://www.youtube.com/watch?v=dX9CGRZwD-w",
+      "viewEvidence": {"viewCount": 11589672, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=dX9CGRZwD-w", "sourceSnapshotOn": null},
+      "techniqueTags": ["three-dimensional-explainer", "factory-tour", "micro-to-macro-scale", "layered-process"],
+      "studyQuestion": "How do transitions between microscopic process details and a large factory preserve clarity through a many-stage manufacturing story?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed",
+      "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "animagraffs-sr71-blackbird",
+      "title": "How the Lockheed SR-71 Blackbird Works",
+      "creator": "Animagraffs",
+      "publishedOn": "2024-03-01",
+      "youtubeId": "gkyVZxtsubM",
+      "videoUrl": "https://www.youtube.com/watch?v=gkyVZxtsubM",
+      "viewEvidence": {"viewCount": 11444292, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=gkyVZxtsubM", "sourceSnapshotOn": null},
+      "techniqueTags": ["three-dimensional-explainer", "historical-documentary", "material-craftsmanship", "internal-mechanism"],
+      "studyQuestion": "How does detailed historical reference research translate into legible aircraft material, geometry, internal sections and a cinematic final reveal?",
       "reviewStatus": "editorial-candidate-not-frame-reviewed",
       "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
     },
