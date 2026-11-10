@@ -18,6 +18,7 @@ from kumiki_reference_lab.cli.app import main
 
 ROOT = Path(__file__).resolve().parents[1]
 COLLECTION = ROOT / "research/popular-explainer-videos.v1.json"
+CINEMATIC = ROOT / "research/popular-cinematic-videos.v1.json"
 
 
 class PopularVideoTests(unittest.TestCase):
@@ -55,6 +56,43 @@ class PopularVideoTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "between 1 and 100"):
             search_popular_videos(self.catalog, limit=0)
 
+    def test_broad_cinematic_cohort_and_combined_search(self):
+        cinematic = load_popular_videos(CINEMATIC)
+        items = cinematic["entries"]
+        self.assertEqual(len(items), 21)
+        self.assertGreaterEqual(len({item["creator"] for item in items}), 15)
+        self.assertEqual(sum(item["viewEvidence"]["viewCount"] for item in items), 1_814_369_302)
+        self.assertEqual([item["viewEvidence"]["viewCount"] for item in items],
+                         sorted((item["viewEvidence"]["viewCount"] for item in items), reverse=True))
+        self.assertTrue(all(item["viewEvidence"]["viewCount"] >= 5_000_000 for item in items))
+        self.assertTrue(all(item["rights"] == {"usage": "inspiration-only", "redistributionAuthorized": False}
+                            and item["reviewStatus"] == "editorial-candidate-not-frame-reviewed" for item in items))
+        all_videos = load_popular_videos(ROOT / "research")
+        self.assertEqual(len(all_videos["entries"]), 40)
+        self.assertEqual(sum(item["viewEvidence"]["viewCount"] for item in all_videos["entries"]), 2_540_497_165)
+        self.assertEqual(len({item["youtubeId"] for item in all_videos["entries"]}), 40)
+        self.assertEqual(len({item["creator"] for item in all_videos["entries"]}), 26)
+        self.assertEqual(search_popular_videos(all_videos, "title sequence")[0]["id"],
+                         "stranger-things-title-sequence")
+        self.assertEqual(search_popular_videos(all_videos, "match cut")[0]["id"],
+                         "nike-you-cant-stop-us")
+
+    def test_directory_rejects_ambiguous_or_unsafe_cohorts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            research = Path(directory)
+            with self.assertRaisesRegex(ValueError, "must contain"):
+                load_popular_videos(research)
+            (research / "popular-first-videos.v1.json").write_bytes(COLLECTION.read_bytes())
+            (research / "popular-second-videos.v1.json").write_bytes(COLLECTION.read_bytes())
+            with self.assertRaisesRegex(ValueError, "duplicate video across research cohorts"):
+                load_popular_videos(research)
+            (research / "popular-second-videos.v1.json").unlink()
+            (research / "popular-second-videos.v1.json").symlink_to(CINEMATIC)
+            with self.assertRaisesRegex(ValueError, "regular file"):
+                load_popular_videos(research)
+            with self.assertRaisesRegex(ValueError, "symlink"):
+                load_popular_videos(research / "popular-second-videos.v1.json")
+
     def test_invalid_or_misrepresented_sources_cannot_be_loaded(self):
         mutations = [
             ("duplicate video", lambda c: c["entries"].append(copy.deepcopy(c["entries"][0]))),
@@ -88,7 +126,7 @@ class PopularVideoTests(unittest.TestCase):
                 load_popular_videos(bad)
             link = root / "link.json"
             link.symlink_to(COLLECTION)
-            with self.assertRaisesRegex(ValueError, "regular file"):
+            with self.assertRaisesRegex(ValueError, "symlink"):
                 load_popular_videos(link)
 
     def test_cli_validate_list_search_and_errors(self):
@@ -105,6 +143,17 @@ class PopularVideoTests(unittest.TestCase):
         with contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(main(["video-references", "list", "--min-views", "-2",
                                    "--root", str(COLLECTION)]), 2)
+
+    def test_cli_directory_search_and_validation(self):
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            self.assertEqual(main(["video-references", "validate", "--root", str(ROOT / "research")]), 0)
+        self.assertEqual(json.loads(stdout.getvalue())["entryCount"], 40)
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            self.assertEqual(main(["video-references", "search", "cinematic lighting", "--root",
+                                   str(ROOT / "research")]), 0)
+        self.assertIn("league-of-legends-the-call", [entry["id"] for entry in json.loads(stdout.getvalue())["results"]])
 
 
 if __name__ == "__main__":

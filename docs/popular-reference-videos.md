@@ -1,5 +1,7 @@
 # Widely watched explainer films: evidence-linked study collection
 
+**Also available:** the [21-film non-explainer cinematic collection](cinematic-reference-videos.md) adds ads, game cinematics, product launches, title sequences, animated shorts, practical-effects music films and independent VFX. The CLI searches **both cohorts by default**; use `--root research/popular-explainer-videos.v1.json` to restrict searches to this historical explainer collection.
+
 This is an **editorial shortlist of animation references** for the Kumiki ecosystem, not a chart of the best videos or a verified account of their underlying production processes. The collection spans ten creators and techniques ranging from typography and 2D illustration to mathematical diagrams and exceptionally detailed 3D engineering. Each selection has a direct watch URL and a named public source reporting its video view count.
 
 **Research retrieval: November 10, 2026.** Counts are **video views / plays, not unique viewers**, and must not be used as proof of audience retention, engagement, visual quality, commercial rights, or causal efficacy. Search-indexed counts and third-party analytics can lag YouTube. The `~` sign means the evidence source rounded the count; unmarked numbers are exact *reported figures*, not guarantees of live counts. Where available, the third-party source snapshot date is noted separately from retrieval. Titles can be changed by their creators: the **video ID**, not the title, is the durable identity.
@@ -49,7 +51,7 @@ The creator's chapter descriptions are stronger evidence of **their stated produ
 
 ## Reuse and evidence workflow
 
-The versioned, machine-readable records are in [`research/popular-explainer-videos.v1.json`](../research/popular-explainer-videos.v1.json), with the contract in [`schemas/v1/popular-reference-videos.schema.json`](../schemas/v1/popular-reference-videos.schema.json). Each record includes a stable video ID, reported view count, source type and URL, source snapshot date if known, technique tags, an actionable study question and explicit rights status.
+The versioned, machine-readable records are in [`research/popular-explainer-videos.v1.json`](../research/popular-explainer-videos.v1.json) and [`research/popular-cinematic-videos.v1.json`](../research/popular-cinematic-videos.v1.json), with the shared contract in [`schemas/v1/popular-reference-videos.schema.json`](../schemas/v1/popular-reference-videos.schema.json). Each record includes a stable video ID, reported view count, source type and URL, source snapshot date if known, technique tags, an actionable study question and explicit rights status.
 
 ```bash
 PYTHONPATH=src python -m kumiki_reference_lab video-references validate
@@ -58,7 +60,7 @@ PYTHONPATH=src python -m kumiki_reference_lab video-references search "camera sc
 PYTHONPATH=src python -m kumiki_reference_lab video-references search "system diagram" --limit 5
 ```
 
-All commands operate on **local metadata only** and never download or embed a video, call a video service, or imply authorization. Pass `--root /path/to/catalog.json` when running outside this repository. Both `list` and `search` sort deterministically and are suitable for agent lookup. A view count is only an **evidence-backed popularity signal**; it is never a recommendation algorithm or a verified production metric.
+All commands operate on **local metadata only** and never download or embed a video, call a video service, or imply authorization. The default `--root research` combines both versioned cohorts; pass `--root /path/to/catalog.json` to use one file, or `--root /path/to/research-directory` when running elsewhere. Both `list` and `search` sort deterministically and are suitable for agent lookup. A view count is only an **evidence-backed popularity signal**; it is never a recommendation algorithm or a verified production metric.
 
 To progress an item from popularity-supported *study candidate* to a **measured** technique:
 

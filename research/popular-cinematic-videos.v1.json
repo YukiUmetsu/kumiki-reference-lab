@@ -1,0 +1,175 @@
+{
+  "schemaVersion": "kumiki.popular-video-references.v1",
+  "retrievedOn": "2026-11-10",
+  "methodology": "Editorial discovery of heavily watched non-explainer reference films: animation, game cinematics, advertising, music-video choreography, title design, and narrative/VFX shorts. View counts were observed in indexed YouTube results or identified third-party sources, not fetched from a live YouTube API. Apple Vision Pro (~62.3M as of March 2024) and Nike You Can't Stop Us (more than 59M in an earlier marketing case study) are historical, rounded figures and MUST NOT be read as current live counts. Other numbers may also be stale. Counts refer to plays, never unique viewers, retention, or proof of visual quality. The titles, techniques, and study questions are editorial hypotheses: no frame-level verification was performed. All media is inspiration-only; no redistribution permission is asserted.",
+  "entries": [
+    {
+      "id": "dumb-ways-to-die", "title": "Dumb Ways to Die", "creator": "Dumb Ways to Die", "publishedOn": "2012-11-14",
+      "youtubeId": "IJNR2EpS0jw", "videoUrl": "https://www.youtube.com/watch?v=IJNR2EpS0jw",
+      "viewEvidence": {"viewCount": 359402930, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=IJNR2EpS0jw", "sourceSnapshotOn": null},
+      "techniqueTags": ["animated-psa", "music-synchronization", "character-silhouettes", "comedic-escalation"],
+      "studyQuestion": "How do repeated musical motifs, simple character silhouettes, and accelerating slapstick make a public-service message memorable?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "alan-becker-animation-vs-minecraft", "title": "Animation vs. Minecraft (original)", "creator": "Alan Becker", "publishedOn": "2015-12-14",
+      "youtubeId": "GW_fdXHOWp4", "videoUrl": "https://www.youtube.com/watch?v=GW_fdXHOWp4",
+      "viewEvidence": {"viewCount": 351687889, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=GW_fdXHOWp4", "sourceSnapshotOn": null},
+      "techniqueTags": ["character-interaction", "two-dimensional-three-dimensional", "environment-reactivity", "physical-comedy"],
+      "studyQuestion": "How do small 2D actors interact physically with a recognizable 3D game environment while remaining expressive?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "league-of-legends-the-call", "title": "The Call | Season 2022 Cinematic", "creator": "League of Legends", "publishedOn": "2022-01-07",
+      "youtubeId": "mDYqT0_9VR4", "videoUrl": "https://www.youtube.com/watch?v=mDYqT0_9VR4",
+      "viewEvidence": {"viewCount": 169703517, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=mDYqT0_9VR4", "sourceSnapshotOn": null},
+      "techniqueTags": ["game-cinematic", "character-interaction", "cinematic-lighting", "action-camera"],
+      "studyQuestion": "How are simultaneous character arcs, changes of scale, dramatic lighting, and camera momentum balanced in a game trailer?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "alan-becker-animation-vs-math", "title": "Animation vs. Math", "creator": "Alan Becker", "publishedOn": "2023-06-24",
+      "youtubeId": "B1J6Ou4q8vE", "videoUrl": "https://www.youtube.com/watch?v=B1J6Ou4q8vE",
+      "viewEvidence": {"viewCount": 156333591, "approximate": false, "sourceKind": "third-party-video-statistics", "sourceUrl": "https://digitalcreators.jp/en/channel/en/UCbKWv2x9t6u8yZoB3KcPtnw/popular-videos/", "sourceSnapshotOn": null},
+      "techniqueTags": ["abstract-character-interaction", "mathematical-world", "visual-metaphor", "procedural-motion"],
+      "studyQuestion": "How do abstract numbers and geometric rules become a navigable environment for a character-led story?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "league-of-legends-still-here", "title": "Still Here | Season 2024 Cinematic", "creator": "League of Legends", "publishedOn": "2024-01-10",
+      "youtubeId": "ZHhqwBwmRkI", "videoUrl": "https://www.youtube.com/watch?v=ZHhqwBwmRkI",
+      "viewEvidence": {"viewCount": 146511566, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=ZHhqwBwmRkI", "sourceSnapshotOn": null},
+      "techniqueTags": ["game-cinematic", "temporal-transition", "character-acting", "cinematic-composition"],
+      "studyQuestion": "How does a short multi-era cinematic establish character motivation and transition between fights without disorienting the viewer?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "volvo-trucks-epic-split", "title": "Volvo Trucks - The Epic Split feat. Van Damme", "creator": "Volvo Trucks", "publishedOn": "2013-11-13",
+      "youtubeId": "M7FIvfx5J10", "videoUrl": "https://www.youtube.com/watch?v=M7FIvfx5J10",
+      "viewEvidence": {"viewCount": 128177241, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=M7FIvfx5J10", "sourceSnapshotOn": null},
+      "techniqueTags": ["single-take", "practical-choreography", "product-demonstration", "environmental-lighting"],
+      "studyQuestion": "How can a restrained single camera move and one measurable physical feat communicate a product benefit without exposition?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "ok-go-this-too-shall-pass", "title": "OK Go - This Too Shall Pass - Rube Goldberg Machine", "creator": "OK Go", "publishedOn": "2010-03-01",
+      "youtubeId": "qybUFnY7Y8w", "videoUrl": "https://www.youtube.com/watch?v=qybUFnY7Y8w",
+      "viewEvidence": {"viewCount": 77979646, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=qybUFnY7Y8w", "sourceSnapshotOn": null},
+      "techniqueTags": ["single-take", "rube-goldberg", "causal-transitions", "music-synchronization"],
+      "studyQuestion": "What camera placement and anticipation cues keep a long chain of physical causes readable and synchronized to music?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "apple-introducing-vision-pro", "title": "Introducing Apple Vision Pro", "creator": "Apple", "publishedOn": "2023-06-05",
+      "youtubeId": "TX9qSaGXFyg", "videoUrl": "https://www.youtube.com/watch?v=TX9qSaGXFyg",
+      "viewEvidence": {"viewCount": 62300000, "approximate": true, "sourceKind": "third-party-video-statistics", "sourceUrl": "https://journals.sagepub.com/doi/10.1177/29768624241283913", "sourceSnapshotOn": null},
+      "techniqueTags": ["product-launch", "spatial-ui-compositing", "product-macro", "interface-storytelling"],
+      "studyQuestion": "How can invisible spatial interactions, product macro shots and real-world context be sequenced to introduce a new interface paradigm?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "nike-you-cant-stop-us", "title": "Nike - You Can't Stop Us", "creator": "Nike", "publishedOn": "2020-07-30",
+      "youtubeId": "WA4dDs0T7sM", "videoUrl": "https://www.youtube.com/watch?v=WA4dDs0T7sM",
+      "viewEvidence": {"viewCount": 59000000, "approximate": true, "sourceKind": "third-party-video-statistics", "sourceUrl": "https://www.warc.com/en/campaigns/nike%3A-you-can%27t-stop-us-dcefe6e8ab554509932a09776e4cbc9c", "sourceSnapshotOn": null},
+      "techniqueTags": ["brand-film", "match-cut", "split-screen", "action-continuity"],
+      "studyQuestion": "How do matched athletic movements and split-screen composition connect dozens of unrelated shots into one continuous gesture?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "ok-go-i-wont-let-you-down", "title": "OK Go - I Won't Let You Down", "creator": "OK Go", "publishedOn": "2014-10-27",
+      "youtubeId": "u1ZB_rGFyeU", "videoUrl": "https://www.youtube.com/watch?v=u1ZB_rGFyeU",
+      "viewEvidence": {"viewCount": 53543957, "approximate": false, "sourceKind": "third-party-video-statistics", "sourceUrl": "https://kworb.net/youtube/video/u1ZB_rGFyeU.html", "sourceSnapshotOn": null},
+      "techniqueTags": ["drone-camera", "large-scale-choreography", "top-down-composition", "music-synchronization"],
+      "studyQuestion": "How does camera altitude transform a small human performance into legible stadium-scale geometric choreography?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "game-of-thrones-opening-credits", "title": "Official Opening Credits: Game of Thrones", "creator": "Game of Thrones / HBO", "publishedOn": "2011-04-18",
+      "youtubeId": "s7L2PVdrb_8", "videoUrl": "https://www.youtube.com/watch?v=s7L2PVdrb_8",
+      "viewEvidence": {"viewCount": 47072107, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=s7L2PVdrb_8", "sourceSnapshotOn": null},
+      "techniqueTags": ["title-sequence", "three-dimensional-map", "mechanical-world", "motivated-camera"],
+      "studyQuestion": "How does a traveling camera turn a stylized mechanical map into both geographic exposition and visual identity?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "lego-story", "title": "The LEGO Story", "creator": "LEGOClubTV", "publishedOn": "2012-08-10",
+      "youtubeId": "NdDU_BBJW9Y", "videoUrl": "https://www.youtube.com/watch?v=NdDU_BBJW9Y",
+      "viewEvidence": {"viewCount": 37501792, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=NdDU_BBJW9Y", "sourceSnapshotOn": null},
+      "techniqueTags": ["brand-storytelling", "three-dimensional-animation", "character-acting", "product-evolution"],
+      "studyQuestion": "How can a branded 3D short combine historical events, expressive characters and evolving product forms into a coherent narrative?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "ok-go-one-moment", "title": "OK Go - The One Moment", "creator": "OK Go", "publishedOn": "2016-11-24",
+      "youtubeId": "QvW61K2s0tA", "videoUrl": "https://www.youtube.com/watch?v=QvW61K2s0tA",
+      "viewEvidence": {"viewCount": 34963391, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=QvW61K2s0tA", "sourceSnapshotOn": null},
+      "techniqueTags": ["temporal-retiming", "practical-effects", "music-synchronization", "event-choreography"],
+      "studyQuestion": "What changes when a handful of seconds of precisely staged physical events are slowed and mapped onto an entire song?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "stranger-things-title-sequence", "title": "Stranger Things | Title Sequence [HD]", "creator": "Netflix / Stranger Things", "publishedOn": "2016-08-05",
+      "youtubeId": "-RcPZdihrp4", "videoUrl": "https://www.youtube.com/watch?v=-RcPZdihrp4",
+      "viewEvidence": {"viewCount": 27903296, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=-RcPZdihrp4", "sourceSnapshotOn": null},
+      "techniqueTags": ["title-sequence", "kinetic-typography", "shallow-focus", "negative-space"],
+      "studyQuestion": "How can a single typeface, tight cropping, grain and slow focus transitions build tension before any characters appear?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "ibm-boy-and-his-atom", "title": "A Boy And His Atom: The World's Smallest Movie", "creator": "IBM", "publishedOn": "2013-04-30",
+      "youtubeId": "oSCX78-8-q0", "videoUrl": "https://www.youtube.com/watch?v=oSCX78-8-q0",
+      "viewEvidence": {"viewCount": 27821929, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=oSCX78-8-q0", "sourceSnapshotOn": null},
+      "techniqueTags": ["stop-motion", "microscopic-scale", "material-constraints", "character-silhouettes"],
+      "studyQuestion": "How does an extreme production constraint produce a distinct visual language with minimal poses and tactile credibility?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "blender-big-buck-bunny", "title": "Big Buck Bunny 60fps 4K - Official Blender Foundation Short Film", "creator": "Blender", "publishedOn": "2014-11-10",
+      "youtubeId": "aqz-KE-bpKQ", "videoUrl": "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+      "viewEvidence": {"viewCount": 23504932, "approximate": false, "sourceKind": "third-party-video-statistics", "sourceUrl": "https://stats.videoamigo.com/channel-directory/blenderfoundation.amigo", "sourceSnapshotOn": null},
+      "techniqueTags": ["animated-short", "character-acting", "physical-comedy", "three-dimensional-environment"],
+      "studyQuestion": "What posing, pacing and environment reactions make the characters readable without explanatory dialogue?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "dust-oceanmaker", "title": "Sci-Fi Short Film The OceanMaker", "creator": "DUST / Lucas Martell", "publishedOn": "2018-01-20",
+      "youtubeId": "uWCGK4nneeU", "videoUrl": "https://www.youtube.com/watch?v=uWCGK4nneeU",
+      "viewEvidence": {"viewCount": 22335055, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=uWCGK4nneeU", "sourceSnapshotOn": null},
+      "techniqueTags": ["science-fiction", "animated-short", "environment-storytelling", "aerial-action"],
+      "studyQuestion": "How do wide establishing shots, air-vehicle motion, and environmental effects build a cinematic world quickly?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "blender-sprite-fright", "title": "Sprite Fright - Blender Open Movie", "creator": "Blender Studio", "publishedOn": "2021-10-29",
+      "youtubeId": "_cMxraX_5RE", "videoUrl": "https://www.youtube.com/watch?v=_cMxraX_5RE",
+      "viewEvidence": {"viewCount": 9383328, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=_cMxraX_5RE", "sourceSnapshotOn": null},
+      "techniqueTags": ["animated-short", "cinematic-lighting", "character-acting", "tonal-shift"],
+      "studyQuestion": "How are expressive character animation, woodland lighting and a tonal pivot staged within a short narrative?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "the-present-jacob-frey", "title": "The Present | A Short Film by Jacob Frey", "creator": "MAGNETFILM / Jacob Frey", "publishedOn": "2017-03-20",
+      "youtubeId": "C_nJJHaNmnY", "videoUrl": "https://www.youtube.com/watch?v=C_nJJHaNmnY",
+      "viewEvidence": {"viewCount": 6809428, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=C_nJJHaNmnY", "sourceSnapshotOn": null},
+      "techniqueTags": ["animated-short", "emotional-storytelling", "character-blocking", "visual-reveal"],
+      "studyQuestion": "How does visual blocking withhold a crucial fact and then reframe the audience's understanding in a final reveal?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "ian-hubert-dynamo-dream", "title": "Salad Mug - DYNAMO DREAM, Ep1", "creator": "Ian Hubert", "publishedOn": "2021-05-26",
+      "youtubeId": "LsGZ_2RuJ2A", "videoUrl": "https://www.youtube.com/watch?v=LsGZ_2RuJ2A",
+      "viewEvidence": {"viewCount": 6600000, "approximate": true, "sourceKind": "third-party-video-statistics", "sourceUrl": "https://hackertube.ai/topics/animation-vfx", "sourceSnapshotOn": null},
+      "techniqueTags": ["indie-vfx", "live-action-compositing", "environment-storytelling", "cinematic-worldbuilding"],
+      "studyQuestion": "How can economical 3D assets, camera tracking and compositing build the impression of an enormous lived-in science-fiction world?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "blender-sintel", "title": "Sintel - Open Movie by Blender Foundation", "creator": "Blender", "publishedOn": "2010-09-30",
+      "youtubeId": "eRsGyueVLvQ", "videoUrl": "https://www.youtube.com/watch?v=eRsGyueVLvQ",
+      "viewEvidence": {"viewCount": 5833707, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=eRsGyueVLvQ", "sourceSnapshotOn": null},
+      "techniqueTags": ["animated-short", "creature-animation", "emotional-storytelling", "cinematic-lighting"],
+      "studyQuestion": "How do character and creature acting, environment and lighting support an emotional narrative without relying on exposition?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    }
+  ]
+}

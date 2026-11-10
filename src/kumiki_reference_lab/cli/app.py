@@ -479,12 +479,12 @@ def build_parser() -> argparse.ArgumentParser:
             sub.add_argument("--out", type=Path, required=True,
                              help="directory for immutable catalog-index.json")
 
-    popular = commands.add_parser("video-references", help="browse evidence-linked popular explainer video examples")
+    popular = commands.add_parser("video-references", help="browse evidence-linked popular films across research cohorts")
     popular_actions = popular.add_subparsers(dest="popular_action", required=True)
     for action in ("validate", "list", "search"):
         sub = popular_actions.add_parser(action)
-        sub.add_argument("--root", type=Path, default=Path("research/popular-explainer-videos.v1.json"),
-                         help="local versioned reference-video metadata JSON")
+        sub.add_argument("--root", type=Path, default=Path("research"),
+                         help="research cohort directory or one versioned metadata JSON file")
         if action in ("list", "search"):
             sub.add_argument("--min-views", type=int, default=0)
             sub.add_argument("--limit", type=int, default=20)
