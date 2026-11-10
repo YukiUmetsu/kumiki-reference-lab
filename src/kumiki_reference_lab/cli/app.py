@@ -23,6 +23,7 @@ from kumiki_reference_lab.analyzers.shots.timeline_view import build_timeline_vi
 from kumiki_reference_lab.analyzers.shots.gallery import build_shot_gallery
 from kumiki_reference_lab.analyzers.media.contact_sheet import build_contact_sheet
 from kumiki_reference_lab.analyzers.motion.analyze import analyze_image_motion
+from kumiki_reference_lab.analyzers.motion.dense import analyze_dense_flow
 from kumiki_reference_lab.analyzers.motion.sparse import analyze_sparse_flow
 from kumiki_reference_lab.analyzers.motion.review import build_sparse_flow_review
 from kumiki_reference_lab.analyzers.subjects.roi import analyze_roi_track
@@ -144,6 +145,8 @@ def build_parser() -> argparse.ArgumentParser:
                         help="reject matches lacking independent local subpatch appearance support")
     sparse.add_argument("--projective-hypotheses", action="store_true",
                         help="optional bounded projective image-plane fit; never a camera claim")
+    sparse.add_argument("--model-validation", action="store_true",
+                        help="opt-in held-out spatial prediction test for translation/affine/projective")
     sparse.add_argument("--tracklet-motion-consistency", action="store_true",
                         help="optionally abstain from implausible consecutive PTS-scaled motion links")
     sparse.add_argument("--tracklet-appearance-consistency", action="store_true",
@@ -153,6 +156,19 @@ def build_parser() -> argparse.ArgumentParser:
     sparse.add_argument("--ffmpeg", default="ffmpeg")
     sparse.add_argument("--ffprobe", default="ffprobe")
     sparse.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
+
+    dense = commands.add_parser("dense-flow", help="optional bounded dense 2D optical flow")
+    dense.add_argument("source", type=Path)
+    dense.add_argument("--out", type=Path)
+    dense.add_argument("--max-seconds", type=int, default=10)
+    dense.add_argument("--max-samples", type=int, default=24)
+    dense.add_argument("--width", type=int, default=160)
+    dense.add_argument("--height", type=int, default=90)
+    dense.add_argument("--grid-step", type=int, default=12)
+    dense.add_argument("--threshold", type=float, default=0.25)
+    dense.add_argument("--ffmpeg", default="ffmpeg")
+    dense.add_argument("--ffprobe", default="ffprobe")
+    dense.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
 
     sparse_review = commands.add_parser(
         "review-sparse-flow", help="inspect source-verified sparse motion on original frames")
@@ -389,8 +405,13 @@ def build_parser() -> argparse.ArgumentParser:
     analyze.add_argument("--sparse-lk-refinement", action="store_true")
     analyze.add_argument("--sparse-quadrant-consistency", action="store_true")
     analyze.add_argument("--sparse-projective-hypotheses", action="store_true")
+    analyze.add_argument("--sparse-model-validation", action="store_true")
     analyze.add_argument("--sparse-tracklet-motion-consistency", action="store_true")
     analyze.add_argument("--sparse-tracklet-appearance-consistency", action="store_true")
+    analyze.add_argument("--dense-flow", action="store_true",
+                         help="include optional multiscale dense image-plane flow measurements")
+    analyze.add_argument("--dense-samples", type=int, default=24)
+    analyze.add_argument("--dense-grid-step", type=int, default=12)
     analyze.add_argument("--sparse-correlation", type=float, default=0.68)
     analyze.add_argument("--appearance", action="store_true",
                          help="include optional timecoded RGB appearance evidence")
@@ -472,8 +493,11 @@ def main(argv: list[str] | None = None) -> int:
                 sparse_lk_refinement=args.sparse_lk_refinement,
                 sparse_quadrant_consistency=args.sparse_quadrant_consistency,
                 sparse_projective_hypotheses=args.sparse_projective_hypotheses,
+                sparse_model_validation=args.sparse_model_validation,
                 sparse_tracklet_motion_consistency=args.sparse_tracklet_motion_consistency,
                 sparse_tracklet_appearance_consistency=args.sparse_tracklet_appearance_consistency,
+                dense_flow=args.dense_flow, dense_samples=args.dense_samples,
+                dense_grid_step=args.dense_grid_step,
                 appearance=args.appearance, appearance_samples=args.appearance_samples,
                 threshold=args.threshold, ffmpeg=args.ffmpeg, ffprobe=args.ffprobe,
                 rights_status=args.rights_status,
@@ -635,11 +659,20 @@ def main(argv: list[str] | None = None) -> int:
                 lk_refinement=args.lk_refinement,
                 quadrant_consistency=args.quadrant_consistency,
                 projective_hypotheses=args.projective_hypotheses,
+                model_validation=args.model_validation,
                 tracklet_motion_consistency=args.tracklet_motion_consistency,
                 tracklet_appearance_consistency=args.tracklet_appearance_consistency,
                 ffmpeg=args.ffmpeg, ffprobe=args.ffprobe, rights_status=args.rights_status,
             )
             filename = "sparse-flow.json"
+        elif args.command == "dense-flow":
+            artifact = analyze_dense_flow(
+                args.source, seconds=args.max_seconds, max_samples=args.max_samples,
+                width=args.width, height=args.height, grid_step=args.grid_step,
+                threshold=args.threshold, ffmpeg=args.ffmpeg, ffprobe=args.ffprobe,
+                rights_status=args.rights_status,
+            )
+            filename = "dense-flow.json"
         elif args.command == "appearance":
             artifact = analyze_appearance(
                 args.source, seconds=args.max_seconds, max_samples=args.max_samples,
