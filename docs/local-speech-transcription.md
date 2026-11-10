@@ -19,7 +19,7 @@ PYTHONPATH=src python -m kumiki_reference_lab character-scene report \
   ./runs/speech-reference-01/character-scene.json
 ```
 
-Outputs are an **atomic, new-only directory** with `character-scene.json` and `speech-manifest.json`. The manifest records media/model SHA-256, audio stream index and start PTS, audio/video source timebases, requested window, assumed alignment and number of segments. WAV and raw whisper.cpp JSON are temporary and discarded. Existing output directories are never overwritten.
+Outputs are an **atomic, new-only directory** with `character-scene.json` and `speech-manifest.json`. The manifest records media/model SHA-256, audio stream index and start PTS, audio/video source timebases, requested window, **actual decoded PCM sample count**, assumed alignment and number of segments. The scene window ends at the **real extracted audio duration**, rather than assuming a short video yielded the entire requested scan. WAV and raw whisper.cpp JSON are temporary and discarded. Existing output directories are never overwritten.
 
 Bounds: first 1–120 seconds, local video extensions only (`.mp4`, `.m4v`, `.mov`, `.mkv`, `.webm`, `.avi`), a local nonempty model, bounded memory/disk/output JSON and process timeouts. It does not read remote URLs, playlists or X/What Ships video pages. The source and model are checked for modification before the result is published. Tool failure publishes no partial result.
 
