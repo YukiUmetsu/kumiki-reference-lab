@@ -48,6 +48,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Offline voice-cluster association:** [`speech-associate`](docs/offline-speaker-association.md) conservatively joins locally generated RTTM diarization segments to source-PTS-bound ASR utterances. Stable **voice-only** IDs are assigned only when competing voices do not create ambiguity; unknown voices remain unknown. `speech-transcribe --retain-audio` can optionally preserve a fingerprinted decoded WAV for an exact-match offline diarizer. This is not automatic diarization or a visible-character identity classifier.
 
+**Evidence-backed dialogue-to-character links:** [`speech-link-characters`](docs/character-speech-link.md) combines a source-bound speech/voice review with a separate visual character scene, but only at explicitly reviewed, timecoded lip-motion evidence anchors. Other utterances retain their original voice-only or unknown speaker IDs. This is a reviewer/model attribution contract, **not automatic active-speaker detection or verified personal identity**.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
