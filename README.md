@@ -44,6 +44,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Character and dialogue review (new):** [`character-scene`](docs/character-scene-review.md) validates and summarizes source-PTS-bound character rosters, visible traits, multi-character actions, scene interactions, dialogue with attributed or unknown speakers, and explicitly sourced identity claims. It is **a reviewer/model annotation contract**, not automatic character detection, ASR, diarization, age/ethnicity inference or verified character recognition. The [synthetic example](examples/character-scene.synthetic.example.json) illustrates the input format without representing any actual reference film.
 
+**First optional automatic speech stage:** [`speech-transcribe`](docs/local-speech-transcription.md) runs a previously installed local whisper.cpp executable/model on a bounded local video, maps ASR segment offsets to the source video PTS timebase, and emits the existing `character-scene` contract with **unknown speaker IDs**. No remote media, model downloads, diarization, lip-sync or character detection. A model-generated transcript is provisional evidence, not independently verified dialogue.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
