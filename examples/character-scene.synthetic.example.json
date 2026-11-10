@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "kumiki.character-scene-review.v1",
+  "sourceSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "sourceStreamIndex": 0,
+  "sourceTimebase": {"numerator": 1, "denominator": 1000},
+  "reviewer": {"kind": "human", "id": "synthetic-fixture-not-a-real-film"},
+  "window": {"startPts": 0, "endPts": 6000, "coverage": "partial-window"},
+  "characters": [
+    {"id": "person_a", "kind": "animated-human", "label": "Character A", "visualDescription": "Short dark hair, red jacket, round glasses."},
+    {"id": "person_b", "kind": "animated-human", "label": "Character B", "visualDescription": "Long blue scarf, yellow bag, short curly hair."},
+    {"id": "narrator", "kind": "voice-only", "label": "Offscreen narrator", "visualDescription": null}
+  ],
+  "appearances": [
+    {"characterId": "person_a", "startPts": 500, "endPts": 4500, "anchorPts": [1000, 3000], "visibleTraits": ["red jacket", "round glasses"], "anchorBox": [0.2, 0.15, 0.25, 0.7], "observation": "Animated character appears in a red jacket on the left.", "confidence": "high"},
+    {"characterId": "person_b", "startPts": 1000, "endPts": 5000, "anchorPts": [2000], "visibleTraits": ["blue scarf", "yellow bag"], "anchorBox": [0.6, 0.1, 0.25, 0.8], "observation": "Second character appears on the right, facing character A.", "confidence": "high"}
+  ],
+  "actions": [
+    {"actorId": "person_a", "targetId": "person_b", "action": "points-at", "startPts": 2100, "endPts": 2900, "anchorPts": [2500], "observation": "Character A extends their arm in B's direction.", "confidence": "medium"},
+    {"actorId": "person_b", "targetId": null, "action": "turns-head", "startPts": 2900, "endPts": 3300, "anchorPts": [3000], "observation": "Character B turns their head toward character A.", "confidence": "medium"}
+  ],
+  "utterances": [
+    {"speakerId": "person_a", "startPts": 1200, "endPts": 2000, "text": "Look over there!", "language": "en", "transcriptEvidence": "speech", "speakerEvidence": "visible-lip-motion", "confidence": "medium"},
+    {"speakerId": null, "startPts": 3400, "endPts": 4100, "text": "What is that?", "language": "en", "transcriptEvidence": "speech", "speakerEvidence": "unknown", "confidence": "low"}
+  ],
+  "identityClaims": []
+}
