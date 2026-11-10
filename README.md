@@ -56,6 +56,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Timecoded detector visual QA (new):** [`review-subject-tracklets`](docs/subject-tracklet-visual-review.md) decodes original local media frames at source-verified PTS and overlays previously proposed detector boxes/tracklet IDs. The resulting offline HTML gallery prioritizes cuts, records source and report hashes and remains **unreviewed** until inspected. It does not validate person identity, model accuracy or cinematic quality.
 
+**First local pixel-to-human detector (macOS, optional):** [`mac-vision-humans`](docs/mac-vision-human-detection.md) samples original-PTS source frames and runs Apple Vision's built-in human-rectangle detector via locally installed PyObjC. It outputs provider-neutral people-box proposals for `subject-detections` and `review-subject-tracklets` without downloading models or making remote calls. It supports **live-action human regions only** as an unverified baseline, not animated-character recognition, person identification, age/ethnicity classification or action understanding.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
