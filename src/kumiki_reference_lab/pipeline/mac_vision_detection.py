@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import platform
 import sys
 import tempfile
 from fractions import Fraction
@@ -140,7 +141,8 @@ def detect_mac_vision_people(
         "sourceSha256": source_info["source"]["sha256"],
         "sourceStreamIndex": stream,
         "sourceTimebase": tb_dict,
-        "detector": {"name": "apple-vision-human-rectangles-local", "modelSha256": None},
+        "detector": {"name": f"apple-vision-human-rectangles-macos-{platform.mac_ver()[0] or 'unknown'}",
+                     "modelSha256": None},
         "cutCandidatePts": sorted({int(pts) for pts in cuts.pts
                                    if selected[0].pts < pts <= selected[-1].pts}),
         "frames": entries,
