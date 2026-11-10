@@ -112,12 +112,15 @@ def transcribe_local_video(source: Path, out: Path, *, model: Path,
                            whisper_cli: str = "whisper-cli", ffmpeg: str = "ffmpeg",
                            ffprobe: str = "ffprobe", max_seconds: int = 30,
                            timeout_seconds: int = 600, language: str = "auto",
-                           rights_status: str = "review-required") -> Path:
+                           rights_status: str = "review-required",
+                           retain_audio: bool = False) -> Path:
     """Run local ASR and atomically publish an unattributed dialogue scene.
 
     Alignment assumes the first decoded audio sample corresponds to audio
     start_pts. Encoder delay or timestamp discontinuities may violate that.
     """
+    if type(retain_audio) is not bool:
+        raise ValueError("retain_audio must be a boolean")
     if type(max_seconds) is not int or not 1 <= max_seconds <= 120:
         raise ValueError("max_seconds must be 1–120")
     if type(timeout_seconds) is not int or not 30 <= timeout_seconds <= 3600:
@@ -166,6 +169,7 @@ def transcribe_local_video(source: Path, out: Path, *, model: Path,
             raise ValueError("decoded audio is not valid WAV") from exc
         if not 0 < sample_count <= max_seconds * 16000 + 2048:
             raise ValueError("decoded audio samples exceed scan budget or are empty")
+        audio_sha = sha256_file(wav)
         window_start = _round_pts(audio_origin, video_tb)
         window_end = _round_pts(audio_origin + Fraction(sample_count, 16000), video_tb)
         if window_end <= window_start:
@@ -222,6 +226,7 @@ def transcribe_local_video(source: Path, out: Path, *, model: Path,
             "audioStartPts": audio_start_pts, "sourceVideoTimebase": video_tb_data,
             "requestedWindowSeconds": max_seconds,
             "decodedAudioSamples": sample_count, "sampleRateHz": 16000,
+            "decodedAudioSha256": audio_sha, "retainedAudio": retain_audio,
             "utteranceCount": len(utterances), "language": lang,
             "rightsStatus": rights_status,
             "clockMapping": "whisper-offset-ms-plus-ffprobe-audio-start-pts-to-video-pts",
@@ -235,7 +240,10 @@ def transcribe_local_video(source: Path, out: Path, *, model: Path,
             json.dumps(scene, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         (temp / "speech-manifest.json").write_text(
             json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        wav.unlink()
+        if retain_audio:
+            wav.rename(temp / "audio-for-diarization.wav")
+        else:
+            wav.unlink()
         transcript_path.unlink()
         os.replace(temp, out)
     return out / "character-scene.json"
