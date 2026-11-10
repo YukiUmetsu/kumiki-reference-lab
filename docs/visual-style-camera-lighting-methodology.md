@@ -2,7 +2,7 @@
 
 **New:** [Timecoded visual-style reviews](timecoded-visual-style-review.md) can record reviewer-observed media, paper-cut/collage/stop-motion/3D treatments, lighting looks and shot scales over exact source PTS intervals. This is an annotation/reporting capability, not evidence that the popular reference videos were watched or styled automatically.
 
-This extends the [audience benchmark](audience-benchmark-methodology.md) with **a separate creative vocabulary**. An often-watched video is not automatically a good example of a style, and an artist's case study is not proof that a technique causes views. Do not join these sources statistically until the *same video ID* has both source-attributed audience evidence and reviewed visual observations.
+This extends the [audience benchmark](audience-benchmark-methodology.md) with **a separate creative vocabulary**. An often-watched video is not automatically a good example of a style, and an artist's case study is not proof that a technique causes views. Do not join these sources statistically until the *same video ID* has both source-attributed audience evidence and reviewed visual observations. The [first actual licensed-file calibration](open-footage-calibration.md) demonstrates why introductory titles can bias a short visual sample.
 
 ## 1. Source-attributed style catalog
 

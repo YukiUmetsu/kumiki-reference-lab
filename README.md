@@ -38,6 +38,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Style review timeline:** [`visual-style-review`](docs/timecoded-visual-style-review.md) accepts source-PTS-bound, reviewer-declared intervals with primary medium, overlapping paper-cut/collage/2.5D/3D/stop-motion/live-action aesthetic tags, lighting look and shot scale. It computes **time-weighted** distributions and abstains from whole-window estimates for partial or gapped reviews. The example is synthetic; no popular-video style proportions are claimed.
 
+**Real footage calibration:** Four [openly licensed video files](docs/open-footage-calibration.md) covering paper cutouts, kinetic type, flat motion graphics and cinematic 3D have now been locally downloaded, source-hashed, probed and analyzed for their first 10s. `open-footage validate|list|verify-local` checks the versioned [calibration dataset](research/open-footage-calibration.v1.json), and source-PTS-based image-motion/display-brightness counts are recorded separately from sparse contact-sheet observations. The paper film's opening title cards are a real false-negative trap; these are **not whole-film camera/light frequencies, full-speed reviews, or popularity claims**. Raw footage is not checked in.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |

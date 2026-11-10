@@ -1,0 +1,147 @@
+{
+  "schemaVersion": "kumiki.open-footage-calibration.v1",
+  "collectedOn": "2026-11-10",
+  "methodology": "Four locally downloaded, source-hashed Wikimedia Commons files were probed and analyzed over only their first ten seconds with the existing bounded analysis pipeline, followed by sparse contact-sheet frame inspection. Counts are sampled display-image proxies, not physical cameras, lights, stylistic proportions, quality scores or popularity evidence.",
+  "entries": [
+    {
+      "id": "night-paper-stop-motion",
+      "title": "Night - Paper stop motion",
+      "creator": "DRabbitz Drtz",
+      "rights": {
+        "commonsPage": "https://commons.wikimedia.org/wiki/File:Night_-_Paper_stop_motion.webm",
+        "license": "CC-BY-3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+        "attribution": "Night - Paper stop motion by DRabbitz Drtz, CC BY 3.0"
+      },
+      "media": {
+        "localName": "paper-stop-motion.webm",
+        "downloadUrl": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Night_-_Paper_stop_motion.webm",
+        "sha256": "2fc0c40b1962158245510ab0d884a6d7e5dfec2af9c9f25b9fd0eb1181ee1ff4",
+        "sizeBytes": 17324033,
+        "durationMilliseconds": 112109,
+        "width": 1920,
+        "height": 1080,
+        "streamIndex": 0,
+        "sourceTimebase": {"numerator": 1, "denominator": 1000}
+      },
+      "sample": {
+        "startSeconds": 0,
+        "requestedSeconds": 10,
+        "imageMotion": {"activeRuns": 0, "cutCandidates": 0, "sampledSpanSeconds": 9.943, "measuredPairFraction": 0.510007, "activeTimeFractionOfMeasured": 0.0},
+        "displayLuma": {"activeRuns": 0, "cutCandidates": 0, "sampledSpanSeconds": 9.943, "measuredPairFraction": 1.0, "activeTimeFractionOfMeasured": 0.0}
+      },
+      "frameObservations": {
+        "reviewMode": "contact-sheets-only-no-full-speed-viewing",
+        "sampledWindowNote": "The first ten seconds show mostly black title cards and a small white illustrated logo, not a representative animated-paper story scene.",
+        "secondaryFrameNote": "Additional one-frame-per-second contact sheets from about 25-35s and 55-65s show flat outlined character cutouts, a bedroom set, and a dark purple nighttime scene. Later motion frequency was not measured.",
+        "visibleTags": ["title-card", "paper-cut"]
+      },
+      "audienceStatus": "not-measured-for-this-file"
+    },
+    {
+      "id": "trick-or-treat-kinetic-type",
+      "title": "Trick or Treat - Kinetic Typography",
+      "creator": "Conanda Sixteinliesena",
+      "rights": {
+        "commonsPage": "https://commons.wikimedia.org/wiki/File:%27Trick_or_Treat%27_-_Kinetic_Typography.webm",
+        "license": "CC-BY-3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+        "attribution": "Trick or Treat - Kinetic Typography by Conanda Sixteinliesena, CC BY 3.0"
+      },
+      "media": {
+        "localName": "kinetic-typography.webm",
+        "downloadUrl": "https://commons.wikimedia.org/wiki/Special:Redirect/file/%27Trick_or_Treat%27_-_Kinetic_Typography.webm",
+        "sha256": "cc6d598af88f63f2d39a05dc926470a65323ec8cb83c27df0911d7890723de4e",
+        "sizeBytes": 235041,
+        "durationMilliseconds": 10137,
+        "width": 540,
+        "height": 360,
+        "streamIndex": 0,
+        "sourceTimebase": {"numerator": 1, "denominator": 1000}
+      },
+      "sample": {
+        "startSeconds": 0,
+        "requestedSeconds": 10,
+        "imageMotion": {"activeRuns": 6, "cutCandidates": 3, "sampledSpanSeconds": 9.96, "measuredPairFraction": 0.895582, "activeTimeFractionOfMeasured": 0.533632},
+        "displayLuma": {"activeRuns": 5, "cutCandidates": 3, "sampledSpanSeconds": 9.96, "measuredPairFraction": 0.911647, "activeTimeFractionOfMeasured": 0.524229}
+      },
+      "frameObservations": {
+        "reviewMode": "contact-sheets-only-no-full-speed-viewing",
+        "sampledWindowNote": "Black-and-white words TRICK, OR and TREAT change scale and position among concentric circle and wedge shapes. Graphic contrast switches with the background.",
+        "secondaryFrameNote": "The film is approximately ten seconds long; no other scene interval was sampled.",
+        "visibleTags": ["kinetic-typography", "2d-motion-graphics"]
+      },
+      "audienceStatus": "not-measured-for-this-file"
+    },
+    {
+      "id": "sintel-extract",
+      "title": "Sintel webm extract",
+      "creator": "Durian Open Movie project / Blender Foundation",
+      "rights": {
+        "commonsPage": "https://commons.wikimedia.org/wiki/File:Sintel_webm_extract.webm",
+        "license": "CC-BY-3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+        "attribution": "Sintel by the Durian Open Movie project, copyright Blender Foundation, CC BY 3.0"
+      },
+      "media": {
+        "localName": "sintel-extract.webm",
+        "downloadUrl": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Sintel_webm_extract.webm",
+        "sha256": "da6d5de07cbc08c42fdbcc2b8b0c07b34c494c7d4ddcc3497d40cd1be8f4a0da",
+        "sizeBytes": 7756199,
+        "durationMilliseconds": 81584,
+        "width": 640,
+        "height": 360,
+        "streamIndex": 0,
+        "sourceTimebase": {"numerator": 1, "denominator": 1000}
+      },
+      "sample": {
+        "startSeconds": 0,
+        "requestedSeconds": 10,
+        "imageMotion": {"activeRuns": 2, "cutCandidates": 1, "sampledSpanSeconds": 9.958, "measuredPairFraction": 0.962342, "activeTimeFractionOfMeasured": 0.504331},
+        "displayLuma": {"activeRuns": 0, "cutCandidates": 1, "sampledSpanSeconds": 9.958, "measuredPairFraction": 0.958225, "activeTimeFractionOfMeasured": 0.0}
+      },
+      "frameObservations": {
+        "reviewMode": "contact-sheets-only-no-full-speed-viewing",
+        "sampledWindowNote": "Stylized 3D people in a warm, firelit interior; wide conversational framing is followed by a close-up face and a vessel. Apparent light direction is stable in the sampled images.",
+        "secondaryFrameNote": "The remaining seventy-plus seconds of this excerpt have not yet been visually sampled.",
+        "visibleTags": ["3d-rendered", "character-animation"]
+      },
+      "audienceStatus": "not-measured-for-this-file"
+    },
+    {
+      "id": "motion-graphics-animation",
+      "title": "MotionGraphicsAnimation",
+      "creator": "Wiki Learning Tec de Monterrey, Mexico City Campus students",
+      "rights": {
+        "commonsPage": "https://commons.wikimedia.org/wiki/File:MotionGraphicsAnimation.webm",
+        "license": "CC-BY-SA-4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "attribution": "MotionGraphicsAnimation by Wiki Learning Tec de Monterrey students, see film credits, CC BY-SA 4.0"
+      },
+      "media": {
+        "localName": "motion-graphics.webm",
+        "downloadUrl": "https://commons.wikimedia.org/wiki/Special:Redirect/file/MotionGraphicsAnimation.webm",
+        "sha256": "68615c75cb8c5a87f25244038cd67038b74162b70c5a8c7db9134e5c27846e52",
+        "sizeBytes": 5424307,
+        "durationMilliseconds": 48003,
+        "width": 1920,
+        "height": 1080,
+        "streamIndex": 0,
+        "sourceTimebase": {"numerator": 1, "denominator": 1000}
+      },
+      "sample": {
+        "startSeconds": 0,
+        "requestedSeconds": 10,
+        "imageMotion": {"activeRuns": 5, "cutCandidates": 0, "sampledSpanSeconds": 9.917, "measuredPairFraction": 0.764747, "activeTimeFractionOfMeasured": 0.593486},
+        "displayLuma": {"activeRuns": 4, "cutCandidates": 0, "sampledSpanSeconds": 9.917, "measuredPairFraction": 1.0, "activeTimeFractionOfMeasured": 0.176565}
+      },
+      "frameObservations": {
+        "reviewMode": "contact-sheets-only-no-full-speed-viewing",
+        "sampledWindowNote": "A bright green flat background holds Spanish typography and pink geometry; the square translates and rotates between sampled images, with sparse white accent lines.",
+        "secondaryFrameNote": "The later portion of the 48-second film has not yet been visually sampled.",
+        "visibleTags": ["2d-motion-graphics", "kinetic-typography"]
+      },
+      "audienceStatus": "not-measured-for-this-file"
+    }
+  ]
+}
