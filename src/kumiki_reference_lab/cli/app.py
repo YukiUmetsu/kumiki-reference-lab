@@ -26,6 +26,7 @@ from kumiki_reference_lab.analyzers.motion.analyze import analyze_image_motion
 from kumiki_reference_lab.analyzers.motion.dense import analyze_dense_flow
 from kumiki_reference_lab.analyzers.motion.dense_review import build_dense_flow_review
 from kumiki_reference_lab.analyzers.motion.temporal_support import analyze_dense_temporal_support_file
+from kumiki_reference_lab.analyzers.motion.annotation_evaluation import evaluate_dense_flow_annotations_files
 from kumiki_reference_lab.analyzers.motion.sparse import analyze_sparse_flow
 from kumiki_reference_lab.analyzers.motion.review import build_sparse_flow_review
 from kumiki_reference_lab.analyzers.subjects.roi import analyze_roi_track
@@ -196,6 +197,13 @@ def build_parser() -> argparse.ArgumentParser:
     dense_support.add_argument("dense_report", type=Path)
     dense_support.add_argument("--out", type=Path,
                                help="write immutable dense-temporal-support.json to this directory")
+
+    dense_evaluate = commands.add_parser(
+        "evaluate-dense-flow", help="compare dense vectors to declared source-PTS grid annotations")
+    dense_evaluate.add_argument("dense_report", type=Path)
+    dense_evaluate.add_argument("annotations", type=Path)
+    dense_evaluate.add_argument("--out", type=Path,
+                                help="write immutable dense-flow-evaluation.json to this directory")
 
     roi_review = commands.add_parser(
         "review-roi", help="view verified ROI boxes and loss on original source frames")
@@ -584,6 +592,13 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
             else:
                 print(str(write_json_artifact(args.out, "dense-temporal-support.json", result)))
+            return 0
+        if args.command == "evaluate-dense-flow":
+            result = evaluate_dense_flow_annotations_files(args.dense_report, args.annotations)
+            if args.out is None:
+                print(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
+            else:
+                print(str(write_json_artifact(args.out, "dense-flow-evaluation.json", result)))
             return 0
         if args.command == "review-roi":
             print(build_roi_review(
