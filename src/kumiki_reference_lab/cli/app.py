@@ -40,6 +40,9 @@ from kumiki_reference_lab.analyzers.shots.detect import analyze_hard_cuts
 from kumiki_reference_lab.backends.ffmpeg.probe import ProbeError
 from kumiki_reference_lab.catalog.store import build_catalog_index, load_catalog, search_catalog
 from kumiki_reference_lab.catalog.popular_videos import load_popular_videos, search_popular_videos
+from kumiki_reference_lab.catalog.video_sources import (
+    get_source_reference, load_source_references, search_source_references,
+)
 from kumiki_reference_lab.catalog.visual_styles import (
     load_visual_styles, search_visual_styles, style_family_counts,
 )
@@ -515,6 +518,22 @@ def build_parser() -> argparse.ArgumentParser:
             sub.add_argument("--limit", type=int, default=20)
         if action == "search":
             sub.add_argument("query", help="technique, story goal, title or creator")
+    sources = commands.add_parser(
+        "video-sources", help="browse normalized YouTube and What Ships references without media downloads")
+    source_actions = sources.add_subparsers(dest="source_action", required=True)
+    for action in ("validate", "list", "search", "show"):
+        sub = source_actions.add_parser(action)
+        sub.add_argument("--youtube-root", type=Path, default=Path("research"))
+        sub.add_argument("--whatships", type=Path,
+                         default=Path("research/whatships-index-2026-11-10.json"))
+        if action in ("list", "search"):
+            sub.add_argument("--provider", choices=("all", "youtube", "whatships"), default="all")
+            sub.add_argument("--min-views", type=int, default=0)
+            sub.add_argument("--limit", type=int, default=20)
+        if action == "search":
+            sub.add_argument("query", help="title, creator, category, tags, or source description")
+        if action == "show":
+            sub.add_argument("identity", help="provider-qualified ID, e.g. whatships:figma-3980")
     audience = commands.add_parser("audience-benchmarks", help="analyze recent-upload audience metadata without video downloads")
     audience_actions = audience.add_subparsers(dest="audience_action", required=True)
     for action in ("validate", "report", "study-plan", "compare-visual"):
@@ -629,6 +648,24 @@ def main(argv: list[str] | None = None) -> int:
                                                 limit=args.limit)
                 print(json.dumps({"query": query, "results": results, "count": len(results),
                                   "retrievedOn": collection["retrievedOn"]}, indent=2, sort_keys=True))
+            return 0
+        if args.command == "video-sources":
+            collection = load_source_references(args.youtube_root, args.whatships)
+            if args.source_action == "validate":
+                by_provider = {provider: sum(item["provider"] == provider for item in collection["entries"])
+                               for provider in ("youtube", "whatships")}
+                response = {"valid": True, "entryCount": len(collection["entries"]),
+                            "byProvider": by_provider, "retrievedOn": collection["retrievedOn"]}
+            elif args.source_action == "show":
+                response = {"reference": get_source_reference(collection, args.identity)}
+            else:
+                query = args.query if args.source_action == "search" else ""
+                results = search_source_references(collection, query, provider=args.provider,
+                                                   min_views=args.min_views, limit=args.limit)
+                response = {"query": query, "provider": args.provider,
+                            "results": results, "count": len(results),
+                            "retrievedOn": collection["retrievedOn"]}
+            print(json.dumps(response, indent=2, sort_keys=True, ensure_ascii=False))
             return 0
         if args.command == "audience-benchmarks":
             collection = load_audience_benchmarks(args.root)
