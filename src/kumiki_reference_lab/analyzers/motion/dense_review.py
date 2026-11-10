@@ -30,6 +30,8 @@ RENDER_REVISION = "source-pts-dense-grid-arrows-v1"
 _REJECTIONS = {"low-texture", "out-of-frame", "roundtrip-inconsistent",
                "implausible-displacement", "appearance-inconsistent"}
 _STATUSES = {"cut-boundary", "unobservable", "insufficient-grid-support", "flow-observed"}
+# The estimator checks unrounded endpoints, but emits dx/dy rounded to 4 dp.
+_VECTOR_QUANTIZATION_SLACK = 0.000051
 
 
 def _finite(value: Any, name: str) -> float:
@@ -143,8 +145,12 @@ def validate_dense_review_report(report: dict[str, Any]) -> tuple[
             seen.add((x, y))
             dx, dy = _finite(vector.get("dx"), "dx"), _finite(vector.get("dy"), "dy")
             error = _finite(vector.get("roundtripErrorPixels"), "roundtrip error")
-            if (math.hypot(dx, dy) > 24.0001 or not 5 <= x + dx < width - 6 or
-                    not 5 <= y + dy < height - 6 or not 0 <= error <= 1.5):
+            if (math.hypot(dx, dy) > 24.0001 or
+                    not 5 - _VECTOR_QUANTIZATION_SLACK <= x + dx <
+                    width - 6 + _VECTOR_QUANTIZATION_SLACK or
+                    not 5 - _VECTOR_QUANTIZATION_SLACK <= y + dy <
+                    height - 6 + _VECTOR_QUANTIZATION_SLACK or
+                    not 0 <= error <= 1.5):
                 raise ValueError("dense review vector leaves the trusted image bounds")
     return width, height, samples, pairs
 

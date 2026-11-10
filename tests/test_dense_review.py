@@ -82,6 +82,16 @@ class DenseReviewValidationTests(unittest.TestCase):
             with self.subTest(change=change), self.assertRaises(ValueError):
                 validate_dense_review_report(report)
 
+    def test_allows_only_quantization_slack_at_image_boundary(self):
+        # The estimator bounds the unrounded endpoint, then rounds dx to 4 dp.
+        # A valid endpoint at 153.99998 may therefore serialize as 154.0000.
+        report = _sample_report()
+        report["pairs"][0]["vectors"][0].update({"x": 150, "dx": 4.0, "dy": 0.0})
+        validate_dense_review_report(report)
+        report["pairs"][0]["vectors"][0]["dx"] = 4.001
+        with self.assertRaises(ValueError):
+            validate_dense_review_report(report)
+
     def test_html_shows_only_measured_pair_and_escapes_source_name(self):
         report = _sample_report()
         frames = [{"sampleIndex": i, "sourcePts": p, "seconds": p / 1000,
