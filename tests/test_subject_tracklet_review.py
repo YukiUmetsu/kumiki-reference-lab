@@ -121,6 +121,7 @@ class SubjectVisualReviewTests(unittest.TestCase):
             lambda x: x["frames"][0]["proposals"][0].update(detectorScore=True),
             lambda x: x["frames"][0]["proposals"][0].update(box=[0.99,0.2,0.5,0.4]),
             lambda x: x["frames"][1].update(sourcePts=0),
+            lambda x: x.update(cutCandidatePts=[1500, 1200]),
             lambda x: x["frames"][0]["proposals"][0].update(
                 association="<img src=x onerror=alert(1)>"),
         ]
@@ -136,6 +137,7 @@ class SubjectVisualReviewTests(unittest.TestCase):
         self.assertEqual(len(chosen), 8)
         self.assertEqual((chosen[0], chosen[-1]), (0,100))
         self.assertEqual(chosen, sorted(set(chosen)))
+        self.assertEqual(_select_indices(10, 4, priorities=[6, 5]), [0, 5, 6, 9])
 
     def test_decode_failure_never_publishes(self):
         with (patch("kumiki_reference_lab.pipeline.subject_tracklet_review.inspect_source",
