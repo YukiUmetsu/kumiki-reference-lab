@@ -69,6 +69,7 @@ from kumiki_reference_lab.integrations.kumiki.film_feedback import (
 )
 from kumiki_reference_lab.reviews.notes import review_notes_template, validate_review_notes
 from kumiki_reference_lab.reviews.visual_events import load_visual_events, summarize_visual_events
+from kumiki_reference_lab.reviews.character_scene import load_character_scene, summarize_character_scene
 from kumiki_reference_lab.reviews.visual_style_timeline import (
     load_visual_style_timeline, summarize_visual_style_timeline,
 )
@@ -601,6 +602,12 @@ def build_parser() -> argparse.ArgumentParser:
     for action in ("validate", "report"):
         sub = style_review_actions.add_parser(action)
         sub.add_argument("review_file", type=Path)
+    character_review = commands.add_parser(
+        "character-scene", help="validate or summarize timecoded character and dialogue review declarations")
+    character_actions = character_review.add_subparsers(dest="character_action", required=True)
+    for action in ("validate", "report"):
+        sub = character_actions.add_parser(action)
+        sub.add_argument("review_file", type=Path)
     return parser
 
 
@@ -746,6 +753,13 @@ def main(argv: list[str] | None = None) -> int:
             report = ({"valid": True, "eventCount": len(review["events"])}
                       if args.event_action == "validate" else summarize_visual_events(review))
             print(json.dumps(report, indent=2, sort_keys=True))
+            return 0
+        if args.command == "character-scene":
+            review = load_character_scene(args.review_file)
+            report = ({"valid": True, "characterCount": len(review["characters"])}
+                      if args.character_action == "validate" else
+                      summarize_character_scene(review))
+            print(json.dumps(report, indent=2, sort_keys=True, ensure_ascii=False))
             return 0
         if args.command == "visual-style-review":
             review = load_visual_style_timeline(args.review_file)
