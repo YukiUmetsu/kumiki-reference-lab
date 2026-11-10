@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "kumiki.subject-detections.v1",
+  "sourceSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "sourceStreamIndex": 0,
+  "sourceTimebase": {
+    "numerator": 1,
+    "denominator": 1000
+  },
+  "detector": {
+    "name": "synthetic-local-detector-demo",
+    "modelSha256": null
+  },
+  "cutCandidatePts": [],
+  "frames": [
+    {
+      "sourcePts": 0,
+      "detections": [
+        {
+          "category": "animated-character",
+          "score": 0.9,
+          "box": [
+            0.1,
+            0.2,
+            0.23,
+            0.5
+          ]
+        },
+        {
+          "category": "animated-character",
+          "score": 0.93,
+          "box": [
+            0.65,
+            0.2,
+            0.23,
+            0.5
+          ]
+        }
+      ]
+    },
+    {
+      "sourcePts": 1000,
+      "detections": [
+        {
+          "category": "animated-character",
+          "score": 0.9,
+          "box": [
+            0.12,
+            0.2,
+            0.23,
+            0.5
+          ]
+        },
+        {
+          "category": "animated-character",
+          "score": 0.91,
+          "box": [
+            0.62,
+            0.2,
+            0.23,
+            0.5
+          ]
+        }
+      ]
+    },
+    {
+      "sourcePts": 2000,
+      "detections": [
+        {
+          "category": "animated-character",
+          "score": 0.9,
+          "box": [
+            0.14,
+            0.2,
+            0.23,
+            0.5
+          ]
+        },
+        {
+          "category": "animated-character",
+          "score": 0.92,
+          "box": [
+            0.59,
+            0.2,
+            0.23,
+            0.5
+          ]
+        }
+      ]
+    }
+  ]
+}
