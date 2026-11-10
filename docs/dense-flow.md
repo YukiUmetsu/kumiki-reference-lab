@@ -70,3 +70,25 @@ analysis-run checksum inventory on reuse.
 Recommended next step: compare this field with known, independently generated
 2.5D parallax, blur and deforming-subject footage, then add explicit temporal
 occlusion diagnostics before allowing learned re-identification.
+
+## Review the actual source frames
+
+```bash
+kumiki-ref dense-flow reference.mp4 --out ./runs/dense
+kumiki-ref review-dense-flow reference.mp4 ./runs/dense/dense-flow.json \
+  --out ./runs/reviews --max-frames 8
+```
+
+The returned offline `index.html` shows at most twelve lossless decoded source
+frames at **exact original presentation timestamps**, with arrows for accepted
+grid vectors from each preceding sampled pair. Cuts display no extrapolated
+arrows. Opening/closing, cut-adjacent, weak and strong grid-support moments are
+prioritized. The report is verified against source SHA-256, stream, timebase,
+sample ordinals, PTS, grid geometry, accepted/rejected counts and image bounds.
+
+The immutable `kumiki.dense-flow-review.v1` bundle includes frame PNGs, copied
+`dense-flow.json`, the HTML gallery and a checksum manifest. Identical requests
+reuse an intact bundle; tampering stops reuse. This reviewer itself uses no
+OpenCV or neural models, only FFmpeg and Python's standard library. The arrows
+are **unreviewed image-plane evidence**, not validated object identities,
+occlusion segmentation, 3D depth, camera recovery or artistic approval.
