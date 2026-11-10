@@ -69,7 +69,7 @@ class VisualStudyPlanTests(unittest.TestCase):
     def test_indexed_candidates_are_attached_only_to_exact_source_rows(self):
         candidates = load_video_id_candidates(CANDIDATES, self.source)
         plan = build_visual_study_plan(self.source, identity_candidates=candidates)
-        self.assertEqual(plan["selectedRowsWithIndexedIdCandidates"], 2)
+        self.assertEqual(plan["selectedRowsWithIndexedIdCandidates"], 6)
         candidates_found = []
         for channel in plan["channels"]:
             for pair in channel["selectedPairs"]:
@@ -79,6 +79,10 @@ class VisualStudyPlanTests(unittest.TestCase):
                                                  item["videoIdentityCandidate"]["youtubeId"]))
                         self.assertEqual(item["visualReviewStatus"], "not-performed")
         self.assertEqual(candidates_found, [
+            ("alan-becker", 19, "xu0mrfxPhbY"),
+            ("kurzgesagt", 12, "hiIIGMeMEuE"),
+            ("kurzgesagt", 11, "NIifnIP_NnQ"),
+            ("real-engineering", 2, "rCM6dvK2Hjg"),
             ("real-engineering", 23, "j0ZZfIz9R1I"),
             ("real-engineering", 24, "Vf_pS0XSTyo"),
         ])
