@@ -10,6 +10,7 @@ import json
 import re
 from datetime import date, datetime
 from pathlib import Path
+from statistics import median
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -227,3 +228,44 @@ def get_source_reference(collection: dict[str, Any], identity: str) -> dict[str,
         if item["id"] == identity:
             return item
     raise ValueError(f"unknown source reference: {identity}")
+
+
+def summarize_source_references(collection: dict[str, Any]) -> dict[str, Any]:
+    """Describe source coverage, not performance or production technique."""
+    entries = collection["entries"]
+
+    def summarize(items: list[dict[str, Any]]) -> dict[str, Any]:
+        return {
+            "entries": len(items),
+            "detailedEntries": sum(item["evidenceStatus"] != "index-only" for item in items),
+            "viewCountsKnown": sum(item["views"] is not None for item in items),
+            "durationsKnown": sum(item["durationSeconds"] is not None for item in items),
+        }
+
+    providers = {name: summarize([item for item in entries if item["provider"] == name])
+                 for name in sorted({item["provider"] for item in entries})}
+    categories: dict[str, dict[str, Any]] = {}
+    for category in sorted({item["category"] for item in entries}):
+        items = [item for item in entries if item["category"] == category]
+        views = [item["views"] for item in items if item["views"] is not None]
+        durations = [item["durationSeconds"] for item in items
+                     if item["durationSeconds"] is not None]
+        categories[category] = {
+            **summarize(items),
+            "medianObservedViews": median(views) if views else None,
+            "medianDurationSeconds": median(durations) if durations else None,
+            "millionViewSnapshots": sum(view_count >= 1_000_000 for view_count in views),
+        }
+    return {
+        "schemaVersion": "kumiki.video-source-coverage.v1",
+        "retrievedOn": collection["retrievedOn"],
+        "totalEntries": len(entries),
+        "providers": providers,
+        "categories": categories,
+        "limitations": [
+            "What Ships directory selection bias and nonuniform detail sampling limit comparisons.",
+            "Observed view counts are historical X snapshots, not unique viewers or retention.",
+            "Publication age, account audience, promotion and topic remain uncontrolled.",
+            "No visual or audio properties were measured by this metadata report.",
+        ],
+    }
