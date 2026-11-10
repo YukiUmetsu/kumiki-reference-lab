@@ -12,6 +12,7 @@ dependencies = []
 
 [project.optional-dependencies]
 motion = ["numpy>=1.26"]
+dense = ["numpy>=1.26", "opencv-python-headless>=4.10,<6"]
 
 [project.scripts]
 kumiki-ref = "kumiki_reference_lab.cli.app:main"

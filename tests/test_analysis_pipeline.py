@@ -130,6 +130,22 @@ class AnalysisPipelineIntegrationTests(unittest.TestCase):
             self.assertEqual(artifact["observations"][7]["status"], "manual-reseed")
             self.assertNotIn("roiReseeds", json.loads(default.read_text())["settings"])
             self.assertEqual(json.loads(default.read_text())["schemaVersion"], ANALYSIS_RUN_VERSION)
+            if importlib.util.find_spec("cv2") and importlib.util.find_spec("jsonschema"):
+                from jsonschema import Draft202012Validator
+
+                combined = run_analysis(
+                    source, runs, seconds=2, roi=seed, samples=12,
+                    roi_reseeds=reseeds, sparse_flow=True, sparse_samples=8,
+                    sparse_model_validation=True, dense_flow=True, dense_samples=8,
+                    threshold=0.95,
+                )
+                combined_manifest = json.loads(combined.read_text())
+                schema = json.loads((Path(__file__).resolve().parents[1] /
+                                     "schemas/v2/analysis-run.schema.json").read_text())
+                Draft202012Validator(schema).validate(combined_manifest)
+                self.assertEqual({"sparseFlow", "denseFlow", "trackRoi"} &
+                                 combined_manifest["artifacts"].keys(),
+                                 {"sparseFlow", "denseFlow", "trackRoi"})
 
     def test_roi_reseeds_require_an_initial_seed_before_creating_output(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -1,3 +1,4 @@
+import importlib.util
 import json
 import unittest
 from pathlib import Path
@@ -6,7 +7,7 @@ from kumiki_reference_lab.contracts.source import SCHEMA_VERSION
 from kumiki_reference_lab.contracts.analysis import (
     FRAME_TIMELINE_VERSION, SHOT_CANDIDATES_VERSION, CONTACT_SHEET_VERSION,
     IMAGE_MOTION_VERSION, ROI_TRACK_VERSION, ANALYSIS_RUN_VERSION, SPARSE_FLOW_VERSION,
-    ROI_TRACK_RESEED_VERSION, ANALYSIS_RUN_RESEED_VERSION,
+    ROI_TRACK_RESEED_VERSION, ANALYSIS_RUN_RESEED_VERSION, DENSE_FLOW_VERSION,
     SPARSE_FLOW_REVIEW_VERSION,
     APPEARANCE_VERSION, APPEARANCE_COMPARISON_VERSION, FRAME_COMPARISON_VERSION,
     TECHNIQUE_PROPOSALS_VERSION,
@@ -50,6 +51,7 @@ class SchemaTests(unittest.TestCase):
                               ("contact-sheet", CONTACT_SHEET_VERSION),
                               ("image-motion", IMAGE_MOTION_VERSION),
                               ("sparse-flow", SPARSE_FLOW_VERSION),
+                              ("dense-flow", DENSE_FLOW_VERSION),
                               ("sparse-flow-review", SPARSE_FLOW_REVIEW_VERSION),
                               ("appearance", APPEARANCE_VERSION),
                               ("appearance-comparison", APPEARANCE_COMPARISON_VERSION),
@@ -129,6 +131,59 @@ class SchemaTests(unittest.TestCase):
         self.assertIn("roiReseeds", run_v2["properties"]["settings"]["required"])
         self.assertEqual(example[0]["sourcePts"], 700)
         self.assertEqual(len(example), 2)
+
+    @unittest.skipUnless(importlib.util.find_spec("jsonschema"), "jsonschema unavailable")
+    def test_analysis_run_schemas_accept_combined_optional_motion_settings(self):
+        from jsonschema import Draft202012Validator, ValidationError
+
+        root = Path(__file__).resolve().parents[1] / "schemas"
+        base = {
+            "sourceSha256": "0" * 64, "streamIndex": 0, "seconds": 2,
+            "thumbnails": 4, "motion": False, "roi": [0.2, 0.2, 0.2, 0.2],
+            "samples": 12, "width": 160, "height": 90,
+            "cutThreshold": 0.95, "ffmpeg": "ffmpeg", "ffprobe": "ffprobe",
+            "rightsStatus": "review-required",
+            "sparseFlow": True, "sparseSamples": 8, "sparsePoints": 40,
+            "sparseRadius": 8, "sparseCorrelation": 0.68,
+            "sparsePyramidLevels": 2, "sparseSubpixelRefinement": True,
+            "sparseSubpixelReverseCheck": True, "sparseQuadrantConsistency": True,
+            "sparseProjectiveHypotheses": True, "sparseModelValidation": True,
+            "sparseTrackletMotionConsistency": True,
+            "sparseTrackletAppearanceConsistency": True,
+            "denseFlow": True, "denseSamples": 8, "denseGridStep": 12,
+            "versions": {"run": "kumiki.analysis-run.v1", "source": "v1",
+                         "frames": "v1", "cuts": "v1", "contact": "v1",
+                         "motion": "v1", "roi": "kumiki.roi-track.v1",
+                         "sparseFlow": "kumiki.sparse-flow.v1",
+                         "denseFlow": "kumiki.dense-flow.v1"},
+        }
+        for version in (1, 2):
+            with self.subTest(version=version):
+                schema = json.loads((root / f"v{version}/analysis-run.schema.json").read_text())
+                Draft202012Validator.check_schema(schema)
+                settings = json.loads(json.dumps(base))
+                if version == 2:
+                    settings["roiReseeds"] = [{"sourcePts": 700, "box": [0.2, 0.2, 0.2, 0.2]}]
+                    settings["versions"]["run"] = "kumiki.analysis-run.v2"
+                    settings["versions"]["roi"] = "kumiki.roi-track.v2"
+                report = {
+                    "schemaVersion": f"kumiki.analysis-run.v{version}",
+                    "settings": settings,
+                    "sourceTimebase": {"numerator": 1, "denominator": 1000},
+                    "coverage": "bounded-from-start-not-necessarily-full-video",
+                    "artifacts": {name: f"{name}.json" for name in ("inspect", "frames", "cuts", "contactSheet")},
+                    "files": [{"path": f"file-{i}", "sha256": "0" * 64} for i in range(7)],
+                    "catalogProposals": [], "interpretationStatus": "not-performed",
+                }
+                validator = Draft202012Validator(schema)
+                validator.validate(report)
+                settings["sparseLkRefinement"] = True
+                settings.pop("sparseSubpixelRefinement")
+                settings.pop("sparseSubpixelReverseCheck")
+                validator.validate(report)
+                settings["unexpectedSetting"] = True
+                with self.assertRaises(ValidationError):
+                    validator.validate(report)
 
 
 if __name__ == "__main__":

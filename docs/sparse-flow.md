@@ -154,6 +154,44 @@ unreliable. No outside models are downloaded. Opt-in runs have distinct
 checksum identities, and the existing source-linked visual review can still
 display the underlying point tracks.
 
+## Optional held-out motion-model validation
+
+Use `--model-validation` with `sparse-flow`, or `--sparse-model-validation`
+with `analyze --sparse-flow`. This adds `modelValidation` to each pair
+(`null` across detected cuts), independently of the existing affine and
+projective *in-sample* hypotheses. Default reports and previous immutable run
+hashes remain unchanged. The analyzer compares three descriptions of
+**observed 2D motion**: translation, affine and projective transforms. It
+cannot identify a physical camera or object.
+
+Up to 64 accepted correspondences are divided by an interleaved spatial
+checkerboard into three folds. Each model fits two folds and predicts the
+third, so every point is evaluated exactly once and never helps train its own
+parameters. Each fold must have genuinely two-dimensional point geometry,
+not just a large span along one diagonal. The report includes held-out RMS
+and a conservative higher-rank 90th-percentile error in
+image pixels. A more complex model needs a substantial improvement in
+held-out errors over the simpler one to become the numeric candidate.
+
+- Fewer than 18 points, narrow coverage or an unsupported fold yields explicit
+  abstention. The preferred model also needs at most 1.5 px held-out RMS and
+  3 px 90th-percentile error; otherwise it abstains.
+- Competing moving layers, outliers, blur, rolling shutter, depth parallax and
+  subject deformation can still undermine prediction. Held-out outliers are
+  deliberately *not removed*. Thresholds are initial heuristics, **not
+  calibrated confidence**. `holdout-supported` indicates a model of these
+  sampled image-plane vectors, not confirmation of a camera rig.
+
+Older strict v1 readers may reject the new optional fields when enabled;
+users of that mode must update to the corresponding extended v1 schema.
+The default report remains unchanged.
+
+```bash
+kumiki-ref sparse-flow reference.mp4 --max-points 64 --model-validation --out ./runs/flow
+kumiki-ref analyze reference.mp4 --sparse-flow --sparse-points 64 \
+  --sparse-model-validation --out ./runs
+```
+
 ## Optional motion-consistent tracklet handoffs
 
 Use `--tracklet-motion-consistency` with `sparse-flow` or
