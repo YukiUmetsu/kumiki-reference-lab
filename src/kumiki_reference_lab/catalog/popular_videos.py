@@ -152,7 +152,7 @@ def validate_popular_videos(data: Any) -> list[str]:
     return errors
 
 
-def load_popular_videos(path: Path) -> dict[str, Any]:
+def _load_popular_video_file(path: Path) -> dict[str, Any]:
     """Load a bounded, regular JSON file; reject malformed/ambiguous metadata."""
     if path.is_symlink() or not path.is_file():
         raise ValueError(f"popular-video catalog must be a regular file: {path}")
@@ -166,6 +166,39 @@ def load_popular_videos(path: Path) -> dict[str, Any]:
     if errors:
         raise ValueError("popular-video catalog validation failed:\n" + "\n".join(errors))
     return payload
+
+
+def load_popular_videos(path: Path) -> dict[str, Any]:
+    """Load one research cohort or combine all canonical cohorts in a directory.
+
+    The latter preserves separately dated source files while exposing one offline
+    search surface. No files are modified, fetched, or silently deduplicated.
+    """
+    if path.is_symlink():
+        raise ValueError(f"popular-video catalog must not be a symlink: {path}")
+    if not path.is_dir():
+        return _load_popular_video_file(path)
+    paths = sorted(path.glob("popular-*-videos.v1.json"))
+    if not paths or len(paths) > 16:
+        raise ValueError("popular-video directory must contain 1–16 versioned cohorts")
+    cohorts = [_load_popular_video_file(candidate) for candidate in paths]
+    identifiers: set[str] = set()
+    youtube_ids: set[str] = set()
+    combined: list[dict[str, Any]] = []
+    for cohort in cohorts:
+        for entry in cohort["entries"]:
+            if entry["id"] in identifiers or entry["youtubeId"] in youtube_ids:
+                raise ValueError(f"duplicate video across research cohorts: {entry['id']}")
+            identifiers.add(entry["id"])
+            youtube_ids.add(entry["youtubeId"])
+            combined.append(entry)
+    return {
+        "schemaVersion": SCHEMA_VERSION,
+        "retrievedOn": max(cohort["retrievedOn"] for cohort in cohorts),
+        "methodology": "Combined separately authored metadata-only cohorts: " + ", ".join(
+            candidate.name for candidate in paths),
+        "entries": sorted(combined, key=lambda item: (-item["viewEvidence"]["viewCount"], item["id"])),
+    }
 
 
 def search_popular_videos(data: dict[str, Any], query: str = "", *,
