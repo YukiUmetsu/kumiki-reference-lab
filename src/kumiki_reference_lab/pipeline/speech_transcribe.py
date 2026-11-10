@@ -9,6 +9,7 @@ import os
 import re
 import subprocess
 import tempfile
+import wave
 from fractions import Fraction
 from pathlib import Path
 from typing import Any
@@ -58,7 +59,7 @@ def _language_code(json_value: Any, requested: str) -> str:
     return "und"
 
 
-def _parse_whisper_json(data: Any, *, seconds: int, audio_start: Fraction,
+def _parse_whisper_json(data: Any, *, max_duration_ms: int, audio_start: Fraction,
                         video_timebase: Fraction, lang: str) -> list[dict[str, Any]]:
     """whisper.cpp -oj offsets.from/to are integer milliseconds."""
     if not isinstance(data, dict) or not isinstance(data.get("transcription"), list):
@@ -73,7 +74,7 @@ def _parse_whisper_json(data: Any, *, seconds: int, audio_start: Fraction,
         offsets = item["offsets"]
         lo, hi = offsets.get("from"), offsets.get("to")
         if (type(lo) is not int or type(hi) is not int or
-                not 0 <= lo < hi <= seconds * 1000):
+                not 0 <= lo < hi <= max_duration_ms):
             raise ValueError(f"whisper.cpp segment {index} has invalid millisecond offsets")
         value = item.get("text")
         if type(value) is not str or not 1 <= len(value.strip()) <= 4000:
@@ -138,10 +139,6 @@ def transcribe_local_video(source: Path, out: Path, *, model: Path,
     video_tb_data = source_info["video"]["sourceTimebase"]
     video_tb = Fraction(video_tb_data["numerator"], video_tb_data["denominator"])
     audio_origin = audio_start_pts * audio_tb
-    window_start = _round_pts(audio_origin, video_tb)
-    window_end = _round_pts(audio_origin + max_seconds, video_tb)
-    if window_end <= window_start:
-        raise ValueError("requested scan window smaller than source video timebase")
     model_sha = sha256_file(model)
     require_unchanged(model, model_signature)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -159,6 +156,20 @@ def transcribe_local_video(source: Path, out: Path, *, model: Path,
         ], timeout=min(240, 30 + max_seconds * 4), stage="ffmpeg audio extraction")
         if not wav.is_file() or not 44 < wav.stat().st_size <= 1_048_576 + 60_000 * max_seconds:
             raise ValueError("decoded WAV missing or exceeds bounded size")
+        try:
+            with wave.open(str(wav), "rb") as audio:
+                if (audio.getnchannels() != 1 or audio.getsampwidth() != 2 or
+                        audio.getframerate() != 16000):
+                    raise ValueError("decoded audio is not mono PCM16 at 16 kHz")
+                sample_count = audio.getnframes()
+        except (wave.Error, EOFError, OSError) as exc:
+            raise ValueError("decoded audio is not valid WAV") from exc
+        if not 0 < sample_count <= max_seconds * 16000 + 2048:
+            raise ValueError("decoded audio samples exceed scan budget or are empty")
+        window_start = _round_pts(audio_origin, video_tb)
+        window_end = _round_pts(audio_origin + Fraction(sample_count, 16000), video_tb)
+        if window_end <= window_start:
+            raise ValueError("decoded audio window smaller than source video timebase")
         _run_command([
             whisper_cli, "-m", str(model.resolve()), "-f", str(wav),
             "-l", language, "-oj", "-of", str(prefix),
@@ -186,8 +197,9 @@ def transcribe_local_video(source: Path, out: Path, *, model: Path,
         if not isinstance(transcript, dict):
             raise ValueError("whisper.cpp JSON root must be an object")
         lang = _language_code(transcript.get("result"), language)
-        utterances = _parse_whisper_json(transcript, seconds=max_seconds,
-                                         audio_start=audio_origin,
+        utterances = _parse_whisper_json(
+            transcript, max_duration_ms=sample_count * 1000 // 16000,
+            audio_start=audio_origin,
                                          video_timebase=video_tb, lang=lang)
         scene = {
             "schemaVersion": CHARACTER_SCENE_VERSION,
@@ -209,6 +221,7 @@ def transcribe_local_video(source: Path, out: Path, *, model: Path,
                                     "denominator": audio_tb.denominator},
             "audioStartPts": audio_start_pts, "sourceVideoTimebase": video_tb_data,
             "requestedWindowSeconds": max_seconds,
+            "decodedAudioSamples": sample_count, "sampleRateHz": 16000,
             "utteranceCount": len(utterances), "language": lang,
             "rightsStatus": rights_status,
             "clockMapping": "whisper-offset-ms-plus-ffprobe-audio-start-pts-to-video-pts",
