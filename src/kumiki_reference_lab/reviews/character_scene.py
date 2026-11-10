@@ -217,6 +217,11 @@ def summarize_character_scene(review: dict[str, Any]) -> dict[str, Any]:
     action_count = Counter(item["actorId"] for item in review["actions"])
     appearance_count = Counter(item["characterId"] for item in review["appearances"])
     speaking_count = Counter(item["speakerId"] for item in review["utterances"] if item["speakerId"] is not None)
+    edge_count = Counter((item["actorId"], item["targetId"]) for item in review["actions"]
+                         if item["targetId"] is not None)
+    traits_by_character = {c["id"]: set() for c in review["characters"]}
+    for item in review["appearances"]:
+        traits_by_character[item["characterId"]].update(item["visibleTraits"])
     return {
         "schemaVersion": _SUMMARY_VERSION,
         "sourceSha256": review["sourceSha256"],
@@ -230,10 +235,18 @@ def summarize_character_scene(review: dict[str, Any]) -> dict[str, Any]:
         "unattributedUtterances": sum(item["speakerId"] is None for item in review["utterances"]),
         "identityClaims": len(review["identityClaims"]),
         "characters": [{"id": character["id"], "label": character["label"],
+                        "kind": character["kind"],
+                        "visualDescription": character["visualDescription"],
+                        "visibleTraits": sorted(traits_by_character[character["id"]]),
                         "appearances": appearance_count[character["id"]],
                         "actions": action_count[character["id"]],
                         "attributedUtterances": speaking_count[character["id"]]}
                        for character in review["characters"]],
+        "interactionPairs": [{"actorId": actor, "targetId": target, "eventCount": count}
+                             for (actor, target), count in sorted(edge_count.items())],
+        "actionTimeline": review["actions"],
+        "dialogueTimeline": review["utterances"],
+        "sourcedIdentityClaims": review["identityClaims"],
         "reviewStatus": "reviewer-declared-not-independently-media-verified",
         "methodLimits": [
             "No automatic character detection, speaker diarization, transcription or identity recognition was performed.",
