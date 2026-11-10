@@ -31,6 +31,11 @@ class CharacterSceneTests(unittest.TestCase):
         self.assertEqual(report["utteranceCount"], 2)
         self.assertEqual(report["unattributedUtterances"], 1)
         self.assertEqual(report["characters"][0]["attributedUtterances"], 1)
+        self.assertEqual(report["characters"][0]["visibleTraits"], ["red jacket", "round glasses"])
+        self.assertEqual(report["interactionPairs"], [
+            {"actorId": "person_a", "targetId": "person_b", "eventCount": 1}])
+        self.assertEqual(report["actionTimeline"][0]["action"], "points-at")
+        self.assertEqual(report["dialogueTimeline"][0]["text"], "Look over there!")
         self.assertEqual(report["reviewStatus"], "reviewer-declared-not-independently-media-verified")
 
     def test_cli_validate_and_report(self):
