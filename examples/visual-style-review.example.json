@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "kumiki.visual-style-timeline-review.v1",
+  "sourceSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "sourceStreamIndex": 0,
+  "sourceTimebase": {
+    "numerator": 1,
+    "denominator": 1000
+  },
+  "reviewer": {
+    "kind": "human",
+    "id": "placeholder-reviewer"
+  },
+  "window": {
+    "startPts": 0,
+    "endPts": 10000,
+    "coverage": "full-window-visual-review"
+  },
+  "segments": [
+    {
+      "startPts": 0,
+      "endPts": 5000,
+      "medium": "2.5d-compositing",
+      "treatments": ["paper-cut", "paper-collage", "2.5d-parallax"],
+      "lightingLook": "soft-diffuse",
+      "shotScale": "medium",
+      "confidence": "medium",
+      "anchorPts": [1000, 3500],
+      "observation": "Illustrative placeholder: layered paper silhouettes with apparent depth and diffuse shadows.",
+      "alternativeExplanation": "Could be flat digital shapes with stylized shadow layers rather than physical paper."
+    },
+    {
+      "startPts": 5000,
+      "endPts": 10000,
+      "medium": "live-action",
+      "treatments": ["naturalistic-documentary"],
+      "lightingLook": "hard-directional",
+      "shotScale": "wide",
+      "confidence": "low",
+      "anchorPts": [7000],
+      "observation": "Illustrative placeholder: photographic street scene with apparent directional sunlight.",
+      "alternativeExplanation": "Could be 3D rendering with a realistic color grade rather than camera footage."
+    }
+  ]
+}
