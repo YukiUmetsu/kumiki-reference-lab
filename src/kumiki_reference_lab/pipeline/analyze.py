@@ -137,6 +137,7 @@ def run_analysis(
     sparse_lk_refinement: bool = False,
     sparse_quadrant_consistency: bool = False,
     sparse_projective_hypotheses: bool = False,
+    sparse_model_validation: bool = False,
     sparse_tracklet_motion_consistency: bool = False,
     sparse_tracklet_appearance_consistency: bool = False,
     dense_flow: bool = False, dense_samples: int = 24,
@@ -167,6 +168,8 @@ def run_analysis(
             raise ValueError("dense-flow samples must be 5..40")
         if type(dense_grid_step) is not int or not 8 <= dense_grid_step <= 24:
             raise ValueError("dense-flow grid step must be 8..24")
+    if sparse_model_validation and not sparse_flow:
+        raise ValueError("sparse model validation requires sparse-flow")
     if sparse_flow:
         if seconds > 20 or width > 240 or height > 135:
             raise ValueError("sparse-flow requires seconds <=20, width <=240 and height <=135")
@@ -190,6 +193,8 @@ def run_analysis(
             raise ValueError("sparse-flow quadrant consistency must be a boolean")
         if type(sparse_projective_hypotheses) is not bool:
             raise ValueError("sparse-flow projective hypotheses must be a boolean")
+        if type(sparse_model_validation) is not bool:
+            raise ValueError("sparse-flow model validation must be a boolean")
         if type(sparse_tracklet_motion_consistency) is not bool:
             raise ValueError("sparse-flow tracklet motion consistency must be a boolean")
         if type(sparse_tracklet_appearance_consistency) is not bool:
@@ -239,6 +244,8 @@ def run_analysis(
             settings["sparseQuadrantConsistency"] = True
         if sparse_projective_hypotheses:
             settings["sparseProjectiveHypotheses"] = True
+        if sparse_model_validation:
+            settings["sparseModelValidation"] = True
         if sparse_tracklet_motion_consistency:
             settings["sparseTrackletMotionConsistency"] = True
         if sparse_tracklet_appearance_consistency:
@@ -309,6 +316,7 @@ def run_analysis(
                 lk_refinement=sparse_lk_refinement,
                 quadrant_consistency=sparse_quadrant_consistency,
                 projective_hypotheses=sparse_projective_hypotheses,
+                model_validation=sparse_model_validation,
                 tracklet_motion_consistency=sparse_tracklet_motion_consistency,
                 tracklet_appearance_consistency=sparse_tracklet_appearance_consistency,
                 ffmpeg=ffmpeg, ffprobe=ffprobe, rights_status=rights_status,

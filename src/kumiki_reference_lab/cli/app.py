@@ -129,6 +129,8 @@ def build_parser() -> argparse.ArgumentParser:
                         help="reject matches lacking independent local subpatch appearance support")
     sparse.add_argument("--projective-hypotheses", action="store_true",
                         help="optional bounded projective image-plane fit; never a camera claim")
+    sparse.add_argument("--model-validation", action="store_true",
+                        help="opt-in held-out spatial prediction test for translation/affine/projective")
     sparse.add_argument("--tracklet-motion-consistency", action="store_true",
                         help="optionally abstain from implausible consecutive PTS-scaled motion links")
     sparse.add_argument("--tracklet-appearance-consistency", action="store_true",
@@ -378,6 +380,7 @@ def build_parser() -> argparse.ArgumentParser:
     analyze.add_argument("--sparse-lk-refinement", action="store_true")
     analyze.add_argument("--sparse-quadrant-consistency", action="store_true")
     analyze.add_argument("--sparse-projective-hypotheses", action="store_true")
+    analyze.add_argument("--sparse-model-validation", action="store_true")
     analyze.add_argument("--sparse-tracklet-motion-consistency", action="store_true")
     analyze.add_argument("--sparse-tracklet-appearance-consistency", action="store_true")
     analyze.add_argument("--dense-flow", action="store_true",
@@ -462,6 +465,7 @@ def main(argv: list[str] | None = None) -> int:
                 sparse_lk_refinement=args.sparse_lk_refinement,
                 sparse_quadrant_consistency=args.sparse_quadrant_consistency,
                 sparse_projective_hypotheses=args.sparse_projective_hypotheses,
+                sparse_model_validation=args.sparse_model_validation,
                 sparse_tracklet_motion_consistency=args.sparse_tracklet_motion_consistency,
                 sparse_tracklet_appearance_consistency=args.sparse_tracklet_appearance_consistency,
                 dense_flow=args.dense_flow, dense_samples=args.dense_samples,
@@ -621,6 +625,7 @@ def main(argv: list[str] | None = None) -> int:
                 lk_refinement=args.lk_refinement,
                 quadrant_consistency=args.quadrant_consistency,
                 projective_hypotheses=args.projective_hypotheses,
+                model_validation=args.model_validation,
                 tracklet_motion_consistency=args.tracklet_motion_consistency,
                 tracklet_appearance_consistency=args.tracklet_appearance_consistency,
                 ffmpeg=args.ffmpeg, ffprobe=args.ffprobe, rights_status=args.rights_status,
