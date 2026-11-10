@@ -34,6 +34,14 @@ class CliTests(unittest.TestCase):
                 self.assertEqual(code, 2)
                 tracker.assert_not_called()
 
+    def test_review_roi_cli_passes_bounded_options(self):
+        with patch("kumiki_reference_lab.cli.app.build_roi_review",
+                   return_value=Path("/tmp/example/index.html")) as builder:
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(main(["review-roi", "reference.mkv", "track.json",
+                                       "--out", "reviews", "--max-frames", "7"]), 0)
+        self.assertEqual(builder.call_args.kwargs["max_frames"], 7)
+
     def test_output_is_idempotent_and_never_overwritten(self):
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "source.mp4"

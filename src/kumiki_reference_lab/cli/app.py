@@ -27,6 +27,7 @@ from kumiki_reference_lab.analyzers.motion.dense import analyze_dense_flow
 from kumiki_reference_lab.analyzers.motion.sparse import analyze_sparse_flow
 from kumiki_reference_lab.analyzers.motion.review import build_sparse_flow_review
 from kumiki_reference_lab.analyzers.subjects.roi import analyze_roi_track
+from kumiki_reference_lab.analyzers.subjects.review import build_roi_review
 from kumiki_reference_lab.analyzers.media.timeline import analyze_frame_timeline
 from kumiki_reference_lab.analyzers.shots.detect import analyze_hard_cuts
 from kumiki_reference_lab.backends.ffmpeg.probe import ProbeError
@@ -178,6 +179,15 @@ def build_parser() -> argparse.ArgumentParser:
     sparse_review.add_argument("--max-tracklets", type=int, default=12)
     sparse_review.add_argument("--ffmpeg", default="ffmpeg")
     sparse_review.add_argument("--ffprobe", default="ffprobe")
+
+    roi_review = commands.add_parser(
+        "review-roi", help="view verified ROI boxes and loss on original source frames")
+    roi_review.add_argument("source", type=Path)
+    roi_review.add_argument("roi_report", type=Path)
+    roi_review.add_argument("--out", type=Path, required=True)
+    roi_review.add_argument("--max-frames", type=int, default=8)
+    roi_review.add_argument("--ffmpeg", default="ffmpeg")
+    roi_review.add_argument("--ffprobe", default="ffprobe")
 
     appearance = commands.add_parser("appearance", help="measure RGB palette, contrast, highlight, and color changes")
     appearance.add_argument("source", type=Path)
@@ -545,6 +555,11 @@ def main(argv: list[str] | None = None) -> int:
                 args.source, args.sparse_report, args.out,
                 max_frames=args.max_frames, max_tracklets=args.max_tracklets,
                 ffmpeg=args.ffmpeg, ffprobe=args.ffprobe))
+            return 0
+        if args.command == "review-roi":
+            print(build_roi_review(
+                args.source, args.roi_report, args.out,
+                max_frames=args.max_frames, ffmpeg=args.ffmpeg, ffprobe=args.ffprobe))
             return 0
         if args.command == "review-timeline":
             print(build_timeline_view(
