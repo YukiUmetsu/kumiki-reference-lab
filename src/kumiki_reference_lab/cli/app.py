@@ -68,6 +68,7 @@ from kumiki_reference_lab.pipeline.study import study_reference
 from kumiki_reference_lab.pipeline.speech_transcribe import transcribe_local_video
 from kumiki_reference_lab.pipeline.character_motion import run_character_motion
 from kumiki_reference_lab.pipeline.subject_detections import run_subject_detections
+from kumiki_reference_lab.pipeline.subject_tracklet_review import build_subject_tracklet_review
 from kumiki_reference_lab.pipeline.speaker_association import associate_speakers
 from kumiki_reference_lab.pipeline.character_speech_link import link_characters_to_speech
 from kumiki_reference_lab.integrations.kumiki.film_handoff import export_film_handoff
@@ -645,6 +646,18 @@ def build_parser() -> argparse.ArgumentParser:
     asr.add_argument("--retain-audio", action="store_true",
                      help="retain hashed decoded WAV so an offline diarizer can use identical audio")
     asr.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
+    subject_review = commands.add_parser(
+        "review-subject-tracklets",
+        help="decode source-PTS frames and show external detector tracklet boxes for visual QA")
+    subject_review.add_argument("source", type=Path)
+    subject_review.add_argument("report", type=Path, help="subject-tracklets.json")
+    subject_review.add_argument("--out", type=Path, required=True, help="new output gallery directory")
+    subject_review.add_argument("--max-frames", type=int, default=8)
+    subject_review.add_argument("--scan-seconds", type=int, default=20)
+    subject_review.add_argument("--width", type=int, default=320)
+    subject_review.add_argument("--height", type=int, default=180)
+    subject_review.add_argument("--ffmpeg", default="ffmpeg")
+    subject_review.add_argument("--ffprobe", default="ffprobe")
     subject_proposals = commands.add_parser(
         "subject-detections",
         help="validate external local detector boxes and form source-verified, cut-bounded tracklets")
@@ -847,6 +860,12 @@ def main(argv: list[str] | None = None) -> int:
                 max_seconds=args.max_seconds, timeout_seconds=args.timeout_seconds,
                 language=args.language, rights_status=args.rights_status,
                 retain_audio=args.retain_audio))
+            return 0
+        if args.command == "review-subject-tracklets":
+            print(build_subject_tracklet_review(
+                args.source, args.report, args.out, max_frames=args.max_frames,
+                scan_seconds=args.scan_seconds, width=args.width, height=args.height,
+                ffmpeg=args.ffmpeg, ffprobe=args.ffprobe))
             return 0
         if args.command == "subject-detections":
             print(run_subject_detections(
