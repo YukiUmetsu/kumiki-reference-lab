@@ -632,6 +632,8 @@ def build_parser() -> argparse.ArgumentParser:
     asr.add_argument("--max-seconds", type=int, default=30)
     asr.add_argument("--timeout-seconds", type=int, default=600)
     asr.add_argument("--language", default="auto")
+    asr.add_argument("--retain-audio", action="store_true",
+                     help="retain hashed decoded WAV so an offline diarizer can use identical audio")
     asr.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
     character_review = commands.add_parser(
         "character-scene", help="validate or summarize timecoded character and dialogue review declarations")
@@ -801,7 +803,8 @@ def main(argv: list[str] | None = None) -> int:
                 args.source, args.out, model=args.model, whisper_cli=args.whisper_cli,
                 ffmpeg=args.ffmpeg, ffprobe=args.ffprobe,
                 max_seconds=args.max_seconds, timeout_seconds=args.timeout_seconds,
-                language=args.language, rights_status=args.rights_status))
+                language=args.language, rights_status=args.rights_status,
+                retain_audio=args.retain_audio))
             return 0
         if args.command == "character-scene":
             review = load_character_scene(args.review_file)
