@@ -26,7 +26,7 @@ Professional motion graphics depend on more than shaders and easing presets:
 
 Reference Lab turns these observations into an auditable analysis pipeline and a reusable **Kumiki Cinematic Techniques Catalog**.
 
-**Popular, evidence-linked videos to study:** the [12-film explainer reference collection](docs/popular-reference-videos.md) spans eight creators, from 3Blue1Brown's mathematical animation to Branch Education's detailed 3D engineering. Each entry links the original video and a public view-count source (~558.8 million *combined reported plays*, not unique viewers); [versioned metadata](research/popular-explainer-videos.v1.json) and a `video-references` CLI support offline search. All entries are **inspiration-only editorial candidates**, not visually validated techniques or reusable media assets.
+**Popular, evidence-linked videos to study:** the [19-film explainer reference collection](docs/popular-reference-videos.md) spans ten creators, from 3Blue1Brown's mathematical animation to Animagraffs' detailed Blender modeling and Branch Education's 3D engineering. Each entry links the original video and a public view-count source (~726.1 million *combined reported plays*, not unique viewers); [versioned metadata](research/popular-explainer-videos.v1.json) and a `video-references` CLI support offline search. All entries are **inspiration-only editorial candidates**, not visually validated techniques or reusable media assets.
 
 ## Ecosystem boundaries
 
