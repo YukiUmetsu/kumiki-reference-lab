@@ -22,7 +22,7 @@ from kumiki_reference_lab.analyzers.techniques.propose import _json_file
 from kumiki_reference_lab.backends.ffmpeg.frames import read_frame_pts
 from kumiki_reference_lab.backends.ffmpeg.raw_frames import read_rgb_frames
 from kumiki_reference_lab.core.provenance import file_signature, require_unchanged
-from kumiki_reference_lab.pipeline.subject_detections import OUTPUT_VERSION, _check_box
+from kumiki_reference_lab.pipeline.subject_detections import OUTPUT_VERSION, _check_box, _check_float
 
 REVIEW_VERSION = "kumiki.subject-tracklet-visual-review.v1"
 _TRACKLET = re.compile(r"subject_[0-9]{3}\Z")
@@ -63,6 +63,11 @@ def _validate_report(report: Any) -> list[dict[str, Any]]:
         counts[tid] = 0
     if report.get("trackletCount") != len(roster):
         raise ValueError("visual QA tracklet count mismatch")
+    cuts = report.get("cutCandidatePts")
+    if (not isinstance(cuts, list) or len(cuts) > 120 or
+            any(type(p) is not int for p in cuts) or cuts != sorted(set(cuts)) or
+            any(not frames[0]["sourcePts"] < p <= frames[-1]["sourcePts"] for p in cuts)):
+        raise ValueError("visual QA cut candidates malformed")
     prior_pts = None
     proposals_total = 0
     for i, frame in enumerate(frames):
@@ -89,9 +94,7 @@ def _validate_report(report: Any) -> list[dict[str, Any]]:
                 raise ValueError("visual QA references unknown or duplicate frame tracklet")
             seen.add(tid)
             _check_box(row["box"], "visual QA box")
-            score = row["detectorScore"]
-            if type(score) not in (int, float) or not math.isfinite(score) or not 0 <= score <= 1:
-                raise ValueError("visual QA detector score invalid")
+            _check_float(row["detectorScore"], "visual QA detector score")
             if row["association"] not in ("mutual-iou-match", "new-unverified-tracklet"):
                 raise ValueError("visual QA association unsupported")
             if type(row["crossedCutBeforeFrame"]) is not bool:
@@ -109,13 +112,25 @@ def _validate_report(report: Any) -> list[dict[str, Any]]:
     return frames
 
 
-def _select_indices(total: int, max_frames: int) -> list[int]:
+def _select_indices(total: int, max_frames: int,
+                    priorities: list[int] | None = None) -> list[int]:
     count = min(total, max_frames)
     if count == 1:
         return [0]
-    # Include first/last and spread the remaining frames evenly, without duplicates.
-    indices = {round(i * (total - 1) / (count - 1)) for i in range(count)}
-    return sorted(indices)
+    selected = {0, total - 1}
+    for i in priorities or []:
+        if 0 <= i < total and len(selected) < count:
+            selected.add(i)
+    for i in range(count):
+        if len(selected) >= count:
+            break
+        selected.add(round(i * (total - 1) / (count - 1)))
+    if len(selected) < count:
+        for i in range(total):
+            if len(selected) >= count:
+                break
+            selected.add(i)
+    return sorted(selected)
 
 
 def _page(rows: list[dict[str, Any]], width: int, height: int, source_name: str) -> str:
@@ -161,7 +176,7 @@ def _page(rows: list[dict[str, Any]], width: int, height: int, source_name: str)
         '<header><h1>Timecoded subject-tracklet review</h1><p>'
         + html.escape(source_name, quote=True) +
         '. These frames were decoded from the local source and their original PTS verified. '
-        'Rectangles and IDs are unverified **detector proposals**, not confirmed persons '
+        'Rectangles and IDs are unverified detector proposals, not confirmed persons '
         'or approved character identities. Review drift, occlusion, cuts and missing boxes '
         'before interpreting actions or relationships.</p></header>'
         '<main><section class="grid">' + "".join(figures) +
@@ -191,7 +206,12 @@ def build_subject_tracklet_review(
             metadata["video"]["streamIndex"] != report["sourceStreamIndex"] or
             metadata["video"]["sourceTimebase"] != report["sourceTimebase"]):
         raise ValueError("subject review report source hash/clock differs from local film")
-    idx = _select_indices(len(frames), max_frames)
+    cuts = report["cutCandidatePts"]
+    priorities = []
+    for i in range(1, len(frames)):
+        if any(frames[i-1]["sourcePts"] < p <= frames[i]["sourcePts"] for p in cuts):
+            priorities.extend((i-1, i))
+    idx = _select_indices(len(frames), max_frames, priorities=priorities)
     chosen = [frames[i] for i in idx]
     timebase = Fraction(**report["sourceTimebase"])
     frame_records = read_frame_pts(
