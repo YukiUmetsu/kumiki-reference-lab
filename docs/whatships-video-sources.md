@@ -12,6 +12,7 @@ PYTHONPATH=src python -m kumiki_reference_lab video-sources report
 PYTHONPATH=src python -m kumiki_reference_lab video-sources list --provider whatships --min-views 1000000
 PYTHONPATH=src python -m kumiki_reference_lab video-sources search "paper motion" --provider whatships
 PYTHONPATH=src python -m kumiki_reference_lab video-sources show whatships:figma-3980
+PYTHONPATH=src python -m kumiki_reference_lab video-sources observations --visual-tag editorial-collage
 ```
 
 All outputs are JSON. `show` returns a **browser page** in `watchUrl` and the original X URL in `originalUrl`, when the What Ships detail record provides one. For YouTube references, both URLs point to the canonical YouTube video. IDs are provider-qualified (`youtube:<video-id>`, `whatships:<slug>`) to avoid cross-provider collisions.
@@ -23,6 +24,8 @@ The [cross-category coverage analysis](whatships-category-coverage.md) explains 
 The default [`research/whatships-index-2026-11-10.json`](../research/whatships-index-2026-11-10.json) is a frozen snapshot of **2,861 indexed videos** across eight categories, of which **419** have rich detail metadata (including historical view counts for 418). The smaller [`research/whatships-motion-2026-11-10.json`](../research/whatships-motion-2026-11-10.json) is a **69-film Motion cohort** in which all entries have detail. Sources: the site's [public index](https://whatships.com/search-index.json) and read-only [MCP tools](https://whatships.com/developers/) `search_videos` and `get_video`, retrieved November 10, 2026. To use a newer local snapshot:
 
 The [browser-observed launch-film notes](whatships-observed-motion.md) record directly seen moments in nine playable clips spanning Motion, Design, AI, Hardware and Developer tools, clearly separated from metadata and unmeasured production hypotheses.
+
+The matching [structured observation dataset](../research/whatships-browser-observations-2026-11-10.json) is linked by provider-qualified ID and can be queried with `video-sources observations --source-id whatships:paper-mono-code` or `--visual-tag screen-recording`. These are **selected browser-player moments**, never complete shot timelines; the separate data schema prohibits unverified cut-frequency, camera, or light measurements. Entries are validated against the currently loaded source catalog so unknown video IDs cannot acquire spurious visual evidence.
 
 ```bash
 PYTHONPATH=src python -m kumiki_reference_lab video-sources list \
