@@ -1,0 +1,115 @@
+{
+  "schemaVersion": "kumiki.visual-style-references.v1",
+  "retrievedOn": "2026-11-10",
+  "methodology": "Production-studio descriptions and research references, not downloaded or frame-reviewed films. Example works do not have verified audience metrics here. Visual signals and study questions are editorial hypotheses, not detector outputs.",
+  "entries": [
+    {
+      "id": "layered-paper-cut",
+      "name": "Layered paper-cut and dimensional cutouts",
+      "family": "paper-and-collage",
+      "styleSignals": ["cut-edge silhouettes", "stacked graphic planes", "depth through overlapping paper-like layers"],
+      "studyQuestions": {"camera": "Does parallax distinguish separately staged cutout planes?", "lighting": "Are soft contact shadows an essential depth cue?", "cadence": "How often do layers move relative to each other?"},
+      "creatorSource": {"creator": "BUCK", "work": "Riot Games Lunar New Year", "url": "https://buck.co/work/riot-games-lunar-new-year", "sourceType": "studio-production-description", "sourceClaim": "The production uses traditional paper-cut aesthetics with many layered cutouts building 3D character and environment forms."},
+      "reviewStatus": "source-described-not-frame-reviewed", "audienceStatus": "not-measured-for-this-work", "rights": "inspiration-only"
+    },
+    {
+      "id": "paper-cut-look-in-3d",
+      "name": "Cut-paper look translated to 3D",
+      "family": "paper-and-collage",
+      "styleSignals": ["2D cut-paper shapes", "3D shading on graphic silhouettes", "sculpted graphic volumes"],
+      "studyQuestions": {"camera": "What makes the 3D depth feel paper-like rather than plastic?", "lighting": "Is depth communicated by broad shade or by edge shadow?", "cadence": "Do shapes change continuously or through graphic replacements?"},
+      "creatorSource": {"creator": "BUCK", "work": "We the People: Stronger", "url": "https://buck.co/work/we-the-people-stronger", "sourceType": "studio-production-description", "sourceClaim": "The project starts with cut-paper visual references and a 2D design that the studio translates into 3D."},
+      "reviewStatus": "source-described-not-frame-reviewed", "audienceStatus": "not-measured-for-this-work", "rights": "inspiration-only"
+    },
+    {
+      "id": "hand-drawn-cel",
+      "name": "Hand-drawn cel-style character animation",
+      "family": "hand-drawn",
+      "styleSignals": ["illustrated character contours", "individually drawn poses", "visible drawn shape changes"],
+      "studyQuestions": {"camera": "Is the composition stable to prioritize character acting?", "lighting": "How are highlights and shadows simplified into shapes?", "cadence": "Is character animation on twos or a variable exposure?"},
+      "creatorSource": {"creator": "Giant Ant", "work": "TVFCU: Sharing the Magic", "url": "https://www.giantant.ca/tvfcu-sharing-the-magic", "sourceType": "studio-production-description", "sourceClaim": "Giant Ant says the work uses traditional drawn animation and explicitly distinguishes it from working on physical paper."},
+      "reviewStatus": "source-described-not-frame-reviewed", "audienceStatus": "not-measured-for-this-work", "rights": "inspiration-only"
+    },
+    {
+      "id": "clay-puppet-stop-motion",
+      "name": "Physical puppet and clay stop-motion",
+      "family": "physical-animation",
+      "styleSignals": ["tactile clay or puppet surfaces", "physical miniature sets", "stepwise pose updates"],
+      "studyQuestions": {"camera": "How many compositions rely on a locked-off miniature camera?", "lighting": "Which physical shadows reveal set scale and tactile surfaces?", "cadence": "What fraction of pose changes is held or intentionally stepped?"},
+      "creatorSource": {"creator": "Aardman", "work": "Wallace & Gromit: Shot on iPhone", "url": "https://www.aardman.com/latest-news/2025/june/behind-the-craft-wallace-gromit-shot-on-iphone/", "sourceType": "studio-behind-the-scenes", "sourceClaim": "Aardman documents handmade sets, clay and stop-motion production for the campaign."},
+      "reviewStatus": "source-described-not-frame-reviewed", "audienceStatus": "not-measured-for-this-work", "rights": "inspiration-only"
+    },
+    {
+      "id": "wood-carved-frame-objects",
+      "name": "Physical frame-by-frame wood carving",
+      "family": "physical-animation",
+      "styleSignals": ["painted wood grain", "separate physical frame artifacts", "handmade object finish"],
+      "studyQuestions": {"camera": "Does object framing stay consistent across physical frames?", "lighting": "How do grazing light and grain reveal carved depth?", "cadence": "What is the perceived motion cadence of the carved sequence?"},
+      "creatorSource": {"creator": "BUCK", "work": "BUCK Holiday Gift", "url": "https://buck.co/work/buck-holiday-gift", "sourceType": "studio-production-description", "sourceClaim": "The studio translated custom animation frames into individually painted pine carvings."},
+      "reviewStatus": "source-described-not-frame-reviewed", "audienceStatus": "not-measured-for-this-work", "rights": "inspiration-only"
+    },
+    {
+      "id": "comic-halftone-3d",
+      "name": "Comic halftone and hand-drawn hybrid 3D",
+      "family": "stylized-3d",
+      "styleSignals": ["halftone shading", "hatching", "illustrated effect lines and printed color"],
+      "studyQuestions": {"camera": "How do graphic patterns remain legible during rapid virtual camera moves?", "lighting": "Where does print-style tonal design replace smooth photoreal shading?", "cadence": "Does held animation shape perceived speed differently than image-plane motion?"},
+      "creatorSource": {"creator": "Sony Pictures Imageworks", "work": "Spider-Man: Into the Spider-Verse", "url": "https://www.imageworks.com/our-craft/feature-animation/movies/spider-man-spider-verse", "sourceType": "studio-production-description", "sourceClaim": "The studio explains its comic-print halftoning, hatching and hand-drawn treatments in a stylized CG production."},
+      "reviewStatus": "source-described-not-frame-reviewed", "audienceStatus": "not-measured-for-this-work", "rights": "inspiration-only"
+    },
+    {
+      "id": "painterly-2d-3d-hybrid",
+      "name": "Painterly cinematic 2D and 3D hybrid",
+      "family": "stylized-3d",
+      "styleSignals": ["painted-looking CG surfaces", "drawn and rendered effects", "cinematic depth and staging"],
+      "studyQuestions": {"camera": "Where do dynamic camera moves serve a story beat rather than spectacle?", "lighting": "How is cinematic contrast reconciled with painterly surface design?", "cadence": "Does shot-to-shot motion intensity track emotional escalation?"},
+      "creatorSource": {"creator": "Fortiche", "work": "Arcane", "url": "https://forticheprod.com/blog/arcane-by-fortiche/", "sourceType": "studio-production-description", "sourceClaim": "Fortiche describes painterly art direction blending 2D/3D with cinematic staging and dynamic camera work."},
+      "reviewStatus": "source-described-not-frame-reviewed", "audienceStatus": "not-measured-for-this-work", "rights": "inspiration-only"
+    },
+    {
+      "id": "faux-stop-motion-diy-print",
+      "name": "Faux stop-motion and rough DIY print",
+      "family": "print-and-collage",
+      "styleSignals": ["poster-like print artifacts", "spray-paint marks", "purposefully stepped movement"],
+      "studyQuestions": {"camera": "Which composition changes resemble physically rearranged paper?", "lighting": "Are texture and contrast more important than simulated light?", "cadence": "How does intentionally nonsmooth movement affect apparent energy?"},
+      "creatorSource": {"creator": "BUCK", "work": "Instagram Pride", "url": "https://buck.co/work/instagram-pride", "sourceType": "studio-production-description", "sourceClaim": "BUCK describes spray-paint and low-fi printing and deliberately uses a faux stop-motion approach."},
+      "reviewStatus": "source-described-not-frame-reviewed", "audienceStatus": "not-measured-for-this-work", "rights": "inspiration-only"
+    },
+    {
+      "id": "print-texture-2point5d",
+      "name": "Grainy print texture with 2.5D camera depth",
+      "family": "print-and-collage",
+      "styleSignals": ["bright flat graphic colors", "grain and print-like texture", "subtle dimensional separation"],
+      "studyQuestions": {"camera": "When do shallow parallax moves add depth without losing graphic clarity?", "lighting": "How do contrast and texture replace heavy physical lighting?", "cadence": "How often is the 2.5D camera moving versus typography and shapes?"},
+      "creatorSource": {"creator": "BUCK", "work": "Identity Digital: Dot New Domain", "url": "https://buck.co/work/identity-digital-dot-new-domain", "sourceType": "studio-production-description", "sourceClaim": "BUCK says it paired grainy print-like styling with subtle dimension and 2.5D camera movement."},
+      "reviewStatus": "source-described-not-frame-reviewed", "audienceStatus": "not-measured-for-this-work", "rights": "inspiration-only"
+    },
+    {
+      "id": "photo-cel-type-mixed-media",
+      "name": "Photographic collage with cel animation and type",
+      "family": "print-and-collage",
+      "styleSignals": ["photographic cutouts", "illustrated 2D overlays", "hand-lettered typography"],
+      "studyQuestions": {"camera": "Which graphic planes follow or oppose the main subject?", "lighting": "How are incompatible photo and illustration contrast levels reconciled?", "cadence": "What is the edit rate at changes in narration topic?"},
+      "creatorSource": {"creator": "BUCK", "work": "Facebook IWD", "url": "https://buck.co/work/facebook-iwd", "sourceType": "studio-production-description", "sourceClaim": "The studio explicitly lists cel animation, 2D, hand-drawn typography and photography as its mixed-media technique."},
+      "reviewStatus": "source-described-not-frame-reviewed", "audienceStatus": "not-measured-for-this-work", "rights": "inspiration-only"
+    },
+    {
+      "id": "low-frame-2d-with-tactile-3d",
+      "name": "Low-frame 2D characters in tactile 3D worlds",
+      "family": "stylized-3d",
+      "styleSignals": ["graphic 2D characters", "photoreal tactile environments", "intentionally sparse character frame cadence"],
+      "studyQuestions": {"camera": "How does perspective exaggeration change perceived scale?", "lighting": "How does stage-like lighting ground flat character layers?", "cadence": "Does character pose frequency differ from environment and camera frequency?"},
+      "creatorSource": {"creator": "Giant Ant", "work": "Duolingo: Misunderstood", "url": "https://www.giantant.ca/duolingo-misunderstood", "sourceType": "studio-production-description", "sourceClaim": "Giant Ant describes low-framerate animation, 2D characters and rich tactile 3D worlds with dramatic stage lighting."},
+      "reviewStatus": "source-described-not-frame-reviewed", "audienceStatus": "not-measured-for-this-work", "rights": "inspiration-only"
+    },
+    {
+      "id": "abstract-geometric-brand-motion",
+      "name": "Minimal abstract geometric identity motion",
+      "family": "abstract-motion",
+      "styleSignals": ["simple 2D and 3D shapes", "minimal branded geometry", "metaphoric shape transformations"],
+      "studyQuestions": {"camera": "Is perceived motion caused by geometric transformation or camera move?", "lighting": "Does shading communicate dimensionality while preserving brand simplicity?", "cadence": "How many independent beats fit into a five-second brand ident?"},
+      "creatorSource": {"creator": "Ordinary Folk", "work": "TED: Intro Animation", "url": "https://www.ordinaryfolk.co/project/ted-intro-animation", "sourceType": "studio-production-description", "sourceClaim": "Ordinary Folk lists 2D, 3D and shapes for a five-second TED intro developed around spreading ideas."},
+      "reviewStatus": "source-described-not-frame-reviewed", "audienceStatus": "not-measured-for-this-work", "rights": "inspiration-only"
+    }
+  ]
+}

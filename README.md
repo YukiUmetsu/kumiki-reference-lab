@@ -30,6 +30,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Broader comparison data:** [300 latest-upload source rows across six channels](docs/audience-benchmark-methodology.md) add public runtimes, upload dates, views, likes and comments, including ordinary releases rather than just hits (not 300 verified distinct new films). `audience-benchmarks` produces per-channel, source-age-matched descriptive comparisons and clearly labels confounders; it does **not** infer causal virality or evaluate unseen visual techniques. [Versioned source snapshot](research/audience-recent-uploads.v1.json).
 
+**Visual style, camera and lighting research:** [12 studio-attributed style exemplars](docs/visual-style-camera-lighting-methodology.md) now cover paper-cut, physical stop-motion, hand-drawn, halftone, painterly 3D, print/collage and abstract motion. `visual-styles` searches examples and three-axis review questions. `visual-cadence` computes bounded, source-verified rates for **image-plane translation and display-luma proxies** from existing motion/appearance JSON; `visual-events` counts camera/lighting **reviewer-interpreted** events only when an entire stated window was reviewed. None is an automatic physical-camera or lamp classifier, and style examples carry no implied view-count proof.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
