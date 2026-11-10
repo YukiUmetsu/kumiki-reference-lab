@@ -65,6 +65,7 @@ from kumiki_reference_lab.contracts.source import RIGHTS_STATUSES
 from kumiki_reference_lab.core.artifacts import write_json_artifact
 from kumiki_reference_lab.pipeline.analyze import run_analysis
 from kumiki_reference_lab.pipeline.study import study_reference
+from kumiki_reference_lab.pipeline.speech_transcribe import transcribe_local_video
 from kumiki_reference_lab.integrations.kumiki.film_handoff import export_film_handoff
 from kumiki_reference_lab.integrations.kumiki.film_map_review import build_film_map_review
 from kumiki_reference_lab.integrations.kumiki.film_feedback import (
@@ -610,6 +611,18 @@ def build_parser() -> argparse.ArgumentParser:
     for action in ("validate", "report"):
         sub = style_review_actions.add_parser(action)
         sub.add_argument("review_file", type=Path)
+    asr = commands.add_parser(
+        "speech-transcribe", help="optional local whisper.cpp ASR to unattributed character-scene dialogue")
+    asr.add_argument("source", type=Path, help="authorized local video file")
+    asr.add_argument("--model", type=Path, required=True, help="existing local whisper.cpp model file")
+    asr.add_argument("--out", type=Path, required=True, help="new directory for source-bound JSON")
+    asr.add_argument("--whisper-cli", default="whisper-cli")
+    asr.add_argument("--ffmpeg", default="ffmpeg")
+    asr.add_argument("--ffprobe", default="ffprobe")
+    asr.add_argument("--max-seconds", type=int, default=30)
+    asr.add_argument("--timeout-seconds", type=int, default=600)
+    asr.add_argument("--language", default="auto")
+    asr.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
     character_review = commands.add_parser(
         "character-scene", help="validate or summarize timecoded character and dialogue review declarations")
     character_actions = character_review.add_subparsers(dest="character_action", required=True)
@@ -767,6 +780,13 @@ def main(argv: list[str] | None = None) -> int:
             report = ({"valid": True, "eventCount": len(review["events"])}
                       if args.event_action == "validate" else summarize_visual_events(review))
             print(json.dumps(report, indent=2, sort_keys=True))
+            return 0
+        if args.command == "speech-transcribe":
+            print(transcribe_local_video(
+                args.source, args.out, model=args.model, whisper_cli=args.whisper_cli,
+                ffmpeg=args.ffmpeg, ffprobe=args.ffprobe,
+                max_seconds=args.max_seconds, timeout_seconds=args.timeout_seconds,
+                language=args.language, rights_status=args.rights_status))
             return 0
         if args.command == "character-scene":
             review = load_character_scene(args.review_file)
