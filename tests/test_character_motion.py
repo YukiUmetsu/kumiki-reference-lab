@@ -75,6 +75,7 @@ class CharacterMotionTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.base = Path(self.temp.name)
+        (self.base / "synthetic.mp4").write_bytes(b"synthetic fixture; analyzer mocked")
         self.roster = roster()
         self.tracks = {"person_a": track([8, 12, 16]), "person_b": track([90, 80, 70])}
 
