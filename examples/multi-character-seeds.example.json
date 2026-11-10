@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "kumiki.multi-character-seeds.v1",
+  "characters": [
+    {
+      "id": "character_a",
+      "kind": "animated-human",
+      "label": "Character A",
+      "visualDescription": "Reviewer-provided description: red jacket, short dark hair",
+      "seedBox": [
+        0.1,
+        0.18,
+        0.22,
+        0.28
+      ],
+      "reseeds": null
+    },
+    {
+      "id": "character_b",
+      "kind": "animated-human",
+      "label": "Character B",
+      "visualDescription": "Reviewer-provided description: blue scarf, yellow backpack",
+      "seedBox": [
+        0.62,
+        0.2,
+        0.22,
+        0.28
+      ],
+      "reseeds": null
+    }
+  ]
+}

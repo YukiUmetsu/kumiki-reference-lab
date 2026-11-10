@@ -50,6 +50,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Evidence-backed dialogue-to-character links:** [`speech-link-characters`](docs/character-speech-link.md) combines a source-bound speech/voice review with a separate visual character scene, but only at explicitly reviewed, timecoded lip-motion evidence anchors. Other utterances retain their original voice-only or unknown speaker IDs. This is a reviewer/model attribution contract, **not automatic active-speaker detection or verified personal identity**.
 
+**Seeded multi-character tracking (new):** [`character-motion`](docs/multi-character-motion.md) runs existing local, source-timecoded ROI tracking for 2–6 reviewer-seeded subjects and fuses their positions into a conservative motion report, including co-visibility and screen-space box relationships. It also emits compatible low-confidence single-frame `character-scene` appearances with empty action/dialogue lists. It does **not** automatically detect characters or establish identity across a cut or occlusion. [Synthetic seed input](examples/multi-character-seeds.example.json).
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
