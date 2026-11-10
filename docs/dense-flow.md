@@ -142,6 +142,47 @@ are checked: `sourceVerified` and `annotationsIndependentlyVerified` remain
 `false`. Even excellent agreement is **not physical camera calibration**,
 depth recovery, subject identification or artistic-quality approval.
 
+## Compare reference motion with a Kumiki render
+
+Run dense flow independently on the reference and rendered videos, using the
+**same analysis width/height and grid step**, then declare the timeline anchors:
+
+```bash
+kumiki-ref dense-flow reference.mp4 --out ./runs/reference-flow
+kumiki-ref dense-flow kumiki-render.mp4 --out ./runs/render-flow
+kumiki-ref compare-dense-flow \
+  ./runs/reference-flow/dense-flow.json \
+  ./runs/render-flow/dense-flow.json \
+  --reference-anchor-ms 0 --candidate-anchor-ms 0 \
+  --tolerance-ms 100 --out ./runs/render-motion-comparison
+```
+
+Change the anchors to the **actual corresponding source/render times**; do
+not assume both start at zero. `--time-scale` (default `1`) can express a
+declared speed ratio, using the same convention as `compare-appearance`: a
+candidate timestamp `t` maps to `referenceAnchor + (t-candidateAnchor) × scale`.
+The [versioned comparison report](../schemas/v1/dense-flow-comparison.schema.json)
+maximizes one-to-one matching of **pair midpoints** within the tolerance,
+then rejects comparisons of time-disjoint intervals, overlap shorter than
+half of the shorter pair's duration, or mapped pair durations that differ by
+more than 2×. A matching timestamp alone is not treated as
+matching visual content.
+
+At shared accepted grid coordinates, each pair reports mean/median
+**image-velocity difference in analysis pixels per reference second**. It
+also reports reference-only/candidate-only support counts and fixed-grid
+Jaccard overlap. A pair with no shared observations has `null` error,
+**never an invented perfect score**. Cut-crossing pairs are excluded. Unmatched
+pair counts, incompatible durations and time-disjoint pairs are explicit.
+
+This is a quantitative review aid, not proof that the same subjects or physical
+surface points were followed across videos: the fixed grid cell may display
+different content in the reference and render. Neither video is reopened by
+this JSON-only command, so `sourceVerified`, camera motion, identity and
+artistic approval all remain false/unperformed. Use `compare-frames` for
+source-verified side-by-side visual QA of the corresponding moments, and
+inspect actual animated output at full speed.
+
 ## Review the actual source frames
 
 ```bash
