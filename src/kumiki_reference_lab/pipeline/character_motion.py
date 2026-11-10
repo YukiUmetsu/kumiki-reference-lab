@@ -15,6 +15,8 @@ from itertools import combinations
 from pathlib import Path
 from typing import Any
 
+from kumiki_reference_lab.analyzers.media.inspect import sha256_file
+from kumiki_reference_lab.core.provenance import file_signature, require_unchanged
 from kumiki_reference_lab.analyzers.subjects.roi import (
     _box_grid, analyze_roi_track, validate_roi_reseeds,
 )
@@ -248,6 +250,13 @@ def run_character_motion(source: Path, config: Path, out: Path, *, seconds: int 
     """Run existing bounded ROI tracker for each seeded subject and publish atomically."""
     if out.exists() or out.is_symlink():
         raise ValueError("output must be a new, nonexisting directory")
+    if type(correlation) not in (int, float) or not math.isfinite(correlation) or not 0 < correlation < 1:
+        raise ValueError("correlation must be finite and between zero and one")
+    if type(cut_threshold) not in (int, float) or not math.isfinite(cut_threshold) or not 0 < cut_threshold < 1:
+        raise ValueError("cut threshold must be finite and between zero and one")
+    config_signature = file_signature(config)
+    seed_hash = sha256_file(config)
+    source_signature = file_signature(source)
     roster = _read_config(config, width=width, height=height, radius=radius)
     tracks = {}
     for item in roster:
@@ -258,6 +267,11 @@ def run_character_motion(source: Path, config: Path, out: Path, *, seconds: int 
             rights_status=rights_status, reseeds=item["reseeds"],
         )
     scene, report = combine_character_tracks(roster, tracks)
+    require_unchanged(config, config_signature)
+    require_unchanged(source, source_signature)
+    report["seedConfigSha256"] = seed_hash
+    report["rightsStatus"] = rights_status
+    report["trackingMethod"] = "independent-seeded-ROI-passes"
     out.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".kumiki-character-motion-", dir=out.parent) as directory:
         temp = Path(directory)
