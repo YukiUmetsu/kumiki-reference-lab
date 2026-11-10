@@ -36,6 +36,7 @@ from kumiki_reference_lab.analyzers.media.timeline import analyze_frame_timeline
 from kumiki_reference_lab.analyzers.shots.detect import analyze_hard_cuts
 from kumiki_reference_lab.backends.ffmpeg.probe import ProbeError
 from kumiki_reference_lab.catalog.store import build_catalog_index, load_catalog, search_catalog
+from kumiki_reference_lab.catalog.popular_videos import load_popular_videos, search_popular_videos
 from kumiki_reference_lab.contracts.source import RIGHTS_STATUSES
 from kumiki_reference_lab.core.artifacts import write_json_artifact
 from kumiki_reference_lab.pipeline.analyze import run_analysis
@@ -477,6 +478,18 @@ def build_parser() -> argparse.ArgumentParser:
         elif action == "index":
             sub.add_argument("--out", type=Path, required=True,
                              help="directory for immutable catalog-index.json")
+
+    popular = commands.add_parser("video-references", help="browse evidence-linked popular explainer video examples")
+    popular_actions = popular.add_subparsers(dest="popular_action", required=True)
+    for action in ("validate", "list", "search"):
+        sub = popular_actions.add_parser(action)
+        sub.add_argument("--root", type=Path, default=Path("research/popular-explainer-videos.v1.json"),
+                         help="local versioned reference-video metadata JSON")
+        if action in ("list", "search"):
+            sub.add_argument("--min-views", type=int, default=0)
+            sub.add_argument("--limit", type=int, default=20)
+        if action == "search":
+            sub.add_argument("query", help="technique, story goal, title or creator")
     return parser
 
 
@@ -513,6 +526,18 @@ def main(argv: list[str] | None = None) -> int:
                 destination = write_json_artifact(args.out, "catalog-index.json",
                                                   build_catalog_index(entries))
                 print(str(destination))
+            return 0
+        if args.command == "video-references":
+            collection = load_popular_videos(args.root)
+            if args.popular_action == "validate":
+                print(json.dumps({"valid": True, "entryCount": len(collection["entries"]),
+                                  "retrievedOn": collection["retrievedOn"]}, sort_keys=True))
+            else:
+                query = args.query if args.popular_action == "search" else ""
+                results = search_popular_videos(collection, query, min_views=args.min_views,
+                                                limit=args.limit)
+                print(json.dumps({"query": query, "results": results, "count": len(results),
+                                  "retrievedOn": collection["retrievedOn"]}, indent=2, sort_keys=True))
             return 0
         if args.command == "analyze":
             manifest = run_analysis(

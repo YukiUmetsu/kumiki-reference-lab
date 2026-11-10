@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/popular-reference-videos.schema.json",
+  "title": "Kumiki Popular Reference Videos v1",
+  "description": "Third-party popularity snapshots for editorial study, not a footage license or a creative-quality score.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "retrievedOn", "methodology", "entries"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.popular-video-references.v1"},
+    "retrievedOn": {"$ref": "#/$defs/date"},
+    "methodology": {"$ref": "#/$defs/text"},
+    "entries": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/entry"}}
+  },
+  "$defs": {
+    "text": {"type": "string", "minLength": 1},
+    "date": {"type": "string", "format": "date", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "creator", "publishedOn", "youtubeId", "videoUrl", "viewEvidence", "techniqueTags", "studyQuestion", "reviewStatus", "rights"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9-]+$"},
+        "title": {"$ref": "#/$defs/text"},
+        "creator": {"$ref": "#/$defs/text"},
+        "publishedOn": {"$ref": "#/$defs/date"},
+        "youtubeId": {"type": "string", "pattern": "^[A-Za-z0-9_-]{11}$"},
+        "videoUrl": {"type": "string", "format": "uri", "pattern": "^https://(www\\.)?youtube\\.com/watch\\?v="},
+        "viewEvidence": {
+          "type": "object", "additionalProperties": false,
+          "required": ["viewCount", "approximate", "sourceKind", "sourceUrl", "sourceSnapshotOn"],
+          "properties": {
+            "viewCount": {"type": "integer", "minimum": 1},
+            "approximate": {"type": "boolean"},
+            "sourceKind": {"enum": ["youtube-search-index", "third-party-video-statistics"]},
+            "sourceUrl": {"type": "string", "format": "uri", "pattern": "^https://"},
+            "sourceSnapshotOn": {"oneOf": [{"$ref": "#/$defs/date"}, {"type": "null"}]}
+          }
+        },
+        "techniqueTags": {
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"}
+        },
+        "studyQuestion": {"$ref": "#/$defs/text"},
+        "reviewStatus": {"const": "editorial-candidate-not-frame-reviewed"},
+        "rights": {
+          "type": "object", "additionalProperties": false,
+          "required": ["usage", "redistributionAuthorized"],
+          "properties": {
+            "usage": {"const": "inspiration-only"},
+            "redistributionAuthorized": {"const": false}
+          }
+        }
+      }
+    }
+  }
+}
