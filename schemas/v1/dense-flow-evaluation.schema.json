@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/dense-flow-evaluation.schema.json",
+  "title": "Dense-flow agreement with declared grid annotations",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "inputHashes", "sourceSha256", "sourceStreamIndex", "sourceTimebase", "analysisResolution", "gridStepPixels", "provenance", "sourceVerified", "annotationsIndependentlyVerified", "physicalCameraVerified", "semanticIdentityVerified", "qualityVerdict", "limits", "summary", "pairs"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.dense-flow-annotation-evaluation.v1"},
+    "inputHashes": {"type": "object", "additionalProperties": false,
+      "required": ["denseFlowCanonicalSha256", "annotationsCanonicalSha256"],
+      "properties": {
+        "denseFlowCanonicalSha256": {"$ref": "#/$defs/hash"},
+        "annotationsCanonicalSha256": {"$ref": "#/$defs/hash"}
+      }
+    },
+    "sourceSha256": {"$ref": "#/$defs/hash"},
+    "sourceStreamIndex": {"type": "integer", "minimum": 0},
+    "sourceTimebase": {"$ref": "#/$defs/rational"},
+    "analysisResolution": {"$ref": "#/$defs/resolution"},
+    "gridStepPixels": {"type": "integer", "minimum": 8, "maximum": 24},
+    "provenance": {"$ref": "#/$defs/provenance"},
+    "sourceVerified": {"const": false},
+    "annotationsIndependentlyVerified": {"const": false},
+    "physicalCameraVerified": {"const": false},
+    "semanticIdentityVerified": {"const": false},
+    "qualityVerdict": {"const": "not-performed"},
+    "limits": {"type": "string", "minLength": 40},
+    "summary": {"$ref": "#/$defs/statistics"},
+    "pairs": {"type": "array", "minItems": 1, "maxItems": 39,
+      "items": {"type": "object", "additionalProperties": false,
+        "required": ["startPts", "endPts", "deltaTimeSeconds", "labeledCount", "observedCount", "missingCount", "coverageFraction", "meanEndpointErrorPixels", "points"],
+        "properties": {
+          "startPts": {"type": "integer"}, "endPts": {"type": "integer"},
+          "deltaTimeSeconds": {"$ref": "#/$defs/rational"},
+          "labeledCount": {"$ref": "#/$defs/count"},
+          "observedCount": {"$ref": "#/$defs/count"},
+          "missingCount": {"$ref": "#/$defs/count"},
+          "coverageFraction": {"$ref": "#/$defs/fraction"},
+          "meanEndpointErrorPixels": {"$ref": "#/$defs/nullableError"},
+          "points": {"type": "array", "minItems": 1, "maxItems": 512,
+            "items": {"type": "object", "additionalProperties": false,
+              "required": ["x", "y", "labeledDx", "labeledDy", "observedDx", "observedDy", "endpointErrorPixels", "status"],
+              "properties": {
+                "x": {"type": "integer", "minimum": 0, "maximum": 239},
+                "y": {"type": "integer", "minimum": 0, "maximum": 134},
+                "labeledDx": {"$ref": "#/$defs/boundedDisplacement"},
+                "labeledDy": {"$ref": "#/$defs/boundedDisplacement"},
+                "observedDx": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/boundedDisplacement"}]},
+                "observedDy": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/boundedDisplacement"}]},
+                "endpointErrorPixels": {"$ref": "#/$defs/nullableError"},
+                "status": {"enum": ["observed", "not-observed"]}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "count": {"type": "integer", "minimum": 0, "maximum": 19968},
+    "fraction": {"type": "number", "minimum": 0, "maximum": 1},
+    "nullableError": {"anyOf": [{"type": "null"}, {"type": "number", "minimum": 0, "maximum": 680}]},
+    "boundedDisplacement": {"type": "number", "minimum": -240, "maximum": 240},
+    "rational": {"type": "object", "additionalProperties": false,
+      "required": ["numerator", "denominator"],
+      "properties": {"numerator": {"type": "integer", "minimum": 1}, "denominator": {"type": "integer", "minimum": 1}}
+    },
+    "resolution": {"type": "object", "additionalProperties": false,
+      "required": ["width", "height"],
+      "properties": {"width": {"type": "integer", "minimum": 64, "maximum": 240},
+                     "height": {"type": "integer", "minimum": 36, "maximum": 135}}
+    },
+    "provenance": {"type": "object", "additionalProperties": false,
+      "required": ["kind", "reviewStatus"],
+      "properties": {
+        "kind": {"enum": ["independently-generated", "human-annotated"]},
+        "reviewStatus": {"enum": ["unverified", "reviewed"]}
+      }
+    },
+    "statistics": {"type": "object", "additionalProperties": false,
+      "required": ["labeledCount", "observedCount", "missingCount", "coverageFraction", "meanEndpointErrorPixels", "medianEndpointErrorPixels"],
+      "properties": {
+        "labeledCount": {"$ref": "#/$defs/count"},
+        "observedCount": {"$ref": "#/$defs/count"},
+        "missingCount": {"$ref": "#/$defs/count"},
+        "coverageFraction": {"$ref": "#/$defs/fraction"},
+        "meanEndpointErrorPixels": {"$ref": "#/$defs/nullableError"},
+        "medianEndpointErrorPixels": {"$ref": "#/$defs/nullableError"}
+      }
+    }
+  }
+}

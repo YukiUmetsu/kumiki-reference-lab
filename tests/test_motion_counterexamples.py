@@ -136,6 +136,7 @@ class EncodedMotionCounterexamplesTests(unittest.TestCase):
     def test_encoded_depth_planes_retain_two_known_image_velocities(self):
         import numpy as np
         from kumiki_reference_lab.analyzers.motion.dense import analyze_dense_flow
+        from kumiki_reference_lab.analyzers.motion.annotation_evaluation import evaluate_dense_flow_annotations
 
         with tempfile.TemporaryDirectory() as directory:
             video = Path(directory) / "two-depth-planes.mkv"
@@ -162,6 +163,33 @@ class EncodedMotionCounterexamplesTests(unittest.TestCase):
             self.assertAlmostEqual(float(np.median(far_dx)), 2, delta=0.8)
             self.assertFalse(report["analyzer"]["physicalCameraVerified"])
             self.assertFalse(report["analyzer"]["semanticIdentityVerified"])
+            # These positions come from the known scene construction, never
+            # from which vectors the estimator happened to accept.
+            pair_labels = []
+            for index, pair in enumerate(report["pairs"]):
+                near_left = bounds[index][0]
+                near_x = next(x for x in range(6, 154, 12)
+                              if near_left + 12 <= x < near_left + 40)
+                pair_labels.append({"startPts": pair["startPts"],
+                                    "endPts": pair["endPts"], "points": [
+                                        {"x": near_x, "y": 42, "dx": 6, "dy": 0},
+                                        {"x": 18, "y": 6, "dx": 2, "dy": 0},
+                                        {"x": 126, "y": 78, "dx": 2, "dy": 0},
+                                    ]})
+            labels = {"schemaVersion": "kumiki.dense-flow-annotations.v1",
+                      "sourceSha256": report["sourceSha256"],
+                      "sourceStreamIndex": report["sourceStreamIndex"],
+                      "sourceTimebase": report["sourceTimebase"],
+                      "analysisResolution": report["analyzer"]["resolution"],
+                      "gridStepPixels": report["analyzer"]["gridStepPixels"],
+                      "provenance": {"kind": "independently-generated",
+                                     "reviewStatus": "unverified"},
+                      "pairLabels": pair_labels}
+            evaluated = evaluate_dense_flow_annotations(report, labels)
+            self.assertEqual(evaluated["summary"]["labeledCount"], 21)
+            self.assertGreaterEqual(evaluated["summary"]["coverageFraction"], 0.35)
+            self.assertLess(evaluated["summary"]["meanEndpointErrorPixels"], 2.0)
+            self.assertFalse(evaluated["annotationsIndependentlyVerified"])
             json.dumps(report, allow_nan=False)
 
     @unittest.skipUnless(importlib.util.find_spec("cv2"), "OpenCV required")

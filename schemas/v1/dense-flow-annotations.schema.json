@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/dense-flow-annotations.schema.json",
+  "title": "Declared dense-flow grid annotations (not verified ground truth)",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "sourceSha256", "sourceStreamIndex", "sourceTimebase", "analysisResolution", "gridStepPixels", "provenance", "pairLabels"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.dense-flow-annotations.v1"},
+    "sourceSha256": {"$ref": "#/$defs/hash"},
+    "sourceStreamIndex": {"type": "integer", "minimum": 0},
+    "sourceTimebase": {"$ref": "#/$defs/rational"},
+    "analysisResolution": {"$ref": "#/$defs/resolution"},
+    "gridStepPixels": {"type": "integer", "minimum": 8, "maximum": 24},
+    "provenance": {"$ref": "#/$defs/provenance"},
+    "pairLabels": {"type": "array", "minItems": 1, "maxItems": 39,
+      "items": {"type": "object", "additionalProperties": false,
+        "required": ["startPts", "endPts", "points"],
+        "properties": {
+          "startPts": {"type": "integer"}, "endPts": {"type": "integer"},
+          "points": {"type": "array", "minItems": 1, "maxItems": 512,
+            "items": {"type": "object", "additionalProperties": false,
+              "required": ["x", "y", "dx", "dy"],
+              "properties": {
+                "x": {"type": "integer", "minimum": 0, "maximum": 239},
+                "y": {"type": "integer", "minimum": 0, "maximum": 134},
+                "dx": {"$ref": "#/$defs/boundedDisplacement"},
+                "dy": {"$ref": "#/$defs/boundedDisplacement"}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "boundedDisplacement": {"type": "number", "minimum": -240, "maximum": 240},
+    "rational": {"type": "object", "additionalProperties": false,
+      "required": ["numerator", "denominator"],
+      "properties": {"numerator": {"type": "integer", "minimum": 1}, "denominator": {"type": "integer", "minimum": 1}}
+    },
+    "resolution": {"type": "object", "additionalProperties": false,
+      "required": ["width", "height"],
+      "properties": {"width": {"type": "integer", "minimum": 64, "maximum": 240},
+                     "height": {"type": "integer", "minimum": 36, "maximum": 135}}
+    },
+    "provenance": {"type": "object", "additionalProperties": false,
+      "required": ["kind", "reviewStatus"],
+      "properties": {
+        "kind": {"enum": ["independently-generated", "human-annotated"]},
+        "reviewStatus": {"enum": ["unverified", "reviewed"]}
+      }
+    }
+  }
+}

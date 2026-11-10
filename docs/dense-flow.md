@@ -101,6 +101,47 @@ the output is an idempotent no-overwrite artifact, and can be regenerated
 without OpenCV. It never asserts semantic occlusion, subject identity,
 physical camera or calibrated probabilities.
 
+## Evaluate against independently supplied motion annotations
+
+```bash
+kumiki-ref evaluate-dense-flow ./runs/dense/dense-flow.json \
+  ./annotations.json --out ./runs/flow-evaluation
+```
+
+The [versioned annotation input](../schemas/v1/dense-flow-annotations.schema.json)
+must explicitly name the same source SHA-256, video stream, rational timebase,
+analysis width/height and grid step as the dense report. Labels use the
+**original start/end PTS** and exact sampled grid coordinates (at the default
+160×90 and 12-pixel step, x=6,18,…,150; y=6,18,…,78). For example, one
+labeled pair can contain:
+
+```json
+{
+  "startPts": 100,
+  "endPts": 200,
+  "points": [{"x": 30, "y": 30, "dx": 2.0, "dy": 0.0}]
+}
+```
+
+This object belongs inside `pairLabels` of an annotation document whose
+`provenance` declares `kind: "human-annotated"` or
+`"independently-generated"` and `reviewStatus: "unverified"` or
+`"reviewed"`. Use the source hash and PTS from the actual dense-flow report;
+the numbers above are only illustrative. An annotator should inspect the
+resized source and destination frames independently of Farneback's vectors,
+or generate labels from an independently controlled render.
+
+The [evaluation artifact](../schemas/v1/dense-flow-evaluation.schema.json)
+reports the fraction of labels with accepted observations and Euclidean
+endpoint errors **only for those observed**. A missing vector counts toward
+missing coverage but never gets a fabricated zero-error score. Cross-cut
+labels, mismatched PTS/source geometry, duplicate grid points and nonfinite
+numbers are rejected. Both inputs have canonical JSON SHA-256 hashes, and
+publishing is atomic and no-overwrite. Only the supplied artifact contents
+are checked: `sourceVerified` and `annotationsIndependentlyVerified` remain
+`false`. Even excellent agreement is **not physical camera calibration**,
+depth recovery, subject identification or artistic-quality approval.
+
 ## Review the actual source frames
 
 ```bash
