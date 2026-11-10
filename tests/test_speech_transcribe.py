@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import tempfile
 import unittest
+import wave
 from fractions import Fraction
 from pathlib import Path
 from unittest.mock import patch
@@ -42,7 +43,11 @@ class SpeechTranscribeTests(unittest.TestCase):
         if stage.startswith("ffmpeg"):
             self.assertIn("-protocol_whitelist", args)
             self.assertEqual(args[args.index("-map") + 1], "0:1")
-            Path(args[-1]).write_bytes(b"W" * 1024)
+            with wave.open(str(args[-1]), "wb") as audio:
+                audio.setnchannels(1)
+                audio.setsampwidth(2)
+                audio.setframerate(16000)
+                audio.writeframes(b"\\0\\0" * 64000)
         elif stage.startswith("whisper"):
             self.assertEqual(args[args.index("-l") + 1], "auto")
             out_prefix = Path(args[args.index("-of") + 1])
@@ -80,6 +85,7 @@ class SpeechTranscribeTests(unittest.TestCase):
         self.assertEqual(manifest["sourceAudioStreamIndex"], 1)
         self.assertEqual(manifest["audioStartPts"], 48000)
         self.assertEqual(manifest["utteranceCount"], 2)
+        self.assertEqual(manifest["decodedAudioSamples"], 64000)
         self.assertIn("no-speaker-identification", manifest["evidenceStatus"])
         with self.assertRaisesRegex(ValueError, "nonexisting"):
             self.run_fake()
@@ -90,7 +96,7 @@ class SpeechTranscribeTests(unittest.TestCase):
         self.assertEqual(_round_pts(Fraction(1, 2000), Fraction(1, 1000)), 1)
         utterances = _parse_whisper_json(
             {"transcription": [{"offsets": {"from": 0, "to": 2000}, "text": "你好"}]},
-            seconds=3, audio_start=Fraction(1, 2), video_timebase=Fraction(1, 1000),
+            max_duration_ms=3000, audio_start=Fraction(1, 2), video_timebase=Fraction(1, 1000),
             lang="zh")
         self.assertEqual((utterances[0]["startPts"], utterances[0]["endPts"]),
                          (500, 2500))
