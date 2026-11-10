@@ -1,6 +1,6 @@
 # First real-footage calibration (four openly licensed references)
 
-Unlike synthetic integration fixtures and the **unwatched** high-view-count inspiration catalog, these four files were actually downloaded and analyzed on **2026-11-10**. Their bytes were hashed, FFprobe recorded media metadata and source timebase, and the existing 2D image-motion and display-luma analyzers processed the first ten seconds of each file. Two later ten-second windows in the paper film were also measured, preserving the original source PTS and media SHA-256. One-frame-per-second contact sheets were inspected. **The films were not watched in motion at full speed**, and there has been no independent style classification, camera-rig recovery, lighting-rig recovery or popularity verification for these four files.
+Unlike synthetic integration fixtures and the **unwatched** high-view-count inspiration catalog, these four files were actually downloaded and analyzed on **2026-11-10**. Their bytes were hashed, FFprobe recorded media metadata and source timebase, and the 2D image-motion and display-luma analyzers processed **11 ten-second windows across the four films**, preserving the original source PTS and media SHA-256. One-frame-per-second contact sheets were inspected to label each window's visual role. **The films were not watched in motion at full speed**, and there has been no independent style classification, camera-rig recovery, lighting-rig recovery or popularity verification for these four files.
 
 The data are stored without footage or copied frames in [`research/open-footage-calibration.v1.json`](../research/open-footage-calibration.v1.json).
 
@@ -33,10 +33,24 @@ The numerical columns below are **counts in each sampled opening interval**, not
 | 0–10s: title cards | 0 | 0.0% | 0 | 0 |
 | 25–35s: character/bedroom/night transition | 3 | 48.9% | 2 | 2 |
 | 55–65s: dim bedroom and character scene | 4 | 72.6% | 4 | 0 |
+| 85–95s: ending title to credits | 0 | 0.0% | 3 | 0 |
 
-Global image motion and average display brightness still miss character/shape deformation, internal object animation, color-independent motion, spatial light changes and some edits. The 10s Sintel sample contains a firelit interior, but its zero luma-change runs do not prove that the lighting rig is static. The three windows describe only 30 **non-contiguous** seconds of a 112-second paper film, not its whole runtime.
+Global image motion and average display brightness still miss character/shape deformation, internal object animation, color-independent motion, spatial light changes and some edits. The 10s Sintel sample contains a firelit interior, but its zero luma-change runs do not prove that the lighting rig is static. The four windows describe only 40 **non-contiguous** seconds of a 112-second paper film, not its whole runtime.
 
-The sample also shows a precision limit: one high-contrast kinetic-typography video yields 6 motion runs in ~10s, whereas another motion-graphics video yields 5. Those are *threshold-specific detected episodes*, not six or five deliberate camera moves. With only four deliberately diverse sources and seven sampled windows (three from the paper film), **there is no defensible statistical relationship with view counts, retention, aesthetic quality or a recommended camera-movement frequency**.
+### Additional source windows and content-aware comparison
+
+We sampled a wider range of body content and endings. Each later-window `visualContext` comes from a sparse still-frame contact sheet and is **distinct from** numerical motion/luma detection:
+
+| Video | Source window | Reviewed visual role | Image translation runs | Luma-change runs | Cut candidates |
+| --- | --- | --- | ---: | ---: | ---: |
+| Sintel extract | 20–30s | City establishing image after dark transition | 1 | 1 | 1 |
+| Sintel extract | 50–60s | Character and dragon rooftop action | 5 | 1 | 5 |
+| MotionGraphicsAnimation | 15–25s | Spanish typography, illustrated fox and shapes | 2 | 3 | 3 |
+| MotionGraphicsAnimation | 35–45s | Dollar/clock graphics transitioning into credits | 3 | 2 | 0 |
+
+The 85–95s paper-film window also transitions to ending credits. **Credits and title sequences must be separated from main-content footage** before comparing motion cadence; otherwise, a video with longer credits can appear artificially calmer or busier. Run `open-footage summarize` to produce a per-video breakdown grouped by reviewed role with time-weighted measurable-pair fractions. This reports only the selected windows, not a whole-film frequency estimate.
+
+The sample also shows a precision limit: a high-contrast kinetic-typography clip yields 6 motion runs in ~10s, whereas the motion-graphics film yields 5 in its opening ~10s. These are *threshold-specific detected episodes*, not six or five deliberate camera moves. With only four deliberately diverse sources and eleven sampled windows, **there is no defensible statistical relationship with view counts, retention, aesthetic quality or a recommended camera-movement frequency**.
 
 ## Reproduce without a subscription
 
@@ -45,6 +59,7 @@ Download each **original file** by following `media.downloadUrl` in the dataset 
 ```bash
 PYTHONPATH=src python -m kumiki_reference_lab open-footage validate
 PYTHONPATH=src python -m kumiki_reference_lab open-footage list
+PYTHONPATH=src python -m kumiki_reference_lab open-footage summarize
 PYTHONPATH=src python -m kumiki_reference_lab open-footage verify-local \
   --media-root workspace/open-media
 
