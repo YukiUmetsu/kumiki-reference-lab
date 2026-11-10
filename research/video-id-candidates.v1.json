@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "kumiki.video-id-candidates.v1",
+  "indexedOn": "2026-11-10",
+  "methodology": "Two source-table rows provisionally linked to exact video IDs by indexed YouTube search results displaying the original channel and matching title and publication date (allowing one local/UTC day). YouTube watch pages could not be independently opened because direct fetches were throttled. These are browsing leads, not frame-verified identities, view-count updates, media permissions, or redistribution rights.",
+  "entries": [
+    {
+      "channelId": "real-engineering",
+      "rowIndex": 23,
+      "sourceRowSha256": "ff0eef85b67f97e3a8bae7c3d8e3f70c67970d006d19937734d3e553aaed355b",
+      "youtubeId": "j0ZZfIz9R1I",
+      "videoUrl": "https://www.youtube.com/watch?v=j0ZZfIz9R1I",
+      "indexedTitle": "How We Built The ISS",
+      "indexedPublisher": "Real Engineering",
+      "indexedPublishedOn": "2025-12-06",
+      "evidenceKind": "indexed-youtube-search-result",
+      "evidenceUrl": "https://www.youtube.com/watch?v=j0ZZfIz9R1I",
+      "reviewStatus": "index-corroborated-watch-page-not-opened"
+    },
+    {
+      "channelId": "real-engineering",
+      "rowIndex": 24,
+      "sourceRowSha256": "11dd5c623e3a277fa08c3fd037cf89642c2e96702b8e00928d3aaa4502d87959",
+      "youtubeId": "Vf_pS0XSTyo",
+      "videoUrl": "https://www.youtube.com/watch?v=Vf_pS0XSTyo",
+      "indexedTitle": "Solar Farms in Space - Reflect Orbital",
+      "indexedPublisher": "Real Engineering",
+      "indexedPublishedOn": "2025-12-03",
+      "evidenceKind": "indexed-youtube-search-result",
+      "evidenceUrl": "https://www.youtube.com/watch?v=Vf_pS0XSTyo",
+      "reviewStatus": "index-corroborated-watch-page-not-opened"
+    }
+  ]
+}

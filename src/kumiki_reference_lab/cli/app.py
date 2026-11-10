@@ -46,6 +46,8 @@ from kumiki_reference_lab.catalog.visual_styles import (
 from kumiki_reference_lab.catalog.audience_benchmarks import (
     build_audience_insights, load_audience_benchmarks,
 )
+from kumiki_reference_lab.catalog.visual_study_plan import build_visual_study_plan
+from kumiki_reference_lab.catalog.video_id_candidates import load_video_id_candidates
 from kumiki_reference_lab.contracts.source import RIGHTS_STATUSES
 from kumiki_reference_lab.core.artifacts import write_json_artifact
 from kumiki_reference_lab.pipeline.analyze import run_analysis
@@ -502,13 +504,21 @@ def build_parser() -> argparse.ArgumentParser:
             sub.add_argument("query", help="technique, story goal, title or creator")
     audience = commands.add_parser("audience-benchmarks", help="analyze recent-upload audience metadata without video downloads")
     audience_actions = audience.add_subparsers(dest="audience_action", required=True)
-    for action in ("validate", "report"):
+    for action in ("validate", "report", "study-plan"):
         sub = audience_actions.add_parser(action)
         sub.add_argument("--root", type=Path, default=Path("research/audience-recent-uploads.v1.json"),
                          help="versioned local recent-upload audience snapshot")
         if action == "report":
             sub.add_argument("--min-comparison-count", type=int, default=5,
                              help="minimum observations per side of an age-matched duration contrast")
+        if action == "study-plan":
+            sub.add_argument("--out", type=Path, help="optional immutable study-plan artifact directory")
+            sub.add_argument("--pairs-per-channel", type=int, default=3)
+            sub.add_argument("--max-source-age-gap-days", type=int, default=45)
+            sub.add_argument("--max-runtime-ratio", type=float, default=1.75)
+            sub.add_argument("--min-view-ratio", type=float, default=2.0)
+            sub.add_argument("--identity-candidates", type=Path,
+                             help="optional audited exact-row YouTube index candidates, never inferred by title")
     cadence = commands.add_parser(
         "visual-cadence", help="summarize sampled image-motion, cut and display-luma proxy rates")
     cadence.add_argument("motion_report", type=Path)
@@ -587,10 +597,22 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps({"valid": True, "channelCount": len(collection["channels"]),
                                   "sampleCount": sum(len(c["videos"]) for c in collection["channels"]),
                                   "retrievedOn": collection["retrievedOn"]}, sort_keys=True))
-            else:
+            elif args.audience_action == "report":
                 print(json.dumps(build_audience_insights(
                     collection, minimum_comparison_count=args.min_comparison_count),
                     indent=2, sort_keys=True, ensure_ascii=False))
+            else:
+                identities = (load_video_id_candidates(args.identity_candidates, collection)
+                              if args.identity_candidates is not None else None)
+                plan = build_visual_study_plan(
+                    collection, pairs_per_channel=args.pairs_per_channel,
+                    max_age_gap_days=args.max_source_age_gap_days,
+                    max_duration_ratio=args.max_runtime_ratio,
+                    min_view_ratio=args.min_view_ratio, identity_candidates=identities)
+                if args.out is None:
+                    print(json.dumps(plan, indent=2, sort_keys=True, ensure_ascii=False))
+                else:
+                    print(write_json_artifact(args.out, "visual-study-plan.json", plan))
             return 0
         if args.command == "visual-cadence":
             print(json.dumps(summarize_visual_cadence(
