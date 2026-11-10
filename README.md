@@ -26,6 +26,8 @@ Professional motion graphics depend on more than shaders and easing presets:
 
 Reference Lab turns these observations into an auditable analysis pipeline and a reusable **Kumiki Cinematic Techniques Catalog**.
 
+**Popular, evidence-linked videos to study:** the [12-film explainer reference collection](docs/popular-reference-videos.md) spans eight creators, from 3Blue1Brown's mathematical animation to Branch Education's detailed 3D engineering. Each entry links the original video and a public view-count source (~558.8 million *combined reported plays*, not unique viewers); [versioned metadata](research/popular-explainer-videos.v1.json) and a `video-references` CLI support offline search. All entries are **inspiration-only editorial candidates**, not visually validated techniques or reusable media assets.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
@@ -293,6 +295,8 @@ PYTHONPATH=src python -m kumiki_reference_lab contact-sheet ./reference.mp4 --ma
 PYTHONPATH=src python -m kumiki_reference_lab catalog validate
 PYTHONPATH=src python -m kumiki_reference_lab catalog search "reveal material shape"
 PYTHONPATH=src python -m kumiki_reference_lab catalog index --out ./runs/catalog-r001
+PYTHONPATH=src python -m kumiki_reference_lab video-references validate
+PYTHONPATH=src python -m kumiki_reference_lab video-references search "camera scale"
 PYTHONPATH=src python -m kumiki_reference_lab analyze ./reference.mp4 --max-seconds 10 --out ./runs
 PYTHONPATH=src python -m kumiki_reference_lab audio-onsets ./reference.mp4 --max-seconds 10 --out ./runs/onsets
 PYTHONPATH=src python -m unittest discover -s tests -v
