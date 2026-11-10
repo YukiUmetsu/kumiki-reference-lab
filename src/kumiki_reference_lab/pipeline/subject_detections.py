@@ -47,7 +47,7 @@ def _check_box(value: Any, name: str) -> tuple[float, float, float, float]:
     if not isinstance(value, list) or len(value) != 4:
         raise ValueError(f"{name} requires normalized [x,y,width,height]")
     x, y, w, h = [_check_float(item, name) for item in value]
-    if w <= 0 or h <= 0 or x + w > 1 + 1e-9 or y + h > 1 + 1e-9:
+    if w <= 0 or h <= 0 or x + w > 1 or y + h > 1:
         raise ValueError(f"{name} is outside normalized image bounds")
     return x, y, w, h
 
