@@ -16,6 +16,9 @@ from kumiki_reference_lab.analyzers.audio.av_cuts import build_av_cut_evidence
 from kumiki_reference_lab.analyzers.comparison.appearance import compare_appearance
 from kumiki_reference_lab.analyzers.comparison.dense_flow import compare_dense_flow_files
 from kumiki_reference_lab.analyzers.comparison.frames import build_frame_comparison
+from kumiki_reference_lab.analyzers.comparison.visual_cadence import (
+    load_cadence_input, summarize_visual_cadence,
+)
 from kumiki_reference_lab.analyzers.techniques.propose import propose_techniques
 from kumiki_reference_lab.analyzers.techniques.review import build_technique_review
 from kumiki_reference_lab.analyzers.shots.evidence import build_shot_evidence
@@ -37,6 +40,9 @@ from kumiki_reference_lab.analyzers.shots.detect import analyze_hard_cuts
 from kumiki_reference_lab.backends.ffmpeg.probe import ProbeError
 from kumiki_reference_lab.catalog.store import build_catalog_index, load_catalog, search_catalog
 from kumiki_reference_lab.catalog.popular_videos import load_popular_videos, search_popular_videos
+from kumiki_reference_lab.catalog.visual_styles import (
+    load_visual_styles, search_visual_styles, style_family_counts,
+)
 from kumiki_reference_lab.catalog.audience_benchmarks import (
     build_audience_insights, load_audience_benchmarks,
 )
@@ -50,6 +56,7 @@ from kumiki_reference_lab.integrations.kumiki.film_feedback import (
     init_film_feedback, validate_film_feedback,
 )
 from kumiki_reference_lab.reviews.notes import review_notes_template, validate_review_notes
+from kumiki_reference_lab.reviews.visual_events import load_visual_events, summarize_visual_events
 
 
 def _read_roi_reseeds(path: Path | None) -> list[dict] | None:
@@ -502,6 +509,29 @@ def build_parser() -> argparse.ArgumentParser:
         if action == "report":
             sub.add_argument("--min-comparison-count", type=int, default=5,
                              help="minimum observations per side of an age-matched duration contrast")
+    cadence = commands.add_parser(
+        "visual-cadence", help="summarize sampled image-motion, cut and display-luma proxy rates")
+    cadence.add_argument("motion_report", type=Path)
+    cadence.add_argument("appearance_report", type=Path)
+    cadence.add_argument("--image-motion-threshold", type=float, default=0.01,
+                         help="normalized image displacement per second (not camera velocity)")
+    cadence.add_argument("--luma-change-threshold", type=float, default=0.05,
+                         help="absolute display Y-prime proxy change per second (not lighting)")
+    styles = commands.add_parser("visual-styles", help="search source-attributed styles and camera/lighting study questions")
+    style_actions = styles.add_subparsers(dest="style_action", required=True)
+    for action in ("validate", "list", "search"):
+        sub = style_actions.add_parser(action)
+        sub.add_argument("--root", type=Path, default=Path("research/visual-styles.v1.json"))
+        if action != "validate":
+            sub.add_argument("--family", help="exact visual style family, e.g. paper-and-collage")
+            sub.add_argument("--limit", type=int, default=20)
+        if action == "search":
+            sub.add_argument("query")
+    events = commands.add_parser("visual-events", help="summarize explicitly reviewed camera and lighting events")
+    event_actions = events.add_subparsers(dest="event_action", required=True)
+    for action in ("validate", "report"):
+        sub = event_actions.add_parser(action)
+        sub.add_argument("review_file", type=Path)
     return parser
 
 
@@ -561,6 +591,30 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(build_audience_insights(
                     collection, minimum_comparison_count=args.min_comparison_count),
                     indent=2, sort_keys=True, ensure_ascii=False))
+            return 0
+        if args.command == "visual-cadence":
+            print(json.dumps(summarize_visual_cadence(
+                load_cadence_input(args.motion_report),
+                load_cadence_input(args.appearance_report),
+                image_motion_threshold=args.image_motion_threshold,
+                luma_change_threshold=args.luma_change_threshold), indent=2, sort_keys=True))
+            return 0
+        if args.command == "visual-styles":
+            catalog = load_visual_styles(args.root)
+            if args.style_action == "validate":
+                print(json.dumps({"valid": True, "entryCount": len(catalog["entries"]),
+                                  "families": style_family_counts(catalog)}, sort_keys=True))
+            else:
+                query = args.query if args.style_action == "search" else ""
+                result = search_visual_styles(catalog, query, family=args.family, limit=args.limit)
+                print(json.dumps({"query": query, "count": len(result), "results": result},
+                                 indent=2, sort_keys=True))
+            return 0
+        if args.command == "visual-events":
+            review = load_visual_events(args.review_file)
+            report = ({"valid": True, "eventCount": len(review["events"])}
+                      if args.event_action == "validate" else summarize_visual_events(review))
+            print(json.dumps(report, indent=2, sort_keys=True))
             return 0
         if args.command == "analyze":
             manifest = run_analysis(

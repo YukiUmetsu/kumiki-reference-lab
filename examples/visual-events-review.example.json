@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "kumiki.visual-events-review.v1",
+  "sourceSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "sourceStreamIndex": 0,
+  "sourceTimebase": {"numerator": 1, "denominator": 1000},
+  "reviewer": {"kind": "human", "id": "replace-with-reviewer-id"},
+  "window": {"startPts": 0, "endPts": 10000, "coverage": "partial-window-visual-review"},
+  "events": [
+    {
+      "category": "camera-movement",
+      "kind": "pan",
+      "startPts": 1000,
+      "endPts": 4000,
+      "assessment": "unresolved-hypothesis",
+      "observation": "Background appears to move sideways.",
+      "alternativeExplanation": "The background may be an animated 2D layer."
+    }
+  ]
+}
