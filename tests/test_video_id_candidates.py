@@ -24,12 +24,13 @@ class CandidateIdentityTests(unittest.TestCase):
             ROOT / "research/video-id-candidates.v1.json", self.audience)
 
     def test_exact_rows_have_youtube_index_evidence_only(self):
-        self.assertEqual(len(self.candidates["entries"]), 6)
+        self.assertEqual(len(self.candidates["entries"]), 11)
         self.assertTrue(all(e["reviewStatus"] == "index-corroborated-watch-page-not-opened"
                             and e["videoUrl"] == e["evidenceUrl"]
                             for e in self.candidates["entries"]))
         self.assertEqual({e["youtubeId"] for e in self.candidates["entries"]},
-                         {"xu0mrfxPhbY", "hiIIGMeMEuE", "NIifnIP_NnQ",
+                         {"39BPQh6-ZFI", "xu0mrfxPhbY", "24iVz8k3lrs", "wUsjDnjg2Xw",
+                          "hiIIGMeMEuE", "NIifnIP_NnQ", "as9L2q9oYiE", "bYkQn2TpF2k",
                           "rCM6dvK2Hjg", "j0ZZfIz9R1I", "Vf_pS0XSTyo"})
 
     def test_typographic_apostrophe_equivalence_is_narrow(self):
@@ -45,7 +46,7 @@ class CandidateIdentityTests(unittest.TestCase):
     def test_reject_stale_invented_duplicate_unsafe_or_unverified_links(self):
         for name, mutate in (
             ("mismatched hash", lambda x: x["entries"][0].update(sourceRowSha256="a" * 64)),
-            ("wrong row", lambda x: x["entries"][0].update(rowIndex=21)),
+            ("wrong row", lambda x: x["entries"][0].update(rowIndex=20)),
             ("fake approval", lambda x: x["entries"][0].update(reviewStatus="physically-verified")),
             ("publisher", lambda x: x["entries"][0].update(indexedPublisher="Unrelated")),
             ("title", lambda x: x["entries"][0].update(indexedTitle="A different film")),
