@@ -33,7 +33,7 @@ Open `./runs/apple-human-review/index.html` locally and inspect every proposed r
 - FFmpeg decodes the exact requested frame ordinals, and the decoded PTS must match FFprobe. Up to 24 frames from the first 30 seconds are processed at up to 320×180 resolution.
 - Apple Vision receives in-memory PNG image data and returns people rectangles. Native bottom-left normalized bounding boxes are converted to top-left normalized coordinates.
 - Results are deduplicated and capped at 8 proposed people per sampled frame; each output includes an uncalibrated Vision confidence.
-- The source SHA, stream/timebase, provider name and FFmpeg cut candidates are recorded in the existing `kumiki.subject-detections.v1` format. `modelSha256` is null because Apple's system model is not supplied as a local weight file.
+- The source SHA, stream/timebase, provider name **including the macOS version**, and FFmpeg cut candidates are recorded in the existing `kumiki.subject-detections.v1` format. `modelSha256` is null because Apple's system model is not supplied as a local weight file.
 - No input frame, model weight, transcript, voice print or original video is saved by this detector. It writes only a new local detection JSON file.
 - The next two commands apply conservative within-shot IoU association and produce a source-PTS-verified visual QA gallery.
 
