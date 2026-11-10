@@ -119,6 +119,24 @@ class DiarizationJoinTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "pristine unattributed"):
             associate_speakers(self.run, self.rttm, self.out)
 
+    def test_retained_audio_checksum_verified(self):
+        import hashlib
+        wav = self.run / "audio-for-diarization.wav"
+        wav.write_bytes(b"known waveform")
+        self.manifest["retainedAudio"] = True
+        self.manifest["decodedAudioSha256"] = hashlib.sha256(b"known waveform").hexdigest()
+        self.save()
+        load_character_scene(associate_speakers(self.run, self.rttm, self.out))
+
+    def test_retained_audio_tampering_is_rejected(self):
+        self.manifest["retainedAudio"] = True
+        self.manifest["decodedAudioSha256"] = "f" * 64
+        self.save()
+        (self.run / "audio-for-diarization.wav").write_bytes(b"changed waveform")
+        with self.assertRaisesRegex(ValueError, "checksum mismatch"):
+            associate_speakers(self.run, self.rttm, self.out)
+        self.assertFalse(self.out.exists())
+
     def test_threshold_validation(self):
         for kwargs in ({"min_coverage": float("nan")}, {"max_competing": 2},
                        {"min_coverage": False}):
