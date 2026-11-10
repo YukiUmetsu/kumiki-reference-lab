@@ -115,6 +115,7 @@ class CharacterMotionTests(unittest.TestCase):
         for index, obs in enumerate(item["observations"]):
             obs["segmentIndex"] = 1 if index == 2 else 0
         item["observations"][2]["status"] = "manual-reseed"
+        item["observations"][2]["displacementPixels"] = {"dx": 0, "dy": 0}
         scene, report = combine_character_tracks(self.roster, self.tracks)
         self.assertEqual(len(scene["appearances"]), 6)
         self.assertEqual(report["pairSummary"][0]["closerSteps"], 1)
