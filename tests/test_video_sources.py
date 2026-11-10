@@ -12,6 +12,7 @@ from pathlib import Path
 
 from kumiki_reference_lab.catalog.video_sources import (
     get_source_reference, load_source_references, search_source_references,
+    summarize_source_references,
 )
 from kumiki_reference_lab.cli.app import main
 
@@ -177,6 +178,32 @@ class VideoSourceTests(unittest.TestCase):
             code = main(["video-sources", "validate", "--youtube-root", str(ROOT / "research")])
         self.assertEqual(code, 0)
         self.assertEqual(json.loads(out.getvalue())["byProvider"], {"youtube": 40, "whatships": 2861})
+
+    def test_coverage_report_separates_unknown_from_known_views(self):
+        report = summarize_source_references(self.load())
+        self.assertEqual(report["totalEntries"], 21)
+        self.assertEqual(report["providers"]["whatships"], {
+            "entries": 2, "detailedEntries": 1, "viewCountsKnown": 1, "durationsKnown": 1,
+        })
+        self.assertEqual(report["categories"]["design"]["viewCountsKnown"], 0)
+        self.assertIsNone(report["categories"]["design"]["medianObservedViews"])
+        self.assertEqual(report["categories"]["motion"]["medianObservedViews"], 189170)
+        self.assertEqual(report["categories"]["motion"]["medianDurationSeconds"], 61)
+        self.assertIn("selection bias", " ".join(report["limitations"]).lower())
+
+    def test_default_cli_report_counts_cross_category_evidence(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = main(["video-sources", "report", "--youtube-root", str(ROOT / "research")])
+        self.assertEqual(code, 0)
+        report = json.loads(out.getvalue())
+        self.assertEqual(report["totalEntries"], 2901)
+        self.assertEqual(report["providers"]["whatships"], {
+            "entries": 2861, "detailedEntries": 419, "viewCountsKnown": 418,
+            "durationsKnown": 419,
+        })
+        self.assertEqual(report["categories"]["motion"]["entries"], 69)
+        self.assertEqual(report["categories"]["ai"]["entries"], 1122)
 
 
 if __name__ == "__main__":

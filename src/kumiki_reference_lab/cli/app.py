@@ -42,6 +42,7 @@ from kumiki_reference_lab.catalog.store import build_catalog_index, load_catalog
 from kumiki_reference_lab.catalog.popular_videos import load_popular_videos, search_popular_videos
 from kumiki_reference_lab.catalog.video_sources import (
     get_source_reference, load_source_references, search_source_references,
+    summarize_source_references,
 )
 from kumiki_reference_lab.catalog.visual_styles import (
     load_visual_styles, search_visual_styles, style_family_counts,
@@ -521,7 +522,7 @@ def build_parser() -> argparse.ArgumentParser:
     sources = commands.add_parser(
         "video-sources", help="browse normalized YouTube and What Ships references without media downloads")
     source_actions = sources.add_subparsers(dest="source_action", required=True)
-    for action in ("validate", "list", "search", "show"):
+    for action in ("validate", "list", "search", "show", "report"):
         sub = source_actions.add_parser(action)
         sub.add_argument("--youtube-root", type=Path, default=Path("research"))
         sub.add_argument("--whatships", type=Path,
@@ -658,6 +659,8 @@ def main(argv: list[str] | None = None) -> int:
                             "byProvider": by_provider, "retrievedOn": collection["retrievedOn"]}
             elif args.source_action == "show":
                 response = {"reference": get_source_reference(collection, args.identity)}
+            elif args.source_action == "report":
+                response = summarize_source_references(collection)
             else:
                 query = args.query if args.source_action == "search" else ""
                 results = search_source_references(collection, query, provider=args.provider,
