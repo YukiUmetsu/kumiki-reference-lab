@@ -63,13 +63,43 @@ analysis-run checksum inventory on reuse.
   pixel displacement and thresholds apply to that image plane, not 4K source
   pixels, 3D meters, focal lengths or camera velocities. Pair durations come
   from actual source PTS, never nominal frame index.
-- The small synthetic fixture suite calibrates basic translation, competing
-  moving layers, occlusion, VFR and cut abstention. It is not real-world
-  accuracy evaluation, professional quality approval or trained confidence.
+- The synthetic fixture suite covers basic translation, competing 2.5D-like
+  depth layers, a directional exposure-blur interval, obstruction, VFR and
+  cut abstention. It is not calibrated real-world accuracy evaluation,
+  professional quality approval or trained confidence.
 
-Recommended next step: compare this field with known, independently generated
-2.5D parallax, blur and deforming-subject footage, then add explicit temporal
-occlusion diagnostics before allowing learned re-identification.
+Recommended next step: validate on independently measured real footage with
+depth, lens variation and deforming subjects before permitting any learned
+re-identification or camera-motion claim.
+
+## Diagnose changes in temporal observation support
+
+```bash
+kumiki-ref dense-temporal-support ./runs/dense/dense-flow.json \
+  --out ./runs/temporal-support
+```
+
+The offline [`kumiki.dense-temporal-support.v1`](../schemas/v1/dense-temporal-support.schema.json)
+report compares **accepted grid coordinates** in successive dense-flow pairs.
+It records which fixed positions retain, lose or gain measured vector support,
+alongside original source PTS and rejection counts. At least ten previously
+supported points followed by a reduction to half or less produces a
+`support-drop-candidate`; the reverse produces a `support-rise-candidate`.
+Other transitions are `no-large-aggregate-change`. A cut suppresses the
+comparison and also resets the following pair. No support is interpolated
+across a missing or cut observation.
+
+This is deliberately **not optical-flow tracking across time**. The same
+fixed (x, y) is a different physical surface point after the image moves.
+Support may change because of motion, blur, illumination, poor texture or
+occlusion; the diagnostic does not distinguish those causes. `sourceVerified`
+is `false` because this JSON-only command validates a bounded dense report but
+does **not** reopen or decode the original video. To verify the source bytes
+and observe actual frames, separately run `review-dense-flow` below. A
+canonical SHA-256 binds the diagnostic to the input report's JSON content;
+the output is an idempotent no-overwrite artifact, and can be regenerated
+without OpenCV. It never asserts semantic occlusion, subject identity,
+physical camera or calibrated probabilities.
 
 ## Review the actual source frames
 

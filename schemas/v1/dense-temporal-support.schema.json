@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/dense-temporal-support.schema.json",
+  "title": "Kumiki Dense Flow Fixed-Grid Temporal Support v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "sourceSha256", "inputReportCanonicalSha256", "sourceStreamIndex", "sourceTimebase", "sampleCount", "analysisResolution", "gridStepPixels", "diagnosticMethod", "sourceVerified", "semanticOcclusionVerified", "semanticIdentityVerified", "calibratedConfidence", "limits", "summary", "pairs"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.dense-temporal-support.v1"},
+    "sourceSha256": {"$ref": "#/$defs/hash"},
+    "inputReportCanonicalSha256": {"$ref": "#/$defs/hash"},
+    "sourceStreamIndex": {"type": "integer", "minimum": 0},
+    "sourceTimebase": {"$ref": "#/$defs/rational"},
+    "sampleCount": {"type": "integer", "minimum": 2, "maximum": 40},
+    "analysisResolution": {
+      "type": "object", "additionalProperties": false,
+      "required": ["width", "height"],
+      "properties": {
+        "width": {"type": "integer", "minimum": 64, "maximum": 240},
+        "height": {"type": "integer", "minimum": 36, "maximum": 135}
+      }
+    },
+    "gridStepPixels": {"type": "integer", "minimum": 8, "maximum": 24},
+    "diagnosticMethod": {"const": "consecutive-fixed-grid-support-v1"},
+    "sourceVerified": {"const": false},
+    "semanticOcclusionVerified": {"const": false},
+    "semanticIdentityVerified": {"const": false},
+    "calibratedConfidence": {"const": false},
+    "limits": {"type": "string", "minLength": 40},
+    "summary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["dropCandidates", "riseCandidates", "skippedCutBoundaries"],
+      "properties": {
+        "dropCandidates": {"type": "integer", "minimum": 0, "maximum": 39},
+        "riseCandidates": {"type": "integer", "minimum": 0, "maximum": 39},
+        "skippedCutBoundaries": {"type": "integer", "minimum": 0, "maximum": 39}
+      }
+    },
+    "pairs": {"type": "array", "minItems": 1, "maxItems": 39,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["startPts", "endPts", "deltaTimeSeconds", "status", "acceptedCellCount", "candidateCellCount", "rejected", "previousPairComparison"],
+        "properties": {
+          "startPts": {"type": "integer"}, "endPts": {"type": "integer"},
+          "deltaTimeSeconds": {"$ref": "#/$defs/rational"},
+          "status": {"enum": ["cut-boundary", "unobservable", "insufficient-grid-support", "flow-observed"]},
+          "acceptedCellCount": {"type": "integer", "minimum": 0, "maximum": 512},
+          "candidateCellCount": {"type": "integer", "minimum": 0, "maximum": 512},
+          "rejected": {
+            "type": "object", "additionalProperties": false,
+            "required": ["low-texture", "out-of-frame", "roundtrip-inconsistent", "implausible-displacement", "appearance-inconsistent"],
+            "properties": {
+              "low-texture": {"$ref": "#/$defs/count"},
+              "out-of-frame": {"$ref": "#/$defs/count"},
+              "roundtrip-inconsistent": {"$ref": "#/$defs/count"},
+              "implausible-displacement": {"$ref": "#/$defs/count"},
+              "appearance-inconsistent": {"$ref": "#/$defs/count"}
+            }
+          },
+          "previousPairComparison": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/comparison"}]}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "count": {"type": "integer", "minimum": 0, "maximum": 512},
+    "rational": {"type": "object", "additionalProperties": false,
+      "required": ["numerator", "denominator"],
+      "properties": {"numerator": {"type": "integer"}, "denominator": {"type": "integer", "minimum": 1}}
+    },
+    "comparison": {"type": "object", "additionalProperties": false,
+      "required": ["status", "previousStartPts", "previousEndPts", "previousAccepted", "fixedGridRetained", "fixedGridLost", "fixedGridGained", "interpretation"],
+      "properties": {
+        "status": {"enum": ["support-drop-candidate", "support-rise-candidate", "no-large-aggregate-change"]},
+        "previousStartPts": {"type": "integer"},
+        "previousEndPts": {"type": "integer"},
+        "previousAccepted": {"$ref": "#/$defs/count"},
+        "fixedGridRetained": {"$ref": "#/$defs/count"},
+        "fixedGridLost": {"$ref": "#/$defs/count"},
+        "fixedGridGained": {"$ref": "#/$defs/count"},
+        "interpretation": {"const": "fixed-grid-occupancy-only-not-feature-correspondence"}
+      }
+    }
+  }
+}

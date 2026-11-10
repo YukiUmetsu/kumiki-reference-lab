@@ -25,6 +25,7 @@ from kumiki_reference_lab.analyzers.media.contact_sheet import build_contact_she
 from kumiki_reference_lab.analyzers.motion.analyze import analyze_image_motion
 from kumiki_reference_lab.analyzers.motion.dense import analyze_dense_flow
 from kumiki_reference_lab.analyzers.motion.dense_review import build_dense_flow_review
+from kumiki_reference_lab.analyzers.motion.temporal_support import analyze_dense_temporal_support_file
 from kumiki_reference_lab.analyzers.motion.sparse import analyze_sparse_flow
 from kumiki_reference_lab.analyzers.motion.review import build_sparse_flow_review
 from kumiki_reference_lab.analyzers.subjects.roi import analyze_roi_track
@@ -189,6 +190,12 @@ def build_parser() -> argparse.ArgumentParser:
     dense_review.add_argument("--max-frames", type=int, default=8)
     dense_review.add_argument("--ffmpeg", default="ffmpeg")
     dense_review.add_argument("--ffprobe", default="ffprobe")
+
+    dense_support = commands.add_parser(
+        "dense-temporal-support", help="inspect fixed-grid dense flow support changes, not occlusion")
+    dense_support.add_argument("dense_report", type=Path)
+    dense_support.add_argument("--out", type=Path,
+                               help="write immutable dense-temporal-support.json to this directory")
 
     roi_review = commands.add_parser(
         "review-roi", help="view verified ROI boxes and loss on original source frames")
@@ -570,6 +577,13 @@ def main(argv: list[str] | None = None) -> int:
             print(build_dense_flow_review(
                 args.source, args.dense_report, args.out,
                 max_frames=args.max_frames, ffmpeg=args.ffmpeg, ffprobe=args.ffprobe))
+            return 0
+        if args.command == "dense-temporal-support":
+            result = analyze_dense_temporal_support_file(args.dense_report)
+            if args.out is None:
+                print(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
+            else:
+                print(str(write_json_artifact(args.out, "dense-temporal-support.json", result)))
             return 0
         if args.command == "review-roi":
             print(build_roi_review(
