@@ -14,6 +14,7 @@ from kumiki_reference_lab.analyzers.audio.levels import analyze_audio_levels
 from kumiki_reference_lab.analyzers.audio.onsets import analyze_audio_onsets
 from kumiki_reference_lab.analyzers.audio.av_cuts import build_av_cut_evidence
 from kumiki_reference_lab.analyzers.comparison.appearance import compare_appearance
+from kumiki_reference_lab.analyzers.comparison.dense_flow import compare_dense_flow_files
 from kumiki_reference_lab.analyzers.comparison.frames import build_frame_comparison
 from kumiki_reference_lab.analyzers.techniques.propose import propose_techniques
 from kumiki_reference_lab.analyzers.techniques.review import build_technique_review
@@ -277,6 +278,16 @@ def build_parser() -> argparse.ArgumentParser:
     comparison.add_argument("--tolerance-ms", type=int, default=150)
     comparison.add_argument("--time-scale", default="1")
     comparison.add_argument("--out", type=Path)
+
+    dense_comparison = commands.add_parser(
+        "compare-dense-flow", help="compare two source-PTS-anchored image-plane flow reports")
+    dense_comparison.add_argument("reference_report", type=Path)
+    dense_comparison.add_argument("candidate_report", type=Path)
+    dense_comparison.add_argument("--reference-anchor-ms", type=int, required=True)
+    dense_comparison.add_argument("--candidate-anchor-ms", type=int, required=True)
+    dense_comparison.add_argument("--tolerance-ms", type=int, default=150)
+    dense_comparison.add_argument("--time-scale", default="1")
+    dense_comparison.add_argument("--out", type=Path)
 
     frame_compare = commands.add_parser("compare-frames",
                                         help="create immutable aligned side-by-side video frame evidence")
@@ -639,6 +650,18 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 print(str(write_json_artifact(args.out, "appearance-comparison.json",
                                               comparison)))
+            return 0
+        if args.command == "compare-dense-flow":
+            result = compare_dense_flow_files(
+                args.reference_report, args.candidate_report,
+                reference_anchor_ms=args.reference_anchor_ms,
+                candidate_anchor_ms=args.candidate_anchor_ms,
+                tolerance_ms=args.tolerance_ms, time_scale=args.time_scale,
+            )
+            if args.out is None:
+                print(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
+            else:
+                print(str(write_json_artifact(args.out, "dense-flow-comparison.json", result)))
             return 0
         if args.command == "compare-frames":
             index = build_frame_comparison(

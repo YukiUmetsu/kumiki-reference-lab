@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/blob/main/schemas/v1/dense-flow-comparison.schema.json",
+  "title": "Reference-versus-render dense image-plane flow comparison",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "reference", "candidate", "grid", "alignment", "comparison", "pairs", "summary"],
+  "properties": {
+    "schemaVersion": {"const": "kumiki.dense-flow-comparison.v1"},
+    "reference": {"$ref": "#/$defs/source"},
+    "candidate": {"$ref": "#/$defs/source"},
+    "grid": {"type": "object", "additionalProperties": false,
+      "required": ["width", "height", "stepPixels"],
+      "properties": {
+        "width": {"type": "integer", "minimum": 64, "maximum": 240},
+        "height": {"type": "integer", "minimum": 36, "maximum": 135},
+        "stepPixels": {"type": "integer", "minimum": 8, "maximum": 24}
+      }
+    },
+    "alignment": {"type": "object", "additionalProperties": false,
+      "required": ["method", "referenceAnchorSeconds", "candidateAnchorSeconds", "scale", "toleranceSeconds", "oneToOne"],
+      "properties": {
+        "method": {"const": "explicit-anchor-monotonic-pair-midpoints-v1"},
+        "referenceAnchorSeconds": {"$ref": "#/$defs/rational"},
+        "candidateAnchorSeconds": {"$ref": "#/$defs/rational"},
+        "scale": {"$ref": "#/$defs/rational"},
+        "toleranceSeconds": {"$ref": "#/$defs/rational"},
+        "oneToOne": {"const": true}
+      }
+    },
+    "comparison": {"type": "object", "additionalProperties": false,
+      "required": ["status", "matchedPairCount", "unmatchedReferencePairCount", "unmatchedCandidatePairCount", "referenceCutPairCount", "candidateCutPairCount", "sourceVerified", "cameraMotionVerified", "semanticIdentityVerified", "qualityVerdict", "limits"],
+      "properties": {
+        "status": {"enum": ["aligned-pairs", "no-aligned-pairs"]},
+        "matchedPairCount": {"$ref": "#/$defs/pairCount"},
+        "unmatchedReferencePairCount": {"$ref": "#/$defs/pairCount"},
+        "unmatchedCandidatePairCount": {"$ref": "#/$defs/pairCount"},
+        "referenceCutPairCount": {"$ref": "#/$defs/pairCount"},
+        "candidateCutPairCount": {"$ref": "#/$defs/pairCount"},
+        "sourceVerified": {"const": false},
+        "cameraMotionVerified": {"const": false},
+        "semanticIdentityVerified": {"const": false},
+        "qualityVerdict": {"const": "not-performed"},
+        "limits": {"type": "string", "minLength": 40}
+      }
+    },
+    "pairs": {"type": "array", "maxItems": 39,
+      "items": {"type": "object", "additionalProperties": false,
+        "required": ["referenceStartPts", "referenceEndPts", "candidateStartPts", "candidateEndPts", "signedAlignmentErrorSeconds", "referenceDurationSeconds", "candidateMappedDurationSeconds", "referenceAcceptedCellCount", "candidateAcceptedCellCount", "sharedCellCount", "referenceOnlyCellCount", "candidateOnlyCellCount", "supportJaccardFraction", "status", "meanGridVelocityDifferencePxPerSecond", "medianGridVelocityDifferencePxPerSecond"],
+        "properties": {
+          "referenceStartPts": {"type": "integer"},
+          "referenceEndPts": {"type": "integer"},
+          "candidateStartPts": {"type": "integer"},
+          "candidateEndPts": {"type": "integer"},
+          "signedAlignmentErrorSeconds": {"$ref": "#/$defs/rational"},
+          "referenceDurationSeconds": {"$ref": "#/$defs/rational"},
+          "candidateMappedDurationSeconds": {"$ref": "#/$defs/rational"},
+          "referenceAcceptedCellCount": {"$ref": "#/$defs/cellCount"},
+          "candidateAcceptedCellCount": {"$ref": "#/$defs/cellCount"},
+          "sharedCellCount": {"$ref": "#/$defs/cellCount"},
+          "referenceOnlyCellCount": {"$ref": "#/$defs/cellCount"},
+          "candidateOnlyCellCount": {"$ref": "#/$defs/cellCount"},
+          "supportJaccardFraction": {"$ref": "#/$defs/nullableFraction"},
+          "status": {"enum": ["time-disjoint", "insufficient-time-overlap", "duration-incomparable", "observed-comparison", "no-shared-cells"]},
+          "meanGridVelocityDifferencePxPerSecond": {"$ref": "#/$defs/nullableError"},
+          "medianGridVelocityDifferencePxPerSecond": {"$ref": "#/$defs/nullableError"}
+        }
+      }
+    },
+    "summary": {"type": "object", "additionalProperties": false,
+      "required": ["comparedPairCount", "durationIncomparableCount", "timeDisjointCount", "insufficientOverlapCount", "sharedCellCount", "meanGridVelocityDifferencePxPerSecond", "medianGridVelocityDifferencePxPerSecond"],
+      "properties": {
+        "comparedPairCount": {"$ref": "#/$defs/pairCount"},
+        "durationIncomparableCount": {"$ref": "#/$defs/pairCount"},
+        "timeDisjointCount": {"$ref": "#/$defs/pairCount"},
+        "insufficientOverlapCount": {"$ref": "#/$defs/pairCount"},
+        "sharedCellCount": {"type": "integer", "minimum": 0, "maximum": 19968},
+        "meanGridVelocityDifferencePxPerSecond": {"$ref": "#/$defs/nullableError"},
+        "medianGridVelocityDifferencePxPerSecond": {"$ref": "#/$defs/nullableError"}
+      }
+    }
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "pairCount": {"type": "integer", "minimum": 0, "maximum": 39},
+    "cellCount": {"type": "integer", "minimum": 0, "maximum": 512},
+    "nullableFraction": {"anyOf": [{"type": "null"}, {"type": "number", "minimum": 0, "maximum": 1}]},
+    "nullableError": {"anyOf": [{"type": "null"}, {"type": "number", "minimum": 0}]},
+    "rational": {"type": "object", "additionalProperties": false,
+      "required": ["numerator", "denominator"],
+      "properties": {"numerator": {"type": "integer"}, "denominator": {"type": "integer", "minimum": 1}}
+    },
+    "source": {"type": "object", "additionalProperties": false,
+      "required": ["sourceSha256", "reportCanonicalSha256", "sourceStreamIndex", "sourceTimebase"],
+      "properties": {
+        "sourceSha256": {"$ref": "#/$defs/hash"},
+        "reportCanonicalSha256": {"$ref": "#/$defs/hash"},
+        "sourceStreamIndex": {"type": "integer", "minimum": 0},
+        "sourceTimebase": {"$ref": "#/$defs/rational"}
+      }
+    }
+  }
+}
