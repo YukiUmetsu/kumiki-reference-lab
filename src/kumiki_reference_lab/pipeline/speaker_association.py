@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from kumiki_reference_lab.pipeline.speech_transcribe import _round_pts
+from kumiki_reference_lab.analyzers.media.inspect import sha256_file
 from kumiki_reference_lab.reviews.character_scene import load_character_scene, validate_character_scene
 
 SCHEMA_VERSION = "kumiki.speaker-diarization-association.v1"
@@ -141,6 +142,11 @@ def associate_speakers(speech_run: Path, rttm_path: Path, out: Path, *,
     scene = load_character_scene(speech_run / "character-scene.json")
     manifest = _load_json(speech_run / "speech-manifest.json")
     audio_origin, video_tb, samples = _clock(scene, manifest)
+    if manifest.get("retainedAudio") is True:
+        wav = speech_run / "audio-for-diarization.wav"
+        if (wav.is_symlink() or not wav.is_file() or
+                sha256_file(wav) != manifest.get("decodedAudioSha256")):
+            raise ValueError("retained diarization audio checksum mismatch")
     if (scene["characters"] or scene["appearances"] or scene["actions"] or
             scene["identityClaims"] or any(x["speakerId"] is not None for x in scene["utterances"])):
         raise ValueError("speaker association accepts only a pristine unattributed ASR scene")
@@ -180,7 +186,8 @@ def associate_speakers(speech_run: Path, rttm_path: Path, out: Path, *,
     association = {
         "schemaVersion": SCHEMA_VERSION,
         "sourceSha256": scene["sourceSha256"], "asrModelSha256": manifest["modelSha256"],
-        "rttmSha256": rttm_sha, "minCoverage": min_coverage, "maxCompeting": max_competing,
+        "rttmSha256": rttm_sha, "decodedAudioSha256": manifest.get("decodedAudioSha256"),
+        "minCoverage": min_coverage, "maxCompeting": max_competing,
         "voiceClusterCount": len(diarized),
         "attributedUtterances": sum(x["speakerId"] is not None for x in out_utterances),
         "unknownUtterances": sum(x["speakerId"] is None for x in out_utterances),
