@@ -67,6 +67,7 @@ from kumiki_reference_lab.pipeline.analyze import run_analysis
 from kumiki_reference_lab.pipeline.study import study_reference
 from kumiki_reference_lab.pipeline.speech_transcribe import transcribe_local_video
 from kumiki_reference_lab.pipeline.speaker_association import associate_speakers
+from kumiki_reference_lab.pipeline.character_speech_link import link_characters_to_speech
 from kumiki_reference_lab.integrations.kumiki.film_handoff import export_film_handoff
 from kumiki_reference_lab.integrations.kumiki.film_map_review import build_film_map_review
 from kumiki_reference_lab.integrations.kumiki.film_feedback import (
@@ -612,6 +613,13 @@ def build_parser() -> argparse.ArgumentParser:
     for action in ("validate", "report"):
         sub = style_review_actions.add_parser(action)
         sub.add_argument("review_file", type=Path)
+    character_speaker = commands.add_parser(
+        "speech-link-characters",
+        help="link individual utterances to visible characters only with explicit PTS lip-motion evidence")
+    character_speaker.add_argument("speech_scene", type=Path)
+    character_speaker.add_argument("visual_scene", type=Path)
+    character_speaker.add_argument("link_review", type=Path)
+    character_speaker.add_argument("--out", type=Path, required=True)
     speaker_join = commands.add_parser(
         "speech-associate", help="offline join of diarization RTTM voice clusters to local ASR segments")
     speaker_join.add_argument("speech_run", type=Path,
@@ -792,6 +800,10 @@ def main(argv: list[str] | None = None) -> int:
             report = ({"valid": True, "eventCount": len(review["events"])}
                       if args.event_action == "validate" else summarize_visual_events(review))
             print(json.dumps(report, indent=2, sort_keys=True))
+            return 0
+        if args.command == "speech-link-characters":
+            print(link_characters_to_speech(args.speech_scene, args.visual_scene,
+                                            args.link_review, args.out))
             return 0
         if args.command == "speech-associate":
             print(associate_speakers(args.speech_run, args.rttm, args.out,
