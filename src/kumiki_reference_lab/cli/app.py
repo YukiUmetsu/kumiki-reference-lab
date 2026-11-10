@@ -67,6 +67,7 @@ from kumiki_reference_lab.pipeline.analyze import run_analysis
 from kumiki_reference_lab.pipeline.study import study_reference
 from kumiki_reference_lab.pipeline.speech_transcribe import transcribe_local_video
 from kumiki_reference_lab.pipeline.character_motion import run_character_motion
+from kumiki_reference_lab.pipeline.subject_detections import run_subject_detections
 from kumiki_reference_lab.pipeline.speaker_association import associate_speakers
 from kumiki_reference_lab.pipeline.character_speech_link import link_characters_to_speech
 from kumiki_reference_lab.integrations.kumiki.film_handoff import export_film_handoff
@@ -644,6 +645,18 @@ def build_parser() -> argparse.ArgumentParser:
     asr.add_argument("--retain-audio", action="store_true",
                      help="retain hashed decoded WAV so an offline diarizer can use identical audio")
     asr.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
+    subject_proposals = commands.add_parser(
+        "subject-detections",
+        help="validate external local detector boxes and form source-verified, cut-bounded tracklets")
+    subject_proposals.add_argument("source", type=Path, help="authorized local video")
+    subject_proposals.add_argument("detections", type=Path, help="local source-PTS detection JSON")
+    subject_proposals.add_argument("--out", type=Path, required=True, help="new output directory")
+    subject_proposals.add_argument("--min-iou", type=float, default=0.35)
+    subject_proposals.add_argument("--ambiguity-margin", type=float, default=0.10)
+    subject_proposals.add_argument("--min-score", type=float, default=0.25)
+    subject_proposals.add_argument("--ffprobe", default="ffprobe")
+    subject_proposals.add_argument("--rights-status", choices=RIGHTS_STATUSES,
+                                   default="review-required")
     character_motion = commands.add_parser(
         "character-motion", help="track 2–6 manually seeded characters and measure screen-space motion")
     character_motion.add_argument("source", type=Path, help="authorized local reference video")
@@ -834,6 +847,12 @@ def main(argv: list[str] | None = None) -> int:
                 max_seconds=args.max_seconds, timeout_seconds=args.timeout_seconds,
                 language=args.language, rights_status=args.rights_status,
                 retain_audio=args.retain_audio))
+            return 0
+        if args.command == "subject-detections":
+            print(run_subject_detections(
+                args.source, args.detections, args.out, min_iou=args.min_iou,
+                ambiguity_margin=args.ambiguity_margin, min_score=args.min_score,
+                ffprobe=args.ffprobe, rights_status=args.rights_status))
             return 0
         if args.command == "character-motion":
             print(run_character_motion(
