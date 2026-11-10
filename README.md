@@ -54,6 +54,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Provider-neutral subject detections (new):** [`subject-detections`](docs/provider-neutral-subject-detections.md) imports source-verified, timecoded boxes from a separately run local detector and conservatively associates adjacent visible regions into provisional tracklets. It abstains on ambiguous matches and resets at supplied cuts. It emits a compatible low-confidence `character-scene` roster and appearances with **no fabricated actions, demographic attributes or person identities**. This is **detector-output ingestion**, not automatic vision inference. [Synthetic input](examples/subject-detections.synthetic.example.json).
 
+**Timecoded detector visual QA (new):** [`review-subject-tracklets`](docs/subject-tracklet-visual-review.md) decodes original local media frames at source-verified PTS and overlays previously proposed detector boxes/tracklet IDs. The resulting offline HTML gallery prioritizes cuts, records source and report hashes and remains **unreviewed** until inspected. It does not validate person identity, model accuracy or cinematic quality.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
