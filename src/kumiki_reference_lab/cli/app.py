@@ -66,6 +66,7 @@ from kumiki_reference_lab.core.artifacts import write_json_artifact
 from kumiki_reference_lab.pipeline.analyze import run_analysis
 from kumiki_reference_lab.pipeline.study import study_reference
 from kumiki_reference_lab.pipeline.speech_transcribe import transcribe_local_video
+from kumiki_reference_lab.pipeline.speaker_association import associate_speakers
 from kumiki_reference_lab.integrations.kumiki.film_handoff import export_film_handoff
 from kumiki_reference_lab.integrations.kumiki.film_map_review import build_film_map_review
 from kumiki_reference_lab.integrations.kumiki.film_feedback import (
@@ -611,6 +612,15 @@ def build_parser() -> argparse.ArgumentParser:
     for action in ("validate", "report"):
         sub = style_review_actions.add_parser(action)
         sub.add_argument("review_file", type=Path)
+    speaker_join = commands.add_parser(
+        "speech-associate", help="offline join of diarization RTTM voice clusters to local ASR segments")
+    speaker_join.add_argument("speech_run", type=Path,
+                              help="output directory from speech-transcribe")
+    speaker_join.add_argument("rttm", type=Path,
+                              help="RTTM from a separately run local diarizer on the same audio")
+    speaker_join.add_argument("--out", type=Path, required=True)
+    speaker_join.add_argument("--min-coverage", type=float, default=0.80)
+    speaker_join.add_argument("--max-competing", type=float, default=0.10)
     asr = commands.add_parser(
         "speech-transcribe", help="optional local whisper.cpp ASR to unattributed character-scene dialogue")
     asr.add_argument("source", type=Path, help="authorized local video file")
@@ -780,6 +790,11 @@ def main(argv: list[str] | None = None) -> int:
             report = ({"valid": True, "eventCount": len(review["events"])}
                       if args.event_action == "validate" else summarize_visual_events(review))
             print(json.dumps(report, indent=2, sort_keys=True))
+            return 0
+        if args.command == "speech-associate":
+            print(associate_speakers(args.speech_run, args.rttm, args.out,
+                                     min_coverage=args.min_coverage,
+                                     max_competing=args.max_competing))
             return 0
         if args.command == "speech-transcribe":
             print(transcribe_local_video(
