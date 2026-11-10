@@ -52,6 +52,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Seeded multi-character tracking (new):** [`character-motion`](docs/multi-character-motion.md) runs existing local, source-timecoded ROI tracking for 2–6 reviewer-seeded subjects and fuses their positions into a conservative motion report, including co-visibility and screen-space box relationships. It also emits compatible low-confidence single-frame `character-scene` appearances with empty action/dialogue lists. It does **not** automatically detect characters or establish identity across a cut or occlusion. [Synthetic seed input](examples/multi-character-seeds.example.json).
 
+**Provider-neutral subject detections (new):** [`subject-detections`](docs/provider-neutral-subject-detections.md) imports source-verified, timecoded boxes from a separately run local detector and conservatively associates adjacent visible regions into provisional tracklets. It abstains on ambiguous matches and resets at supplied cuts. It emits a compatible low-confidence `character-scene` roster and appearances with **no fabricated actions, demographic attributes or person identities**. This is **detector-output ingestion**, not automatic vision inference. [Synthetic input](examples/subject-detections.synthetic.example.json).
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
