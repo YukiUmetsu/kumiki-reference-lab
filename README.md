@@ -32,6 +32,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Visual style, camera and lighting research:** [12 studio-attributed style exemplars](docs/visual-style-camera-lighting-methodology.md) now cover paper-cut, physical stop-motion, hand-drawn, halftone, painterly 3D, print/collage and abstract motion. `visual-styles` searches examples and three-axis review questions. `visual-cadence` computes bounded, source-verified rates for **image-plane translation and display-luma proxies** from existing motion/appearance JSON; `visual-events` counts camera/lighting **reviewer-interpreted** events only when an entire stated window was reviewed. None is an automatic physical-camera or lamp classifier, and style examples carry no implied view-count proof.
 
+**Audience-to-visual study queue:** [`audience-benchmarks study-plan`](docs/visual-study-cohort-plan.md) now builds a reproducible 17-pair research queue from the 300 source rows, matching within channel, source-age window and runtime family while explicitly excluding ambiguous duplicate-title/date entries. Two Real Engineering rows have separately indexed, **provisional** YouTube ID links for future visual review. No pair is claimed to have been watched, style-coded or causally explained.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
