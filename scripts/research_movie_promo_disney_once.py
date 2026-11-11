@@ -11,6 +11,7 @@ import collections
 import hashlib
 import json
 import math
+import re
 import shutil
 import statistics
 import subprocess
@@ -33,7 +34,11 @@ VIDEO_ID = "elemental-official-trailer"
 
 
 def run(*command: str, output: bool = False) -> str:
-    result = subprocess.run(command, check=True, text=True, capture_output=True)
+    result = subprocess.run(command, text=True, capture_output=True)
+    if result.returncode:
+        # CDN endpoints may contain temporary access tokens; redact all URLs.
+        safe = re.sub(r"https?://\\S+", "[redacted-url]", (result.stderr or "")[-1800:])
+        raise RuntimeError(f"{command[0]} failed with code {result.returncode}: {safe}")
     return result.stdout if output else ""
 
 
