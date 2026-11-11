@@ -82,6 +82,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **All What Ships videos, not only selected genres:** [`whatships-all refresh/report/queue`](docs/whatships-full-coverage.md) validates and inventories every published video from the official public index, across all eight categories, with category-fair backlog planning, new/delisted slug audits, and explicit missing detail/media/visual evidence. The frozen November 10 snapshot contains 2,861 videos; 419 have detailed metadata. This catalogs metadata, **not permission to download or a claim that all media was watched**.
 
+**Progress toward 100% detailed What Ships metadata:** [`whatships-all enrich`](docs/whatships-detail-enrichment.md) consumes small, rate-limited batches of the directory's public read-only `get_video` catalog interface, retaining exact source links and historical view timestamps. Unknown/invalid details remain pending; no video files or frames are acquired. This command has mocked offline protocol tests, but its live MCP compatibility must still be verified.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
