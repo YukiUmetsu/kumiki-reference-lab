@@ -538,7 +538,7 @@ def validate_repository_analysis(path: Path, snapshot_path: Path) -> dict[str,An
             index.get("sourceLinkedAnalysisCount") != len(index["entries"])):
         raise ValueError("repository analysis index version/count/source mismatch")
     seen = set()
-    browser_count = numeric_count = 0
+    browser_count = numeric_count = character_count = 0
     for item in index["entries"]:
         if (not isinstance(item,dict) or set(item) != {
                 "sourceId","recordPath","evidenceKinds"}):
@@ -559,6 +559,7 @@ def validate_repository_analysis(path: Path, snapshot_path: Path) -> dict[str,An
         _validate_record(record,sid,index["catalogSnapshotSha256"])
         browser_count += "browserSpotCheck" in record["evidence"]
         numeric_count += "numericVisual" in record["evidence"]
+        character_count += "characterStudyStatus" in record["evidence"]
         numeric = record["evidence"].get("numericVisual")
         if numeric is not None:
             if (numeric.get("sourceSha256") != record["sourceMediaSha256"] or
@@ -569,6 +570,7 @@ def validate_repository_analysis(path: Path, snapshot_path: Path) -> dict[str,An
         raise ValueError("repository catalog snapshot SHA does not match source file")
     if (index.get("browserSpotCheckCount") != browser_count or
             index.get("sampledNumericVideoCount") != numeric_count or
+            index.get("unreviewedCharacterJobCount") != character_count or
             index.get("fullFilmReviewedCount") != 0):
         raise ValueError("repository index misstates observation coverage")
     # Exporter never writes image/media or absolute file paths.
