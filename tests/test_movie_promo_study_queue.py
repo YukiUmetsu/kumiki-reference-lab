@@ -21,8 +21,8 @@ class MoviePromoQueueTests(unittest.TestCase):
 
     def test_valid_unmeasured_queue_is_studio_diverse(self):
         self.assertEqual(audit(self.queue, self.catalog), [])
-        self.assertGreaterEqual(len(self.queue["entries"]), 13)
-        self.assertGreaterEqual(len({item["filmStudio"] for item in self.queue["entries"]}), 8)
+        self.assertGreaterEqual(len(self.queue["entries"]), 26)
+        self.assertGreaterEqual(len({item["filmStudio"] for item in self.queue["entries"]}), 15)
         self.assertTrue(all(item["mediaAnalysisStatus"] == "not-performed" for item in self.queue["entries"]))
 
     def test_duplicate_existing_upload_rejected(self):
@@ -60,6 +60,33 @@ class MoviePromoQueueTests(unittest.TestCase):
         data = copy.deepcopy(self.queue)
         data["entries"][0]["filmStudio"] = ""
         self.assertTrue(any("invalid film metadata" in x for x in audit(data, self.catalog)))
+
+    def test_recent_official_uploads_and_non_hollywood_film_styles(self):
+        ids = {entry["youtubeId"] for entry in self.queue["entries"]}
+        self.assertEqual(len(ids), len(self.queue["entries"]))
+        for video_id in ("AzCAwdp1uIQ", "d_Z_tybgPgg", "nsXQijb0F4I",
+                         "VvSrHIX5a-0", "Pu0pH5BuCPM", "9kb7vK11_Rw"):
+            self.assertIn(video_id, ids)
+        self.assertFalse(any("sourceSha256" in row or "windows" in row
+                             for row in self.queue["entries"]))
+
+    def test_third_party_video_evidence_requires_exact_source_id(self):
+        data = copy.deepcopy(self.queue)
+        row = next(item for item in data["entries"]
+                   if item["id"] == "godzilla-minus-zero-trailer-3")
+        self.assertEqual(audit(data, self.catalog), [])
+        row["viewEvidence"]["sourceUrl"] = (
+            "https://chartslist.com/youtube/video/different-film/video")
+        self.assertTrue(any("unsafe evidence URL" in x for x in audit(data, self.catalog)))
+
+    def test_third_party_video_evidence_rejects_masqueraded_host(self):
+        data = copy.deepcopy(self.queue)
+        row = next(item for item in data["entries"]
+                   if item["id"] == "godzilla-minus-zero-trailer-3")
+        row["viewEvidence"]["sourceUrl"] = (
+            "https://chartslist.com.evil.example/youtube/video/"
+            + row["youtubeId"] + "/video")
+        self.assertTrue(any("unsafe evidence URL" in x for x in audit(data, self.catalog)))
 
     def test_view_counts_cannot_be_strings(self):
         data = copy.deepcopy(self.queue)
