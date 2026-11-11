@@ -637,6 +637,8 @@ def build_parser() -> argparse.ArgumentParser:
     measure_ws.add_argument("--cut-threshold", type=float, default=.25)
     measure_ws.add_argument("--replace-existing", action="store_true",
         help="explicitly replace prior numeric video evidence for this source")
+    measure_ws.add_argument("--fill-gaps", action="store_true",
+        help="sample previously unmeasured source-time windows and append to existing numeric evidence")
     measure_ws.add_argument("--ffmpeg", default="ffmpeg")
     measure_ws.add_argument("--ffprobe", default="ffprobe")
 
@@ -1219,6 +1221,7 @@ def main(argv: list[str] | None = None) -> int:
                 width=args.width, height=args.height,
                 cut_threshold=args.cut_threshold,
                 replace_existing=args.replace_existing,
+                fill_gaps=args.fill_gaps,
                 ffmpeg=args.ffmpeg, ffprobe=args.ffprobe),
                 indent=2, sort_keys=True, ensure_ascii=False))
             return 0
