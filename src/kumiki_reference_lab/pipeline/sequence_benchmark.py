@@ -339,6 +339,8 @@ def evaluate_sequence_labels(
     insights_sha: str, labels_sha: str,
 ) -> dict[str, Any]:
     source, model, rows = _insights_sequences(insights)
+    if not rows:
+        raise ValueError("cannot score an empty three-anchor sequence review")
     reviewer, truth = _truth(
         labels, rows, source_sha=source,
         insights_sha=insights_sha, model=model)
@@ -479,9 +481,10 @@ def _write_new(path: Path, doc: dict[str, Any]) -> None:
             stream.write(data)
             stream.flush()
             os.fsync(stream.fileno())
-        if path.exists() or path.is_symlink():
-            raise ValueError("output was created by another writer")
-        os.replace(temp, path)
+        # Hardlink creates the destination atomically only when absent.
+        # os.replace would silently overwrite a concurrent writer's result.
+        os.link(temp, path)
+        temp.unlink()
         temp = None
     finally:
         if temp is not None:
