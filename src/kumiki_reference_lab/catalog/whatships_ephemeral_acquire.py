@@ -98,7 +98,7 @@ def acquire_and_measure_x_video(
     acknowledge_rights: bool = False, yt_dlp: str = "yt-dlp",
     timeout_seconds: int = 240, window_seconds: int = 10,
     window_count: int = 4, max_samples: int = 12,
-    fill_gaps: bool = True,
+    fill_gaps: bool = True, image_translation: bool = False,
     ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
 ) -> dict[str, Any]:
     """Download -> validate -> measure -> retain only derived Git data -> delete.
@@ -107,6 +107,7 @@ def acquire_and_measure_x_video(
     invocation; a linked public X post alone is not legal permission.
     """
     if (acknowledge_rights is not True or type(fill_gaps) is not bool
+            or type(image_translation) is not bool
             or type(timeout_seconds) is not int
             or not 30 <= timeout_seconds <= 300):
         raise ValueError("explicit authorized-source rights and bounded download timeout required")
@@ -140,7 +141,8 @@ def acquire_and_measure_x_video(
             snapshot_path,ledger,source_id,repository_root,
             window_seconds=window_seconds,window_count=window_count,
             max_samples=max_samples,fill_gaps=fill_gaps,
-            ffmpeg=ffmpeg,ffprobe=ffprobe)
+            ffmpeg=ffmpeg,ffprobe=ffprobe,
+            **({"image_translation":True} if image_translation else {}))
     # Python TemporaryDirectory removes footage, source local bindings and
     # all partial downloads on success or failure. No video bytes are kept.
     return {

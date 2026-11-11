@@ -73,7 +73,7 @@ def _frame_delta(before: bytes, after: bytes) -> float:
 def analyze_source_visual_window(
     source: Path, *, start_seconds: int = 0, seconds: int = 10,
     max_samples: int = 12, width: int = 160, height: int = 90,
-    cut_threshold: float = .25,
+    cut_threshold: float = .25, image_translation: bool = False,
     rights_status: str = "review-required",
     ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
 ) -> dict[str, Any]:
@@ -85,7 +85,8 @@ def analyze_source_visual_window(
             type(width) is not int or not 64 <= width <= 320 or
             type(height) is not int or not 36 <= height <= 180 or
             type(cut_threshold) not in (float, int) or
-            not math.isfinite(cut_threshold) or not 0 < cut_threshold < 1):
+            not math.isfinite(cut_threshold) or not 0 < cut_threshold < 1 or
+            type(image_translation) is not bool):
         raise ValueError("source visual probe window, frame, or cut budgets invalid")
     if (source.is_symlink() or not source.is_file() or
             source.suffix.lower() not in _VIDEO_EXTENSIONS):
@@ -143,6 +144,16 @@ def analyze_source_visual_window(
          "appearance": _frame_metrics(frame, width=width, height=height)}
         for pts_value, frame in zip(pts, frames_rgb, strict=True)
     ]
+    planes = None
+    if image_translation:
+        # Optional reuse of the existing FFT phase-correlation code. A
+        # grayscale global shift is only an image-plane motion hypothesis.
+        from kumiki_reference_lab.analyzers.motion.phase import measure_image_shift
+        planes = [
+            bytes((77*frame[i] + 150*frame[i+1] + 29*frame[i+2])//256
+                  for i in range(0, len(frame), 3))
+            for frame in frames_rgb
+        ]
     pairs: list[dict[str, Any]] = []
     for i in range(1, len(pts)):
         crossed = any(pts[i-1] < p <= pts[i] for p in boundaries)
@@ -150,14 +161,23 @@ def analyze_source_visual_window(
         if dt <= 0:
             raise ValueError("sampled video source PTS were nonmonotonic")
         value = None if crossed else _frame_delta(frames_rgb[i-1], frames_rgb[i])
-        pairs.append({
+        pair = {
             "startPts": pts[i-1], "endPts": pts[i],
             "sourceDeltaSeconds": as_rational_dict(dt),
             "status": "cut-candidate-between-samples" if crossed else "rgb-image-difference-proxy",
             "meanAbsoluteDisplayRgbDelta": value,
             "meanAbsoluteDisplayRgbDeltaPerSecond": (
                 round(value/float(dt), 6) if value is not None else None),
-        })
+        }
+        if image_translation:
+            if crossed:
+                shift = {"status":"cut-boundary","dxPixels":None,
+                         "dyPixels":None,"peakToSidelobeRatio":None}
+            else:
+                shift = measure_image_shift(
+                    planes[i-1], planes[i], width, height)
+            pair["imageTranslation"] = shift
+        pairs.append(pair)
     within_shot = [x["meanAbsoluteDisplayRgbDelta"] for x in pairs
                    if x["meanAbsoluteDisplayRgbDelta"] is not None]
     brightnesses = [x["appearance"]["meanDisplayLumaProxy"] for x in observations]

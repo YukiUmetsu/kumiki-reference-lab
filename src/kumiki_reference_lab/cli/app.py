@@ -595,6 +595,8 @@ def build_parser() -> argparse.ArgumentParser:
     visual_probe.add_argument("--width", type=int, default=160)
     visual_probe.add_argument("--height", type=int, default=90)
     visual_probe.add_argument("--cut-threshold", type=float, default=0.25)
+    visual_probe.add_argument("--image-translation", action="store_true",
+                              help="optional NumPy FFT image-plane shift proxy (not camera motion)")
     visual_probe.add_argument("--ffmpeg", default="ffmpeg")
     visual_probe.add_argument("--ffprobe", default="ffprobe")
     visual_probe.add_argument("--rights-status", choices=RIGHTS_STATUSES,
@@ -619,6 +621,8 @@ def build_parser() -> argparse.ArgumentParser:
     batch_measure.add_argument("--width", type=int, default=160)
     batch_measure.add_argument("--height", type=int, default=90)
     batch_measure.add_argument("--cut-threshold", type=float, default=.25)
+    batch_measure.add_argument("--image-translation", action="store_true",
+                              help="optional NumPy FFT apparent image-plane motion")
     batch_measure.add_argument("--ffmpeg", default="ffmpeg")
     batch_measure.add_argument("--ffprobe", default="ffprobe")
     acquire_ws = commands.add_parser(
@@ -642,6 +646,8 @@ def build_parser() -> argparse.ArgumentParser:
     acquire_ws.add_argument("--window-seconds", type=int, default=10)
     acquire_ws.add_argument("--window-count", type=int, default=4)
     acquire_ws.add_argument("--max-samples", type=int, default=12)
+    acquire_ws.add_argument("--image-translation", action="store_true",
+                            help="optional NumPy FFT apparent image-plane motion")
     acquire_ws.add_argument("--ffmpeg", default="ffmpeg")
     acquire_ws.add_argument("--ffprobe", default="ffprobe")
 
@@ -676,6 +682,8 @@ def build_parser() -> argparse.ArgumentParser:
     measure_ws.add_argument("--width", type=int, default=160)
     measure_ws.add_argument("--height", type=int, default=90)
     measure_ws.add_argument("--cut-threshold", type=float, default=.25)
+    measure_ws.add_argument("--image-translation", action="store_true",
+                            help="measure original-PTS apparent global image translation with optional NumPy")
     measure_ws.add_argument("--replace-existing", action="store_true",
         help="explicitly replace prior numeric video evidence for this source")
     measure_ws.add_argument("--fill-gaps", action="store_true",
@@ -1243,7 +1251,8 @@ def main(argv: list[str] | None = None) -> int:
                 seconds=args.max_seconds, max_samples=args.max_samples,
                 width=args.width, height=args.height,
                 cut_threshold=args.cut_threshold, ffmpeg=args.ffmpeg,
-                ffprobe=args.ffprobe, rights_status=args.rights_status))
+                ffprobe=args.ffprobe, rights_status=args.rights_status,
+                **({"image_translation":True} if args.image_translation else {})))
             return 0
         if args.command == "whatships-measure-batch":
             print(json.dumps(measure_whatships_batch(
@@ -1253,7 +1262,7 @@ def main(argv: list[str] | None = None) -> int:
                 window_count=args.window_count,max_samples=args.max_samples,
                 width=args.width,height=args.height,
                 cut_threshold=args.cut_threshold,ffmpeg=args.ffmpeg,
-                ffprobe=args.ffprobe),
+                ffprobe=args.ffprobe,image_translation=args.image_translation),
                 indent=2,sort_keys=True,ensure_ascii=False))
             return 0
         if args.command == "whatships-acquire-measure":
@@ -1265,6 +1274,7 @@ def main(argv: list[str] | None = None) -> int:
                 yt_dlp=args.yt_dlp,timeout_seconds=args.timeout_seconds,
                 window_seconds=args.window_seconds,
                 window_count=args.window_count,max_samples=args.max_samples,
+                image_translation=args.image_translation,
                 ffmpeg=args.ffmpeg,ffprobe=args.ffprobe),
                 indent=2,sort_keys=True,ensure_ascii=False))
             return 0
@@ -1285,7 +1295,7 @@ def main(argv: list[str] | None = None) -> int:
                 width=args.width, height=args.height,
                 cut_threshold=args.cut_threshold,
                 replace_existing=args.replace_existing,
-                fill_gaps=args.fill_gaps,
+                fill_gaps=args.fill_gaps, image_translation=args.image_translation,
                 ffmpeg=args.ffmpeg, ffprobe=args.ffprobe),
                 indent=2, sort_keys=True, ensure_ascii=False))
             return 0

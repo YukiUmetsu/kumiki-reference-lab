@@ -161,6 +161,17 @@ def build_whatships_browser(
                         "meanDisplayLuma":w["sampledWindowSummary"]["meanSampledDisplayLumaProxy"],
                         "meanSaturation":w["sampledWindowSummary"]["meanSampledSaturationProxy"],
                         "withinShotRgbChange":w["sampledWindowSummary"]["meanWithinShotDisplayRgbDelta"],
+                        "apparentGlobalTranslationPairs":(
+                            sum(pair["imageTranslation"]["status"] == "measured-image-translation"
+                                for pair in w["sampledFramePairs"])
+                            if all("imageTranslation" in pair for pair in w["sampledFramePairs"])
+                            else None),
+                        "imageTranslationAttemptedPairs":(
+                            sum(pair["imageTranslation"]["status"] not in
+                                ("cut-boundary","unobservable-low-texture")
+                                for pair in w["sampledFramePairs"])
+                            if all("imageTranslation" in pair for pair in w["sampledFramePairs"])
+                            else None),
                     } for w in archived_numeric["windows"]],
                 }
                 visual_status = "sampled-numeric-unreviewed"
@@ -332,10 +343,10 @@ if(x.audioEnergy){
  out.append(t);
 }
 if(x.numeric){out.append(el("h3","Sampled original-source video windows"));
-const t=el("table"),head=el("tr");for(const name of ["Time (seconds)","Sampled frames","PTS inventory","Cut candidates","Display luma","Saturation","Within-shot RGB change"])head.append(el("th",name));t.append(head);
+const t=el("table"),head=el("tr");for(const name of ["Time (seconds)","Sampled frames","PTS inventory","Cut candidates","Global image shifts","Display luma","Saturation","Within-shot RGB change"])head.append(el("th",name));t.append(head);
 for(const w of x.numeric.windows){const row=el("tr");for(const val of [w.startSeconds+"–"+w.endSeconds,w.sampledFrames,
 w.inventoriedFrames===null?"not recorded":w.inventoriedFrames,
-w.cutCandidates,fmt(w.meanDisplayLuma),fmt(w.meanSaturation),fmt(w.withinShotRgbChange)])row.append(el("td",val));t.append(row);}out.append(t);
+w.cutCandidates,w.apparentGlobalTranslationPairs===null||w.apparentGlobalTranslationPairs===undefined?"not probed":w.apparentGlobalTranslationPairs,fmt(w.meanDisplayLuma),fmt(w.meanSaturation),fmt(w.withinShotRgbChange)])row.append(el("td",val));t.append(row);}out.append(t);
 }else out.append(el("p","No original-frame numeric measurements were supplied for this video."));
 byId("modal").showModal();}
 function render(){

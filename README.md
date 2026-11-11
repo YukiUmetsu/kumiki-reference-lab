@@ -112,6 +112,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Numerical soundtrack energy analysis:** [`whatships-audio-measure`](docs/whatships-audio-energy-research.md) writes source-SHA-linked PCM RMS/peak and near-silence time buckets directly into Git-tracked `research/analysis/whatships/<slug>.json` for authorized local videos. It does **not** export audio, music, voices or transcripts, and FFmpeg output seeking does **not** establish exact synchronization to original video PTS.
 
+**Original-PTS apparent image-plane motion:** [`whatships-measure --image-translation`](docs/whatships-source-pts-image-translation.md) optionally reuses the existing FFT phase-correlation engine to record cut-gated global image shift proxies alongside exact source frame PTS. Available on direct, batch and ephemeral authorized-source workflows; optional NumPy required. It does not assert that camera pans, dolly moves, zooms or physical lighting were detected.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
