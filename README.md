@@ -39,6 +39,18 @@ camera trajectories or persistent object tracks. For a standalone versioned
 shot-and-motion report, run `python -m kumiki_reference_lab.pipeline.online_temporal
 motion --workspace PATH`. See [temporal shot analysis](docs/temporal-shot-analysis.md).
 
+## Screen-space motion timing for seeded subjects
+
+The cinematic-insights workflow now extracts **measured timing** from
+shot-local, operator-seeded character/product/text region tracks: progress,
+sampled speed, approximate hold fractions, screen-space scale/rotation,
+and optional conservative linear/ease-in/ease-out/smoothstep fits.
+This needs **no additional AI model calls**. Results appear in
+`seededMotionTiming` and `kumikiTimingProposals` in existing
+`<id>.insights.json` outputs. A curve fit describes visible box motion,
+**not original animation keyframes, a verified easing function, or a
+character rig**. See [seeded motion timing](docs/seeded-motion-timing.md).
+
 ## Why this exists
 
 Professional motion graphics depend on more than shaders and easing presets:
