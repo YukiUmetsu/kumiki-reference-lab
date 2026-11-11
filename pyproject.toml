@@ -18,6 +18,8 @@ dense = ["numpy>=1.26", "opencv-python-headless>=4.10,<6"]
 kumiki-ref = "kumiki_reference_lab.cli.app:main"
 kumiki-watch = "kumiki_reference_lab.pipeline.online_study:main"
 kumiki-frames = "kumiki_reference_lab.pipeline.agent_frame_review:main"
+kumiki-insights = "kumiki_reference_lab.pipeline.cinematic_insights:main"
+kumiki-catalog = "kumiki_reference_lab.pipeline.cinematic_catalog:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
