@@ -788,6 +788,8 @@ def build_parser() -> argparse.ArgumentParser:
         help="tracked per-video analysis dataset to update in this Git worktree")
     analysis_sync.add_argument("--replace-existing", action="store_true",
         help="explicitly replace conflicting evidence; Git history retains prior revisions")
+    analysis_sync.add_argument("--append-numeric-windows", action="store_true",
+        help="merge nonoverlapping source-PTS sample windows; incompatible with --replace-existing")
     analysis_validate = full_actions.add_parser(
         "validate-analysis",
         help="verify committed per-video analysis dataset against its source snapshot")
@@ -1264,7 +1266,8 @@ def main(argv: list[str] | None = None) -> int:
             elif args.whatships_action == "sync-analysis":
                 print(json.dumps(sync_repository_analysis(
                     args.snapshot, args.incoming, args.root,
-                    replace_existing=args.replace_existing),
+                    replace_existing=args.replace_existing,
+                    append_numeric_windows=args.append_numeric_windows),
                     indent=2, sort_keys=True, ensure_ascii=False))
             elif args.whatships_action == "validate-analysis":
                 print(json.dumps(validate_repository_analysis(args.root, args.snapshot),
