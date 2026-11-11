@@ -1,0 +1,423 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/schemas/v1/online-temporal-analysis.schema.json",
+  "title": "Low-compute online video shot candidates and image-plane motion",
+  "description": "Source-hashed deterministic derivative: unverified shot boundaries, frame-change timing, sampled image-plane block matches. No semantic/camera/object tracking claims.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "sourceSha256",
+    "frameCount",
+    "segmentation",
+    "shots",
+    "motion",
+    "limitations"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "kumiki.online-temporal-analysis.v1"
+    },
+    "sourceSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "frameCount": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 108000
+    },
+    "segmentation": {
+      "type": "object",
+      "required": [
+        "method",
+        "minimumShotFrames",
+        "detectedCutCandidates",
+        "selectedShotBoundaries",
+        "suppressedCandidateIndices",
+        "status"
+      ],
+      "properties": {
+        "method": {
+          "const": "clustered-hard-cut-candidates-v1"
+        },
+        "minimumShotFrames": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "detectedCutCandidates": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "selectedShotBoundaries": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "suppressedCandidateIndices": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "status": {
+          "const": "heuristic-not-human-verified"
+        }
+      },
+      "additionalProperties": false
+    },
+    "shots": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4096,
+      "items": {
+        "type": "object",
+        "required": [
+          "shotIndex",
+          "startFrameIndex",
+          "endFrameIndex",
+          "startSeconds",
+          "endSeconds",
+          "frameCount",
+          "entryCutCandidateFrameIndex",
+          "reviewFrameIndices",
+          "representativeFrameIndices",
+          "timing",
+          "classificationStatus"
+        ],
+        "properties": {
+          "shotIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "startFrameIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "endFrameIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "startSeconds": {
+            "type": "number"
+          },
+          "endSeconds": {
+            "type": "number"
+          },
+          "frameCount": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "entryCutCandidateFrameIndex": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "reviewFrameIndices": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "representativeFrameIndices": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 5,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "classificationStatus": {
+            "const": "unverified-shot-candidate"
+          },
+          "timing": {
+            "type": "object",
+            "required": [
+              "meanFrameDifference",
+              "peakFrameDifference",
+              "peakChangeFrameIndex",
+              "lowChangeFraction",
+              "highChangeFraction",
+              "meanDisplayLuma"
+            ],
+            "properties": {
+              "meanFrameDifference": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "peakFrameDifference": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "peakChangeFrameIndex": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "lowChangeFraction": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "highChangeFraction": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "meanDisplayLuma": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "motion": {
+      "type": "object",
+      "required": [
+        "status",
+        "samplingMethod",
+        "evaluatedPairs",
+        "pairs"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "not-measured",
+            "sampled-block-matching-proxies",
+            "no-pairs-available"
+          ]
+        },
+        "samplingMethod": {
+          "type": "string"
+        },
+        "requestedMaxPairs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "stride": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 240
+        },
+        "evaluatedPairs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 500
+        },
+        "pairs": {
+          "type": "array",
+          "maxItems": 500,
+          "items": {
+            "type": "object",
+            "required": [
+              "fromFrameIndex",
+              "toFrameIndex",
+              "startSeconds",
+              "endSeconds",
+              "deltaSeconds",
+              "frameDifferenceProxy",
+              "status",
+              "matchedRegions",
+              "dominantVectorPixels",
+              "coherenceFraction",
+              "relativeMotionRegions",
+              "searchRadiusPixels",
+              "spatialSamplingStepPixels",
+              "dominantVelocityPixelsPerSecond"
+            ],
+            "properties": {
+              "fromFrameIndex": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "toFrameIndex": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "startSeconds": {
+                "type": "number"
+              },
+              "endSeconds": {
+                "type": "number"
+              },
+              "deltaSeconds": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "frameDifferenceProxy": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "status": {
+                "enum": [
+                  "coherent-image-plane-proxy",
+                  "ambiguous-image-plane-proxy",
+                  "abstain-insufficient-texture"
+                ]
+              },
+              "matchedRegions": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 12
+              },
+              "dominantVectorPixels": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "dx",
+                      "dy"
+                    ],
+                    "properties": {
+                      "dx": {
+                        "type": "number"
+                      },
+                      "dy": {
+                        "type": "number"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "coherenceFraction": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 1
+              },
+              "relativeMotionRegions": {
+                "type": "array",
+                "maxItems": 12,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "gridColumn",
+                    "gridRow",
+                    "centerX",
+                    "centerY",
+                    "dxPixels",
+                    "dyPixels",
+                    "textureProxy",
+                    "matchError",
+                    "improvementOverNoShift",
+                    "residualDxPixels",
+                    "residualDyPixels"
+                  ],
+                  "properties": {
+                    "gridColumn": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 3
+                    },
+                    "gridRow": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 2
+                    },
+                    "centerX": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "centerY": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "dxPixels": {
+                      "type": "number"
+                    },
+                    "dyPixels": {
+                      "type": "number"
+                    },
+                    "textureProxy": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "matchError": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "improvementOverNoShift": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "residualDxPixels": {
+                      "type": "number"
+                    },
+                    "residualDyPixels": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "searchRadiusPixels": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "spatialSamplingStepPixels": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "dominantVelocityPixelsPerSecond": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "vx",
+                      "vy"
+                    ],
+                    "properties": {
+                      "vx": {
+                        "type": "number"
+                      },
+                      "vy": {
+                        "type": "number"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}
