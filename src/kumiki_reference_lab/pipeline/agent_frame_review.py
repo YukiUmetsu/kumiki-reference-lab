@@ -212,14 +212,14 @@ def next_frame(workspace: Path, *, after: int = -1,
             or type(min_change) not in (int, float) or not 0 <= min_change <= 1
             or type(interval) is not int or not 1 <= interval <= 3600):
         raise ValueError("invalid frame review selection")
-    shot_indices: set[int] = set()
+    shot_frames = None
     if mode == "shots":
-        from kumiki_reference_lab.pipeline.online_temporal import build_shot_plan
-        shot_indices = {i for shot in build_shot_plan(numeric)["shots"]
-                        for i in shot["reviewFrameIndices"]}
+        from kumiki_reference_lab.pipeline.shot_intelligence import build_shot_intelligence
+        shot_frames = {i for shot in build_shot_intelligence(numeric)["shots"]
+                       for i in shot["representativeFrameIndices"]}
     for i in range(after + 1, manifest["frameCount"]):
         row = numeric["frames"][i]
-        if (mode == "shots" and i in shot_indices or mode == "every" or
+        if ((mode == "shots" and i in shot_frames) or mode == "every" or
                 (mode == "cuts" and row["cutCandidate"]) or
                 (mode == "changed" and row["changeFromPrevious"] and
                  row["changeFromPrevious"]["meanPixelDelta"] >= min_change) or
@@ -241,33 +241,6 @@ def _load_annotations(workspace: Path) -> list[dict[str, Any]]:
             or len(doc["observations"]) > 10000):
         raise ValueError("annotation file has invalid structure")
     return doc["observations"]
-
-
-
-def show_shots(workspace: Path, *, after_shot: int = -1, limit: int = 12,
-               minimum_shot_frames: int = 4) -> dict[str, Any]:
-    """Return a bounded page of shot candidates with visual review cues."""
-    if (type(after_shot) is not int or after_shot < -1
-            or type(limit) is not int or not 1 <= limit <= 50):
-        raise ValueError("invalid shot pagination")
-    manifest, numeric, reference = load_workspace(workspace)
-    from kumiki_reference_lab.pipeline.online_temporal import build_shot_plan
-    plan = build_shot_plan(numeric, minimum_shot_frames=minimum_shot_frames)
-    candidates = plan["shots"]
-    selected = candidates[after_shot + 1:after_shot + 1 + limit]
-    return {
-        "schemaVersion": plan["schemaVersion"],
-        "sourceSha256": manifest["sourceSha256"],
-        "frameCount": manifest["frameCount"],
-        "totalShotCandidates": len(candidates),
-        "afterShotIndex": after_shot,
-        "returnedCount": len(selected),
-        "hasMore": after_shot + 1 + len(selected) < len(candidates),
-        "nextAfterShotIndex": selected[-1]["shotIndex"] if selected else None,
-        "shots": selected,
-        "numericReference": str(reference),
-        "interpretationStatus": "heuristic-cuts-not-verified-shots",
-    }
 
 
 def annotate_frame(
@@ -365,15 +338,20 @@ def scan_frames(
     prior = _load_annotations(workspace)
     visited = {(x["endFrameIndex"], x["category"]) for x in prior}
     # Read the numeric report ONCE, rather than reparsing it for every frame.
-    targets = [0] if after < 0 and mode != "shots" else []
-    shot_indices: set[int] = set()
     if mode == "shots":
-        from kumiki_reference_lab.pipeline.online_temporal import build_shot_plan
-        shot_indices = {i for shot in build_shot_plan(numeric)["shots"]
-                        for i in shot["reviewFrameIndices"]}
-    for i in range(after + 1, manifest["frameCount"]):
+        from kumiki_reference_lab.pipeline.shot_intelligence import (
+            build_shot_intelligence, prioritized_frame_plan,
+        )
+        source_shots = build_shot_intelligence(numeric)
+        plan = prioritized_frame_plan(
+            source_shots, max_frames=min(1000, manifest["frameCount"]))
+        targets = [row["frameIndex"] for row in plan["frameTasks"]
+                   if row["frameIndex"] > after]
+    else:
+        targets = [0] if after < 0 else []
+    for i in ([] if mode == "shots" else range(after + 1, manifest["frameCount"])):
         row = numeric["frames"][i]
-        if ((mode == "shots" and i in shot_indices) or mode == "every" or
+        if (mode == "every" or
                 (mode == "cuts" and row["cutCandidate"]) or
                 (mode == "changed" and row["changeFromPrevious"] and
                  row["changeFromPrevious"]["meanPixelDelta"] >= min_change) or
@@ -426,7 +404,7 @@ def scan_frames(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Agent-friendly frame-by-frame review")
-    parser.add_argument("command", choices=["show", "next", "shots", "motion", "annotate", "infer", "scan", "export", "cleanup"])
+    parser.add_argument("command", choices=["show", "next", "annotate", "infer", "scan", "export", "cleanup"])
     parser.add_argument("--workspace", type=Path, required=True)
     parser.add_argument("--index", type=int, default=0)
     parser.add_argument("--after", type=int, default=-1)
@@ -444,12 +422,6 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--categories", default="animation,typography,visual-style")
     parser.add_argument("--max-calls", type=int, default=24)
     parser.add_argument("--max-failures", type=int, default=3)
-    parser.add_argument("--shot-after", type=int, default=-1)
-    parser.add_argument("--shot-limit", type=int, default=12)
-    parser.add_argument("--min-shot-frames", type=int, default=4)
-    parser.add_argument("--max-motion-pairs", type=int, default=96)
-    parser.add_argument("--motion-stride", type=int, default=8)
-    parser.add_argument("--search-radius", type=int, default=3)
     parser.add_argument("--no-save", action="store_true", help="infer without saving an annotation")
     args = parser.parse_args(argv)
     try:
@@ -459,19 +431,6 @@ def main(argv: list[str] | None = None) -> int:
             result = next_frame(args.workspace, after=args.after,
                                 mode=args.mode or "every", min_change=args.min_change,
                                 interval=args.interval)
-        elif args.command == "shots":
-            result = show_shots(args.workspace, after_shot=args.shot_after,
-                                limit=args.shot_limit,
-                                minimum_shot_frames=args.min_shot_frames)
-        elif args.command == "motion":
-            from kumiki_reference_lab.pipeline.online_temporal import write_temporal_report
-            dest = write_temporal_report(
-                args.workspace, max_motion_pairs=args.max_motion_pairs,
-                stride=args.motion_stride,
-                minimum_shot_frames=args.min_shot_frames,
-                search_radius=args.search_radius,
-            )
-            result = {"savedTo": str(dest), "status": "sampled-numeric-motion-proxies"}
         elif args.command == "annotate":
             result = annotate_frame(
                 args.workspace, start=args.index, end=args.end,
