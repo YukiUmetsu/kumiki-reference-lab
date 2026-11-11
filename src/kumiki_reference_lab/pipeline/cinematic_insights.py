@@ -23,6 +23,9 @@ from kumiki_reference_lab.pipeline.shot_intelligence import (
 from kumiki_reference_lab.pipeline.temporal_motion import build_temporal_motion
 from kumiki_reference_lab.pipeline.screen_text import build_screen_text
 from kumiki_reference_lab.pipeline.seeded_subjects import build_seeded_region_tracks
+from kumiki_reference_lab.pipeline.motion_timing import (
+    build_seeded_motion_timing, propose_original_timing_recipes,
+)
 
 SCHEMA_VERSION = "kumiki.online-cinematic-insights.v1"
 
@@ -316,6 +319,7 @@ def analyze_cinematic_workspace(
             "status": "not-requested", "tracks": [],
             "screenRelationshipProxies": [],
         })
+    timing = build_seeded_motion_timing(subjects)
     notes = _read_optional_notes(
         reference.with_suffix(".frame-notes.json"),
         source_sha=manifest["sourceSha256"],
@@ -351,6 +355,8 @@ def analyze_cinematic_workspace(
         "temporalMotion": movement,
         "screenText": text,
         "seededSubjectTracks": subjects,
+        "seededMotionTiming": timing,
+        "kumikiTimingProposals": propose_original_timing_recipes(timing),
         "audioVisualCues": derive_audio_visual_hypotheses(shots, audio),
         "techniqueHypotheses": cues,
         "kumikiRecipeProposals": derive_kumiki_recipe_proposals(shots, cues),
@@ -358,6 +364,9 @@ def analyze_cinematic_workspace(
             "characterIdentity": (
                 "Use existing seeded ROI character tracker with verified identity; "
                 "anonymous optical-flow points cannot establish identity."),
+            "motionTiming": (
+                "Seeded box-center timing curves are normalized sampled hypotheses, "
+                "not recovered original animation keys, poses or easing settings."),
             "characterInteraction": (
                 "Pair character tracks only when contemporaneous boxes are independently "
                 "observed. Image overlap/relative movement alone is not a social interaction."),
