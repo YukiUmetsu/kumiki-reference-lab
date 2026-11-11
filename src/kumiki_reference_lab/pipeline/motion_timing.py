@@ -255,7 +255,8 @@ def build_seeded_motion_timing(
         raise ValueError("timing needs seeded ROI tracking evidence")
     status = seeded_tracks.get("status")
     source_sha = seeded_tracks.get("sourceSha256")
-    if status in ("not-requested", "not-run-install-pip-extra-dense"):
+    if status in ("not-requested", "not-run-install-pip-extra-dense",
+                  "not-measured-no-auto-regions"):
         # No ROI evidence must not erase source identity. The rest of the
         # cinematic report remains source-hashed, including abstention states.
         if numeric is not None:
