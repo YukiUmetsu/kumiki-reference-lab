@@ -6,6 +6,7 @@ frames to disk. FFmpeg showinfo PTS are validated against the decoded frame coun
 from __future__ import annotations
 
 import math
+import random
 import re
 import subprocess
 import tempfile
@@ -118,6 +119,9 @@ def analyze_all_frames(
     ]
     measured: list[dict[str, Any]] = []
     visual_samples: list[tuple[int, bytes]] = []
+    eligible_seen = 0
+    candidate_capacity = max(0, max_semantic_frames - 2)
+    selector = random.Random(int(metadata["source"]["sha256"][:16], 16))
     last: bytes | None = None
     with tempfile.TemporaryFile(mode="w+b") as log:
         try:
@@ -140,9 +144,20 @@ def analyze_all_frames(
                     "changeFromPrevious": delta,
                     "cutCandidate": cut,
                 })
-                if (len(visual_samples) < max_semantic_frames and
-                        (position == 0 or position % semantic_stride == 0 or cut)):
+                # Deterministic reservoir of eligible keyframes across the
+                # ENTIRE decoded duration; do not exhaust the budget in the
+                # first seconds. First and last frames are always represented.
+                if max_semantic_frames and position == 0:
                     visual_samples.append((position, _png_rgb(frame, width, height)))
+                elif candidate_capacity and (position % semantic_stride == 0 or cut):
+                    eligible_seen += 1
+                    if len(visual_samples) - 1 < candidate_capacity:
+                        visual_samples.append((position, _png_rgb(frame, width, height)))
+                    else:
+                        slot = selector.randrange(eligible_seen)
+                        if slot < candidate_capacity:
+                            visual_samples[1 + slot] = (
+                                position, _png_rgb(frame, width, height))
                 last = frame
             process.stdout.close()
             try:
@@ -182,6 +197,11 @@ def analyze_all_frames(
     if any(pts[i][1] <= pts[i - 1][1] for i in range(1, len(pts))):
         raise ValueError("decoded frame timestamps are not strictly increasing")
     require_unchanged(source, signature)
+    if (max_semantic_frames >= 2 and len(measured) > 1 and
+            all(i != len(measured) - 1 for i, _ in visual_samples)):
+        assert last is not None
+        visual_samples.append((len(measured) - 1, _png_rgb(last, width, height)))
+    visual_samples.sort(key=lambda item: item[0])
     raw_duration = metadata["video"]["durationSecondsReported"]
     try:
         duration = float(raw_duration) if raw_duration is not None else None
