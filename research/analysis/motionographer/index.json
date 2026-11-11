@@ -1,11 +1,11 @@
 {
   "schemaVersion": "kumiki.motionographer-index.v1",
-  "generatedAt": "2026-11-11T21:11:29.793086Z",
+  "generatedAt": "2026-11-11T21:11:49.598865Z",
   "catalogSha256": "23f813dafb11e546fc8c62f962bf435b8d7aa75e4a00f3c4179f6459e68b7893",
   "counts": {
-    "measured": 40,
+    "measured": 45,
     "no-video": 7385,
-    "pending": 23,
+    "pending": 18,
     "unsupported-format": 1053,
     "unsupported-host-not-allowlisted": 17,
     "unsupported-other-embed": 56,
@@ -9910,7 +9910,18 @@
       "mediaSlug": "Behaviors_C",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 35.083333,
+      "resolution": [
+        1610,
+        1000
+      ],
+      "sourceSha256": "638c14d9bf52864ed6785adf5a078d2b1077356733574cdb96f6239caa316dac",
+      "windowCount": 3,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.238164,
+      "meanSaturation": 0.519442,
+      "recordPath": "videos/from-motion-design-to-game-design-in-depth-process-behind-specimen--Behaviors_C.json"
     },
     {
       "postId": 58841,
@@ -9950,7 +9961,18 @@
       "mediaSlug": "CJ4y2OKUsAAVqkR",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 2.798,
+      "resolution": [
+        640,
+        360
+      ],
+      "sourceSha256": "3bd1e49b5efa3ebfb9cc7696928ce09c37421ec8872944541654f108f65fe78b",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.558415,
+      "meanSaturation": 0.070899,
+      "recordPath": "videos/game-of-thrones-sword-experience--CJ4y2OKUsAAVqkR.json"
     },
     {
       "postId": 58828,
@@ -10080,7 +10102,18 @@
       "mediaSlug": "stripe-checkout",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 5.36,
+      "resolution": [
+        1280,
+        720
+      ],
+      "sourceSha256": "46b7bc13b1f856fe903328bd7f5136eb1b9a78d457813b2e87e41a7e6095e80a",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.545184,
+      "meanSaturation": 0.518996,
+      "recordPath": "videos/user-interface-design-why-motion-matters--stripe-checkout.json"
     },
     {
       "postId": 58617,
@@ -10100,7 +10133,18 @@
       "mediaSlug": "stripe-verification2-desktop1",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 4.88,
+      "resolution": [
+        960,
+        540
+      ],
+      "sourceSha256": "b1913bec340fb2e506a1ce5fc362be45039150eba05a8e1d3e819bc2a896aefc",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.565208,
+      "meanSaturation": 0.452799,
+      "recordPath": "videos/user-interface-design-why-motion-matters--stripe-verification2-desktop1.json"
     },
     {
       "postId": 58617,
@@ -10120,7 +10164,18 @@
       "mediaSlug": "stripe-shake",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 4.76,
+      "resolution": [
+        1280,
+        720
+      ],
+      "sourceSha256": "a5601818840a79ad4f310e249a265e97eb5139f92e0d99a261b0533bd070d247",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.464337,
+      "meanSaturation": 0.041887,
+      "recordPath": "videos/user-interface-design-why-motion-matters--stripe-shake.json"
     },
     {
       "postId": 58617,
