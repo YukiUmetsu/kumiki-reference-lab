@@ -65,9 +65,15 @@ def _representatives(rows: list[dict[str, Any]], begin: int, stop: int) -> list[
     # Include the most visually dynamic frame inside a shot without
     # spending model budget on every frame.
     if stop - begin > 2:
+        changes = [rows[i]["changeFromPrevious"]["meanPixelDelta"]
+                   for i in range(begin + 1, stop)]
         active = max(range(begin + 1, stop),
                      key=lambda i: rows[i]["changeFromPrevious"]["meanPixelDelta"])
-        indices.add(active)
+        # In a static shot, a tiny noise fluctuation is not a meaningful
+        # fourth keyframe. Spend a weak model's visual budget elsewhere.
+        if changes and changes[active - begin - 1] >= max(
+                .05, 2 * statistics.median(changes)):
+            indices.add(active)
     return sorted(indices)
 
 
