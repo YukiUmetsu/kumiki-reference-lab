@@ -26,10 +26,15 @@ Do not reproduce copyrighted scenes or redistribute reference media.
 8. Never claim exact font family, verified identity, physical camera path or
    confirmed animation technique from low-resolution visual-model guesses.
    Use explicit uncertainty and source-frame evidence.
-9. Export through kumiki-frames export to
+9. Prefer `kumiki-frames scan --mode shots` when a small model should inspect
+   representative shot frames across a reference. Run `kumiki-insights` to
+   generate bounded shot, optical-flow, optional OCR and Kumiki recipe
+   proposals. Run `kumiki-catalog` to compare them by source SHA-256.
+   See docs/temporal-cinematic-intelligence.md.
+10. Export through kumiki-frames export to
    research/analysis/online-videos/<source-id>.frame-notes.json.
    Preserve source hashes, frame indices, timestamp ranges and confidence.
-10. Once review is complete, run kumiki-frames cleanup to remove ignored
+11. Once review is complete, run kumiki-frames cleanup to remove ignored
     preview PNGs. Do not add workspace/ or source videos to Git.
 
 No video host allowlist is required. However, only retrieve lawfully accessible
