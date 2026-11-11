@@ -1,11 +1,11 @@
 {
   "schemaVersion": "kumiki.motionographer-index.v1",
-  "generatedAt": "2026-11-11T21:08:54.220795Z",
+  "generatedAt": "2026-11-11T21:09:39.468808Z",
   "catalogSha256": "23f813dafb11e546fc8c62f962bf435b8d7aa75e4a00f3c4179f6459e68b7893",
   "counts": {
-    "measured": 10,
+    "measured": 15,
     "no-video": 7385,
-    "pending": 53,
+    "pending": 48,
     "unsupported-format": 1053,
     "unsupported-host-not-allowlisted": 17,
     "unsupported-other-embed": 56,
@@ -1930,7 +1930,18 @@
       "mediaSlug": "trozo-1recup",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 108.641975,
+      "resolution": [
+        640,
+        480
+      ],
+      "sourceSha256": "e8d2a47a6a95692ae74d6dbdc5aef65f681a5ebe2abd8fb5e310e156052f3e57",
+      "windowCount": 4,
+      "cutCandidateRatePerMinute": 7.5,
+      "meanDisplayLuma": 0.161755,
+      "meanSaturation": 0.117766,
+      "recordPath": "videos/mistborn--trozo-1recup.json"
     },
     {
       "postId": 77907,
@@ -1940,7 +1951,18 @@
       "mediaSlug": "Editing_Only46ShotsUsed-1",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 5.0,
+      "resolution": [
+        1350,
+        1350
+      ],
+      "sourceSha256": "effcb76a2361cb95b3affd9f64484b83110c086f716b9b30cb8cf144a23c8f69",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.265824,
+      "meanSaturation": 0.238189,
+      "recordPath": "videos/ai-for-good-life-is-plastic--Editing_Only46ShotsUsed-1.json"
     },
     {
       "postId": 77907,
@@ -1950,7 +1972,18 @@
       "mediaSlug": "3_RunwayGen2_Rendering-1",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 5.24,
+      "resolution": [
+        1350,
+        1350
+      ],
+      "sourceSha256": "768b1bf6a7bd36c11edc86338b0467cba840231f3a4d537cda52aadbb2588c13",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 195.0,
+      "meanDisplayLuma": 0.374825,
+      "meanSaturation": 0.293868,
+      "recordPath": "videos/ai-for-good-life-is-plastic--3_RunwayGen2_Rendering-1.json"
     },
     {
       "postId": 77907,
@@ -1960,7 +1993,18 @@
       "mediaSlug": "4_RunwayGen2_UpTo60RendersOfTheSameStillToGetAUsableClip",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 7.28,
+      "resolution": [
+        1350,
+        1350
+      ],
+      "sourceSha256": "6f6809b04ed0343d12a31ac422f4e27b2b48dc903aa5bf2dca8954ece6bf09f6",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.676709,
+      "meanSaturation": 0.40375,
+      "recordPath": "videos/ai-for-good-life-is-plastic--4_RunwayGen2_UpTo60RendersOfTheSameStillToGetAUsableClip.json"
     },
     {
       "postId": 77182,
@@ -1970,7 +2014,18 @@
       "mediaSlug": "AE-Kit",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 38.683333,
+      "resolution": [
+        2560,
+        1440
+      ],
+      "sourceSha256": "bf13dc02ed8c91a1244dea26450ca9879a6b5fc05f6a063013d7a11b92169994",
+      "windowCount": 3,
+      "cutCandidateRatePerMinute": 2.0,
+      "meanDisplayLuma": 0.187829,
+      "meanSaturation": 0.608564,
+      "recordPath": "videos/nickelodeon-global-rebrand-project-breakdown--AE-Kit.json"
     },
     {
       "postId": 77182,
