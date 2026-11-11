@@ -159,6 +159,11 @@ class SemanticAndRunnerTests(unittest.TestCase):
         self.assertEqual(result[0]["comparisonFrameIndex"], None)
         self.assertEqual(result[1]["comparisonFrameIndex"], 1)
         self.assertEqual(len(infer.call_args.args[0]), 2)
+        interrupted = analyze_visual_samples(
+            [(1, b"png1"), (8, b"png2")], model="localvision",
+            cut_candidate_indices=(5,))
+        self.assertIsNone(interrupted[1]["comparisonFrameIndex"])
+        self.assertEqual(len(infer.call_args.args[0]), 1)
 
     @patch("kumiki_reference_lab.pipeline.online_study.analyze_all_frames")
     @patch("kumiki_reference_lab.pipeline.online_study.download_public_video")
