@@ -1,11 +1,11 @@
 {
   "schemaVersion": "kumiki.motionographer-index.v1",
-  "generatedAt": "2026-11-11T21:12:28.906895Z",
+  "generatedAt": "2026-11-11T21:12:48.645831Z",
   "catalogSha256": "23f813dafb11e546fc8c62f962bf435b8d7aa75e4a00f3c4179f6459e68b7893",
   "counts": {
-    "measured": 55,
+    "measured": 60,
     "no-video": 7385,
-    "pending": 8,
+    "pending": 3,
     "unsupported-format": 1053,
     "unsupported-host-not-allowlisted": 17,
     "unsupported-other-embed": 56,
@@ -11445,7 +11445,18 @@
       "mediaSlug": "Emoji_Finale",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 12.041667,
+      "resolution": [
+        640,
+        640
+      ],
+      "sourceSha256": "7535ae3dc0dc984a96522223431d2561915a6209150c40f1fe510b26f01325f5",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.048664,
+      "meanSaturation": 0.046517,
+      "recordPath": "videos/tendril-relaunching-and-repositioning-in-a-shifting-landscape--Emoji_Finale.json"
     },
     {
       "postId": 57642,
@@ -11535,7 +11546,18 @@
       "mediaSlug": "chronemics-tree",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 11.0,
+      "resolution": [
+        800,
+        450
+      ],
+      "sourceSha256": "1e6f32564d3a997d8d89d7d6d08f269b8677a0db2fb76adce38a989d936f7924",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.79591,
+      "meanSaturation": 0.035658,
+      "recordPath": "videos/hybrid-by-birth-getting-to-know-animade--chronemics-tree.json"
     },
     {
       "postId": 57542,
@@ -11635,7 +11657,18 @@
       "mediaSlug": "makeup_1",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 4.3043,
+      "resolution": [
+        960,
+        540
+      ],
+      "sourceSha256": "fbeb3106f41d3af806deedc5ba21f400f10655a7ee2fcf62b64f920fff519ef9",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.64386,
+      "meanSaturation": 0.098249,
+      "recordPath": "videos/crafting-graphics-for-the-oscars-an-interview-with-henry-hobson--makeup_1.json"
     },
     {
       "postId": 57343,
@@ -11685,7 +11718,18 @@
       "mediaSlug": "detail-poetry",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 6.089417,
+      "resolution": [
+        1280,
+        720
+      ],
+      "sourceSha256": "f63641b5f8c3ef88caafe386dbde1735cc7a3bbb2961460781b871e341c79584",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 48.0,
+      "meanDisplayLuma": 0.636598,
+      "meanSaturation": 0.233113,
+      "recordPath": "videos/interactive-experiences-at-the-human-scale-making-centerstage-with-andrew-bell-and-lutz-vogel--detail-poetry.json"
     },
     {
       "postId": 56722,
@@ -11705,7 +11749,18 @@
       "mediaSlug": "detail-rooms",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 3.75375,
+      "resolution": [
+        1280,
+        720
+      ],
+      "sourceSha256": "14a0b6547b63ebb34b19ea76e5c91a87170eb4ca53ac9f5837aa1cc021100a18",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.422261,
+      "meanSaturation": 0.193868,
+      "recordPath": "videos/interactive-experiences-at-the-human-scale-making-centerstage-with-andrew-bell-and-lutz-vogel--detail-rooms.json"
     },
     {
       "postId": 56722,
