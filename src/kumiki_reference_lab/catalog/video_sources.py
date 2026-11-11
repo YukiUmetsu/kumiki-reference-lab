@@ -28,7 +28,7 @@ _CATEGORIES = {
     "Hardware": "hardware", "Other": "other",
 }
 _RIGHTS = {"usage": "inspiration-only", "redistributionAuthorized": False}
-_PROVIDERS = {"all", "youtube", "whatships"}
+_PROVIDERS = {"all", "youtube", "whatships", "directors-library"}
 
 
 def _unique_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -184,12 +184,31 @@ def _from_youtube(data: dict[str, Any]) -> list[dict[str, Any]]:
     } for item in data["entries"]]
 
 
-def load_source_references(youtube_root: Path, whatships_path: Path) -> dict[str, Any]:
+def load_source_references(youtube_root: Path, whatships_path: Path,
+                           directors_library_path: Path | None = None) -> dict[str, Any]:
     """Validate and combine metadata; perform no HTTP or video downloads."""
     youtube = load_popular_videos(youtube_root)
     whatships = _load_snapshot(whatships_path)
     entries = _from_youtube(youtube) + _from_whatships(whatships)
-    return {"schemaVersion": SCHEMA_VERSION, "retrievedOn": whatships["retrievedOn"],
+    retrieved_on = whatships["retrievedOn"]
+    if directors_library_path is not None:
+        # Local import avoids a module cycle: the Directors' Library parser
+        # reuses the strict duplicate-property JSON decoder above.
+        from kumiki_reference_lab.catalog.directors_library import load_snapshot
+
+        directors = load_snapshot(directors_library_path)
+        entries.extend({
+            "id": item["id"], "provider": "directors-library", "title": item["title"],
+            "creator": ", ".join(item["directors"]), "category": item["category"],
+            "watchUrl": item["watchUrl"], "originalUrl": item["playerUrl"],
+            "publishedOn": item["sitePublishedOn"], "durationSeconds": None,
+            "views": None, "viewsCapturedAt": None,
+            "tags": [item["subcategory"]] if item["subcategory"] else [],
+            "description": "", "evidenceStatus": "detail-snapshot",
+            "reviewStatus": "metadata-only-not-frame-reviewed", "rights": dict(_RIGHTS),
+        } for item in directors["videos"])
+        retrieved_on = max(retrieved_on, directors["retrievedOn"])
+    return {"schemaVersion": SCHEMA_VERSION, "retrievedOn": retrieved_on,
             "entries": entries}
 
 
@@ -197,7 +216,7 @@ def search_source_references(collection: dict[str, Any], query: str = "", *,
                              provider: str = "all", min_views: int = 0,
                              limit: int = 20) -> list[dict[str, Any]]:
     if not isinstance(provider, str) or provider not in _PROVIDERS:
-        raise ValueError("provider must be all, youtube or whatships")
+        raise ValueError("provider must be all, youtube, whatships or directors-library")
     if not isinstance(query, str):
         raise ValueError("query must be text")
     if type(min_views) is not int or min_views < 0:
