@@ -46,6 +46,8 @@ The progress report distinguishes `requestedWindowSpanFraction` from true analys
 
 This worker currently executes the character and pair-interaction video pipeline. It does **not** produce authenticated camera/lens movement, real-world lighting setup, soundtrack classifications or detailed cinematography summaries. Those require separate timestamped visual/audio evidence and explicit review.
 
+The [separate numeric visual backfill](whatships-visual-backfill.md) can now revisit every completed source's original time windows without rerunning the character VLM, retaining measured cut/color/image-change evidence in a distinct source-hashed progress ledger. Those visual proxies remain unreviewed, not actual camera/light classifications.
+
 ## Progress toward all What Ships videos
 
 The November 10 catalog indexes 2,861 videos, but the site is a directory, not an authorized source-video CDN. The worker can analyze only those whose media is separately available with permission and bound privately. The backlog remains explicit for unbound films; no amount of metadata enrichment can replace actually observing their footage.
