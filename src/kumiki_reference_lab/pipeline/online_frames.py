@@ -109,7 +109,7 @@ def analyze_all_frames(
     pixels = width * height * 3
     command = [
         ffmpeg, "-hide_banner", "-nostdin", "-loglevel", "info",
-        "-i", str(source.resolve()), "-map", "0:v:0", "-an", "-sn", "-dn",
+        "-i", str(source.resolve()), "-map", f"0:{metadata['video']['streamIndex']}", "-an", "-sn", "-dn",
         "-t", str(max_seconds), "-vf",
         f"scale={width}:{height}:force_original_aspect_ratio=decrease,"
         f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2,showinfo",
