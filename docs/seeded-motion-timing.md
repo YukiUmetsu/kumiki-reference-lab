@@ -71,6 +71,16 @@ The calculation uses no model call, source video or frame pixels; it consumes
 existing measured ROI trajectories. Low-capacity local Magnitude models
 remain useful for separate visual classification.
 
+## Multi-region temporal evidence
+
+When several regions are tracked in the same candidate shot, the
+`multiRegionTemporal` field records explicit frame-bound events such as
+screen-center approach/separation, overlap onset, left-right order changes
+and shared image displacement. These are geometry measurements, not
+verified social interactions or skeletal animation. It includes bounded
+review frames for later inspection. See
+[online multi-region temporal events](online-multi-region-temporal-events.md).
+
 ## Test
 
     PYTHONPATH=src python -m unittest tests.test_motion_timing -q
