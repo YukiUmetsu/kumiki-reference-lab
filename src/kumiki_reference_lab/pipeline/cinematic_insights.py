@@ -22,6 +22,7 @@ from kumiki_reference_lab.pipeline.shot_intelligence import (
 )
 from kumiki_reference_lab.pipeline.temporal_motion import build_temporal_motion
 from kumiki_reference_lab.pipeline.screen_text import build_screen_text
+from kumiki_reference_lab.pipeline.seeded_subjects import build_seeded_region_tracks
 
 SCHEMA_VERSION = "kumiki.online-cinematic-insights.v1"
 
@@ -285,6 +286,7 @@ def analyze_cinematic_workspace(
     workspace: Path, *, motion: bool = True, ocr: bool = False,
     max_motion_pairs: int = 120, max_ocr_frames: int = 48,
     max_plan_frames: int = 48, overwrite: bool = False,
+    roi_seeds: Path | None = None, max_roi_frames: int = 240,
 ) -> Path:
     manifest, numeric, reference = load_workspace(workspace)
     if any(type(v) is not bool for v in (motion, ocr, overwrite)):
@@ -304,6 +306,12 @@ def analyze_cinematic_workspace(
         if ocr else {
             "status": "not-requested", "observedFrames": [],
             "textMotionCandidates": [],
+        })
+    subjects = (build_seeded_region_tracks(
+        workspace, shots, roi_seeds, max_frames_per_subject=max_roi_frames)
+        if roi_seeds is not None else {
+            "status": "not-requested", "tracks": [],
+            "screenRelationshipProxies": [],
         })
     notes = _read_optional_notes(
         reference.with_suffix(".frame-notes.json"),
@@ -333,6 +341,7 @@ def analyze_cinematic_workspace(
         "shotAwareAgentPlan": plan,
         "temporalMotion": movement,
         "screenText": text,
+        "seededSubjectTracks": subjects,
         "audioVisualCues": derive_audio_visual_hypotheses(shots, audio),
         "techniqueHypotheses": cues,
         "kumikiRecipeProposals": derive_kumiki_recipe_proposals(shots, cues),
@@ -364,6 +373,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-motion-pairs", type=int, default=120)
     parser.add_argument("--max-ocr-frames", type=int, default=48)
     parser.add_argument("--max-plan-frames", type=int, default=48)
+    parser.add_argument("--roi-seeds", type=Path,
+                        help="optional small local ROI seed JSON for known subject regions")
+    parser.add_argument("--max-roi-frames", type=int, default=240)
     parser.add_argument("--overwrite", action="store_true")
     opts = parser.parse_args(argv)
     try:
@@ -372,6 +384,7 @@ def main(argv: list[str] | None = None) -> int:
             max_motion_pairs=opts.max_motion_pairs,
             max_ocr_frames=opts.max_ocr_frames,
             max_plan_frames=opts.max_plan_frames, overwrite=opts.overwrite,
+            roi_seeds=opts.roi_seeds, max_roi_frames=opts.max_roi_frames,
         )
     except (ValueError, OSError, KeyError, TypeError, json.JSONDecodeError) as exc:
         parser.exit(2, f"cinematic intelligence failed: {exc}\n")
