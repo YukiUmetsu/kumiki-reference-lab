@@ -15,6 +15,7 @@ from unittest.mock import patch
 from kumiki_reference_lab.pipeline.agent_frame_review import (
     finalize_frame_workspace, scan_frames,
 )
+from kumiki_reference_lab.analyzers.motion.review import _png_rgb
 from kumiki_reference_lab.pipeline.cinematic_catalog import (
     build_cinematic_catalog, search_cinematic_catalog,
 )
@@ -86,8 +87,10 @@ def fixture(root: Path) -> Path:
     workspace = root / "workspace" / "frame-review" / identifier
     (workspace / "frames").mkdir(parents=True)
     for i in range(24):
+        value = 204 if i >= 12 else 64
+        raw = bytes([value, value, value]) * (160 * 90)
         (workspace / "frames" / f"frame-{i:06d}.png").write_bytes(
-            b"\x89PNG\r\n\x1a\npreview-test-bytes")
+            _png_rgb(raw, 160, 90))
     finalize_frame_workspace(
         workspace, study_id=identifier,
         watch_url="https://example.org/example",
@@ -245,7 +248,13 @@ class CinematicIntegrationTests(unittest.TestCase):
         with patch.dict(sys.modules, {"cv2": None}):
             motion = build_temporal_motion(
                 self.workspace, build_shot_intelligence(evidence()))
-        self.assertEqual(motion["status"], "not-run-install-pip-extra-dense")
+        self.assertEqual(motion["status"], "measured-sampled-stdlib-block-motion-proxies")
+        self.assertTrue(motion["pairs"])
+        self.assertFalse(motion["featureTracklets"])
+        self.assertTrue(all(
+            p["globalImageMotion"]["status"] != "supported-screen-affine-candidate"
+            for p in motion["pairs"]
+        ))
 
     def test_bounded_seeded_subjects_and_relationship_geometry(self):
         seed = {
