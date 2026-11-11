@@ -233,7 +233,8 @@ def analyze_seeded_track(track: dict[str, Any], *,
 
 def build_seeded_motion_timing(
     seeded_tracks: dict[str, Any], *, min_observations: int = 8,
-    max_tracks: int = 8,
+    max_tracks: int = 8, numeric: dict[str, Any] | None = None,
+    shot_plan: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Convert existing ROI track observations to bounded timing proposals."""
     if type(max_tracks) is not int or not 1 <= max_tracks <= 8:
@@ -257,12 +258,45 @@ def build_seeded_motion_timing(
     tracks = seeded_tracks.get("tracks")
     if not isinstance(tracks, list) or len(tracks) > max_tracks:
         raise ValueError("timing tracks exceed maximum budget")
+    frames = None
+    if numeric is not None:
+        if (not isinstance(numeric, dict)
+                or numeric.get("sourceSha256") != source_sha
+                or not isinstance(numeric.get("frames"), list)
+                or numeric.get("frameCount") != len(numeric["frames"])):
+            raise ValueError("timing source-hash or frame evidence mismatch")
+        frames = numeric["frames"]
+    shots = None
+    if shot_plan is not None:
+        if (not isinstance(shot_plan, dict)
+                or shot_plan.get("sourceSha256") != source_sha
+                or not isinstance(shot_plan.get("shots"), list)):
+            raise ValueError("timing shot plan and seed source mismatch")
+        shots = {s["shotId"]: s for s in shot_plan["shots"]}
     seen: set[str] = set()
     results = []
     for track in tracks:
         if not isinstance(track, dict) or track.get("id") in seen:
             raise ValueError("duplicate or invalid seed track")
         seen.add(track.get("id"))
+        observations = track.get("observations")
+        if not isinstance(observations, list):
+            raise ValueError("timing track has no observations")
+        if shots is not None:
+            shot = shots.get(track.get("shotId"))
+            if shot is None or any(
+                    not shot["startFrameIndex"] <= row.get("frameIndex", -1) <
+                    shot["endFrameIndexExclusive"] for row in observations):
+                raise ValueError("timing track crosses or lacks its source shot")
+        if frames is not None:
+            for row in observations:
+                index = row.get("frameIndex")
+                if (type(index) is not int or not 0 <= index < len(frames)
+                        or frames[index]["frameIndex"] != index
+                        or abs(_finite(row.get("decodedSeconds"), "sample time")
+                               - _finite(frames[index].get("decodedSeconds"),
+                                         "source frame time")) > 0.00001):
+                    raise ValueError("timing seed observation/source time mismatch")
         results.append(analyze_seeded_track(
             track, min_observations=min_observations))
     return {
