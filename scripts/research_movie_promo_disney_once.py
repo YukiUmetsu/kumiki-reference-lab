@@ -37,7 +37,7 @@ def run(*command: str, output: bool = False) -> str:
     result = subprocess.run(command, text=True, capture_output=True)
     if result.returncode:
         # CDN endpoints may contain temporary access tokens; redact all URLs.
-        safe = re.sub(r"https?://\\S+", "[redacted-url]", (result.stderr or "")[-1800:])
+        safe = re.sub(r"https?://\S+", "[redacted-url]", (result.stderr or "")[-1800:])
         raise RuntimeError(f"{command[0]} failed with code {result.returncode}: {safe}")
     return result.stdout if output else ""
 
