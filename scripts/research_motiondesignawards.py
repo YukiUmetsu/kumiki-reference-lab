@@ -22,8 +22,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import shlex
 import shutil
+import statistics
 import sys
 import tempfile
 import time
@@ -55,6 +58,8 @@ INDEX_SCHEMA = "kumiki.motiondesignawards-index.v1"
 VIDEO_SCHEMA = "kumiki.motiondesignawards-video-evidence.v1"
 STILL_SCHEMA = "kumiki.motiondesignawards-still-evidence.v1"
 STILLS_INDEX_SCHEMA = "kumiki.motiondesignawards-stills-index.v1"
+AGGREGATE_SCHEMA = "kumiki.motiondesignawards-aggregate.v1"
+DEFAULT_TOP = 20
 EVIDENCE_STATUS = "sampled-original-source-pts-metrics-not-expert-reviewed"
 STILL_EVIDENCE_STATUS = "single-published-still-metrics-not-video-measurement"
 RIGHTS_BASIS = "user-declared-research-use"
@@ -638,6 +643,704 @@ def run_stills(
         jobs=jobs, delay_seconds=delay_seconds, log=log)
 
 
+# ---------------------------------------------------------------------------
+# report: read-only, evidence-bound aggregation of the collected records
+# ---------------------------------------------------------------------------
+
+_NULL_CELL = "—"
+DETAIL_LIMIT_REMINDER = (
+    "sampled source-PTS windows only (not full-film review); numeric display-RGB "
+    "and cut-candidate proxies are not style, quality, lighting, editing-intent, "
+    "or authorship labels.")
+
+
+def _write_text_atomic(path: Path, text: str) -> Path:
+    """Commit one UTF-8 text file via a same-directory temp file and rename."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    staging = tempfile.NamedTemporaryFile(
+        "w", encoding="utf-8", dir=path.parent, prefix=path.name + ".",
+        suffix=".tmp", delete=False)
+    temporary = Path(staging.name)
+    try:
+        with staging:
+            staging.write(text)
+            staging.flush()
+            os.fsync(staging.fileno())
+        os.replace(temporary, path)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+    return path
+
+
+def _load_records(directory: Path, expected_schema: str, *, prefix: str,
+                  ) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
+    """Read every ``*.json`` record in stable name order; isolate bad files."""
+    records: list[dict[str, Any]] = []
+    problems: list[dict[str, str]] = []
+    if not directory.is_dir():
+        return records, problems
+    for path in sorted(directory.glob("*.json")):
+        relative = f"{prefix}/{path.name}"
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as error:
+            problems.append({"file": relative,
+                             "reason": f"{type(error).__name__}: {error}"})
+            continue
+        if not isinstance(payload, dict):
+            problems.append({"file": relative,
+                             "reason": "record is not a JSON object"})
+            continue
+        if payload.get("schemaVersion") != expected_schema:
+            problems.append({
+                "file": relative,
+                "reason": f"unexpected schemaVersion {payload.get('schemaVersion')!r}"})
+            continue
+        records.append(payload)
+    return records, problems
+
+
+def _load_json_context(path: Path | None, *, prefix: str,
+                       ) -> tuple[dict[str, Any] | None, list[dict[str, str]]]:
+    """Read a non-record JSON document (catalog/index); tolerate absence."""
+    if path is None or not path.is_file():
+        return None, []
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        return None, [{"file": prefix,
+                       "reason": f"{type(error).__name__}: {error}"}]
+    if not isinstance(payload, dict):
+        return None, [{"file": prefix, "reason": "document is not a JSON object"}]
+    return payload, []
+
+
+def _record_key(record: dict[str, Any]) -> tuple[str, str]:
+    project_id = as_text(record.get("projectId"))
+    if project_id is not None:
+        return ("projectId", project_id)
+    slug = as_text(record.get("slug"))
+    return ("slug", slug) if slug is not None else ("unknown", "")
+
+
+def _award_types(catalog: dict[str, Any]) -> list[str]:
+    awards = catalog.get("awards")
+    if not isinstance(awards, list):
+        return []
+    ordered = [text for award in awards if isinstance(award, dict)
+               for text in (as_text(award.get("type")),) if text is not None]
+    return list(dict.fromkeys(ordered))
+
+
+def _mean_pair_delta_per_second(probe: dict[str, Any]) -> float | None:
+    pairs = probe.get("sampledFramePairs")
+    if not isinstance(pairs, list):
+        return None
+    values = [value for pair in pairs if isinstance(pair, dict)
+              for value in (finite_float(
+                  pair.get("meanAbsoluteDisplayRgbDeltaPerSecond")),)
+              if value is not None]
+    return round(statistics.mean(values), 6) if values else None
+
+
+def _window_row(window: object) -> dict[str, Any]:
+    if not isinstance(window, dict):
+        window = {}
+    probe = window.get("probe") if isinstance(window.get("probe"), dict) else {}
+    summary = (probe.get("sampledWindowSummary")
+               if isinstance(probe.get("sampledWindowSummary"), dict) else {})
+    frames = probe.get("sampledFrames")
+    start = finite_float(window.get("startSeconds"))
+    end = finite_float(window.get("endSeconds"))
+    seconds = (round(end - start, 6)
+               if start is not None and end is not None else None)
+    return {
+        "startSeconds": start,
+        "endSeconds": end,
+        "windowSeconds": seconds,
+        "sampledFrames": len(frames) if isinstance(frames, list) else None,
+        "cutCandidates": as_int(
+            summary.get("cutCandidateCountBetweenFirstAndLastSample")),
+        "meanDisplayLuma": finite_float(
+            summary.get("meanSampledDisplayLumaProxy")),
+        "meanSaturation": finite_float(
+            summary.get("meanSampledSaturationProxy")),
+        "withinShotDeltaPerSecond": _mean_pair_delta_per_second(probe),
+        "cutSeparatedPairs": as_int(summary.get("cutSeparatedPairs")),
+    }
+
+
+def _video_row(record: dict[str, Any]) -> dict[str, Any]:
+    """Derive the per-video table row strictly from embedded record fields."""
+    catalog = record.get("catalog") if isinstance(record.get("catalog"), dict) else {}
+    scores = catalog.get("scores") if isinstance(catalog.get("scores"), dict) else {}
+    source = record.get("source") if isinstance(record.get("source"), dict) else {}
+    acquisition = (record.get("acquisition")
+                   if isinstance(record.get("acquisition"), dict) else {})
+    coverage = record.get("coverage") if isinstance(record.get("coverage"), dict) else {}
+    summary = record.get("summary") if isinstance(record.get("summary"), dict) else {}
+    resolution = source.get("resolution")
+    resolution_text = None
+    if isinstance(resolution, list) and len(resolution) == 2:
+        width, height = as_int(resolution[0]), as_int(resolution[1])
+        if width is not None and height is not None:
+            resolution_text = f"{width}x{height}"
+    frame_rate = (source.get("frameRate")
+                  if isinstance(source.get("frameRate"), dict) else {})
+    numerator = finite_float(frame_rate.get("numerator"))
+    denominator = finite_float(frame_rate.get("denominator"))
+    fps = (round(numerator / denominator, 6)
+           if numerator is not None and denominator else None)
+    duration = finite_float(source.get("durationSeconds"))
+    size = finite_float(source.get("sizeBytes"))
+    bitrate = (round(size * 8 / duration / 1_000_000, 6)
+               if size is not None and duration is not None and duration > 0
+               else None)
+    windows = record.get("windows") if isinstance(record.get("windows"), list) else []
+    window_rows = [_window_row(window) for window in windows]
+    cut_separated = [row["cutSeparatedPairs"] for row in window_rows
+                     if row["cutSeparatedPairs"] is not None]
+    fraction = finite_float(coverage.get("fractionOfRuntime"))
+    return {
+        "slug": record.get("slug"),
+        "title": catalog.get("title"),
+        "studio": catalog.get("studio"),
+        "category": catalog.get("category"),
+        "awards": _award_types(catalog),
+        "waOverall": finite_float(scores.get("overall")),
+        "provider": acquisition.get("provider"),
+        "runtimeSeconds": duration,
+        "resolution": resolution_text,
+        "fps": fps,
+        "bitrateMbps": bitrate,
+        "downloadMb": (round(size / (1024 * 1024), 6)
+                       if size is not None else None),
+        "windowsMeasured": as_int(coverage.get("windowsMeasured")),
+        "coveragePercent": round(fraction * 100, 6) if fraction is not None else None,
+        "sampledSeconds": finite_float(coverage.get("sampledSeconds")),
+        "cutCandidates": as_int(summary.get("cutCandidates")),
+        "cutsPerMinute": finite_float(summary.get("cutCandidateRatePerMinute")),
+        "meanDisplayLuma": finite_float(summary.get("meanDisplayLuma")),
+        "meanSaturation": finite_float(summary.get("meanSaturation")),
+        "meanWithinShotDeltaPerSecond": finite_float(
+            summary.get("meanWithinShotRgbDeltaPerSecond")),
+        "cutSeparatedPairs": sum(cut_separated) if cut_separated else None,
+        "windowRows": window_rows,
+    }
+
+
+def _video_order(row: dict[str, Any]) -> tuple[bool, float, str]:
+    """Catalog order: descending wa_overall, then slug ascending."""
+    score = row.get("waOverall")
+    return (score is None, -(score or 0.0), str(row.get("slug") or ""))
+
+
+def _table_row(row: dict[str, Any]) -> dict[str, Any]:
+    return {key: value for key, value in row.items() if key != "windowRows"}
+
+
+def _distribution(values: Iterable[float | None], *,
+                  digits: int = 6) -> dict[str, Any]:
+    numbers = [value for value in values if value is not None]
+    if not numbers:
+        return {"n": 0, "min": None, "median": None, "max": None}
+    return {"n": len(numbers), "min": round(min(numbers), digits),
+            "median": round(statistics.median(numbers), digits),
+            "max": round(max(numbers), digits)}
+
+
+def _counter(values: Iterable[object]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for value in values:
+        text = as_text(value) or "unknown"
+        counts[text] = counts.get(text, 0) + 1
+    return {key: counts[key] for key in sorted(counts)}
+
+
+def _award_counts(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
+    counts: dict[str, int] = {}
+    without = 0
+    for row in rows:
+        awards = row.get("awards") if isinstance(row.get("awards"), list) else []
+        if not awards:
+            without += 1
+        for award in awards:
+            text = str(award)
+            counts[text] = counts.get(text, 0) + 1
+    return {"byType": {key: counts[key] for key in sorted(counts)},
+            "rowsWithoutAward": without}
+
+
+def _coverage_aggregate(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
+    runtimes = [row["runtimeSeconds"] for row in rows
+                if row.get("runtimeSeconds") is not None
+                and row["runtimeSeconds"] > 0]
+    paired = [(row["runtimeSeconds"], row["sampledSeconds"]) for row in rows
+              if row.get("runtimeSeconds") is not None
+              and row["runtimeSeconds"] > 0
+              and row.get("sampledSeconds") is not None]
+    total_runtime = round(sum(runtime for runtime, _ in paired), 6) if paired else 0.0
+    total_sampled = round(sum(sampled for _, sampled in paired), 6) if paired else 0.0
+    return {
+        "recordsWithRuntime": len(runtimes),
+        "recordsWithCoverage": len(paired),
+        "totalRuntimeSeconds": total_runtime,
+        "totalSampledSeconds": total_sampled,
+        "sampledFractionOfTotalRuntime": (
+            round(total_sampled / total_runtime, 6) if total_runtime else None),
+        "perRecordCoveragePercent": _distribution(
+            row.get("coveragePercent") for row in rows),
+    }
+
+
+def _skip_reasons(index: dict[str, Any] | None) -> dict[str, int]:
+    rows = index.get("skips") if isinstance(index, dict) else None
+    if not isinstance(rows, list):
+        return {}
+    counts: dict[str, int] = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        reason = as_text(row.get("reason")) or "unknown"
+        counts[reason] = counts.get(reason, 0) + 1
+    return {key: counts[key] for key in sorted(counts)}
+
+
+def _index_measured(index: dict[str, Any] | None) -> int | None:
+    if not isinstance(index, dict):
+        return None
+    counts = index.get("counts")
+    if isinstance(counts, dict):
+        measured = as_int(counts.get("measured"))
+        if measured is not None:
+            return measured
+    rows = index.get("records")
+    return len(rows) if isinstance(rows, list) else None
+
+
+def _list_length(index: dict[str, Any] | None, key: str) -> int:
+    rows = index.get(key) if isinstance(index, dict) else None
+    return len(rows) if isinstance(rows, list) else 0
+
+
+def _still_metrics(record: dict[str, Any]) -> dict[str, Any]:
+    still = record.get("still") if isinstance(record.get("still"), dict) else {}
+    metrics = still.get("metrics") if isinstance(still.get("metrics"), dict) else {}
+    return metrics
+
+
+def _latest_timestamp(records: Iterable[dict[str, Any]],
+                      catalog: dict[str, Any] | None) -> str | None:
+    stamps = [text for record in records
+              for text in (as_text(record.get("generatedAt")),)
+              if text is not None]
+    if stamps:
+        return max(stamps)
+    return as_text(catalog.get("retrievedAt")) if isinstance(catalog, dict) else None
+
+
+def _num(value: float | None, digits: int = 2) -> str:
+    return _NULL_CELL if value is None else f"{value:.{digits}f}"
+
+
+def _int(value: int | None) -> str:
+    return _NULL_CELL if value is None else str(value)
+
+
+def _cell(value: object) -> str:
+    text = _NULL_CELL if value is None else str(value)
+    if not text:
+        text = _NULL_CELL
+    return text.replace("|", "\\|").replace("\n", " ")
+
+
+def _reproduce_commands(*, out_dir: Path, catalog_path: Path,
+                        limit: int | None, top: int) -> list[str]:
+    out, catalog = shlex.quote(str(out_dir)), shlex.quote(str(catalog_path))
+    report = (f"python scripts/research_motiondesignawards.py report "
+              f"--out-dir {out} --catalog {catalog}")
+    if limit is not None:
+        report += f" --limit {limit}"
+    report += f" --top {top}"
+    return [
+        "python scripts/research_motiondesignawards.py catalog "
+        f"--out {catalog}",
+        "python scripts/research_motiondesignawards.py stills "
+        f"--catalog {catalog} --out-dir {out} --resume",
+        "python scripts/research_motiondesignawards.py collect "
+        f"--catalog {catalog} --out-dir {out} --acknowledge-rights",
+        report,
+    ]
+
+
+def _render_report(aggregate: dict[str, Any], *,
+                   out_dir: Path, catalog_path: Path,
+                   limit: int | None, top: int) -> str:
+    counts = aggregate["counts"]
+    video_rows = aggregate["videos"]
+    details = aggregate["details"]
+    video_aggregates = aggregate["aggregates"]
+    stills = aggregate["stills"]
+    lines: list[str] = []
+
+    def add(text: str = "") -> None:
+        lines.append(text)
+
+    add("# Motion Design Awards — measured reference report")
+    add()
+    add("This deliverable tabulates only what the committed evidence records "
+        "contain: catalog metadata, sampled source-PTS numeric probes, and "
+        "single-published-still metrics. It makes no aesthetic, stylistic, "
+        "intentional, or authorship claim.")
+    add()
+
+    add("## Provenance")
+    add()
+    add(f"- Catalog projects: {_int(counts['catalogProjects'])}")
+    add(f"- Video-measured records: {_int(counts['videoMeasured'])}")
+    add(f"- Still-measured records: {_int(counts['stillMeasured'])}")
+    add(f"- Still-only records (no matching video record): {_int(counts['stillOnly'])}")
+    add(f"- Skipped unsupported (index context): {_int(counts['skippedUnsupported'])}")
+    add(f"- Skipped as already-measured (index context): {_int(counts['skippedResume'])}")
+    add(f"- Failed video acquisitions (index context): {_int(counts['failed'])}")
+    add(f"- Failed still acquisitions (stills index context): {_int(counts['stillFailed'])}")
+    add(f"- Unreadable records: {_int(counts['unreadable'])}")
+    add(f"- generatedAt: {_cell(aggregate.get('generatedAt'))}")
+    if limit is not None:
+        add(f"- `--limit {limit}` applied: the first {len(video_rows)} of "
+            f"{counts['videoMeasuredTotal']} video-measured records (catalog order) "
+            "are tabulated and aggregated.")
+    if (counts["indexReportedVideoMeasured"] is not None
+            and counts["indexReportedVideoMeasured"] != counts["videoMeasuredTotal"]):
+        add(f"- Note: index.json reports {counts['indexReportedVideoMeasured']} "
+            f"measured video records while the record directory holds "
+            f"{counts['videoMeasuredTotal']}; this report reads the record files.")
+    if (counts["indexReportedStillMeasured"] is not None
+            and counts["indexReportedStillMeasured"] != counts["stillMeasured"]):
+        add(f"- Note: stills-index.json reports {counts['indexReportedStillMeasured']} "
+            f"measured stills while the record directory holds "
+            f"{counts['stillMeasured']}.")
+    add()
+    add("Reproduce the inputs and this report with:")
+    add()
+    add("```bash")
+    for command in _reproduce_commands(
+            out_dir=out_dir, catalog_path=catalog_path, limit=limit, top=top):
+        add(command)
+    add("```")
+    add()
+    add("Sampling caveat: coverage is `windows measured × window seconds ÷ "
+        "runtime`; every window is a sample, not a full-film review. "
+        "Across the tabulated records, "
+        f"{_num(video_aggregates['coverage']['totalSampledSeconds'], 1)} s of "
+        f"{_num(video_aggregates['coverage']['totalRuntimeSeconds'], 1)} s of "
+        "runtime were measured "
+        f"({_num((video_aggregates['coverage']['sampledFractionOfTotalRuntime'] or 0) * 100, 1)}%). "
+        "Per-record coverage percentages appear in the table below.")
+    add()
+
+    add("## Per-video analysis")
+    add()
+    add(f"{len(video_rows)} video-measured record(s), ordered by descending "
+        "`wa_overall` then slug. All columns are numeric record fields; "
+        "`bitrate_mbps` is derived from `sizeBytes ÷ durationSeconds` and "
+        "`download_mb` from `sizeBytes ÷ 1,048,576`.")
+    add()
+    columns = (
+        "slug", "title", "studio", "category", "awards", "wa_overall",
+        "provider", "runtime_s", "resolution", "fps", "bitrate_mbps",
+        "download_mb", "windows", "coverage_pct", "cuts", "cuts_per_min",
+        "mean_luma", "mean_sat", "delta_per_s", "cut_sep_pairs")
+    add("| " + " | ".join(columns) + " |")
+    add("| " + " | ".join("---" for _ in columns) + " |")
+    for row in video_rows:
+        values = (
+            row["slug"], row["title"], row["studio"], row["category"],
+            ", ".join(row["awards"]) or None, _num(row["waOverall"], 2),
+            row["provider"], _num(row["runtimeSeconds"], 2), row["resolution"],
+            _num(row["fps"], 3), _num(row["bitrateMbps"], 2),
+            _num(row["downloadMb"], 1), _int(row["windowsMeasured"]),
+            _num(row["coveragePercent"], 1), _int(row["cutCandidates"]),
+            _num(row["cutsPerMinute"], 2), _num(row["meanDisplayLuma"], 4),
+            _num(row["meanSaturation"], 4),
+            _num(row["meanWithinShotDeltaPerSecond"], 4),
+            _int(row["cutSeparatedPairs"]))
+        add("| " + " | ".join(_cell(value) for value in values) + " |")
+    add()
+
+    add(f"## Per-video detail (top {len(details)} by wa_overall)")
+    add()
+    if not details:
+        add("No video-measured records.")
+        add()
+    for row, detail in zip(video_rows, details):
+        add(f"### {_cell(row['slug'])} — {_cell(row['title'])}")
+        add()
+        add("| field | value |")
+        add("| --- | --- |")
+        for label, value in (
+                ("title", row["title"]), ("studio", row["studio"]),
+                ("category", row["category"]),
+                ("awards", ", ".join(row["awards"]) or None),
+                ("wa_overall", _num(row["waOverall"], 2)),
+                ("provider", row["provider"]),
+                ("runtime_s", _num(row["runtimeSeconds"], 2)),
+                ("resolution", row["resolution"]), ("fps", _num(row["fps"], 3)),
+                ("bitrate_mbps", _num(row["bitrateMbps"], 2)),
+                ("download_mb", _num(row["downloadMb"], 1)),
+                ("windows", _int(row["windowsMeasured"])),
+                ("coverage_pct", _num(row["coveragePercent"], 1)),
+                ("cuts", _int(row["cutCandidates"])),
+                ("cuts_per_min", _num(row["cutsPerMinute"], 2)),
+                ("mean_luma", _num(row["meanDisplayLuma"], 4)),
+                ("mean_sat", _num(row["meanSaturation"], 4)),
+                ("delta_per_s", _num(row["meanWithinShotDeltaPerSecond"], 4)),
+                ("cut_sep_pairs", _int(row["cutSeparatedPairs"]))):
+            add(f"| {label} | {_cell(value)} |")
+        add()
+        add("| window_s | start_s | sampled_frames | cut_candidates | "
+            "mean_luma | mean_sat | delta_per_s | cut_sep_pairs |")
+        add("| --- | --- | --- | --- | --- | --- | --- | --- |")
+        windows = detail.get("windows") if isinstance(detail.get("windows"), list) else []
+        for window in windows:
+            values = (
+                _num(window["windowSeconds"], 2),
+                _num(window["startSeconds"], 2),
+                _int(window["sampledFrames"]),
+                _int(window["cutCandidates"]),
+                _num(window["meanDisplayLuma"], 4),
+                _num(window["meanSaturation"], 4),
+                _num(window["withinShotDeltaPerSecond"], 4),
+                _int(window["cutSeparatedPairs"]))
+            add("| " + " | ".join(values) + " |")
+        add()
+        add(f"limits: {DETAIL_LIMIT_REMINDER}")
+        add()
+
+    add("## Aggregates (video-measured records only)")
+    add()
+    add("Every number in this section is computed ONLY over the video-measured "
+        "records tabulated above. Published stills, including still-only "
+        "projects, never enter the motion, cut, luma, or saturation aggregates.")
+    add()
+    distributions = video_aggregates["distributions"]
+    add("### Counts")
+    add()
+    add("| provider | records |")
+    add("| --- | --- |")
+    for key, value in video_aggregates["byProvider"].items():
+        add(f"| {_cell(key)} | {value} |")
+    add()
+    add("| category | records |")
+    add("| --- | --- |")
+    for key, value in video_aggregates["byCategory"].items():
+        add(f"| {_cell(key)} | {value} |")
+    add()
+    add("| award_type | records |")
+    add("| --- | --- |")
+    for key, value in video_aggregates["awardType"]["byType"].items():
+        add(f"| {_cell(key)} | {value} |")
+    add(f"| (no award) | {video_aggregates['awardType']['rowsWithoutAward']} |")
+    add()
+    add("### Distributions")
+    add()
+    add("| metric | n | min | median | max |")
+    add("| --- | --- | --- | --- | --- |")
+    for label, key, digits in (
+            ("runtime_s", "runtimeSeconds", 2),
+            ("cuts_per_min", "cutsPerMinute", 2),
+            ("mean_luma", "meanDisplayLuma", 4),
+            ("mean_sat", "meanSaturation", 4)):
+        entry = distributions[key]
+        add(f"| {label} | {entry['n']} | {_num(entry['min'], digits)} | "
+            f"{_num(entry['median'], digits)} | {_num(entry['max'], digits)} |")
+    add()
+    coverage = video_aggregates["coverage"]
+    add("Coverage-weighted caveat: "
+        f"{_num(coverage['totalSampledSeconds'], 1)} sampled seconds cover "
+        f"{_num(coverage['totalRuntimeSeconds'], 1)} runtime seconds "
+        f"({_num((coverage['sampledFractionOfTotalRuntime'] or 0) * 100, 1)}%). "
+        f"Per-record coverage ranges from "
+        f"{_num(coverage['perRecordCoveragePercent']['min'], 1)}% to "
+        f"{_num(coverage['perRecordCoveragePercent']['max'], 1)}% "
+        f"(median {_num(coverage['perRecordCoveragePercent']['median'], 1)}%). "
+        "Aggregates describe the sampled windows, not the full films.")
+    add()
+
+    add("## Published-still evidence (single-frame only)")
+    add()
+    add("Separate lane. A published poster still is not a video frame: these "
+        "numbers are single-frame image metrics, carry no motion, cut, pacing, "
+        "or timing evidence, and are never used in the video aggregates above.")
+    add()
+    add(f"- n: {stills['n']}")
+    add(f"- median meanDisplayLumaProxy: "
+        f"{_num(stills['medianMeanDisplayLumaProxy'], 4)}")
+    add()
+    add("| dominant_hue_family | stills |")
+    add("| --- | --- |")
+    for key, value in stills["dominantHueFamilyCounts"].items():
+        add(f"| {_cell(key)} | {value} |")
+    add()
+
+    add("## Unreadable records")
+    add()
+    if not aggregate["unreadableRecords"]:
+        add("None.")
+    else:
+        add("Malformed or wrong-schema files are skipped; all other records "
+            "are still reported.")
+        add()
+        add("| file | reason |")
+        add("| --- | --- |")
+        for problem in aggregate["unreadableRecords"]:
+            add(f"| {_cell(problem['file'])} | {_cell(problem['reason'])} |")
+    add()
+
+    add("## Explicit non-claims")
+    add()
+    for claim in (
+            "No style, aesthetic quality, mood, lighting, camera/lens, "
+            "editorial intent, authorship, identity, or creative-origin "
+            "inference is made from these numbers.",
+            "Display-RGB luma/saturation and cut candidates are numeric proxies "
+            "only, not semantic labels.",
+            "Windows are sampled; `fullRuntimeMeasured` is false for every video "
+            "record, so nothing here is a full-film review.",
+            "Public availability is not a licence: `rightsStatus` remains "
+            "`review-required`, and reuse needs its own review.",
+            "Vimeo-derived rows are single published poster stills, not video "
+            "frames, and carry no motion, cut, pacing, or timing evidence.",
+            "Catalog metadata (title, studio, category, awards, scores) is "
+            "self-reported by the awards site and is not independently verified.",
+            "Downloaded media, frames, thumbnails, and audio are never retained."):
+        add(f"- {claim}")
+    add()
+    return "\n".join(lines)
+
+
+def run_report(
+    out_dir: Path, *, catalog_path: Path | None = None,
+    limit: int | None = None, top: int = DEFAULT_TOP,
+    generated_at: str | None = None,
+    log: Callable[[str], None] = print,
+) -> int:
+    """Read collected records read-only and write ``report.md`` + ``aggregate.json``."""
+    if limit is not None and (type(limit) is not int or limit < 0):
+        raise ValueError("limit must be a non-negative integer")
+    if type(top) is not int or top < 0:
+        raise ValueError("top must be a non-negative integer")
+    out_dir = Path(out_dir)
+    requested_catalog = Path(catalog_path) if catalog_path is not None else None
+    if requested_catalog is not None and not requested_catalog.is_file():
+        raise ValueError("catalog file does not exist")
+    default_catalog = out_dir / "catalog.json"
+    catalog_path = (requested_catalog if requested_catalog is not None
+                    else (default_catalog if default_catalog.is_file() else None))
+
+    video_records, problems = _load_records(
+        out_dir / "videos", VIDEO_SCHEMA, prefix="videos")
+    still_records, still_problems = _load_records(
+        out_dir / "stills", STILL_SCHEMA, prefix="stills")
+    problems.extend(still_problems)
+    catalog, catalog_problems = _load_json_context(
+        catalog_path, prefix="catalog.json")
+    index, index_problems = _load_json_context(
+        out_dir / "index.json", prefix="index.json")
+    stills_index, stills_index_problems = _load_json_context(
+        out_dir / "stills-index.json", prefix="stills-index.json")
+    problems.extend(catalog_problems)
+    problems.extend(index_problems)
+    problems.extend(stills_index_problems)
+    problems.sort(key=lambda item: (item["file"], item["reason"]))
+
+    if generated_at is None:
+        generated_at = _latest_timestamp([*video_records, *still_records], catalog)
+
+    rows = sorted((_video_row(record) for record in video_records), key=_video_order)
+    measured_total = len(rows)
+    if limit is not None:
+        rows = rows[:limit]
+    details = [{"slug": row["slug"], "windows": row["windowRows"]}
+               for row in rows[:top]]
+    table_rows = [_table_row(row) for row in rows]
+
+    video_keys = {_record_key(record) for record in video_records}
+    still_only = sum(1 for record in still_records
+                     if _record_key(record) not in video_keys)
+
+    skip_reasons = _skip_reasons(index)
+    unsupported = sum(value for key, value in skip_reasons.items()
+                      if key.startswith("unsupported"))
+    still_metrics = [_still_metrics(record) for record in still_records]
+    still_lumas = [finite_float(metrics.get("meanDisplayLumaProxy"))
+                   for metrics in still_metrics]
+    still_lumas = [value for value in still_lumas if value is not None]
+
+    aggregate = {
+        "schemaVersion": AGGREGATE_SCHEMA,
+        "generatedAt": generated_at,
+        "counts": {
+            "catalogProjects": (as_int(catalog.get("totalProjects"))
+                                if isinstance(catalog, dict) else None),
+            "videoMeasured": len(table_rows),
+            "videoMeasuredTotal": measured_total,
+            "stillMeasured": len(still_records),
+            "stillOnly": still_only,
+            "skippedUnsupported": unsupported,
+            "skippedResume": skip_reasons.get("resume-existing-record", 0),
+            "failed": _list_length(index, "failures"),
+            "stillFailed": _list_length(stills_index, "failures"),
+            "unreadable": len(problems),
+            "indexReportedVideoMeasured": _index_measured(index),
+            "indexReportedStillMeasured": _index_measured(stills_index),
+        },
+        "videos": table_rows,
+        "details": details,
+        "aggregates": {
+            "basis": "video-measured records only; published stills never enter "
+                     "these numbers",
+            "recordCount": len(table_rows),
+            "byProvider": _counter(row["provider"] for row in rows),
+            "byCategory": _counter(row["category"] for row in rows),
+            "awardType": _award_counts(rows),
+            "distributions": {
+                "runtimeSeconds": _distribution(
+                    row["runtimeSeconds"] for row in rows),
+                "cutsPerMinute": _distribution(
+                    row["cutsPerMinute"] for row in rows),
+                "meanDisplayLuma": _distribution(
+                    row["meanDisplayLuma"] for row in rows),
+                "meanSaturation": _distribution(
+                    row["meanSaturation"] for row in rows),
+            },
+            "coverage": _coverage_aggregate(rows),
+        },
+        "stills": {
+            "evidence": STILL_EVIDENCE_STATUS,
+            "singleFrameOnly": True,
+            "n": len(still_records),
+            "medianMeanDisplayLumaProxy": (
+                round(statistics.median(still_lumas), 6)
+                if still_lumas else None),
+            "dominantHueFamilyCounts": _counter(
+                metrics.get("dominantHueFamily") for metrics in still_metrics),
+        },
+        "unreadableRecords": problems,
+    }
+
+    report_path = out_dir / "report.md"
+    aggregate_path = out_dir / "aggregate.json"
+    write_json_atomic(aggregate_path, aggregate)
+    _write_text_atomic(report_path, _render_report(
+        aggregate, out_dir=out_dir,
+        catalog_path=catalog_path or default_catalog, limit=limit, top=top))
+    log(f"report: videos={len(table_rows)} stills={len(still_records)} "
+        f"unreadable={len(problems)} -> {report_path} and {aggregate_path}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Ephemeral Motion Design Awards video research collector")
@@ -682,6 +1385,16 @@ def build_parser() -> argparse.ArgumentParser:
     stills.add_argument("--max-image-bytes", type=int, default=STILL_MAX_BYTES)
     stills.add_argument("--ffmpeg", default="ffmpeg")
     stills.add_argument("--ffprobe", default="ffprobe")
+    report = sub.add_parser(
+        "report", help="write an evidence-bound report.md + aggregate.json "
+                       "from collected records (read-only, offline)")
+    report.add_argument("--out-dir", type=Path, required=True)
+    report.add_argument("--catalog", type=Path, default=None,
+                        help="catalog JSON (default: <out-dir>/catalog.json)")
+    report.add_argument("--limit", type=int, default=None,
+                        help="cap the video-measured records included")
+    report.add_argument("--top", type=int, default=DEFAULT_TOP,
+                        help="per-video detail blocks to render")
     return parser
 
 
@@ -696,6 +1409,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"catalog: {catalog['totalProjects']} projects -> {args.out}",
                   flush=True)
             return 0
+        if args.command == "report":
+            return run_report(
+                args.out_dir, catalog_path=args.catalog, limit=args.limit,
+                top=args.top)
         if args.command == "stills":
             return run_stills(
                 args.catalog, out_dir=args.out_dir, limit=args.limit,

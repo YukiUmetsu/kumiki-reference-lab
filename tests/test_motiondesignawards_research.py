@@ -701,6 +701,231 @@ class DirectMp4ProbeFallbackTests(unittest.TestCase):
         download.assert_called_once()
 
 
+def synthetic_video_record(
+    *, slug: str = "demo-film", project_id: str = "42", overall: float = 8.5,
+    title: str = "Demo Film", studio: str = "Demo Studio",
+    category: str = "SHORT_FILMS", provider: str = "cloudflare-stream",
+    awards: list[dict[str, str]] | None = None, duration: float = 20.0,
+    windows: int = 2, cuts: int = 4, luma: float = 0.4,
+    saturation: float = 0.3, cut_separated_pairs: int = 1,
+    generated_at: str = "2026-01-01T00:00:00Z",
+) -> dict:
+    window_rows = []
+    for index in range(windows):
+        window_rows.append({
+            "startSeconds": index * 10,
+            "endSeconds": index * 10 + 10,
+            "probe": {
+                "sampledWindowSummary": {
+                    "cutCandidateCountBetweenFirstAndLastSample": cuts // windows,
+                    "meanSampledDisplayLumaProxy": luma,
+                    "meanSampledSaturationProxy": saturation,
+                    "cutSeparatedPairs": cut_separated_pairs,
+                },
+                "sampledFrames": [{}, {}],
+                "sampledFramePairs": [
+                    {"meanAbsoluteDisplayRgbDeltaPerSecond": 0.5},
+                    {"meanAbsoluteDisplayRgbDeltaPerSecond": 0.25},
+                ],
+            },
+        })
+    sampled = windows * 10
+    return {
+        "schemaVersion": mda.VIDEO_SCHEMA,
+        "projectId": project_id,
+        "slug": slug,
+        "catalog": {
+            "title": title, "studio": studio, "category": category,
+            "scores": {"overall": overall}, "awards": awards or [],
+        },
+        "source": {
+            "durationSeconds": duration, "sizeBytes": 10 * 1024 * 1024,
+            "resolution": [1280, 720],
+            "frameRate": {"numerator": 25, "denominator": 1},
+        },
+        "acquisition": {"provider": provider},
+        "coverage": {
+            "windowsMeasured": windows, "windowSeconds": 10,
+            "sampledSeconds": sampled,
+            "fractionOfRuntime": round(min(1.0, sampled / duration), 6),
+        },
+        "summary": {
+            "cutCandidates": cuts,
+            "cutCandidateRatePerMinute": round(cuts * 60 / sampled, 6),
+            "meanDisplayLuma": luma,
+            "meanSaturation": saturation,
+            "meanWithinShotRgbDeltaPerSecond": 0.375,
+        },
+        "windows": window_rows,
+        "generatedAt": generated_at,
+    }
+
+
+def synthetic_still_record(
+    *, slug: str = "demo-film", project_id: str = "42",
+    luma: float = 0.7, hue: str = "blue",
+    generated_at: str = "2026-01-02T00:00:00Z",
+) -> dict:
+    return {
+        "schemaVersion": mda.STILL_SCHEMA,
+        "projectId": project_id,
+        "slug": slug,
+        "still": {"metrics": {
+            "meanDisplayLumaProxy": luma, "dominantHueFamily": hue}},
+        "generatedAt": generated_at,
+    }
+
+
+class ReportTests(unittest.TestCase):
+    """The report is read-only, deterministic, and never mixes still evidence."""
+
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+
+    def write_video(self, out_dir: Path, record: dict) -> None:
+        acq.write_json_atomic(
+            out_dir / "videos" / f"{mda.safe_slug(record['slug'])}.json", record)
+
+    def write_still(self, out_dir: Path, record: dict) -> None:
+        acq.write_json_atomic(
+            out_dir / "stills" / f"{mda.safe_slug(record['slug'])}.json", record)
+
+    def test_empty_state_writes_valid_skeleton(self) -> None:
+        out_dir = self.root / "out"
+        code = mda.run_report(out_dir, log=lambda _: None)
+        self.assertEqual(code, 0)
+        report = (out_dir / "report.md").read_text(encoding="utf-8")
+        aggregate = json.loads(
+            (out_dir / "aggregate.json").read_text(encoding="utf-8"))
+        self.assertEqual(aggregate["schemaVersion"], mda.AGGREGATE_SCHEMA)
+        self.assertEqual(aggregate["counts"]["videoMeasured"], 0)
+        self.assertEqual(aggregate["videos"], [])
+        self.assertEqual(aggregate["stills"]["n"], 0)
+        self.assertIn("No video-measured records.", report)
+        self.assertIn("None.", report)
+        self.assertEqual(sorted(path.name for path in out_dir.iterdir()),
+                         ["aggregate.json", "report.md"])
+
+    def test_still_only_records_never_enter_motion_aggregates(self) -> None:
+        out_dir = self.root / "out"
+        self.write_video(out_dir, synthetic_video_record(
+            slug="measured", project_id="1", luma=0.2, saturation=0.1,
+            cuts=4))
+        self.write_still(out_dir, synthetic_still_record(
+            slug="measured", project_id="1", luma=0.9, hue="blue"))
+        self.write_still(out_dir, synthetic_still_record(
+            slug="still-only", project_id="2", luma=0.9, hue="red"))
+
+        code = mda.run_report(out_dir, log=lambda _: None)
+        self.assertEqual(code, 0)
+        aggregate = json.loads(
+            (out_dir / "aggregate.json").read_text(encoding="utf-8"))
+        self.assertEqual(aggregate["counts"]["videoMeasured"], 1)
+        self.assertEqual(aggregate["counts"]["stillMeasured"], 2)
+        self.assertEqual(aggregate["counts"]["stillOnly"], 1)
+        self.assertEqual(
+            aggregate["aggregates"]["distributions"]["meanDisplayLuma"],
+            {"n": 1, "min": 0.2, "median": 0.2, "max": 0.2})
+        self.assertEqual(aggregate["stills"]["n"], 2)
+        self.assertEqual(aggregate["stills"]["medianMeanDisplayLumaProxy"], 0.9)
+        self.assertEqual(aggregate["stills"]["dominantHueFamilyCounts"],
+                         {"blue": 1, "red": 1})
+        # The 0.9 still luma never leaks into the video table.
+        self.assertEqual(aggregate["videos"][0]["meanDisplayLuma"], 0.2)
+
+    def test_repeat_runs_are_byte_identical(self) -> None:
+        out_dir = self.root / "out"
+        self.write_video(out_dir, synthetic_video_record(slug="a", project_id="1"))
+        self.write_video(out_dir, synthetic_video_record(
+            slug="b", project_id="2", overall=9.0))
+        self.write_still(out_dir, synthetic_still_record(slug="c", project_id="3"))
+
+        mda.run_report(out_dir, top=2, log=lambda _: None)
+        first_report = (out_dir / "report.md").read_bytes()
+        first_aggregate = (out_dir / "aggregate.json").read_bytes()
+        mda.run_report(out_dir, top=2, log=lambda _: None)
+
+        self.assertEqual((out_dir / "report.md").read_bytes(), first_report)
+        self.assertEqual((out_dir / "aggregate.json").read_bytes(), first_aggregate)
+
+    def test_malformed_records_are_listed_and_do_not_stop_the_report(self) -> None:
+        out_dir = self.root / "out"
+        self.write_video(out_dir, synthetic_video_record(slug="good", project_id="1"))
+        (out_dir / "videos" / "broken.json").write_text(
+            "{not json", encoding="utf-8")
+        acq.write_json_atomic(out_dir / "videos" / "wrong-schema.json",
+                              {"schemaVersion": "kumiki.other.v1"})
+
+        code = mda.run_report(out_dir, log=lambda _: None)
+        self.assertEqual(code, 0)
+        aggregate = json.loads(
+            (out_dir / "aggregate.json").read_text(encoding="utf-8"))
+        self.assertEqual(aggregate["counts"]["videoMeasured"], 1)
+        self.assertEqual(aggregate["counts"]["unreadable"], 2)
+        files = sorted(item["file"] for item in aggregate["unreadableRecords"])
+        self.assertEqual(files, ["videos/broken.json", "videos/wrong-schema.json"])
+        report = (out_dir / "report.md").read_text(encoding="utf-8")
+        self.assertIn("videos/broken.json", report)
+        self.assertIn("unexpected schemaVersion", report)
+
+    def test_number_formatting_is_fixed_precision(self) -> None:
+        self.assertEqual(mda._num(None, 4), "—")
+        self.assertEqual(mda._num(0.123456789, 4), "0.1235")
+        self.assertEqual(mda._int(None), "—")
+        out_dir = self.root / "out"
+        self.write_video(out_dir, synthetic_video_record(
+            slug="numbers", project_id="1", luma=0.4, saturation=0.3,
+            duration=20.0))
+        mda.run_report(out_dir, log=lambda _: None)
+        report = (out_dir / "report.md").read_text(encoding="utf-8")
+        row = next(line for line in report.splitlines()
+                   if line.startswith("| numbers |"))
+        self.assertIn("| 8.50 |", row)
+        self.assertIn("| 20.00 |", row)
+        self.assertIn("| 25.000 |", row)
+        self.assertIn("| 4.19 |", row)   # bitrate Mbps from 10 MiB / 20 s
+        self.assertIn("| 10.0 |", row)   # download MB
+        self.assertIn("| 0.4000 |", row)
+        self.assertIn("| 0.3000 |", row)
+
+    def test_aggregate_totals_reconcile_with_tables(self) -> None:
+        out_dir = self.root / "out"
+        for index in range(3):
+            self.write_video(out_dir, synthetic_video_record(
+                slug=f"clip-{index}", project_id=str(index),
+                overall=9.0 - index,
+                category="SHORT_FILMS" if index else "EXPERIMENTAL",
+                provider="cloudflare-stream" if index else "direct-mp4"))
+        self.write_still(out_dir, synthetic_still_record(slug="s1", project_id="9"))
+
+        mda.run_report(out_dir, top=2, log=lambda _: None)
+        aggregate = json.loads(
+            (out_dir / "aggregate.json").read_text(encoding="utf-8"))
+        report = (out_dir / "report.md").read_text(encoding="utf-8")
+        table = report.split("## Per-video analysis", 1)[1].split(
+            "## Per-video detail", 1)[0]
+        data_rows = [line for line in table.splitlines()
+                     if line.startswith("| ")
+                     and not line.startswith("| slug |")
+                     and not line.startswith("| --- |")]
+        self.assertEqual(aggregate["counts"]["videoMeasured"], 3)
+        self.assertEqual(aggregate["counts"]["videoMeasuredTotal"], 3)
+        self.assertEqual(len(aggregate["videos"]), 3)
+        self.assertEqual(len(data_rows), 3)
+        self.assertEqual(aggregate["aggregates"]["recordCount"], 3)
+        self.assertEqual(sum(aggregate["aggregates"]["byProvider"].values()), 3)
+        self.assertEqual(sum(aggregate["aggregates"]["byCategory"].values()), 3)
+        self.assertEqual(len(aggregate["details"]), 2)
+        # Catalog order: descending wa_overall.
+        self.assertEqual([row["slug"] for row in aggregate["videos"]],
+                         ["clip-0", "clip-1", "clip-2"])
+        self.assertIn("| cloudflare-stream | 2 |",
+                      report)
+        self.assertIn("| direct-mp4 | 1 |", report)
+
+
 def _dump(payload: dict) -> str:
     return json.dumps(payload, indent=2, ensure_ascii=False, allow_nan=False) + "\n"
 
