@@ -14,7 +14,7 @@ from kumiki_reference_lab.catalog.whatships_analysis_store import (
     export_repository_analysis, validate_repository_analysis,
 )
 from kumiki_reference_lab.catalog.whatships_direct_measure import (
-    _duration_windows, measure_whatships_to_repository,
+    _duration_windows, _remaining_windows, measure_whatships_to_repository,
 )
 from kumiki_reference_lab.cli.app import main
 from kumiki_reference_lab.catalog.whatships_research_summary import summarize_tracked_whatships_observations
@@ -73,6 +73,7 @@ class DirectWhatshipsNumericMeasurementTests(unittest.TestCase):
         self.leak_extra_field=False
         self.wrong_report_sha=False
         self.inspected_timebase={"numerator":1,"denominator":1000}
+        self.mock_duration="8.0"
 
     def mock_inspect(self, path, *, ffprobe, rights_status):
         self.assertEqual(path,self.media)
@@ -82,7 +83,7 @@ class DirectWhatshipsNumericMeasurementTests(unittest.TestCase):
             "video":{
                 "streamIndex":0,
                 "sourceTimebase":self.inspected_timebase,
-                "durationSecondsReported":"8.0",
+                "durationSecondsReported":self.mock_duration,
             },
         }
 
@@ -92,7 +93,8 @@ class DirectWhatshipsNumericMeasurementTests(unittest.TestCase):
         self.samples.append((start_seconds,seconds,max_samples))
         if self.fail_second and start_seconds > 0:
             raise ValueError("simulated second-window source decoder failure")
-        positions=[start_seconds*1000+offset for offset in (0,500,1000,1500,2000)]
+        frame_step = 500 if seconds >= 3 else 200
+        positions=[start_seconds*1000+i*frame_step for i in range(5)]
         def frame(pos):
             datum={
                 "sourcePts":pos,
@@ -125,10 +127,10 @@ class DirectWhatshipsNumericMeasurementTests(unittest.TestCase):
             "sampledFrames":[frame(x) for x in positions],
             "sampledFramePairs":[{
                 "startPts":positions[i-1],"endPts":positions[i],
-                "sourceDeltaSeconds":{"numerator":1,"denominator":2},
+                "sourceDeltaSeconds":{"numerator":frame_step,"denominator":1000},
                 "status":"rgb-image-difference-proxy",
                 "meanAbsoluteDisplayRgbDelta":.02,
-                "meanAbsoluteDisplayRgbDeltaPerSecond":.04,
+                "meanAbsoluteDisplayRgbDeltaPerSecond":round(20/frame_step,6),
             } for i in range(1,len(positions))],
             "sampledWindowSummary":{
                 "cutCandidateCountBetweenFirstAndLastSample":0,
@@ -240,6 +242,80 @@ class DirectWhatshipsNumericMeasurementTests(unittest.TestCase):
                          round(10/30,6))
         self.assertEqual(report["fullyHumanReviewedVideoCount"],0)
 
+    def test_fill_gaps_appends_source_pts_windows_without_erasing_first_sample(self):
+        self.mock_duration="20.0"
+        initial=self.run_mock()
+        self.assertEqual(initial["measuredOriginalSourceWindows"],2)
+        self.samples.clear()
+        added=self.run_mock(fill_gaps=True)
+        self.assertEqual(added["existingMeasuredWindowCount"],2)
+        self.assertEqual(added["measuredOriginalSourceWindows"],2)
+        self.assertTrue(added["gitWorkingTreeUpdated"])
+        self.assertEqual(self.samples,[(8,3,5),(12,3,5)])
+        record=json.loads((self.repository/"film-one.json").read_text())
+        numeric=record["evidence"]["numericVisual"]
+        self.assertEqual([(w["startSeconds"],w["endSeconds"])
+                          for w in numeric["windows"]],
+                         [(0,3),(8,11),(12,15),(17,20)])
+        self.assertIn("browserSpotCheck",record["evidence"])
+        self.assertFalse(record["coverage"]["fullFilmReviewed"])
+        self.assertEqual(validate_repository_analysis(self.repository,self.catalog)
+                         ["numericSampledVideos"],1)
+
+    def test_fill_gaps_converges_without_duplicate_or_false_full_review(self):
+        self.run_mock()
+        first=self.run_mock(fill_gaps=True)
+        self.assertEqual(first["measuredOriginalSourceWindows"],1)
+        self.assertEqual(first["existingMeasuredWindowCount"],2)
+        self.assertEqual(first["measuredWindowsAfterRun"],3)
+        old=(self.repository/"film-one.json").read_bytes()
+        self.samples.clear()
+        second=self.run_mock(fill_gaps=True)
+        self.assertEqual(second["measuredOriginalSourceWindows"],0)
+        self.assertFalse(second["gitWorkingTreeUpdated"])
+        self.assertEqual(second["status"],
+                         "no-remaining-whole-second-gaps-within-supported-timeline")
+        self.assertEqual(self.samples,[])
+        self.assertEqual(old,(self.repository/"film-one.json").read_bytes())
+
+    def test_failure_during_gap_fill_does_not_change_existing_numeric_evidence(self):
+        self.mock_duration="20.0"
+        self.run_mock()
+        old=(self.repository/"film-one.json").read_bytes()
+        old_index=(self.repository/"index.json").read_bytes()
+        self.fail_second=True
+        with self.assertRaisesRegex(ValueError,"second-window"):
+            self.run_mock(fill_gaps=True)
+        self.assertEqual(old,(self.repository/"film-one.json").read_bytes())
+        self.assertEqual(old_index,(self.repository/"index.json").read_bytes())
+
+    def test_cli_fill_gaps_applies_only_to_unobserved_source_intervals(self):
+        self.mock_duration="20.0"
+        self.run_mock()
+        capture=io.StringIO()
+        with (
+            patch("kumiki_reference_lab.catalog.whatships_direct_measure.inspect_source",
+                  side_effect=self.mock_inspect),
+            patch("kumiki_reference_lab.catalog.whatships_direct_measure.analyze_source_visual_window",
+                  side_effect=self.mock_probe),
+            contextlib.redirect_stdout(capture),
+        ):
+            rc=main([
+                "whatships-measure",str(self.ledger),"whatships:film-one",
+                "--snapshot",str(self.catalog),
+                "--repository-root",str(self.repository),
+                "--window-seconds","3","--window-count","2",
+                "--max-samples","5","--fill-gaps",
+            ])
+        self.assertEqual(rc,0)
+        report=json.loads(capture.getvalue())
+        self.assertEqual(report["existingMeasuredWindowCount"],2)
+        self.assertEqual(report["measuredWindowsAfterRun"],4)
+
+    def test_append_and_replace_cannot_both_be_enabled(self):
+        with self.assertRaisesRegex(ValueError,"invalid local media"):
+            self.run_mock(fill_gaps=True,replace_existing=True)
+
     def test_unmodified_second_run_does_not_duplicate_data(self):
         self.run_mock()
         before=(self.repository/"film-one.json").read_bytes()
@@ -334,6 +410,30 @@ class DirectWhatshipsNumericMeasurementTests(unittest.TestCase):
 
 
 class DirectWindowPlannerTests(unittest.TestCase):
+    def test_gap_planner_repeatedly_picks_largest_remaining_intervals(self):
+        old=[{"startSeconds":0,"endSeconds":3},{"startSeconds":17,"endSeconds":20}]
+        self.assertEqual(_remaining_windows(
+            "20.0",old,window_seconds=3,window_count=2),
+            ([(8,11),(12,15)],.3))
+        self.assertEqual(_remaining_windows(
+            "8.0",[{"startSeconds":0,"endSeconds":3},
+                   {"startSeconds":5,"endSeconds":8}],
+            window_seconds=3,window_count=2), ([(3,5)],.25))
+        self.assertEqual(_remaining_windows(
+            "8.0",[{"startSeconds":0,"endSeconds":8}],
+            window_seconds=3,window_count=2),([],0.0))
+
+    def test_gap_planner_rejects_malformed_or_crossing_prior_intervals(self):
+        for old in (
+            [{"startSeconds":-1,"endSeconds":2}],
+            [{"startSeconds":0,"endSeconds":3},
+             {"startSeconds":2,"endSeconds":5}],
+            [{"startSeconds":3,"endSeconds":50}],
+            [{"startSeconds":False,"endSeconds":4}],
+        ):
+            with self.subTest(old=old),self.assertRaises(ValueError):
+                _remaining_windows("20",old,window_seconds=3,window_count=2)
+
     def test_nonoverlapping_endpoints_and_reported_duration(self):
         self.assertEqual(_duration_windows("8.0",window_seconds=3,window_count=2),
                          ([(0,3),(5,8)],.75))

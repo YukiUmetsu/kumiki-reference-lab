@@ -100,12 +100,67 @@ def _duration_windows(duration: Any, *, window_seconds: int,
     return windows, fraction
 
 
+def _remaining_windows(
+    duration: Any, already: list[dict[str, Any]], *,
+    window_seconds: int, window_count: int,
+) -> tuple[list[tuple[int, int]], float]:
+    """Select largest unmeasured whole-second gaps in a source timeline.
+
+    Uses only the first 3600 source-relative seconds supported by the exact
+    PTS decoder. Gap selection accounts for requested intervals, not every
+    frame inside those intervals having been measured.
+    """
+    if (type(window_seconds) is not int or not 1 <= window_seconds <= 30 or
+            type(window_count) is not int or not 1 <= window_count <= 6):
+        raise ValueError("gap fill window budgets invalid")
+    if type(duration) is not str:
+        raise ValueError("source duration missing for gap planning")
+    try:
+        length = Decimal(duration)
+    except (ValueError, InvalidOperation):
+        raise ValueError("source duration invalid for gap planning") from None
+    if not length.is_finite() or length < 1:
+        raise ValueError("source duration must be at least one second")
+    max_end = int(min(length, Decimal(3600)))
+    cursor = 0
+    gaps: list[tuple[int, int]] = []
+    for row in already:
+        start, end = row["startSeconds"], row["endSeconds"]
+        if (type(start) is not int or type(end) is not int or
+                not cursor <= start < end <= max_end):
+            raise ValueError("previous numeric windows are outside current video duration")
+        if cursor < start:
+            gaps.append((cursor, start))
+        cursor = end
+    if cursor < max_end:
+        gaps.append((cursor, max_end))
+    selected: list[tuple[int,int]] = []
+    for _ in range(window_count):
+        if not gaps:
+            break
+        # Largest gap first; tie by original film time. A central interval
+        # splits long gaps for subsequent fair and deterministic sampling.
+        left, right = sorted(gaps, key=lambda x:(-(x[1]-x[0]),x[0]))[0]
+        gaps.remove((left,right))
+        width = min(window_seconds, right-left)
+        start = left+(right-left-width)//2
+        end = start+width
+        selected.append((start,end))
+        if left < start:
+            gaps.append((left,start))
+        if end < right:
+            gaps.append((end,right))
+    selected.sort()
+    fraction = sum(end-start for start,end in selected)/length
+    return selected, round(float(fraction),6)
+
+
 def measure_whatships_to_repository(
     snapshot_path: Path, binding_path: Path, source_id: str,
     repository_root: Path, *, window_seconds: int = 10,
     window_count: int = 4, max_samples: int = 12,
     width: int = 160, height: int = 90, cut_threshold: float = 0.25,
-    replace_existing: bool = False,
+    replace_existing: bool = False, fill_gaps: bool = False,
     ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
 ) -> dict[str, Any]:
     """Record source-grounded pixels in research/analysis/whatships/<slug>.json.
@@ -116,7 +171,8 @@ def measure_whatships_to_repository(
     """
     if type(source_id) is not str or not source_id.startswith("whatships:"):
         raise ValueError("must specify exact whatships:slug catalog identity")
-    if (type(replace_existing) is not bool or type(max_samples) is not int or
+    if (type(replace_existing) is not bool or type(fill_gaps) is not bool or
+            (replace_existing and fill_gaps) or type(max_samples) is not int or
             not 5 <= max_samples <= 24 or type(width) is not int or
             not 64 <= width <= 320 or type(height) is not int or
             not 36 <= height <= 180 or type(cut_threshold) not in (int, float) or
@@ -146,9 +202,40 @@ def measure_whatships_to_repository(
             inspected["video"]["streamIndex"] != binding["sourceStreamIndex"] or
             inspected["video"]["sourceTimebase"] != binding["sourceTimebase"]):
         raise ValueError("source bytes, stream or timebase changed since binding")
-    windows, requested_fraction = _duration_windows(
-        inspected["video"]["durationSecondsReported"],
-        window_seconds=window_seconds, window_count=window_count)
+    previous_windows: list[dict[str, Any]] = []
+    if fill_gaps:
+        from kumiki_reference_lab.catalog.whatships_media_bindings import _read_json
+        previous_file = repository_root/(source_id.removeprefix("whatships:")+".json")
+        if previous_file.exists():
+            old = _read_json(previous_file)
+            numeric = old["evidence"].get("numericVisual")
+            if numeric is not None:
+                if numeric["sourceSha256"] != binding["mediaSha256"]:
+                    raise ValueError("cannot fill gaps using a different source video fingerprint")
+                previous_windows = numeric["windows"]
+        windows, requested_fraction = _remaining_windows(
+            inspected["video"]["durationSecondsReported"],previous_windows,
+            window_seconds=window_seconds,window_count=window_count)
+    else:
+        windows, requested_fraction = _duration_windows(
+            inspected["video"]["durationSecondsReported"],
+            window_seconds=window_seconds, window_count=window_count)
+    if not windows:
+        require_unchanged(source, signature)
+        return {
+            "schemaVersion":"kumiki.whatships-direct-numeric-video-study.v1",
+            "sourceId":source_id,
+            "measuredOriginalSourceWindows":0,
+            "sampledOriginalSourceFrames":0,
+            "framesInWindowPtsInventories":0,
+            "sampledFrameFractionOfScannedWindowInventories":None,
+            "requestedWindowTimeFractionOfReportedFilmDuration":0.0,
+            "fullFilmReviewed":False,
+            "gitWorkingTreeUpdated":False,
+            "existingMeasuredWindowCount":len(previous_windows),
+            "status":"no-remaining-whole-second-gaps-within-supported-timeline",
+            "limitations":["No additional whole-second interval can be added to this numeric sample.","This does not establish that every original video frame was decoded or reviewed."],
+        }
     numeric_windows = []
     original_pts_samples = 0
     frames_in_scanned_intervals = 0
@@ -226,11 +313,14 @@ def measure_whatships_to_repository(
         validate_repository_analysis(incoming,snapshot_path)
         result = sync_repository_analysis(
             snapshot_path, incoming, repository_root,
-            replace_existing=replace_existing)
+            replace_existing=replace_existing,
+            append_numeric_windows=fill_gaps)
     return {
         "schemaVersion":"kumiki.whatships-direct-numeric-video-study.v1",
         "sourceId":source_id,
         "measuredOriginalSourceWindows":len(windows),
+        "existingMeasuredWindowCount":len(previous_windows),
+        "measuredWindowsAfterRun":len(previous_windows)+len(windows),
         "sampledOriginalSourceFrames":original_pts_samples,
         "framesInWindowPtsInventories":frames_in_scanned_intervals,
         "sampledFrameFractionOfScannedWindowInventories":round(
