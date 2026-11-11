@@ -20,6 +20,7 @@ from kumiki_reference_lab.analyzers.motion.review import _png_rgb
 from kumiki_reference_lab.analyzers.techniques.propose import _json_file
 from kumiki_reference_lab.backends.ffmpeg.frames import read_frame_pts
 from kumiki_reference_lab.backends.ffmpeg.raw_frames import read_rgb_frames
+from kumiki_reference_lab.backends.ffmpeg.source_seek import decode_verified_later_source_frames
 from kumiki_reference_lab.core.provenance import file_signature, require_unchanged
 from kumiki_reference_lab.pipeline.ollama_character_perception import (
     SCHEMA_VERSION as LOCAL_VISION_VERSION, _crop_rgb, _parse_model_response,
@@ -198,6 +199,7 @@ def _html_page(rows: list[dict[str, Any]], source_name: str) -> str:
 def build_character_vision_review(source: Path, report_path: Path,
                                   vision_dir: Path, out: Path, *,
                                   scan_seconds: int = 20,
+                                  seek_start_seconds: int | None = None,
                                   width: int = 320, height: int = 180,
                                   ffprobe: str = "ffprobe",
                                   ffmpeg: str = "ffmpeg") -> Path:
@@ -206,6 +208,10 @@ def build_character_vision_review(source: Path, report_path: Path,
             type(width) is not int or not 64 <= width <= 320 or
             type(height) is not int or not 36 <= height <= 180):
         raise ValueError("character review scan/resolution out of bounds")
+    if seek_start_seconds is not None and (
+            type(seek_start_seconds) is not int or seek_start_seconds < 0 or
+            scan_seconds > 30 or seek_start_seconds+scan_seconds > 3600):
+        raise ValueError("character review seek window invalid")
     if out.exists() or out.is_symlink():
         raise ValueError("character review destination must be new")
     signatures = [file_signature(x) for x in
@@ -227,24 +233,31 @@ def build_character_vision_review(source: Path, report_path: Path,
     pts = sorted({item["sourcePts"] for item in bound})
     if len(pts) > 12:
         raise ValueError("vision review exceeds 12 distinct decoded frames")
-    frame_records = read_frame_pts(source, report["sourceStreamIndex"],
-                                   seconds=scan_seconds, ffprobe=ffprobe)
-    by_pts: dict[int, list[int]] = {}
-    for frame in frame_records:
-        if frame.pts is not None:
-            by_pts.setdefault(frame.pts, []).append(frame.ordinal)
-    ordinals = []
-    for point in pts:
-        candidates = by_pts.get(point, [])
-        if len(candidates) != 1:
-            raise ValueError("review source PTS missing or ambiguous")
-        ordinals.append(candidates[0])
-    if ordinals != sorted(set(ordinals)):
-        raise ValueError("review requires unique source frames in decode order")
-    timebase = Fraction(**report["sourceTimebase"])
-    rgb = read_rgb_frames(
-        source, report["sourceStreamIndex"], ordinals, pts, timebase=timebase,
-        seconds=scan_seconds, width=width, height=height, ffmpeg=ffmpeg)
+    if seek_start_seconds is not None:
+        rgb = decode_verified_later_source_frames(
+            source, report["sourceStreamIndex"], pts,
+            timebase=Fraction(**report["sourceTimebase"]),
+            start_seconds=seek_start_seconds, seconds=scan_seconds,
+            width=width, height=height, ffprobe=ffprobe, ffmpeg=ffmpeg)
+    else:
+        frame_records = read_frame_pts(source, report["sourceStreamIndex"],
+                                       seconds=scan_seconds, ffprobe=ffprobe)
+        by_pts: dict[int, list[int]] = {}
+        for frame in frame_records:
+            if frame.pts is not None:
+                by_pts.setdefault(frame.pts, []).append(frame.ordinal)
+        ordinals = []
+        for point in pts:
+            candidates = by_pts.get(point, [])
+            if len(candidates) != 1:
+                raise ValueError("review source PTS missing or ambiguous")
+            ordinals.append(candidates[0])
+        if ordinals != sorted(set(ordinals)):
+            raise ValueError("review requires unique source frames in decode order")
+        timebase = Fraction(**report["sourceTimebase"])
+        rgb = read_rgb_frames(
+            source, report["sourceStreamIndex"], ordinals, pts, timebase=timebase,
+            seconds=scan_seconds, width=width, height=height, ffmpeg=ffmpeg)
     by_frame = dict(zip(pts, rgb, strict=True))
     for path, signature in zip(
         (source, report_path, vision_dir / "character-vision.json",
