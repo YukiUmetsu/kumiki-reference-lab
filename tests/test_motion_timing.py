@@ -159,6 +159,27 @@ class TimingInferenceTests(unittest.TestCase):
         result = analyze_seeded_track(track)
         self.assertEqual(result["status"], "abstain-uneven-sampling")
 
+    def test_rejects_cross_shot_and_mismatched_pts(self):
+        track = seeded_track(count=10, start_index=0,
+                             start_seconds=0, seconds_step=.1)
+        report = seeded_report(track)
+        from tests.test_cinematic_intelligence import evidence
+        from kumiki_reference_lab.pipeline.shot_intelligence import build_shot_intelligence
+        numeric = evidence()
+        report["sourceSha256"] = numeric["sourceSha256"]
+        track["shotId"] = "shot-0001"
+        shots = build_shot_intelligence(numeric)
+        valid = build_seeded_motion_timing(
+            report, numeric=numeric, shot_plan=shots)
+        self.assertEqual(valid["supportedCurveCount"], 1)
+        track["observations"][3]["decodedSeconds"] += .001
+        with self.assertRaisesRegex(ValueError, "time mismatch"):
+            build_seeded_motion_timing(report, numeric=numeric, shot_plan=shots)
+        track["observations"][3]["decodedSeconds"] -= .001
+        track["shotId"] = "shot-0002"
+        with self.assertRaisesRegex(ValueError, "crosses"):
+            build_seeded_motion_timing(report, numeric=numeric, shot_plan=shots)
+
     def test_report_serializes_without_nan_or_inference(self):
         out = build_seeded_motion_timing(seeded_report(seeded_track()))
         self.assertEqual(out["supportedCurveCount"], 1)
