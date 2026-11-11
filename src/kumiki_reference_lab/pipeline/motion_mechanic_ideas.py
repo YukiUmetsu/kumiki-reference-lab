@@ -214,6 +214,35 @@ def propose_motion_mechanics(
             or len(temporal["events"]) > 200):
         raise ValueError("motion mechanic input has invalid source evidence")
     source_sha = temporal["sourceSha256"]
+    measured_pairs = temporal.get("pairMetrics", [])
+    if not isinstance(measured_pairs, list) or len(measured_pairs) > 28:
+        raise ValueError("motion mechanic source pair evidence exceeds bounds")
+    pair_signatures = set()
+    for pair in measured_pairs:
+        if (not isinstance(pair, dict)
+                or pair.get("status") !=
+                "pairwise-screen-measurement-not-physical-interaction"
+                or type(pair.get("shotId")) is not str
+                or type(pair.get("subjectA")) is not str
+                or type(pair.get("subjectB")) is not str
+                or pair["subjectA"] == pair["subjectB"]
+                or type(pair.get("startFrameIndex")) is not int
+                or type(pair.get("endFrameIndex")) is not int
+                or not 0 <= pair["startFrameIndex"] <
+                pair["endFrameIndex"] < temporal["frameCount"]
+                or not isinstance(pair.get("identityProvenance"), list)
+                or len(pair["identityProvenance"]) != 2
+                or any(origin not in _ORIGINS
+                       for origin in pair["identityProvenance"])):
+            raise ValueError("motion mechanic pair identity evidence malformed")
+        key = (
+            pair["shotId"], pair["subjectA"], pair["subjectB"],
+            pair["startFrameIndex"], pair["endFrameIndex"],
+            tuple(pair["identityProvenance"]),
+        )
+        if key in pair_signatures:
+            raise ValueError("duplicate pairwise screen evidence")
+        pair_signatures.add(key)
     seen = set()
     counts: dict[str, int] = {}
     proposals = []
@@ -246,6 +275,10 @@ def propose_motion_mechanics(
                 or len(identities) != (1 if b is None else 2)
                 or any(identity not in _ORIGINS for identity in identities)):
             raise ValueError("motion mechanic event identity, shot or time invalid")
+        if b is not None and (
+                event["shotId"], a, b, start, end,
+                tuple(identities)) not in pair_signatures:
+            raise ValueError("motion mechanic pair identity lacks matching measured pair")
         measurements = _bounded_measurements(
             event.get("measurements"), spec["measurementKeys"])
         signature = (name, event["shotId"], a, b, start, end)
