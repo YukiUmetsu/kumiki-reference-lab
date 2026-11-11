@@ -96,6 +96,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Where the What Ships video analysis data lives:** [data guide](docs/whatships-video-data-location.md) · [Git-versioned per-video analysis JSON](research/analysis/whatships/) · [all 2,861 catalog entries](research/whatships-index-2026-11-10.json). The canonical research/analysis/whatships directory starts with nine existing source-linked browser observations, not fabricated full-film analyses; `whatships-all export-analysis` preserves validated local source-PTS numeric evidence in Git-ready, path-redacted records, and `whatships-all browse` provides an offline filterable HTML/CSV browser.
 
+**Search research evidence already checked into Git:** `whatships-all browse --out runs/whatships-catalog` overlays the validated `research/analysis/whatships/` per-video observations by default. `whatships-all research-report` counts source-linked visual tags and true sampled-PTS metrics without inventing camera/lighting labels or treating catalog entries as reviewed videos. See [where the video data lives](docs/whatships-video-data-location.md).
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
