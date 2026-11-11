@@ -84,6 +84,8 @@ def study_online_video(
             audio = (build_online_audio_cues(
                 media, max_seconds=max_seconds, ffmpeg=ffmpeg, ffprobe=ffprobe,
             ) if audio_cues else None)
+            if audio is not None:
+                audio["sourceSha256"] = numeric["sourceSha256"]
             semantics = (analyze_visual_samples(
                 samples, model=model, port=port,
                 cut_candidate_indices=tuple(numeric["cutCandidateFrameIndices"]),
