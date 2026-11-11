@@ -25,6 +25,7 @@ jobs:
           PYTHONPATH: src
         run: |
           python -m compileall -q src
+          python -m unittest tests.test_movie_promo_evidence -q
           python -m unittest tests.test_movie_promo_derivation_pipeline -q
           python -m scripts.rebuild_movie_promo_derived --verify
           python -m unittest tests.test_movie_promo_timed_events -q
