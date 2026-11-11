@@ -131,6 +131,20 @@ never copies media or uploads anything. Human-reviewed labels can then be
 scored with `kumiki-sequence-benchmark evaluate`. See
 [offline sequence labeling](docs/offline-sequence-labeling.md).
 
+### Source-to-animation mechanics (not generic component names)
+
+Supported source-hashed ROI motion events now produce
+`originalMotionMechanicIdeas` in `kumiki-insights`, a **seven-mechanic**
+set of specific original animation proposals: directed screen travel,
+apparent scale focus, paired convergence/divergence, layered crossing
+reveal, lane swap and shared shift with optional authored parallax.
+Each includes concrete choreography stages, authoring knobs, measured
+frame evidence, and possible existing `kumiki-ui` registry files
+inspected at a pinned revision. No inferred source character action,
+physical contact or true camera move is claimed. Candidate registry
+APIs and rendered quality remain unverified until separately tested.
+See [source-grounded animation mechanics](docs/source-to-original-animation-mechanics.md).
+
 ## Why this exists
 
 Professional motion graphics depend on more than shaders and easing presets:
