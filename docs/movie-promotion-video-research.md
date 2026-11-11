@@ -2,9 +2,9 @@
 
 **Research checked:** November 10, 2026  
 **Machine-readable cohort:** [`research/popular-movie-videos.v1.json`](../research/popular-movie-videos.v1.json)  
-**Evidence level:** 13 official YouTube uploads with attributable popularity observations; **5 Disney-hosted trailers actually processed from temporary MP4 files** in 15 non-overlapping 20-second windows (300 seconds total), plus separate limited manual visual observations. Extracted numerical evidence is committed; video, audio and image files are not.
+**Evidence level:** 13 official YouTube uploads with attributable popularity observations; **7 Disney-hosted trailers actually processed from temporary MP4 files** in 21 non-overlapping 20-second windows (420 seconds total), plus separate limited manual visual observations of the original five. Extracted numerical evidence is committed; video, audio and image files are not.
 
-**Measured data:** [`research/movie-promo-measurements-2026-11-10.json`](../research/movie-promo-measurements-2026-11-10.json) and [`research/movie-promo-evidence-2026-11-10/`](../research/movie-promo-evidence-2026-11-10/). The latter retains per-window source PTS, cut-candidate positions, two-dimensional motion results, sampled image appearance, decoded audio RMS/peak trajectories, onset candidates, edit rhythms and AV-cut comparisons. No source videos, frame images, signed CDN URLs or dialogue transcripts are committed.
+**Measured data:** the canonical [`research/analysis/movie-promotions/`](../research/analysis/movie-promotions/) folder holds [`index.json`](../research/analysis/movie-promotions/index.json) and one granular JSON file per analyzed trailer. It retains per-window source PTS, cut-candidate positions, two-dimensional motion results, sampled image appearance, decoded audio RMS/peak trajectories, onset candidates, edit rhythms and AV-cut comparisons. No source videos, frame images, signed CDN URLs or dialogue transcripts are committed.
 
 ## Scope and what the numbers do not mean
 
@@ -100,9 +100,9 @@ Player duration observed: approximately 2:26.
 
 **Hypothesis:** Compared with the selected *Infinity War* frames, the sampled *Endgame* frames emphasize memory, stillness and aftermath. This is a *qualitative observation of selected moments*, not a validated difference in the two trailers' average pacing or brightness.
 
-## First real, source-hashed machine measurements
+## Source-hashed machine measurements
 
-I downloaded publicly delivered H.264/AAC versions from each corresponding official Disney player solely for bounded research, processed them through `study-reference`, exported numeric reports, and removed the media after extraction. The 400–480p sources were ~113–146 seconds long. Three 20-second windows per trailer sampled the opening, approximate middle and ending; middle/ending excerpts were re-encoded temporarily and retain explicit offsets and their own hashes.
+I downloaded publicly delivered H.264/AAC versions from each corresponding official Disney player solely for bounded research, processed them through `study-reference`, exported numeric reports, and removed the media after extraction. The 400–480p sources were ~113–146 seconds long. Three 20-second windows per trailer sampled the opening, approximate middle and ending; middle/ending excerpts were re-encoded temporarily and retain explicit offsets and their own hashes. The additional *Zootopia 2* and *Force Awakens* players were processed in the same way, without claiming their Disney player encodes are byte-identical to the linked YouTube uploads.
 
 | Trailer | Sampled coverage | Cut candidates at default threshold 0.25 | Candidates at sensitivity threshold 0.15 | Audio-level attack candidates | Average sampled display-luma proxy |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -111,15 +111,17 @@ I downloaded publicly delivered H.264/AAC versions from each corresponding offic
 | *Moana 2* | 60 / 130 sec | 25 | 33 | 6 | 0.282 |
 | *Avengers: Infinity War* | 60 / 144 sec | 13 | 19 | 0 | 0.120 |
 | *Avengers: Endgame* | 60 / 146 sec | 11 | 14 | 3 | 0.169 |
+| *Zootopia 2* | 60 / 141 sec | 22 | 26 | 27 | 0.334 |
+| *Star Wars: The Force Awakens* | 60 / 138 sec | 10 | 23 | 5 | 0.176 |
 
-**Interpretation:** At both sensitivity settings, the *Inside Out 2* sample produced more possible hard edits than *Frozen 2*, which favors longer visually continuous stretches in these windows. *Moana 2* fell between them. *Endgame*'s sampled imagery was less saturated than *Infinity War*'s in this particular dataset, compatible with but not proof of a more restrained visual treatment. These are **screen-image differences**, not director intent or audience-performance explanations.
+**Interpretation:** At both sensitivity settings, the *Inside Out 2* sample produced more possible hard edits than *Frozen 2*, which favors longer visually continuous stretches in these windows. *Moana 2* fell between them. *Endgame*'s sampled imagery was less saturated than *Infinity War*'s in this particular dataset, compatible with but not proof of a more restrained visual treatment. *Zootopia 2* showed more cut candidates and onset candidates than *Force Awakens* at the default threshold, though the large 0.15-threshold increase for *Force Awakens* shows sensitivity to detector tuning. These are **screen-image differences**, not director intent or audience-performance explanations.
 
 **Do not treat the table as film-wide cuts/minute.** The FFmpeg scene-difference detector can undercount subtle/dark edits or overcount flashes/rapid action. Its marked events are not human-confirmed cuts. Counts reflect only 60 selected seconds per trailer and vary with threshold. Audio attacks are strict 12 dB RMS-rise candidates, not counts of dialogue, music beats or SFX. Display luma is measured on encoded sampled frames, including letterboxing and color grading; it cannot infer real lighting intensity or rig changes. No automatic speaker/character traits or actions were certified.
 
 ### What remains in Git
 
-- The compact **aggregate JSON** holds 15 named windows, source SHA-256 fingerprints, exact clip offsets, duration/coverage, candidate counts at both thresholds, sampled appearance summaries, image-translation availability and audio attacks.
-- Five **granular evidence JSON files**, one per trailer, retain timecoded cut positions; sampled color/hue measurements; motion and sparse optical-flow outputs; per-decoded-audio-frame RMS/peak levels; onset candidates; candidate edit intervals; and synchronized AV evidence. Arrays use original *window* PTS. For re-encoded windows, add the declared source offset for an **approximate** position in the full original trailer.
+- The compact **[index.json](../research/analysis/movie-promotions/index.json)** holds named windows, source SHA-256 fingerprints, clip offsets, duration/coverage, candidate counts at both thresholds, sampled appearance summaries, image-translation availability and audio attacks.
+- **Granular evidence JSON files** under the same folder, one per trailer, retain timecoded cut positions; sampled color/hue measurements; motion and sparse optical-flow outputs; per-decoded-audio-frame RMS/peak levels; onset candidates; candidate edit intervals; and synchronized AV evidence. Arrays use original *window* PTS. For re-encoded windows, add the declared source offset for an **approximate** position in the full original trailer.
 - The exporter [`scripts/export_movie_promo_evidence.py`](../scripts/export_movie_promo_evidence.py) rebuilds the numeric files from temporary studies, requiring `--summary`, `--media-root`, `--runs-root`, and `--out` on a fresh empty destination. It refuses to silently overwrite reports and verifies video/audio SHA consistency.
 - Copyrighted MP4s, encoded audio and extracted JPEG/HTML review galleries are **not** part of the repository. The original source URLs and hashes allow provenance checks, but hashes do not make footage reproducible once deleted.
 
@@ -134,7 +136,7 @@ I downloaded publicly delivered H.264/AAC versions from each corresponding offic
 | *Moana 2* vs. *The Super Mario Bros. Movie* | How is character attention preserved through fast-moving environments and effects? | Subject-aware composition, motion budgets and scale changes |
 | *Star Wars: The Force Awakens* vs. *Spider-Man: No Way Home* | When are recognizable characters, antagonists or franchise props revealed relative to the title? | Evidence-based reveal-timing recipes |
 
-None of these comparisons has measured paired edit rates, character traits, camera frequency or lighting frequency. The tags in the dataset are hypothesis/search labels only.
+The *Inside Out 2* / *Zootopia 2* pair now has **partial, machine-generated cut/appearance/audio measures** in the tracked dataset, but not reviewed character, camera or scene-label comparisons. Other pairs still lack comparable measured video. No comparison here establishes character traits, camera frequency or lighting frequency. The tags in the catalog are hypothesis/search labels only.
 
 ## Rigorous follow-up with authorized local media
 
@@ -152,4 +154,4 @@ Start with **three full 20-second windows per video** (opening, middle, final se
 
 ## Copyright and review status
 
-The catalog contains source links and independently written questions. The technical evidence contains numeric derivatives, not media files, extracted copyrighted frames, music, transcripts, meshes, character designs or thumbnails, and does not assert redistribution or training rights. All 13 catalog records deliberately retain the strict `editorial-candidate-not-frame-reviewed` status: five now have separately verified *machine measurement provenance*, but none has full-runtime human-certified visual/semantic interpretation. The other eight remain metadata-only.
+The catalog contains source links and independently written questions. The technical evidence contains numeric derivatives, not media files, extracted copyrighted frames, music, transcripts, meshes, character designs or thumbnails, and does not assert redistribution or training rights. All 13 catalog records deliberately retain the strict `editorial-candidate-not-frame-reviewed` status: seven now have separately verified *machine measurement provenance*, but none has full-runtime human-certified visual/semantic interpretation. The other six remain metadata-only.

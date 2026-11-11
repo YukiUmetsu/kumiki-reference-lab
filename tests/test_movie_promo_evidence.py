@@ -7,18 +7,28 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SUMMARY = ROOT / "research/movie-promo-measurements-2026-11-10.json"
-EVIDENCE = ROOT / "research/movie-promo-evidence-2026-11-10"
+EVIDENCE = ROOT / "research/analysis/movie-promotions"
+SUMMARY = EVIDENCE / "index.json"
 
 
 class MoviePromoEvidenceTests(unittest.TestCase):
-    def test_all_five_sources_have_three_source_hashed_numeric_windows(self):
+    def test_all_sources_have_three_source_hashed_numeric_windows(self):
         summary = json.loads(SUMMARY.read_text(encoding="utf-8"))
         self.assertEqual(summary["schemaVersion"], "kumiki.movie-promotion-measurements.v1")
         self.assertEqual(summary["rightsStatus"], "review-required")
         self.assertEqual(summary["mediaCleanupStatus"], "verified-deleted-after-export")
-        self.assertEqual(len(summary["videos"]), 5)
-        self.assertEqual(len(list(EVIDENCE.iterdir())), 5)
+        expected_sources = {
+            "inside-out-2", "frozen-2", "moana-2", "infinity-war",
+            "endgame", "zootopia-2", "force-awakens",
+        }
+        ids = [video["id"] for video in summary["videos"]]
+        self.assertEqual(len(ids), len(set(ids)), "duplicate trailer IDs")
+        self.assertTrue(expected_sources.issubset(ids))
+        self.assertEqual(
+            {path.name for path in EVIDENCE.glob("*.json")},
+            {"index.json", *(video_id + ".json" for video_id in ids)},
+            "each summary trailer must have exactly one tracked evidence file",
+        )
         sha = re.compile(r"^[0-9a-f]{64}$")
         for video in summary["videos"]:
             with self.subTest(video=video["id"]):
