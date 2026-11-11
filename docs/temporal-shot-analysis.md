@@ -24,8 +24,10 @@ workspace/frame-review/<source-id>/ until explicit cleanup.
 
 ## 2. Inspect candidate shots
 
-    kumiki-frames shots --workspace "$REVIEW" --shot-limit 12
-    kumiki-frames shots --workspace "$REVIEW" --shot-after 11 --shot-limit 12
+    python -m kumiki_reference_lab.pipeline.online_temporal shots \
+      --workspace "$REVIEW" --limit 12
+    python -m kumiki_reference_lab.pipeline.online_temporal shots \
+      --workspace "$REVIEW" --after-shot 11 --limit 12
 
 Each page returns shot-candidate time spans, incoming cut boundary, local
 frame indices, measured brightness and temporal-difference statistics, a
@@ -34,15 +36,17 @@ review frames. This **does not establish** true semantic scenes or verified
 editorial cuts: flash frames, rapid foreground motion and dissolves can
 produce incorrect boundaries.
 
-Navigate straight to the next useful frame:
+To inspect a suggested frame, pass one of the returned review frame indices
+to the existing agent interface:
 
-    kumiki-frames next --workspace "$REVIEW" --mode shots --after 0
+    kumiki-frames show --workspace "$REVIEW" --index 120
 
 ## 3. Reconstruct sparse image-plane motion from local frames
 
-    kumiki-frames motion --workspace "$REVIEW" \
+    python -m kumiki_reference_lab.pipeline.online_temporal motion \
+      --workspace "$REVIEW" \
       --max-motion-pairs 96 \
-      --motion-stride 8 \
+      --stride 8 \
       --search-radius 3
 
 This produces *only structured evidence JSON* at:
@@ -73,19 +77,19 @@ To study more motion detail, raise --max-motion-pairs, lower --motion-stride,
 and increase preview resolution in the initial capture. This increases CPU and
 I/O. The default budget is just 96 pairs.
 
-## 4. Focus small Magnitude models on shots, not arbitrary frames
+## 4. Focus small Magnitude models on the suggested frames
 
-    kumiki-frames scan --workspace "$REVIEW" \
-      --mode shots \
-      --categories animation,typography,visual-style \
-      --model 'MAGNITUDE_VISION_MODEL_ID' \
-      --max-calls 24 --max-failures 3
+The shot report returns stable and high-change frame indices for each
+candidate. A weak model can inspect those specific frames without a
+full-video prompt:
 
-The scan uses stable and high-change frames suggested by the shot plan. Each
-call still asks Magnitude only ONE short question using at most two adjacent
-frames. Re-run the command to resume unannotated frame/category pairs.
-The original --mode changed, --mode cuts and --mode interval continue working;
-use interval review for visually rich static sections.
+    kumiki-frames show --workspace "$REVIEW" --index 120
+    kumiki-frames infer --workspace "$REVIEW"       --index 120 --category animation       --model 'MAGNITUDE_VISION_MODEL_ID'
+
+Use existing --mode changed or --mode interval scans for additional coverage.
+The standalone temporal fallback deliberately does not modify the original
+agent command surface, avoiding conflict with the larger, separately reviewed
+cinematic intelligence integration.
 
 ## 5. Save descriptions and remove previews
 
