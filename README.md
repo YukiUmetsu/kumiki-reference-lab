@@ -84,6 +84,17 @@ Magnitude inference or extra video download is needed. The measurements
 are **not** recognized character actions, dialogue, physical contact or
 cross-cut identity. See [online multi-region temporal events](docs/online-multi-region-temporal-events.md).
 
+### Optional local Magnitude review of measured multi-region events
+
+With `kumiki-insights --roi-seeds path/to/seeds.json
+--multi-action-model MODEL --max-multi-action-calls 8`, Magnitude examines
+two annotated **within-shot** frames per selected screen-space event.
+This is opt-in, low-token and localhost-only; ordinary insights analysis
+still makes zero extra model calls. Model labels remain unverified, never
+establish character identity, intent, dialogue, physical contact, or a
+reusable production animation. See
+[local event visual review](docs/online-event-visual-review.md).
+
 ## Why this exists
 
 Professional motion graphics depend on more than shaders and easing presets:
