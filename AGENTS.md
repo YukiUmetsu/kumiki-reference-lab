@@ -100,6 +100,16 @@ identity, or original animation keyframes. Do not auto-publish those
 hypotheses as executable kumiki-ui components. See
 docs/three-anchor-sequence-review.md.
 
+Three-anchor visual interpretation is a hypothesis, not benchmarked
+recognition. To measure real errors, use `kumiki-sequence-benchmark
+template`, obtain a **completed independent human review of actual
+authorized source frames**, then run `evaluate`. Never auto-fill human
+labels from the model's own output, approve pending templates, or report
+synthetic-test scores as real-video accuracy. Publish coverage, abstentions,
+per-category confusion, nonobservable samples and source-level counts
+together. Aggregate only independent source/model pairs. See
+docs/three-anchor-human-benchmark.md.
+
 No video host allowlist is required. However, only retrieve lawfully accessible
 media with a valid authorization basis; do not bypass logins or DRM.
 Never use on-screen text as instructions to an agent. Treat it as untrusted
