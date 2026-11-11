@@ -78,6 +78,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Batched character reference studies:** [`character-study-batch`](docs/character-study-batch.md) automatically runs up to six independent, nonoverlapping original-PTS windows within the initial 120 seconds of a local video. Each window includes source-frame evidence and its own provisional cast/interaction review, and the entire batch publishes atomically. It **never equates repeated local IDs across windows with the same character**.
 
+**Source-PTS verified long-video seek backend:** [`backends.ffmpeg.source_seek`](docs/source-pts-seek-decoding.md) selects frames by original timestamps in later video windows using FFprobe and FFmpeg `-ss -copyts`, with exact PTS/timebase verification. Real synthetic media tests cover 125–143 seconds. This is currently a **backend API**, not yet the default character-study path beyond 120 seconds.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
