@@ -85,7 +85,7 @@ def audit(root: Path) -> list[str]:
             if summary.get("cutCandidateCountAtThreshold015") != window.get("sensitivityCutCandidateCount"):
                 errors.append(f"{slug}/{name}: sensitivity count mismatch")
     for path in root.glob("*.json"):
-        if path.name != "index.json" and path.stem not in seen:
+        if path.name not in {"index.json", "study-queue.v1.json"} and path.stem not in seen:
             errors.append(f"{path.name}: unindexed detail file")
     return errors
 
