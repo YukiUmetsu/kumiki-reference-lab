@@ -1,11 +1,10 @@
 {
   "schemaVersion": "kumiki.motionographer-index.v1",
-  "generatedAt": "2026-11-11T21:12:48.645831Z",
+  "generatedAt": "2026-11-11T21:13:00.544724Z",
   "catalogSha256": "23f813dafb11e546fc8c62f962bf435b8d7aa75e4a00f3c4179f6459e68b7893",
   "counts": {
-    "measured": 60,
+    "measured": 63,
     "no-video": 7385,
-    "pending": 3,
     "unsupported-format": 1053,
     "unsupported-host-not-allowlisted": 17,
     "unsupported-other-embed": 56,
@@ -11780,7 +11779,18 @@
       "mediaSlug": "detail-UI",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 7.882875,
+      "resolution": [
+        1280,
+        720
+      ],
+      "sourceSha256": "861cd249243b7994b10861c5d3e373a0fbfbcb64767683457d71665df1f38061",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.855724,
+      "meanSaturation": 0.040357,
+      "recordPath": "videos/interactive-experiences-at-the-human-scale-making-centerstage-with-andrew-bell-and-lutz-vogel--detail-UI.json"
     },
     {
       "postId": 56722,
@@ -11800,7 +11810,18 @@
       "mediaSlug": "detail-swipe",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 3.003,
+      "resolution": [
+        1280,
+        720
+      ],
+      "sourceSha256": "cba8c091b78d61e241f915e2ff28803af0283db9d14963b97fdd449f38c9297a",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.417058,
+      "meanSaturation": 0.184716,
+      "recordPath": "videos/interactive-experiences-at-the-human-scale-making-centerstage-with-andrew-bell-and-lutz-vogel--detail-swipe.json"
     },
     {
       "postId": 56722,
@@ -12470,7 +12491,18 @@
       "mediaSlug": "animation-meaningfultransitions-visualcontinuity_music-tablet",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 10.2,
+      "resolution": [
+        960,
+        720
+      ],
+      "sourceSha256": "29cdfbf71ecf18f15b5dd420df98b8caa2e2e50ef4a4434e7ae6f208737ef750",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.481205,
+      "meanSaturation": 0.444102,
+      "recordPath": "videos/how-google-uses-motion-design-to-make-tangible-tech--animation-meaningfultransitions-visualcontinuity_music-tablet.json"
     },
     {
       "postId": 56694,
