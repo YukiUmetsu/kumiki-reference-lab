@@ -435,7 +435,9 @@ def aggregate_benchmarks(reports: list[dict[str, Any]]) -> dict[str, Any]:
         grouped[report["modelTag"]].append(report)
     models = []
     for model, entries in sorted(grouped.items()):
-        rows = [phase for report in entries for phase in report["phases"]]
+        rows = [{**phase,
+                 "sequenceId": report["sourceSha256"] + ":" + phase["sequenceId"]}
+                for report in entries for phase in report["phases"]]
         models.append({
             "modelTag": model,
             "distinctSourceCount": len(entries),
