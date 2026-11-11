@@ -137,9 +137,10 @@ class LocalInteractionTests(unittest.TestCase):
         self.detections["cutCandidatePts"] = [500]
         self.prepare()
         path, calls = self.run_mock()
-        self.assertEqual(calls, 1)  # only pair after the cut can be considered
+        self.assertEqual(calls, 0)  # new post-cut tracklets are absent from the reviewed roster
         scene = load_character_scene(path)
-        self.assertEqual(scene["actions"][-1]["startPts"], 1000)
+        self.assertEqual(len(scene["actions"]), 1)
+        self.assertIsNone(scene["actions"][-1]["targetId"])
 
     def test_model_error_never_publishes(self):
         with self.assertRaisesRegex(ValueError, "unsupported"):
