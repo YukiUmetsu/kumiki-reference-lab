@@ -89,3 +89,20 @@ Newly measured records store `scan.sourcePtsFramesSeenInInventory` for each samp
 ## Run a bounded category-balanced analysis batch
 
 Use [`whatships-measure-batch`](../../../docs/whatships-direct-batch.md) with the private authorized media-binding ledger to analyze up to four unmeasured source videos, automatically skipping completed SHA-identical records and preserving each successful per-video JSON in this Git directory. One failed video does not discard earlier measured results. Inspect the resulting `git diff` before committing; no raw video or private path is stored here.
+
+## Incrementally fill the remaining timeline gaps
+
+A film's first analysis contains sparse windows, not continuous coverage. Repeat the original-source-PTS measurement with `--fill-gaps` to add disjoint intervals to the **same** versioned source record:
+
+```bash
+PYTHONPATH=src python -m kumiki_reference_lab whatships-measure \
+  "$HOME/whatships-private/bindings-002/media-bindings.json" \
+  whatships:paper-mono-code --fill-gaps \
+  --window-seconds 10 --window-count 6 --max-samples 12
+```
+
+The planner uses the already saved `[startSeconds,endSeconds)` intervals, selects the largest uncovered gaps, and processes up to six new windows per invocation. It permits short final windows and does not repeat existing windows. Additions must be source-SHA-identical and **strictly nonoverlapping**. Any conflicting or overlapping measurements fail rather than replacing prior evidence. Source records can currently contain up to 64 measured windows; source-relative video time after one hour remains unsupported by the decoder.
+
+When all supported whole-second intervals have been assigned a sampled window, the command reports `no-remaining-whole-second-gaps-within-supported-timeline` without altering the Git worktree. **This does not imply that all frames within those intervals were decoded, or that the film was human reviewed.** Source-PTS inventory counts still distinguish sampled frames from available frames within each interval.
+
+For previous batch exports, `whatships-all sync-analysis --append-numeric-windows --incoming ...` offers the same nonoverlapping merge policy. Do not combine it with `--replace-existing`. Subsequent `git add` and `git commit` remain explicit.
