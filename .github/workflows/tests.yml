@@ -26,6 +26,7 @@ jobs:
         run: |
           python -m compileall -q src
           python -m unittest tests.test_online_video_study -q
+          python -m unittest tests.test_agent_frame_review -q
           python -m unittest tests.test_movie_promo_evidence -q
           python -m unittest tests.test_blender_publisher_promo -q
           python -m unittest tests.test_movie_promo_derivation_pipeline -q
