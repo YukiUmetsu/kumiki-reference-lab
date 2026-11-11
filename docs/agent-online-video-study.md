@@ -60,6 +60,31 @@ frames to be eligible, and raise `--max-semantic-frames` within the bound.
 Ollama inference can be substantially slower than frame decoding. The default
 model-call budget is 24, not an assertion of per-frame semantic classification.
 
+## Low-compute agents: Magnitude and frame-by-frame workspace
+
+When using a small local vision model, prefer the separate **two-stage**
+workflow instead of supplying a large semantic prompt to the video runner:
+
+1. Add `--review-frames` to `kumiki-watch`, and OMIT `--model`.
+   FFmpeg creates one low-resolution PNG per decoded frame in
+   `workspace/frame-review/<source-id>/`, which is already Git-ignored.
+   The downloaded full video is deleted.
+2. Use `kumiki-frames show` and `kumiki-frames next` to inspect exact local
+   frame paths individually. Offline index.html also supports keyboard
+   frame stepping.
+3. Use `kumiki-frames infer --category animation --model YOUR_MAGNITUDE_VISION_MODEL_ID`
+   to ask one narrow local Magnitude question, or run a bounded/resumable
+   `kumiki-frames scan`. Neither requires Ollama.
+4. Export timecoded annotations to
+   `research/analysis/online-videos/<source-id>.frame-notes.json`,
+   then use `kumiki-frames cleanup` to remove local frame previews.
+
+See [Magnitude agent frame workflow](magnitude-agent-frame-workflow.md).
+The original Ollama `kumiki-watch --model` path remains available for users
+who want all-in-one sampled visual proposals. **The retained local PNG workspace
+is optional and does not enter Git.** Disk usage is limited by
+`--max-review-bytes`, default 256 MiB.
+
 ## Data retained in Git
 
 ```text
@@ -102,8 +127,9 @@ The architecture is split into reusable agents/services:
 
 The runner uses a `TemporaryDirectory` around acquisition and every
 subsequent analysis stage. **No downloaded video, audio, original frames,
-screenshots, captions or model prompts enter Git.** Local PNGs are created in
-memory only to reach the loopback vision model; only evidence JSON remains.
+screenshots, captions or model prompts enter Git.** By default, PNGs are created only in memory for local vision inference.
+With --review-frames, low-resolution PNG previews are deliberately retained
+inside ignored workspace/ for agent review; they are deleted by explicit cleanup.
 The rights note is not committed.
 
 ## Security and rights
