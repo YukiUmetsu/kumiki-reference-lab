@@ -16,6 +16,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+from kumiki_reference_lab.analyzers.media.inspect import sha256_file
 from kumiki_reference_lab.catalog.video_sources import _load_snapshot, _from_whatships
 from kumiki_reference_lab.catalog.whatships_data_dashboard import build_whatships_browser
 from kumiki_reference_lab.catalog.whatships_media_bindings import _read_json
@@ -381,9 +382,9 @@ def validate_repository_analysis(path: Path, snapshot_path: Path) -> dict[str,An
                     not isinstance(numeric.get("windows"),list) or
                     not 1 <= len(numeric["windows"]) <= _MAX_WINDOWS):
                 raise ValueError("repository numeric source fingerprint/windows malformed")
-    if (index.get("catalogSnapshotSha256") != __import__("hashlib").sha256(
-            snapshot_path.read_bytes()).hexdigest() or
-            index.get("browserSpotCheckCount") != browser_count or
+    if index.get("catalogSnapshotSha256") != sha256_file(snapshot_path):
+        raise ValueError("repository catalog snapshot SHA does not match source file")
+    if (index.get("browserSpotCheckCount") != browser_count or
             index.get("sampledNumericVideoCount") != numeric_count or
             index.get("fullFilmReviewedCount") != 0):
         raise ValueError("repository index misstates observation coverage")
