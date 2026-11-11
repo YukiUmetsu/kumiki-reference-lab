@@ -11,6 +11,27 @@ from pathlib import Path
 from scripts.derive_movie_promo_timed_events import derive_from_folder, derive_timed_events
 
 
+def first_difference(expected, actual, path="root"):
+    """Return the first useful field-level mismatch for stale-derived-data failures."""
+    if isinstance(expected, dict) and isinstance(actual, dict):
+        for key in sorted(set(expected) | set(actual)):
+            if key not in expected or key not in actual:
+                return f"{path}.{key}: missing key"
+            diff = first_difference(expected[key], actual[key], f"{path}.{key}")
+            if diff:
+                return diff
+    elif isinstance(expected, list) and isinstance(actual, list):
+        if len(expected) != len(actual):
+            return f"{path}: lengths {len(expected)} vs {len(actual)}"
+        for i, (a, b) in enumerate(zip(expected, actual)):
+            diff = first_difference(a, b, f"{path}[{i}]")
+            if diff:
+                return diff
+    elif expected != actual:
+        return f"{path}: committed={expected!r}, generated={actual!r}"
+    return None
+
+
 class TimedMovieEvidenceTests(unittest.TestCase):
     def setUp(self):
         self.source_hash = "a" * 64
@@ -104,7 +125,10 @@ class TimedMovieEvidenceTests(unittest.TestCase):
         output = root / "derived/timed-events.v1.json"
         if not (root / "index.json").is_file() or not output.is_file():
             self.skipTest("requires complete checked-out repository")
-        self.assertEqual(json.loads(output.read_text(encoding="utf-8")), derive_from_folder(root))
+        committed = json.loads(output.read_text(encoding="utf-8"))
+        generated = derive_from_folder(root)
+        mismatch = first_difference(committed, generated)
+        self.assertIsNone(mismatch, mismatch)
 
 
 if __name__ == "__main__":
