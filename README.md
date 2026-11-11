@@ -94,6 +94,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **No-repeat numeric visual backfill:** [`whatships-visual-backfill`](docs/whatships-visual-backfill.md) adds original-PTS cut/color/brightness/image-change measurements to previously completed private What Ships character studies without rerunning VLM inference. All outputs are SHA-bound and resumable, and redacted reports never imply that camera/lighting/style judgments are verified.
 
+**Where the What Ships video analysis data lives:** [data guide](docs/whatships-video-data-location.md) · [Git-versioned per-video analysis JSON](research/analysis/whatships/) · [all 2,861 catalog entries](research/whatships-index-2026-11-10.json). The canonical research/analysis/whatships directory starts with nine existing source-linked browser observations, not fabricated full-film analyses; `whatships-all export-analysis` preserves validated local source-PTS numeric evidence in Git-ready, path-redacted records, and `whatships-all browse` provides an offline filterable HTML/CSV browser.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |

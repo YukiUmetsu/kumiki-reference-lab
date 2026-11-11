@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "kumiki.whatships-repository-analysis.v1",
+  "sourceId": "whatships:claude-motion-reel",
+  "watchUrl": "https://whatships.com/videos/claude-motion-reel/",
+  "catalogSnapshotOn": "2026-11-10",
+  "catalogSnapshotSha256": "bcd18c1758d6e160bbe55eb79e11bcd2390a3c907a782bfbeaa387e0a034b01d",
+  "sourceMediaSha256": null,
+  "coverage": {
+    "hasBrowserSpotCheck": true,
+    "hasSampledNumericSourceFrames": false,
+    "hasUnreviewedCharacterJob": false,
+    "fullFilmReviewed": false
+  },
+  "evidence": {
+    "browserSpotCheck": {
+      "observedOn": "2026-11-10",
+      "method": "browser-player",
+      "coverage": "selected-moments-only",
+      "visualTags": [
+        "easing-demo",
+        "kinetic-typography",
+        "high-contrast-color"
+      ],
+      "visibleMoments": [
+        "A six-row demonstration shows differently shaped easing curves and colored dots on tracks.",
+        "Oversized repeated black NEVER lettering fills a fluorescent yellow composition.",
+        "An orange-coral end card pairs a bold Claude wordmark with a floral mark and serif subline."
+      ],
+      "techniqueHypotheses": [
+        "Try moving visual explanations of easing, followed by a tightly restricted high-contrast typographic reveal."
+      ],
+      "sourcePts": null,
+      "evidenceStatus": "browser-moments-observed-no-timestamp-or-complete-film-review"
+    }
+  },
+  "limits": [
+    "No record should be interpreted as verified full-video coverage.",
+    "Observed browser moments lack original PTS unless separately analyzed.",
+    "RGB/cut metrics are source-frame numerical proxies, not camera/lighting/style truth.",
+    "Model-generated character observations have not been human-reviewed.",
+    "No local paths, original media, private notes or source-video frames are included."
+  ]
+}

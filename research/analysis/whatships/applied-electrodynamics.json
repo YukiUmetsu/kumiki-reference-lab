@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "kumiki.whatships-repository-analysis.v1",
+  "sourceId": "whatships:applied-electrodynamics",
+  "watchUrl": "https://whatships.com/videos/applied-electrodynamics/",
+  "catalogSnapshotOn": "2026-11-10",
+  "catalogSnapshotSha256": "bcd18c1758d6e160bbe55eb79e11bcd2390a3c907a782bfbeaa387e0a034b01d",
+  "sourceMediaSha256": null,
+  "coverage": {
+    "hasBrowserSpotCheck": true,
+    "hasSampledNumericSourceFrames": false,
+    "hasUnreviewedCharacterJob": false,
+    "fullFilmReviewed": false
+  },
+  "evidence": {
+    "browserSpotCheck": {
+      "observedOn": "2026-11-10",
+      "method": "browser-player",
+      "coverage": "selected-moments-only",
+      "visualTags": [
+        "cinematic-imagery",
+        "live-action",
+        "technical-illustration"
+      ],
+      "visibleMoments": [
+        "A dark, softly lit vintage computer is shown against a black backdrop with short white text.",
+        "Another sampled moment shows a person working on electronics at a cluttered bench.",
+        "A white screen displays a thin black patent-style drawing of a device."
+      ],
+      "techniqueHypotheses": [
+        "Study transitions between atmospheric scenes, documentary footage and sparse technical diagrams."
+      ],
+      "sourcePts": null,
+      "evidenceStatus": "browser-moments-observed-no-timestamp-or-complete-film-review"
+    }
+  },
+  "limits": [
+    "No record should be interpreted as verified full-video coverage.",
+    "Observed browser moments lack original PTS unless separately analyzed.",
+    "RGB/cut metrics are source-frame numerical proxies, not camera/lighting/style truth.",
+    "Model-generated character observations have not been human-reviewed.",
+    "No local paths, original media, private notes or source-video frames are included."
+  ]
+}

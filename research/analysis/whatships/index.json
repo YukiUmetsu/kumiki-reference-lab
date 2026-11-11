@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "kumiki.whatships-repository-analysis-index.v1",
+  "catalogSnapshotOn": "2026-11-10",
+  "catalogSnapshotSha256": "bcd18c1758d6e160bbe55eb79e11bcd2390a3c907a782bfbeaa387e0a034b01d",
+  "catalogVideoCount": 2861,
+  "sourceLinkedAnalysisCount": 9,
+  "browserSpotCheckCount": 9,
+  "sampledNumericVideoCount": 0,
+  "unreviewedCharacterJobCount": 0,
+  "fullFilmReviewedCount": 0,
+  "entries": [
+    {
+      "sourceId": "whatships:agent-desktop",
+      "recordPath": "agent-desktop.json",
+      "evidenceKinds": [
+        "browserSpotCheck"
+      ]
+    },
+    {
+      "sourceId": "whatships:applied-electrodynamics",
+      "recordPath": "applied-electrodynamics.json",
+      "evidenceKinds": [
+        "browserSpotCheck"
+      ]
+    },
+    {
+      "sourceId": "whatships:canva-craft",
+      "recordPath": "canva-craft.json",
+      "evidenceKinds": [
+        "browserSpotCheck"
+      ]
+    },
+    {
+      "sourceId": "whatships:claude-motion-reel",
+      "recordPath": "claude-motion-reel.json",
+      "evidenceKinds": [
+        "browserSpotCheck"
+      ]
+    },
+    {
+      "sourceId": "whatships:figma-3980",
+      "recordPath": "figma-3980.json",
+      "evidenceKinds": [
+        "browserSpotCheck"
+      ]
+    },
+    {
+      "sourceId": "whatships:gpt-6-1-terra",
+      "recordPath": "gpt-6-1-terra.json",
+      "evidenceKinds": [
+        "browserSpotCheck"
+      ]
+    },
+    {
+      "sourceId": "whatships:grok-bot-icon-in-code",
+      "recordPath": "grok-bot-icon-in-code.json",
+      "evidenceKinds": [
+        "browserSpotCheck"
+      ]
+    },
+    {
+      "sourceId": "whatships:paper-mono-code",
+      "recordPath": "paper-mono-code.json",
+      "evidenceKinds": [
+        "browserSpotCheck"
+      ]
+    },
+    {
+      "sourceId": "whatships:subvocal",
+      "recordPath": "subvocal.json",
+      "evidenceKinds": [
+        "browserSpotCheck"
+      ]
+    }
+  ],
+  "limits": [
+    "Only records with actual observational evidence are stored here.",
+    "Metadata-only catalog entries stay in research/whatships-index-2026-11-10.json.",
+    "Do not equate a model completion or numeric frame sample with expert review."
+  ]
+}
