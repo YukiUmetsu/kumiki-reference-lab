@@ -11,6 +11,7 @@ from unittest.mock import patch
 from kumiki_reference_lab.cli.app import build_parser
 from kumiki_reference_lab.pipeline.subject_detection_benchmark import (
     _maximum_cardinality_matches, evaluate_subject_boxes, run_subject_box_benchmark,
+    create_subject_box_label_template,
 )
 
 
@@ -167,6 +168,19 @@ class SubjectDetectionBenchmarkTests(unittest.TestCase):
             with self.subTest(threshold=threshold), self.assertRaises(ValueError):
                 evaluate_subject_boxes(self.pred, self.gt, min_iou=threshold)
 
+    def test_label_template_is_explicitly_pending_until_human_approval(self):
+        path = self.root / "pending-annotations.json"
+        create_subject_box_label_template(self.pred_path, path)
+        data = json.loads(path.read_text())
+        self.assertEqual(data["coverageDeclaration"], "pending-review")
+        self.assertEqual(data["reviewer"]["id"], "unassigned")
+        self.assertEqual([f["sourcePts"] for f in data["frames"]], [0, 1000])
+        self.assertTrue(all(f["subjects"] == [] for f in data["frames"]))
+        with self.assertRaisesRegex(ValueError, "declare complete"):
+            evaluate_subject_boxes(self.pred, data)
+        with self.assertRaisesRegex(ValueError, "new file"):
+            create_subject_box_label_template(self.pred_path, path)
+
     def test_cli(self):
         args = build_parser().parse_args([
             "evaluate-character-detections", "clip.mp4", "detections.json",
@@ -174,6 +188,10 @@ class SubjectDetectionBenchmarkTests(unittest.TestCase):
         self.assertEqual(args.command, "evaluate-character-detections")
         self.assertEqual(args.min_iou, .7)
         self.assertEqual(args.ground_truth, Path("human-labels.json"))
+        template = build_parser().parse_args([
+            "character-labels-template", "detections.json",
+            "--out", "pending-labels.json"])
+        self.assertEqual(template.command, "character-labels-template")
 
 
 if __name__ == "__main__":
