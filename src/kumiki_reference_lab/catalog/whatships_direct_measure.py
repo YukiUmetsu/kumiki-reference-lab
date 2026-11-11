@@ -161,6 +161,7 @@ def measure_whatships_to_repository(
     window_count: int = 4, max_samples: int = 12,
     width: int = 160, height: int = 90, cut_threshold: float = 0.25,
     replace_existing: bool = False, fill_gaps: bool = False,
+    image_translation: bool = False,
     ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
 ) -> dict[str, Any]:
     """Record source-grounded pixels in research/analysis/whatships/<slug>.json.
@@ -172,6 +173,7 @@ def measure_whatships_to_repository(
     if type(source_id) is not str or not source_id.startswith("whatships:"):
         raise ValueError("must specify exact whatships:slug catalog identity")
     if (type(replace_existing) is not bool or type(fill_gaps) is not bool or
+            type(image_translation) is not bool or
             (replace_existing and fill_gaps) or type(max_samples) is not int or
             not 5 <= max_samples <= 24 or type(width) is not int or
             not 64 <= width <= 320 or type(height) is not int or
@@ -250,7 +252,8 @@ def measure_whatships_to_repository(
             source, start_seconds=start, seconds=end-start,
             max_samples=max_samples, width=width, height=height,
             cut_threshold=float(cut_threshold),
-            rights_status="user-declared-authorized", ffmpeg=ffmpeg, ffprobe=ffprobe)
+            rights_status="user-declared-authorized", ffmpeg=ffmpeg, ffprobe=ffprobe,
+            **({"image_translation":True} if image_translation else {}))
         numeric_windows.append(_checked_window(
             report, expected_sha=binding["mediaSha256"],
             expected_stream=binding["sourceStreamIndex"],
