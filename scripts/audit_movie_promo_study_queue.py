@@ -87,7 +87,7 @@ def audit(queue: dict, catalog: dict) -> list[str]:
             errors.append(f"{slug}: invalid reported views")
         if view.get("retrievedOn") != queue.get("retrievedOn"):
             errors.append(f"{slug}: unaligned evidence retrieval date")
-        if view.get("sourceKind") not in {"youtube-search-index", "third-party-channel-statistics"}:
+        if view.get("sourceKind") not in {"youtube-search-index", "third-party-channel-statistics", "third-party-video-statistics"}:
             errors.append(f"{slug}: invalid view evidence category")
         url = view.get("sourceUrl")
         try:
@@ -98,7 +98,10 @@ def audit(queue: dict, catalog: dict) -> list[str]:
                         (host not in {"www.youtube.com", "youtube.com"}
                          or url != item.get("officialYoutubeUrl")))
                     or (view.get("sourceKind") == "third-party-channel-statistics" and
-                        host != "trari.com")):
+                        host != "trari.com")
+                    or (view.get("sourceKind") == "third-party-video-statistics" and
+                        (host != "chartslist.com" or
+                         not parsed.path.startswith(f"/youtube/video/{video_id}/")))):
                 errors.append(f"{slug}: unsafe evidence URL")
         except ValueError:
             errors.append(f"{slug}: unsafe evidence URL")
