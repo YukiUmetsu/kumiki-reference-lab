@@ -7,8 +7,11 @@ import tempfile
 import unittest
 from fractions import Fraction
 from pathlib import Path
+from unittest.mock import patch
 
 from kumiki_reference_lab.backends.ffmpeg.probe import ProbeError
+from kumiki_reference_lab.pipeline.local_character_study import run_local_character_study
+from kumiki_reference_lab.reviews.character_scene import load_character_scene
 from kumiki_reference_lab.backends.ffmpeg.source_seek import (
     probe_source_window, decode_rgb_source_pts_seek, detect_source_window_cuts_seek,
 )
@@ -60,6 +63,65 @@ class OriginalPtsSourceSeekTests(unittest.TestCase):
             self.path, 0, window=result)
         self.assertEqual(cuts.timebase, Fraction(1, 10240))
         self.assertEqual(cuts.pts, ())
+
+    def test_full_character_study_from_125_seconds_uses_real_seek_and_all_galleries(self):
+        destination = Path(self.temp.name) / "late-character-study"
+        def boxes(images, **kwargs):
+            self.assertTrue(images[0].startswith(b"\x89PNG\r\n\x1a\n"))
+            return {"subjects": [
+                {"category": "animated-character", "box": [.05,.10,.25,.65]},
+                {"category": "animated-character", "box": [.53,.10,.25,.65]},
+            ]}
+        def appearance(images, *, previous, **kwargs):
+            return {
+                "appearance": "A clear rectangular figure in a vivid colored outfit.",
+                "visibleTraits": ["vivid rectangular silhouette"],
+                "observedAction": "none", "motionEvidence": "",
+            }
+        def pair(images, **kwargs):
+            self.assertEqual(len(images), 2)
+            return {"actorColor": "none", "interaction": "none",
+                    "visualEvidence": ""}
+        with (
+            patch(
+                "kumiki_reference_lab.pipeline.ollama_subject_detection._ollama_json",
+                side_effect=boxes,
+            ),
+            patch(
+                "kumiki_reference_lab.pipeline.ollama_character_perception._ollama_chat",
+                side_effect=appearance,
+            ),
+            patch(
+                "kumiki_reference_lab.pipeline.local_character_interactions._ollama_json",
+                side_effect=pair,
+            ),
+        ):
+            path = run_local_character_study(
+                self.path, destination, model="original-synthetic:1b",
+                detector="ollama", start_seconds=125, max_seconds=3,
+                max_samples=5, max_calls=10, max_pairs=4,
+                width=160, height=90, timeout_seconds=10,
+                review=True, interactions=True,
+            )
+        import json
+        manifest = json.loads(path.read_text())
+        self.assertEqual(manifest["sourceWindowEndSeconds"], 128)
+        self.assertEqual(manifest["sourceDecodeMode"], "verified-seek-original-pts-v1")
+        self.assertIsNone(manifest["scanPrefixSeconds"])
+        self.assertEqual(manifest["provisionalTracklets"], 2)
+        self.assertEqual(manifest["visionAppearanceProposals"], 10)
+        detections = json.loads(
+            (destination / "subject-detections.json").read_text())
+        pts = [x["sourcePts"] for x in detections["frames"]]
+        self.assertEqual(len(pts), 5)
+        self.assertEqual(pts[0], 125*10240)
+        self.assertTrue(all(125*10240 <= p < 128*10240 for p in pts))
+        scene = load_character_scene(
+            destination / "character-interactions" / "character-scene.json")
+        self.assertEqual(scene["actions"], [])
+        self.assertEqual(scene["utterances"], [])
+        for gallery in ("tracklet-qa", "character-qa", "interaction-qa"):
+            self.assertTrue((destination / gallery / "index.html").is_file())
 
     def test_late_off_grid_start_is_not_rounded_or_renumbered(self):
         result = probe_source_window(
