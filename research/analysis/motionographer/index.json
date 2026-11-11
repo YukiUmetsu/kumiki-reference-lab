@@ -1,11 +1,11 @@
 {
   "schemaVersion": "kumiki.motionographer-index.v1",
-  "generatedAt": "2026-11-11T21:11:49.598865Z",
+  "generatedAt": "2026-11-11T21:12:09.224710Z",
   "catalogSha256": "23f813dafb11e546fc8c62f962bf435b8d7aa75e4a00f3c4179f6459e68b7893",
   "counts": {
-    "measured": 45,
+    "measured": 50,
     "no-video": 7385,
-    "pending": 18,
+    "pending": 13,
     "unsupported-format": 1053,
     "unsupported-host-not-allowlisted": 17,
     "unsupported-other-embed": 56,
@@ -10465,7 +10465,18 @@
       "mediaSlug": "OrderBook_Animatic_Process",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 11.833333,
+      "resolution": [
+        720,
+        402
+      ],
+      "sourceSha256": "1642738c66e246781cbf56e98413e2a35062de3e1d3eb72f720c3e3d1cfacf3f",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 6.0,
+      "meanDisplayLuma": 0.262581,
+      "meanSaturation": 0.103532,
+      "recordPath": "videos/how-a-husband-and-wife-team-took-a-startup-from-brand-to-product-launch--OrderBook_Animatic_Process.json"
     },
     {
       "postId": 58246,
@@ -10485,7 +10496,18 @@
       "mediaSlug": "investor-confidence_noaudio_c1",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 7.76,
+      "resolution": [
+        700,
+        394
+      ],
+      "sourceSha256": "e637111434c2fe2e7399e9c3f4fee75817b7d2ab1ef5c57c84255b8ec0e35d58",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.130919,
+      "meanSaturation": 0.094033,
+      "recordPath": "videos/how-a-husband-and-wife-team-took-a-startup-from-brand-to-product-launch--investor-confidence_noaudio_c1.json"
     },
     {
       "postId": 58246,
@@ -10505,7 +10527,18 @@
       "mediaSlug": "Motion_BTK_Cratering",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 6.444444,
+      "resolution": [
+        700,
+        390
+      ],
+      "sourceSha256": "78e71589257558cf690d863d3c1933e20a6acf15f11d2a6e3c63fd448c296c61",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.172788,
+      "meanSaturation": 0.008471,
+      "recordPath": "videos/how-a-husband-and-wife-team-took-a-startup-from-brand-to-product-launch--Motion_BTK_Cratering.json"
     },
     {
       "postId": 58246,
@@ -10735,7 +10768,18 @@
       "mediaSlug": "alphabet_colour_02_1",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 9.041667,
+      "resolution": [
+        960,
+        540
+      ],
+      "sourceSha256": "d759984d82aa4b7924a4d5b662a9de0735ff0e220c13b3ae72810b80cc9dd63f",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 45.0,
+      "meanDisplayLuma": 0.569602,
+      "meanSaturation": 0.519478,
+      "recordPath": "videos/in-depth-making-the-best-of-motionographer-with-aran-quinn-and-mill--alphabet_colour_02_1.json"
     },
     {
       "postId": 58096,
@@ -10775,7 +10819,18 @@
       "mediaSlug": "Kiss_Rectangle",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 3.833333,
+      "resolution": [
+        1280,
+        720
+      ],
+      "sourceSha256": "cd5b816f338038d307c094dcb24abe42001424c693a1857e90fb173daffc8289",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 100.0,
+      "meanDisplayLuma": 0.508158,
+      "meanSaturation": 0.426011,
+      "recordPath": "videos/process-making-the-f5-opening-titles-with-block-tackle--Kiss_Rectangle.json"
     },
     {
       "postId": 57994,

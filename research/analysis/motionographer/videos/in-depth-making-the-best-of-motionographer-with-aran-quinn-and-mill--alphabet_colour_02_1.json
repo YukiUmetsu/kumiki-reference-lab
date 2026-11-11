@@ -1,0 +1,478 @@
+{
+  "schemaVersion": "kumiki.motionographer-video-evidence.v1",
+  "mediaId": "58096-2",
+  "mediaSlug": "alphabet_colour_02_1",
+  "postId": 58096,
+  "postSlug": "in-depth-making-the-best-of-motionographer-with-aran-quinn-and-mill",
+  "postLink": "https://motionographer.com/2015/05/11/in-depth-making-the-best-of-motionographer-with-aran-quinn-and-mill/",
+  "title": "In-Depth: Making the Best of Motionographer with Aran Quinn and Mill+",
+  "date": "2015-05-11T01:29:20",
+  "source": {
+    "mediaSha256": "d759984d82aa4b7924a4d5b662a9de0735ff0e220c13b3ae72810b80cc9dd63f",
+    "sizeBytes": 421147,
+    "durationSeconds": 9.041667,
+    "resolution": [
+      960,
+      540
+    ],
+    "frameRate": {
+      "numerator": 24,
+      "denominator": 1
+    },
+    "sourceTimebase": {
+      "numerator": 1,
+      "denominator": 12288
+    },
+    "container": "mov,mp4,m4a,3gp,3g2,mj2",
+    "videoCodec": "h264",
+    "audioCodec": null,
+    "hasAudio": false
+  },
+  "acquisition": {
+    "provider": "self-hosted-mp4",
+    "videoUrl": "https://s35726.pcdn.co/wp-content/uploads/2015/05/alphabet_colour_02_1.mp4",
+    "method": "http-download",
+    "mediaRetained": false,
+    "attestation": {
+      "rightsBasis": "user-declared-research-use",
+      "note": "operator attests public-post research use; downloaded media is deleted after numeric source-PTS measurement and is not redistributed"
+    }
+  },
+  "coverage": {
+    "windowsMeasured": 1,
+    "windowSeconds": 8,
+    "sampledSeconds": 8,
+    "fractionOfRuntime": 0.884793,
+    "fullRuntimeMeasured": false,
+    "note": "evenly spread source-PTS windows, not full-film review"
+  },
+  "windows": [
+    {
+      "startSeconds": 0,
+      "endSeconds": 8,
+      "probe": {
+        "schemaVersion": "kumiki.source-pts-visual-probe.v1",
+        "sourceSha256": "d759984d82aa4b7924a4d5b662a9de0735ff0e220c13b3ae72810b80cc9dd63f",
+        "sourceStreamIndex": 0,
+        "sourceTimebase": {
+          "numerator": 1,
+          "denominator": 12288
+        },
+        "rightsStatus": "user-declared-authorized",
+        "scan": {
+          "startSeconds": 0,
+          "requestedSeconds": 8,
+          "sourceWindowEndSeconds": 8,
+          "decoder": "source-prefix-ordinal-pts-v1",
+          "frameWidth": 160,
+          "frameHeight": 90,
+          "sourcePtsFramesSeenInInventory": 192,
+          "sampledSourcePtsCount": 12,
+          "sampledPtsStart": 0,
+          "sampledPtsEnd": 97792,
+          "cutThreshold": 0.25,
+          "sourceTimebaseVerified": true
+        },
+        "cutCandidatePts": [
+          6144,
+          12288,
+          18432,
+          30720,
+          49152,
+          73216
+        ],
+        "sampledFrames": [
+          {
+            "sourcePts": 0,
+            "sourceSeconds": {
+              "numerator": 0,
+              "denominator": 1
+            },
+            "appearance": {
+              "meanRgb": [
+                0.904769,
+                0.595493,
+                0.690983
+              ],
+              "meanDisplayLumaProxy": 0.66814,
+              "displayLumaStdDev": 0.027438,
+              "meanSaturationProxy": 0.348481,
+              "shadowPixelFraction": 0.0,
+              "brightPixelFraction": 0.0
+            }
+          },
+          {
+            "sourcePts": 8704,
+            "sourceSeconds": {
+              "numerator": 17,
+              "denominator": 24
+            },
+            "appearance": {
+              "meanRgb": [
+                0.203592,
+                0.16568,
+                0.286675
+              ],
+              "meanDisplayLumaProxy": 0.182476,
+              "displayLumaStdDev": 0.074482,
+              "meanSaturationProxy": 0.452717,
+              "shadowPixelFraction": 0.010903,
+              "brightPixelFraction": 6.9e-05
+            }
+          },
+          {
+            "sourcePts": 17920,
+            "sourceSeconds": {
+              "numerator": 35,
+              "denominator": 24
+            },
+            "appearance": {
+              "meanRgb": [
+                0.832916,
+                0.561416,
+                0.399717
+              ],
+              "meanDisplayLumaProxy": 0.607462,
+              "displayLumaStdDev": 0.045188,
+              "meanSaturationProxy": 0.52226,
+              "shadowPixelFraction": 0.0,
+              "brightPixelFraction": 0.000347
+            }
+          },
+          {
+            "sourcePts": 26624,
+            "sourceSeconds": {
+              "numerator": 13,
+              "denominator": 6
+            },
+            "appearance": {
+              "meanRgb": [
+                0.91912,
+                0.202678,
+                0.03672
+              ],
+              "meanDisplayLumaProxy": 0.343012,
+              "displayLumaStdDev": 0.06905,
+              "meanSaturationProxy": 0.969118,
+              "shadowPixelFraction": 0.005486,
+              "brightPixelFraction": 0.004514
+            }
+          },
+          {
+            "sourcePts": 35328,
+            "sourceSeconds": {
+              "numerator": 23,
+              "denominator": 8
+            },
+            "appearance": {
+              "meanRgb": [
+                0.958825,
+                0.739383,
+                0.040241
+              ],
+              "meanDisplayLumaProxy": 0.735558,
+              "displayLumaStdDev": 0.066778,
+              "meanSaturationProxy": 0.958271,
+              "shadowPixelFraction": 0.003819,
+              "brightPixelFraction": 0.021597
+            }
+          },
+          {
+            "sourcePts": 44544,
+            "sourceSeconds": {
+              "numerator": 29,
+              "denominator": 8
+            },
+            "appearance": {
+              "meanRgb": [
+                0.281777,
+                0.900876,
+                0.705568
+              ],
+              "meanDisplayLumaProxy": 0.755155,
+              "displayLumaStdDev": 0.044917,
+              "meanSaturationProxy": 0.689227,
+              "shadowPixelFraction": 0.0,
+              "brightPixelFraction": 0.001319
+            }
+          },
+          {
+            "sourcePts": 53248,
+            "sourceSeconds": {
+              "numerator": 13,
+              "denominator": 3
+            },
+            "appearance": {
+              "meanRgb": [
+                0.801443,
+                0.200128,
+                0.085941
+              ],
+              "meanDisplayLumaProxy": 0.319723,
+              "displayLumaStdDev": 0.054774,
+              "meanSaturationProxy": 0.894918,
+              "shadowPixelFraction": 0.0,
+              "brightPixelFraction": 0.0
+            }
+          },
+          {
+            "sourcePts": 62464,
+            "sourceSeconds": {
+              "numerator": 61,
+              "denominator": 12
+            },
+            "appearance": {
+              "meanRgb": [
+                0.281911,
+                0.358576,
+                0.522838
+              ],
+              "meanDisplayLumaProxy": 0.354137,
+              "displayLumaStdDev": 0.049021,
+              "meanSaturationProxy": 0.471735,
+              "shadowPixelFraction": 0.0,
+              "brightPixelFraction": 0.0
+            }
+          },
+          {
+            "sourcePts": 71168,
+            "sourceSeconds": {
+              "numerator": 139,
+              "denominator": 24
+            },
+            "appearance": {
+              "meanRgb": [
+                0.281911,
+                0.358576,
+                0.522838
+              ],
+              "meanDisplayLumaProxy": 0.354137,
+              "displayLumaStdDev": 0.049021,
+              "meanSaturationProxy": 0.471735,
+              "shadowPixelFraction": 0.0,
+              "brightPixelFraction": 0.0
+            }
+          },
+          {
+            "sourcePts": 79872,
+            "sourceSeconds": {
+              "numerator": 13,
+              "denominator": 2
+            },
+            "appearance": {
+              "meanRgb": [
+                0.84316,
+                0.821275,
+                0.757691
+              ],
+              "meanDisplayLumaProxy": 0.821337,
+              "displayLumaStdDev": 0.12568,
+              "meanSaturationProxy": 0.170502,
+              "shadowPixelFraction": 0.004097,
+              "brightPixelFraction": 0.817708
+            }
+          },
+          {
+            "sourcePts": 89088,
+            "sourceSeconds": {
+              "numerator": 29,
+              "denominator": 4
+            },
+            "appearance": {
+              "meanRgb": [
+                0.871644,
+                0.846762,
+                0.77741
+              ],
+              "meanDisplayLumaProxy": 0.847045,
+              "displayLumaStdDev": 0.068057,
+              "meanSaturationProxy": 0.142384,
+              "shadowPixelFraction": 0.0,
+              "brightPixelFraction": 0.922292
+            }
+          },
+          {
+            "sourcePts": 97792,
+            "sourceSeconds": {
+              "numerator": 191,
+              "denominator": 24
+            },
+            "appearance": {
+              "meanRgb": [
+                0.871644,
+                0.846762,
+                0.77741
+              ],
+              "meanDisplayLumaProxy": 0.847045,
+              "displayLumaStdDev": 0.068057,
+              "meanSaturationProxy": 0.142384,
+              "shadowPixelFraction": 0.0,
+              "brightPixelFraction": 0.922292
+            }
+          }
+        ],
+        "sampledFramePairs": [
+          {
+            "startPts": 0,
+            "endPts": 8704,
+            "sourceDeltaSeconds": {
+              "numerator": 17,
+              "denominator": 24
+            },
+            "status": "cut-candidate-between-samples",
+            "meanAbsoluteDisplayRgbDelta": null,
+            "meanAbsoluteDisplayRgbDeltaPerSecond": null
+          },
+          {
+            "startPts": 8704,
+            "endPts": 17920,
+            "sourceDeltaSeconds": {
+              "numerator": 3,
+              "denominator": 4
+            },
+            "status": "cut-candidate-between-samples",
+            "meanAbsoluteDisplayRgbDelta": null,
+            "meanAbsoluteDisplayRgbDeltaPerSecond": null
+          },
+          {
+            "startPts": 17920,
+            "endPts": 26624,
+            "sourceDeltaSeconds": {
+              "numerator": 17,
+              "denominator": 24
+            },
+            "status": "cut-candidate-between-samples",
+            "meanAbsoluteDisplayRgbDelta": null,
+            "meanAbsoluteDisplayRgbDeltaPerSecond": null
+          },
+          {
+            "startPts": 26624,
+            "endPts": 35328,
+            "sourceDeltaSeconds": {
+              "numerator": 17,
+              "denominator": 24
+            },
+            "status": "cut-candidate-between-samples",
+            "meanAbsoluteDisplayRgbDelta": null,
+            "meanAbsoluteDisplayRgbDeltaPerSecond": null
+          },
+          {
+            "startPts": 35328,
+            "endPts": 44544,
+            "sourceDeltaSeconds": {
+              "numerator": 3,
+              "denominator": 4
+            },
+            "status": "rgb-image-difference-proxy",
+            "meanAbsoluteDisplayRgbDelta": 0.505631,
+            "meanAbsoluteDisplayRgbDeltaPerSecond": 0.674175
+          },
+          {
+            "startPts": 44544,
+            "endPts": 53248,
+            "sourceDeltaSeconds": {
+              "numerator": 17,
+              "denominator": 24
+            },
+            "status": "cut-candidate-between-samples",
+            "meanAbsoluteDisplayRgbDelta": null,
+            "meanAbsoluteDisplayRgbDeltaPerSecond": null
+          },
+          {
+            "startPts": 53248,
+            "endPts": 62464,
+            "sourceDeltaSeconds": {
+              "numerator": 3,
+              "denominator": 4
+            },
+            "status": "rgb-image-difference-proxy",
+            "meanAbsoluteDisplayRgbDelta": 0.371717,
+            "meanAbsoluteDisplayRgbDeltaPerSecond": 0.495623
+          },
+          {
+            "startPts": 62464,
+            "endPts": 71168,
+            "sourceDeltaSeconds": {
+              "numerator": 17,
+              "denominator": 24
+            },
+            "status": "rgb-image-difference-proxy",
+            "meanAbsoluteDisplayRgbDelta": 0.0,
+            "meanAbsoluteDisplayRgbDeltaPerSecond": 0.0
+          },
+          {
+            "startPts": 71168,
+            "endPts": 79872,
+            "sourceDeltaSeconds": {
+              "numerator": 17,
+              "denominator": 24
+            },
+            "status": "cut-candidate-between-samples",
+            "meanAbsoluteDisplayRgbDelta": null,
+            "meanAbsoluteDisplayRgbDeltaPerSecond": null
+          },
+          {
+            "startPts": 79872,
+            "endPts": 89088,
+            "sourceDeltaSeconds": {
+              "numerator": 3,
+              "denominator": 4
+            },
+            "status": "rgb-image-difference-proxy",
+            "meanAbsoluteDisplayRgbDelta": 0.033343,
+            "meanAbsoluteDisplayRgbDeltaPerSecond": 0.044457
+          },
+          {
+            "startPts": 89088,
+            "endPts": 97792,
+            "sourceDeltaSeconds": {
+              "numerator": 17,
+              "denominator": 24
+            },
+            "status": "rgb-image-difference-proxy",
+            "meanAbsoluteDisplayRgbDelta": 0.0,
+            "meanAbsoluteDisplayRgbDeltaPerSecond": 0.0
+          }
+        ],
+        "sampledWindowSummary": {
+          "cutCandidateCountBetweenFirstAndLastSample": 6,
+          "cutCandidateRatePerRequestedMinute": 45.0,
+          "meanSampledDisplayLumaProxy": 0.569602,
+          "meanSampledSaturationProxy": 0.519478,
+          "meanWithinShotDisplayRgbDelta": 0.182138,
+          "withinShotComparedPairs": 5,
+          "cutSeparatedPairs": 6
+        },
+        "evidenceStatus": "original-source-pts-sampled-numeric-proxies-not-human-reviewed",
+        "methodLimits": [
+          "These are observed display RGB pixel values, not scene-linear physical luminance or measured lighting equipment.",
+          "Interframe RGB differences combine animation, object movement, camera movement, compression, text and fades.",
+          "The cut detector proposes edits; fast movement and transitions can cause false positives/negatives.",
+          "Sampled intervals are not exhaustive source-frame measurement or full-video shot frequency.",
+          "No lens, real camera trajectory, visual style, mood, demographic identity, character or speech inference is claimed."
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "cutCandidates": 6,
+    "cutCandidateRatePerMinute": 45.0,
+    "meanDisplayLuma": 0.569602,
+    "meanSaturation": 0.519478,
+    "meanWithinShotRgbDeltaPerSecond": 0.242851,
+    "sampledFrames": 12,
+    "windowsWithCuts": 1
+  },
+  "evidenceStatus": "sampled-original-source-pts-metrics-not-expert-reviewed",
+  "rightsStatus": "review-required",
+  "limits": [
+    "Sampled source-PTS windows only; this is not full-film review.",
+    "Numeric display-RGB and cut-candidate proxies are not camera, lens, lighting, editing-intent, or style labels.",
+    "No visual style, aesthetic quality, authorship, identity, or creative intent is inferred.",
+    "Public availability is not a license; rightsStatus remains review-required.",
+    "Downloaded media, frames, thumbnails, and audio are never retained.",
+    "Only direct MP4 files on the exact allowlisted site host are measured; Vimeo and YouTube embeds are never attempted.",
+    "Post metadata is self-reported by the publisher site and is not independently verified."
+  ],
+  "generatedAt": "2026-11-11T21:12:04.636349Z"
+}
