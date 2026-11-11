@@ -21,6 +21,7 @@ from kumiki_reference_lab.analyzers.motion.review import _png_rgb
 from kumiki_reference_lab.analyzers.techniques.propose import _json_file
 from kumiki_reference_lab.backends.ffmpeg.frames import read_frame_pts
 from kumiki_reference_lab.backends.ffmpeg.raw_frames import read_rgb_frames
+from kumiki_reference_lab.backends.ffmpeg.source_seek import decode_verified_later_source_frames
 from kumiki_reference_lab.core.provenance import file_signature, require_unchanged
 from kumiki_reference_lab.pipeline.subject_detections import OUTPUT_VERSION, _check_box, _check_float
 
@@ -187,6 +188,7 @@ def _page(rows: list[dict[str, Any]], width: int, height: int, source_name: str)
 def build_subject_tracklet_review(
     source: Path, report_path: Path, out: Path, *, max_frames: int = 8,
     scan_seconds: int = 20, width: int = 320, height: int = 180,
+    seek_start_seconds: int | None = None,
     ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
 ) -> Path:
     """Decode actual local frames and render detector boxes for unapproved QA."""
@@ -195,6 +197,10 @@ def build_subject_tracklet_review(
             type(width) is not int or type(height) is not int or
             not 64 <= width <= 320 or not 36 <= height <= 180):
         raise ValueError("subject review frame/count/scan resolution bounds invalid")
+    if seek_start_seconds is not None and (
+            type(seek_start_seconds) is not int or seek_start_seconds < 0 or
+            scan_seconds > 30 or seek_start_seconds+scan_seconds > 3600):
+        raise ValueError("subject review seek window invalid")
     if out.exists() or out.is_symlink():
         raise ValueError("subject review output must be a new directory")
     source_signature = file_signature(source)
@@ -214,24 +220,31 @@ def build_subject_tracklet_review(
     idx = _select_indices(len(frames), max_frames, priorities=priorities)
     chosen = [frames[i] for i in idx]
     timebase = Fraction(**report["sourceTimebase"])
-    frame_records = read_frame_pts(
-        source, report["sourceStreamIndex"], seconds=scan_seconds, ffprobe=ffprobe)
-    found: dict[int, list[int]] = {}
-    for record in frame_records:
-        if record.pts is not None:
-            found.setdefault(record.pts, []).append(record.ordinal)
-    ordinals = []
-    for frame in chosen:
-        candidates = found.get(frame["sourcePts"], [])
-        if len(candidates) != 1:
-            raise ValueError("source frame PTS missing or ambiguous; increase --scan-seconds or review source")
-        ordinals.append(candidates[0])
-    if ordinals != sorted(set(ordinals)):
-        raise ValueError("source PTS selection is not in unique increasing decode order")
-    rgb = read_rgb_frames(
-        source, report["sourceStreamIndex"], ordinals,
-        [frame["sourcePts"] for frame in chosen], timebase=timebase,
-        seconds=scan_seconds, width=width, height=height, ffmpeg=ffmpeg)
+    if seek_start_seconds is not None:
+        rgb = decode_verified_later_source_frames(
+            source, report["sourceStreamIndex"],
+            [frame["sourcePts"] for frame in chosen], timebase=timebase,
+            start_seconds=seek_start_seconds, seconds=scan_seconds,
+            width=width, height=height, ffprobe=ffprobe, ffmpeg=ffmpeg)
+    else:
+        frame_records = read_frame_pts(
+            source, report["sourceStreamIndex"], seconds=scan_seconds, ffprobe=ffprobe)
+        found: dict[int, list[int]] = {}
+        for record in frame_records:
+            if record.pts is not None:
+                found.setdefault(record.pts, []).append(record.ordinal)
+        ordinals = []
+        for frame in chosen:
+            candidates = found.get(frame["sourcePts"], [])
+            if len(candidates) != 1:
+                raise ValueError("source frame PTS missing or ambiguous; increase --scan-seconds or review source")
+            ordinals.append(candidates[0])
+        if ordinals != sorted(set(ordinals)):
+            raise ValueError("source PTS selection is not in unique increasing decode order")
+        rgb = read_rgb_frames(
+            source, report["sourceStreamIndex"], ordinals,
+            [frame["sourcePts"] for frame in chosen], timebase=timebase,
+            seconds=scan_seconds, width=width, height=height, ffmpeg=ffmpeg)
     require_unchanged(source, source_signature)
     require_unchanged(report_path, report_signature)
     image_rows = [
