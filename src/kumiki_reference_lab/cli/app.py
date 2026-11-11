@@ -53,6 +53,7 @@ from kumiki_reference_lab.catalog.whatships_media_bindings import (
 from kumiki_reference_lab.catalog.whatships_data_dashboard import write_whatships_browser
 from kumiki_reference_lab.catalog.whatships_analysis_store import (
     export_repository_analysis, validate_repository_analysis,
+    sync_repository_analysis,
 )
 from kumiki_reference_lab.catalog.whatships_full_coverage import (
     refresh_full_whatships_catalog, summarize_full_snapshot, plan_full_snapshot,
@@ -717,6 +718,18 @@ def build_parser() -> argparse.ArgumentParser:
                         help="optional PRIVATE source-PTS numeric visual index")
     analysis_export.add_argument("--out", type=Path, required=True,
                         help="new git-ready directory, e.g. research/analysis/whatships-next")
+    analysis_sync = full_actions.add_parser(
+        "sync-analysis",
+        help="merge a verified export into the tracked per-video research corpus without deleting existing evidence")
+    analysis_sync.add_argument("--snapshot", type=Path,
+        default=Path("research/whatships-index-2026-11-10.json"))
+    analysis_sync.add_argument("--incoming", type=Path, required=True,
+        help="new Git-ready export-analysis directory")
+    analysis_sync.add_argument("--root", type=Path,
+        default=Path("research/analysis/whatships"),
+        help="tracked per-video analysis dataset to update in this Git worktree")
+    analysis_sync.add_argument("--replace-existing", action="store_true",
+        help="explicitly replace conflicting evidence; Git history retains prior revisions")
     analysis_validate = full_actions.add_parser(
         "validate-analysis",
         help="verify committed per-video analysis dataset against its source snapshot")
@@ -1167,6 +1180,11 @@ def main(argv: list[str] | None = None) -> int:
                     args.snapshot, args.out, observations_path=args.observations,
                     bindings_path=args.bindings, analysis_path=args.analysis_index,
                     visual_path=args.visual_index))
+            elif args.whatships_action == "sync-analysis":
+                print(json.dumps(sync_repository_analysis(
+                    args.snapshot, args.incoming, args.root,
+                    replace_existing=args.replace_existing),
+                    indent=2, sort_keys=True, ensure_ascii=False))
             elif args.whatships_action == "validate-analysis":
                 print(json.dumps(validate_repository_analysis(args.root, args.snapshot),
                                  indent=2, sort_keys=True, ensure_ascii=False))
