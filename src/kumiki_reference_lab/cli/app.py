@@ -44,6 +44,7 @@ from kumiki_reference_lab.catalog.browser_observations import (
 )
 from kumiki_reference_lab.catalog.popular_videos import load_popular_videos, search_popular_videos
 from kumiki_reference_lab.catalog.whatships_detail_enrich import enrich_whatships_details
+from kumiki_reference_lab.pipeline.whatships_local_worker import run_whatships_local_analysis
 from kumiki_reference_lab.catalog.whatships_media_bindings import (
     register_local_media, media_coverage, eligible_bound_media,
 )
@@ -551,6 +552,35 @@ def build_parser() -> argparse.ArgumentParser:
             sub.add_argument("--limit", type=int, default=20)
         if action == "search":
             sub.add_argument("query", help="technique, story goal, title or creator")
+    analyze_ws = commands.add_parser(
+        "whatships-analyze",
+        help="checkpoint a bounded, source-SHA-verified local analysis batch for bound What Ships videos")
+    analyze_ws.add_argument("bindings", type=Path, help="private media-bindings.json")
+    analyze_ws.add_argument("--snapshot", type=Path,
+                            default=Path("research/whatships-index-2026-11-10.json"))
+    analyze_ws.add_argument("--out", type=Path, required=True,
+                            help="new private output directory with per-video checkpoints")
+    analyze_ws.add_argument("--model", required=True, help="installed local Ollama vision model tag")
+    analyze_ws.add_argument("--previous-index", type=Path,
+                            help="previous PRIVATE analysis-index.json for cross-batch resumption")
+    analyze_ws.add_argument("--source-id", help="optional exact whatships:slug to process")
+    analyze_ws.add_argument("--max-videos", type=int, default=1)
+    analyze_ws.add_argument("--start-offset", type=int, default=0)
+    analyze_ws.add_argument("--detector", choices=("ollama", "apple-vision"), default="ollama")
+    analyze_ws.add_argument("--window-seconds", type=int, default=10)
+    analyze_ws.add_argument("--window-count", type=int, default=2)
+    analyze_ws.add_argument("--max-samples", type=int, default=6)
+    analyze_ws.add_argument("--max-calls", type=int, default=6)
+    analyze_ws.add_argument("--max-pairs", type=int, default=2)
+    analyze_ws.add_argument("--width", type=int, default=320)
+    analyze_ws.add_argument("--height", type=int, default=180)
+    analyze_ws.add_argument("--port", type=int, default=11434)
+    analyze_ws.add_argument("--timeout-seconds", type=int, default=180)
+    analyze_ws.add_argument("--skip-qa", action="store_true")
+    analyze_ws.add_argument("--skip-interactions", action="store_true")
+    analyze_ws.add_argument("--ffmpeg", default="ffmpeg")
+    analyze_ws.add_argument("--ffprobe", default="ffprobe")
+
     media_ws = commands.add_parser(
         "whatships-media",
         help="privately bind authorized local footage to exact What Ships catalog identities")
@@ -1007,6 +1037,19 @@ def main(argv: list[str] | None = None) -> int:
                                                 limit=args.limit)
                 print(json.dumps({"query": query, "results": results, "count": len(results),
                                   "retrievedOn": collection["retrievedOn"]}, indent=2, sort_keys=True))
+            return 0
+        if args.command == "whatships-analyze":
+            print(run_whatships_local_analysis(
+                args.snapshot, args.bindings, args.out,
+                model=args.model, previous_index=args.previous_index,
+                source_id=args.source_id, max_videos=args.max_videos,
+                start_offset=args.start_offset, detector=args.detector,
+                window_seconds=args.window_seconds, window_count=args.window_count,
+                max_samples=args.max_samples, max_calls=args.max_calls,
+                max_pairs=args.max_pairs, width=args.width, height=args.height,
+                port=args.port, timeout_seconds=args.timeout_seconds,
+                review=not args.skip_qa, interactions=not args.skip_interactions,
+                ffmpeg=args.ffmpeg, ffprobe=args.ffprobe))
             return 0
         if args.command == "whatships-media":
             if args.media_action == "bind":
