@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 from pathlib import Path
 
@@ -42,6 +43,11 @@ def audit(root: Path) -> list[str]:
             errors.append(f"{slug}: missing rights review")
         if not _SHA.fullmatch(str(item.get("sourceSha256", ""))):
             errors.append(f"{slug}: invalid original SHA-256")
+        duration = item.get("sourceDurationSeconds")
+        if (isinstance(duration, bool) or not isinstance(duration, (int, float))
+                or not math.isfinite(duration) or duration <= 0):
+            errors.append(f"{slug}: invalid source duration")
+            duration = None
         summaries = item.get("windows", [])
         windows = detail.get("windows", [])
         if len(summaries) != len(windows):
@@ -59,6 +65,19 @@ def audit(root: Path) -> list[str]:
                     errors.append(f"{slug}/{name}: {field} mismatch")
             if not _SHA.fullmatch(str(summary.get("windowSourceSha256", ""))):
                 errors.append(f"{slug}/{name}: invalid clip SHA-256")
+            offset = summary.get("sourceOffsetSeconds")
+            scan = summary.get("scanSeconds")
+            detail_scan = window.get("scanWindowSeconds")
+            if (any(isinstance(v, bool) or not isinstance(v, (int, float))
+                    or not math.isfinite(v) for v in (offset, scan, detail_scan))
+                    or offset < 0 or scan <= 0 or detail_scan <= 0):
+                errors.append(f"{slug}/{name}: invalid window bounds")
+            else:
+                if scan != detail_scan:
+                    errors.append(f"{slug}/{name}: scan duration mismatch")
+                # Re-encoded clips have approximate original offsets.
+                if duration is not None and offset + scan > duration + 0.5:
+                    errors.append(f"{slug}/{name}: window exceeds source duration")
             if summary.get("cutCandidateCount") != len(window.get("shotCutCandidates", [])):
                 errors.append(f"{slug}/{name}: cut candidate count mismatch")
             if summary.get("appearanceFrameSamples") != len(window.get("appearanceSamples", [])):
