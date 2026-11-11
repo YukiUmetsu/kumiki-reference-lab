@@ -56,6 +56,41 @@ class AudioLevelsUnitTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "sample count differs"):
                 analyze_audio_levels(Path("dummy"))
 
+    def test_only_a_small_later_filter_tail_may_be_excluded(self):
+        timeline = {
+            "status": "source-timing-candidate", "sourceSha256": "b" * 64,
+            "audioStreamIndex": 1, "sourceTimebase": {"numerator": 1, "denominator": 8000},
+            "sampleRateHz": 8000, "frames": [{
+                "sourcePts": 0, "sourceSeconds": {"numerator": 0, "denominator": 1},
+                "decodedSampleCount": 1024,
+                "decodedDurationSeconds": {"numerator": 16, "denominator": 125},
+            }],
+        }
+        def frame(ordinal, pts):
+            return {"ordinal": ordinal, "filterPtsTime": pts, "metrics": {
+                "lavfi.astats.Overall.RMS_level": "-20",
+                "lavfi.astats.Overall.Peak_level": "-18",
+                "lavfi.astats.Overall.Number_of_samples": "1024.000000",
+            }}
+        with patch("kumiki_reference_lab.analyzers.audio.levels.file_signature",
+                   return_value=(10, 0, 0, 0)), patch(
+            "kumiki_reference_lab.analyzers.audio.levels.require_unchanged",
+        ), patch(
+            "kumiki_reference_lab.analyzers.audio.levels.analyze_audio_timeline",
+            return_value=timeline,
+        ), patch("kumiki_reference_lab.analyzers.audio.levels._read_levels") as read:
+            read.return_value = [frame(0, "0"), frame(1, "0.128")]
+            report = analyze_audio_levels(Path("dummy"), seconds=1)
+            self.assertEqual(len(report["frames"]), 1)
+            read.return_value = [frame(0, "0"), frame(1, "0")]
+            with self.assertRaisesRegex(ValueError, "valid trailing"):
+                analyze_audio_levels(Path("dummy"), seconds=1)
+            read.return_value = [frame(0, "0"), frame(1, "0.128"),
+                                 frame(2, "0.256"), frame(3, "0.384"),
+                                 frame(4, "0.512"), frame(5, "0.640")]
+            with self.assertRaisesRegex(ValueError, "1:1"):
+                analyze_audio_levels(Path("dummy"), seconds=1)
+
 
 @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"),
                      "FFmpeg/FFprobe required")
