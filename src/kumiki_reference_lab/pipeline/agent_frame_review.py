@@ -393,7 +393,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--workspace", type=Path, required=True)
     parser.add_argument("--index", type=int, default=0)
     parser.add_argument("--after", type=int, default=-1)
-    parser.add_argument("--mode", choices=["every", "cuts", "changed", "interval"], default="every")
+    parser.add_argument("--mode", choices=["every", "cuts", "changed", "interval"])
     parser.add_argument("--interval", type=int, default=24)
     parser.add_argument("--min-change", type=float, default=.08)
     parser.add_argument("--end", type=int)
@@ -414,7 +414,7 @@ def main(argv: list[str] | None = None) -> int:
             result: Any = show_frame(args.workspace, args.index)
         elif args.command == "next":
             result = next_frame(args.workspace, after=args.after,
-                                mode=args.mode, min_change=args.min_change,
+                                mode=args.mode or "every", min_change=args.min_change,
                                 interval=args.interval)
         elif args.command == "annotate":
             result = annotate_frame(
@@ -433,7 +433,7 @@ def main(argv: list[str] | None = None) -> int:
             result = scan_frames(
                 args.workspace, model=args.model,
                 categories=tuple(s.strip() for s in args.categories.split(",")),
-                mode=args.mode, after=args.after, max_calls=args.max_calls,
+                mode=args.mode or "changed", after=args.after, max_calls=args.max_calls,
                 max_failures=args.max_failures, interval=args.interval,
                 min_change=args.min_change, port=args.port,
                 timeout_seconds=args.timeout,
