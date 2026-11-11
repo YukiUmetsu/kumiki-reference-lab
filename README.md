@@ -16,21 +16,20 @@ The aim is **not** to copy a film, recover an inaccessible source project, or au
 
 Run `kumiki-watch` to acquire an authorized public video ephemerally through a provider-neutral extractor, measure **every decoded frame within time/frame budgets**, and optionally use a local Ollama vision model to propose timecoded animation, typography, character, cinematography and style cues. It saves only source-hashed reference JSON under `research/analysis/online-videos/` and deletes the source video before writing results. There is no website allowlist. Host support depends on whether a public, extractable stream exists; unauthenticated extraction is not permission to copy. See [agent online video study documentation](docs/agent-online-video-study.md) for setup, limits and safety. For low-compute local models, use [Magnitude agent frame review](docs/magnitude-agent-frame-workflow.md): optional low-resolution, locally ignored previews of every decoded frame; interactive one-frame tools; scoped Magnitude vision requests; bounded resumable scans and JSON-only annotation export.
 
-## Shot-aware and sparse temporal motion review (no AI dependency)
+## Temporal cinematic intelligence and reusable Kumiki recipe proposals
 
-After `kumiki-watch --review-frames`, use `kumiki-frames shots --workspace PATH`
-to group candidate cuts into timecoded, nonoverlapping shot windows and return
-bounded pages of stable and high-change frames. Use
-`kumiki-frames motion --workspace PATH --max-motion-pairs 96` for cheap
-CPU-only, sampled regional block matching (image-plane translation, coherence
-and residual vectors) based on the local PNGs. All derived numerical evidence
-is saved under `research/analysis/online-videos/<id>.temporal.json`; no
-footage or preview images enter Git. `kumiki-frames scan --mode shots` lets a
-small Magnitude vision model examine suggested frames one category per request.
-**Shot grouping is heuristic; image-plane displacement is not verified
-camera movement or character/object tracking.** See
-[temporal shot analysis](docs/temporal-shot-analysis.md) for implementation
-details, validation and limitations.
+Use `kumiki-watch --review-frames --audio-cues` to retain source-hashed
+frame and bounded audio cues; then `kumiki-frames scan --mode shots` can
+give a small Magnitude model a distributed set of one-category image tasks.
+`kumiki-insights --workspace workspace/frame-review/<source-id>` measures
+provisional shots, optional short optical-flow feature tracklets (install
+`.[dense]`), and optional local OCR (`--ocr`). It produces evidence-linked
+**unverified** animation hypotheses and design-time Kumiki recipe suggestions.
+`kumiki-catalog build` / `search` supports cross-video comparisons by
+source SHA-256 without storing footage or asserting viewer popularity.
+See [Temporal cinematic intelligence](docs/temporal-cinematic-intelligence.md).
+These are proposal/data pipelines, not complete automatic character identity
+tracking, physically verified camera recovery or executable Kumiki components.
 
 ## Why this exists
 
