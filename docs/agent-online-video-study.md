@@ -51,9 +51,14 @@ To inspect more video, raise `--max-seconds` (up to 3600) and
 `--max-frames` (up to 108000). These are **hard analysis budgets**, not a
 guarantee the full video is captured. The report records duration and
 `completeVideo`; consult these before describing an entire video.
-To sample every frame semantically in a short sequence, set
-`--semantic-stride 1` and raise `--max-semantic-frames` within the configured
-bound. Ollama inference can be substantially slower than frame decoding.
+Semantic sample selection uses a deterministic, source-hash-seeded reservoir
+of eligible frames across the **entire decoded interval**, always retaining
+the first and last frame. This avoids using the model-call budget on only the
+opening seconds of a long reference. The `--semantic-stride` option controls
+which frames are eligible (potential cuts are eligible too); use 1 for all
+frames to be eligible, and raise `--max-semantic-frames` within the bound.
+Ollama inference can be substantially slower than frame decoding. The default
+model-call budget is 24, not an assertion of per-frame semantic classification.
 
 ## Data retained in Git
 
