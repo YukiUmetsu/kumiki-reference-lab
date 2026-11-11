@@ -50,6 +50,7 @@ from kumiki_reference_lab.pipeline.whatships_visual_backfill import backfill_wha
 from kumiki_reference_lab.catalog.whatships_media_bindings import (
     register_local_media, media_coverage, eligible_bound_media,
 )
+from kumiki_reference_lab.catalog.whatships_data_dashboard import write_whatships_browser
 from kumiki_reference_lab.catalog.whatships_full_coverage import (
     refresh_full_whatships_catalog, summarize_full_snapshot, plan_full_snapshot,
 )
@@ -686,6 +687,18 @@ def build_parser() -> argparse.ArgumentParser:
     enrich.add_argument("--timeout", type=int, default=25)
     enrich.add_argument("--offline-responses", type=Path,
                         help="optional offline exact slug-to-MCP-response fixture JSON")
+    browse = full_actions.add_parser(
+        "browse", help="generate offline searchable HTML, CSV and JSON for all indexed videos")
+    browse.add_argument("--snapshot", type=Path,
+                        default=Path("research/whatships-index-2026-11-10.json"))
+    browse.add_argument("--out", type=Path, required=True, help="new output directory")
+    browse.add_argument("--bindings", type=Path,
+                        help="optional private source bindings for operator-asserted coverage")
+    browse.add_argument("--analysis-index", type=Path,
+                        help="optional private verified character study index (requires bindings)")
+    browse.add_argument("--visual-index", type=Path,
+                        help="optional private verified RGB/cut index (requires analysis index)")
+
     report = full_actions.add_parser("report", help="count all indexed videos and evidence gaps")
     report.add_argument("--snapshot", type=Path,
                         default=Path("research/whatships-index-2026-11-10.json"))
@@ -1124,7 +1137,11 @@ def main(argv: list[str] | None = None) -> int:
                     indent=2, sort_keys=True, ensure_ascii=False))
             return 0
         if args.command == "whatships-all":
-            if args.whatships_action == "enrich":
+            if args.whatships_action == "browse":
+                print(write_whatships_browser(
+                    args.snapshot, args.out, bindings_path=args.bindings,
+                    analysis_path=args.analysis_index, numeric_path=args.visual_index))
+            elif args.whatships_action == "enrich":
                 print(enrich_whatships_details(
                     args.previous, args.out, max_details=args.max_details,
                     delay_seconds=args.delay_seconds, timeout=args.timeout,
