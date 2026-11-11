@@ -77,3 +77,7 @@ Use `whatships-all research-report` to count and group *actual committed observa
 ## Committed cross-video technique summary
 
 The dated [source-observation technique rollup](../whatships-observed-techniques-2026-11-10.json) reports per-tag frequencies for the nine partially observed videos, per-category counts, and the total 2,861-video catalog denominator. These counts describe **only explicitly recorded visual observations**, not all the indexed films, and cannot support claims about causal virality, lighting frequencies or camera movements. The lightweight GitHub CI recomputes the report from the canonical source records, so editing/adding research observations requires updating this summary in the same commit.
+
+## Direct numeric analysis, without a character VLM
+
+[whatships-measure](../../../docs/whatships-direct-research.md) uses an already bound authorized local video and records actual original-source-PTS frames and numeric motion/color/cut measurements **directly in this Git directory**. It does not require a character model, an intermediate private study index or a backfill. It preserves existing partial browser notes; explicit `--replace-existing` is required for changed numeric measurements. Review `git diff`, then commit ordinary source-linked research JSON.
