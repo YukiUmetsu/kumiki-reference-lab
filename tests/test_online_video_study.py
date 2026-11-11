@@ -127,6 +127,8 @@ class FrameEvidenceTests(unittest.TestCase):
             self.assertTrue(report["decoderTimebaseMatchesSource"])
             self.assertGreaterEqual(len(previews), 2)
             self.assertLessEqual(len(previews), 3)
+            self.assertEqual(previews[0][0], 0)
+            self.assertEqual(previews[-1][0], 23)
             self.assertTrue(previews[0][1].startswith(b"\x89PNG"))
             self.assertTrue(all(
                 a["decodedPts"] < b["decodedPts"] for a, b in
