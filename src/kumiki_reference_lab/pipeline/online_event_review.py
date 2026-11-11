@@ -52,7 +52,7 @@ def _outlined_preview(path: Path, width: int, height: int,
         raise ValueError("only one or two bounded marked subjects are supported")
     rgb = bytearray(_decode_review_png(path, width=width, height=height))
     palette = ((255, 48, 55), (28, 240, 243))
-    for box, color in zip(boxes, palette, strict=True):
+    for box, color in zip(boxes, palette[:len(boxes)], strict=True):
         x, y, w, h = box
         if (any(not math.isfinite(v) for v in box) or
                 x < 0 or y < 0 or w <= 0 or h <= 0 or
