@@ -51,6 +51,9 @@ from kumiki_reference_lab.catalog.whatships_media_bindings import (
     register_local_media, media_coverage, eligible_bound_media,
 )
 from kumiki_reference_lab.catalog.whatships_data_dashboard import write_whatships_browser
+from kumiki_reference_lab.catalog.whatships_analysis_store import (
+    export_repository_analysis, validate_repository_analysis,
+)
 from kumiki_reference_lab.catalog.whatships_full_coverage import (
     refresh_full_whatships_catalog, summarize_full_snapshot, plan_full_snapshot,
 )
@@ -699,6 +702,28 @@ def build_parser() -> argparse.ArgumentParser:
     browse.add_argument("--visual-index", type=Path,
                         help="optional private verified RGB/cut index (requires analysis index)")
 
+    analysis_export = full_actions.add_parser(
+        "export-analysis",
+        help="export actual observations and source-PTS numerical timelines as Git-trackable per-video JSON")
+    analysis_export.add_argument("--snapshot", type=Path,
+                        default=Path("research/whatships-index-2026-11-10.json"))
+    analysis_export.add_argument("--observations", type=Path,
+                        help="optional existing browser spot checks JSON, including un-timed visual notes")
+    analysis_export.add_argument("--bindings", type=Path,
+                        help="optional PRIVATE media bindings (never included in exported files)")
+    analysis_export.add_argument("--analysis-index", type=Path,
+                        help="optional PRIVATE character model study index")
+    analysis_export.add_argument("--visual-index", type=Path,
+                        help="optional PRIVATE source-PTS numeric visual index")
+    analysis_export.add_argument("--out", type=Path, required=True,
+                        help="new git-ready directory, e.g. research/analysis/whatships-next")
+    analysis_validate = full_actions.add_parser(
+        "validate-analysis",
+        help="verify committed per-video analysis dataset against its source snapshot")
+    analysis_validate.add_argument("--snapshot", type=Path,
+                        default=Path("research/whatships-index-2026-11-10.json"))
+    analysis_validate.add_argument("--root", type=Path,
+                        default=Path("research/analysis/whatships"))
     report = full_actions.add_parser("report", help="count all indexed videos and evidence gaps")
     report.add_argument("--snapshot", type=Path,
                         default=Path("research/whatships-index-2026-11-10.json"))
@@ -1137,7 +1162,15 @@ def main(argv: list[str] | None = None) -> int:
                     indent=2, sort_keys=True, ensure_ascii=False))
             return 0
         if args.command == "whatships-all":
-            if args.whatships_action == "browse":
+            if args.whatships_action == "export-analysis":
+                print(export_repository_analysis(
+                    args.snapshot, args.out, observations_path=args.observations,
+                    bindings_path=args.bindings, analysis_path=args.analysis_index,
+                    visual_path=args.visual_index))
+            elif args.whatships_action == "validate-analysis":
+                print(json.dumps(validate_repository_analysis(args.root, args.snapshot),
+                                 indent=2, sort_keys=True, ensure_ascii=False))
+            elif args.whatships_action == "browse":
                 print(write_whatships_browser(
                     args.snapshot, args.out, bindings_path=args.bindings,
                     analysis_path=args.analysis_index, numeric_path=args.visual_index))
