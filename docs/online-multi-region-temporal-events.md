@@ -94,6 +94,18 @@ hypotheses, never confirmed gestures, contact, identity or dialogue.
 Without the flag, this stage makes zero model calls.
 See [event visual review](online-event-visual-review.md).
 
+## Original animation mechanics derived from measured events
+
+`kumiki-insights` also computes `originalMotionMechanicIdeas`, a
+conservative set of **seven specific original animation concepts** from
+the already measured screen-region event types. Examples include
+two-lane swaps, layered crossing reveals, paired convergence and
+authored shared-shift/parallax, with suggested choreography stages and
+related existing `kumiki-ui` registry source files. This stage makes
+no additional model calls and never asserts the source film used such
+an animation recipe. See
+[source-grounded original motion mechanics](source-to-original-animation-mechanics.md).
+
 ## Test
 
     PYTHONPATH=src python -m unittest tests.test_multi_region_temporal -q
