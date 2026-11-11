@@ -175,9 +175,8 @@ class EventReviewTests(unittest.TestCase):
         task = dict(self.temporal["reviewTasks"][0])
         task["frameIndices"] = [0, 12]
         report = {**self.temporal, "reviewTasks": [task]}
-        with self.assertRaisesRegex(ValueError, "same-shot"):
-            # One recorded shot spans 0..31, but synthetic ROI tracks end at 11.
-            # Either a mismatched task signature or an absent observed frame is rejected.
+        with self.assertRaisesRegex(ValueError, "no corresponding measured event"):
+            # A fabricated 0..12 range has no matching measured event.
             review_multi_region_events(
                 self.workspace, self.seeded, self.shots, report, model="small")
 
