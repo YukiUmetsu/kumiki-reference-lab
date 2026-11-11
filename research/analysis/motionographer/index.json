@@ -1,11 +1,11 @@
 {
   "schemaVersion": "kumiki.motionographer-index.v1",
-  "generatedAt": "2026-11-11T21:12:09.224710Z",
+  "generatedAt": "2026-11-11T21:12:28.906895Z",
   "catalogSha256": "23f813dafb11e546fc8c62f962bf435b8d7aa75e4a00f3c4179f6459e68b7893",
   "counts": {
-    "measured": 50,
+    "measured": 55,
     "no-video": 7385,
-    "pending": 13,
+    "pending": 8,
     "unsupported-format": 1053,
     "unsupported-host-not-allowlisted": 17,
     "unsupported-other-embed": 56,
@@ -10860,7 +10860,18 @@
       "mediaSlug": "F5_PremiereProject_720",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 9.3093,
+      "resolution": [
+        1280,
+        720
+      ],
+      "sourceSha256": "7784ded6c59428e60963f15f973ae8507525d4dc9365f3d8d662bcf6739b82d2",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 67.5,
+      "meanDisplayLuma": 0.332544,
+      "meanSaturation": 0.253378,
+      "recordPath": "videos/process-making-the-f5-opening-titles-with-block-tackle--F5_PremiereProject_720.json"
     },
     {
       "postId": 57994,
@@ -10880,7 +10891,18 @@
       "mediaSlug": "LandscapeBanana_Rectangle_2",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 3.625,
+      "resolution": [
+        1280,
+        720
+      ],
+      "sourceSha256": "c649c9f157a66b5cab07f85f21fdb2d4a0eec3ff992d2e60f43cf4e0175b67f9",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 40.0,
+      "meanDisplayLuma": 0.482507,
+      "meanSaturation": 0.204335,
+      "recordPath": "videos/process-making-the-f5-opening-titles-with-block-tackle--LandscapeBanana_Rectangle_2.json"
     },
     {
       "postId": 57994,
@@ -10900,7 +10922,18 @@
       "mediaSlug": "F5type-sequence_7201",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 4.587917,
+      "resolution": [
+        1280,
+        720
+      ],
+      "sourceSha256": "c41f1c51e839dff8cda56b2308ea8d7233aa29d0c357914b1f431bcaabafc983",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 60.0,
+      "meanDisplayLuma": 0.727734,
+      "meanSaturation": 0.279375,
+      "recordPath": "videos/process-making-the-f5-opening-titles-with-block-tackle--F5type-sequence_7201.json"
     },
     {
       "postId": 57994,
@@ -10920,7 +10953,18 @@
       "mediaSlug": "birds_Process",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 2.002,
+      "resolution": [
+        1280,
+        720
+      ],
+      "sourceSha256": "d74ebd0c4d260334c75be7ae1c6aa9b7ebfad1ac1e6286b2a262ac7fd6a3a4c0",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 840.0,
+      "meanDisplayLuma": 0.523266,
+      "meanSaturation": 0.046681,
+      "recordPath": "videos/process-making-the-f5-opening-titles-with-block-tackle--birds_Process.json"
     },
     {
       "postId": 57994,
@@ -10940,7 +10984,18 @@
       "mediaSlug": "ClothTunnel_NEWTexture_MIX",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 3.791667,
+      "resolution": [
+        1280,
+        720
+      ],
+      "sourceSha256": "611fbc87e36e1218b4b166c07ee9f1c79a7ade8b02e55198f7b8c77dfeb6c968",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.192772,
+      "meanSaturation": 0.598073,
+      "recordPath": "videos/process-making-the-f5-opening-titles-with-block-tackle--ClothTunnel_NEWTexture_MIX.json"
     },
     {
       "postId": 57994,
