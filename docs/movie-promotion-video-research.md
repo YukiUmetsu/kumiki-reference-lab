@@ -237,6 +237,22 @@ explicit per-shot confidence/abstention reporting. Do not turn a
 phase-correlation magnitude into a literal camera keyframe without
 scene-level validation or independent reconstructed geometry.
 
+## Newly measured Blender Studio feature-film teaser: *OVERGROWN*
+
+[Original publisher's player](https://video.blender.org/videos/watch/7ad3cbee-fe5f-41c2-93ea-b108986939f4) · [Timecoded numeric detail](../research/analysis/movie-promotions/overgrown-blender-teaser.json)
+
+*OVERGROWN* expands the actually measured promotional-edition corpus from **13 to 14 sources**, with **42 selected 20-second windows and 840 measured seconds**. It is an **81.088-second Blender Studio public PeerTube feature-film teaser**, not one of the 13 videos in the original Hollywood popularity catalog, and not a verified matching YouTube edit. The downloaded publisher media had SHA-256 `0c49e856a034e8de9695c96d86a048a34aa7f60286c0414069a1bcf35dab8f91`; all media and intermediate audio/frame galleries were deleted after numerical export.
+
+| Source interval | FFmpeg cut candidates, threshold 0.25 | Sensitivity threshold 0.15 | Sampled luma proxy |
+| --- | ---: | ---: | ---: |
+| Opening 0–20 seconds | 2 | 2 | 0.2657 |
+| Middle 30–50 seconds | 7 | 8 | 0.2998 |
+| Ending 60–80 seconds | 2 | 3 | 0.2046 |
+
+The middle segment has **more detected scene-change candidates**, and the ending sample is darker *on average across its 12 sampled frames* than the middle sample. These findings do not prove physical camera or lighting behavior, verified cuts, editing intent, or whole-teaser averages. The publisher clip provides 60 seconds of sampled coverage (approximately 74% of its runtime), not a complete frame review. Audio RMS/peak rows, source-PTS cut candidates, sparse-flow abstentions, and image-plane measurements are preserved in the numerical detail. Such distinctively short films should not be directly compared with feature-length movie advertising campaigns without matching runtime, source-edition and content context.
+
+After adding a measured title, run `python -m scripts.rebuild_movie_promo_derived` and `python -m scripts.rebuild_movie_promo_derived --verify`; all three derived comparison/timeline/motion reports must share the updated index Git-blob SHA. The source-hashed data is intended to help implement independently authored animation and pacing techniques in `kumiki-ui`, not to reproduce this film's copyrighted assets.
+
 ## Cross-studio comparison questions
 
 | Pair | Controlled question for future source-verified analysis | Why this matters to Kumiki |
