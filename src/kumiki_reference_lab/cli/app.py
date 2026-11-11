@@ -51,6 +51,7 @@ from kumiki_reference_lab.catalog.whatships_media_bindings import (
     register_local_media, media_coverage, eligible_bound_media,
 )
 from kumiki_reference_lab.catalog.whatships_data_dashboard import write_whatships_browser
+from kumiki_reference_lab.catalog.whatships_research_summary import summarize_tracked_whatships_observations
 from kumiki_reference_lab.catalog.whatships_analysis_store import (
     export_repository_analysis, validate_repository_analysis,
     sync_repository_analysis,
@@ -691,6 +692,12 @@ def build_parser() -> argparse.ArgumentParser:
     enrich.add_argument("--timeout", type=int, default=25)
     enrich.add_argument("--offline-responses", type=Path,
                         help="optional offline exact slug-to-MCP-response fixture JSON")
+    research = full_actions.add_parser(
+        "research-report", help="summarize only Git-tracked video observations and numeric source frames")
+    research.add_argument("--snapshot", type=Path,
+        default=Path("research/whatships-index-2026-11-10.json"))
+    research.add_argument("--root", type=Path,
+        default=Path("research/analysis/whatships"))
     browse = full_actions.add_parser(
         "browse", help="generate offline searchable HTML, CSV and JSON for all indexed videos")
     browse.add_argument("--snapshot", type=Path,
@@ -1193,6 +1200,10 @@ def main(argv: list[str] | None = None) -> int:
             elif args.whatships_action == "validate-analysis":
                 print(json.dumps(validate_repository_analysis(args.root, args.snapshot),
                                  indent=2, sort_keys=True, ensure_ascii=False))
+            elif args.whatships_action == "research-report":
+                print(json.dumps(summarize_tracked_whatships_observations(
+                    args.snapshot, args.root), indent=2, sort_keys=True,
+                    ensure_ascii=False))
             elif args.whatships_action == "browse":
                 print(write_whatships_browser(
                     args.snapshot, args.out, bindings_path=args.bindings,
