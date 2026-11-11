@@ -29,6 +29,7 @@ from kumiki_reference_lab.pipeline.complex_region_probe import probe_complex_reg
 from kumiki_reference_lab.pipeline.motion_timing import (
     build_seeded_motion_timing, propose_original_timing_recipes,
 )
+from kumiki_reference_lab.pipeline.multi_region_temporal import build_multi_region_temporal
 
 SCHEMA_VERSION = "kumiki.online-cinematic-insights.v1"
 
@@ -302,6 +303,7 @@ def analyze_cinematic_workspace(
     region_model_port: int = 10100, region_timeout: int = 120,
     complex_probes: bool = False, max_complex_probes: int = 4,
     complex_probe_frames: int = 12,
+    max_multi_events: int = 80, max_multi_review_tasks: int = 24,
 ) -> Path:
     manifest, numeric, reference = load_workspace(workspace)
     if any(type(v) is not bool for v in (
@@ -375,6 +377,9 @@ def analyze_cinematic_workspace(
             "tracks": [], "screenRelationshipProxies": [],
         }
     timing = build_seeded_motion_timing(subjects, numeric=numeric, shot_plan=shots)
+    multi_region = build_multi_region_temporal(
+        subjects, numeric, shots, max_events=max_multi_events,
+        max_review_tasks=max_multi_review_tasks)
     notes = _read_optional_notes(
         reference.with_suffix(".frame-notes.json"),
         source_sha=manifest["sourceSha256"],
@@ -414,6 +419,7 @@ def analyze_cinematic_workspace(
         "complexRegionProbes": complex_region_probes,
         "seededSubjectTracks": subjects,
         "seededMotionTiming": timing,
+        "multiRegionTemporal": multi_region,
         "kumikiTimingProposals": propose_original_timing_recipes(timing),
         "audioVisualCues": derive_audio_visual_hypotheses(shots, audio),
         "techniqueHypotheses": cues,
@@ -432,8 +438,8 @@ def analyze_cinematic_workspace(
                 "Seeded box-center timing curves are normalized sampled hypotheses, "
                 "not recovered original animation keys, poses or easing settings."),
             "characterInteraction": (
-                "Pair character tracks only when contemporaneous boxes are independently "
-                "observed. Image overlap/relative movement alone is not a social interaction."),
+                "Co-visible screen boxes can yield measured distance/overlap/order events, "
+                "but no pose, gesture, intent, contact, speech or confirmed interaction."),
             "exactTypography": (
                 "OCR boxes and Magnitude notes do not establish an exact font family."),
             "lightingAndMaterials": (
@@ -471,6 +477,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="opt-in short OpenCV geometry probes for complex backgrounds")
     parser.add_argument("--max-complex-probes", type=int, default=4)
     parser.add_argument("--complex-probe-frames", type=int, default=12)
+    parser.add_argument("--max-multi-events", type=int, default=80)
+    parser.add_argument("--max-multi-review-tasks", type=int, default=24)
     parser.add_argument("--overwrite", action="store_true")
     opts = parser.parse_args(argv)
     try:
@@ -489,6 +497,8 @@ def main(argv: list[str] | None = None) -> int:
             complex_probes=opts.probe_complex_regions,
             max_complex_probes=opts.max_complex_probes,
             complex_probe_frames=opts.complex_probe_frames,
+            max_multi_events=opts.max_multi_events,
+            max_multi_review_tasks=opts.max_multi_review_tasks,
         )
     except (ValueError, OSError, KeyError, TypeError, json.JSONDecodeError) as exc:
         parser.exit(2, f"cinematic intelligence failed: {exc}\n")
