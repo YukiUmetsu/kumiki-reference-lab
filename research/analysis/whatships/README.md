@@ -106,3 +106,7 @@ The planner uses the already saved `[startSeconds,endSeconds)` intervals, select
 When all supported whole-second intervals have been assigned a sampled window, the command reports `no-remaining-whole-second-gaps-within-supported-timeline` without altering the Git worktree. **This does not imply that all frames within those intervals were decoded, or that the film was human reviewed.** Source-PTS inventory counts still distinguish sampled frames from available frames within each interval.
 
 For previous batch exports, `whatships-all sync-analysis --append-numeric-windows --incoming ...` offers the same nonoverlapping merge policy. Do not combine it with `--replace-existing`. Subsequent `git add` and `git commit` remain explicit.
+
+## Optional ephemeral source acquisition
+
+If you have permission to study the original public X video associated with a What Ships record, [`whatships-acquire-measure`](../../../docs/whatships-ephemeral-acquisition.md) offers a single authorized acquisition → source-PTS numerical analysis → versioned JSON update workflow. Its public X downloader runs without authentication/cookies and deletes the downloaded media and private binding ledger on success or failure. Only actual frame-derived numeric evidence remains in the Git worktree; source identity and rights must be separately attested.

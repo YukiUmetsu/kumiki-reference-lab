@@ -108,6 +108,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Build time coverage incrementally:** `whatships-measure --fill-gaps` selects the largest remaining source-time intervals and appends their verified original-PTS samples to an existing video record. It never overwrites sampled windows or claims every frame was observed; safe source-PTS addition is also available through `whatships-all sync-analysis --append-numeric-windows`. See [data collection](docs/whatships-direct-research.md).
 
+**Optionally acquire a permitted original X video and delete it after measurement:** [`whatships-acquire-measure`](docs/whatships-ephemeral-acquisition.md) uses a verified-shaped original post link from the What Ships catalog, opt-in lawful-use/identity attestation, and a restricted local `yt-dlp` invocation. It saves only original-PTS numeric results in versioned Git research JSON, discarding downloaded footage and temporary private bindings. Anonymous public X extraction may fail; no login, cookies or bypass are attempted.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |

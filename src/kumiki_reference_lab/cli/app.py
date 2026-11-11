@@ -52,6 +52,7 @@ from kumiki_reference_lab.catalog.whatships_media_bindings import (
 )
 from kumiki_reference_lab.catalog.whatships_data_dashboard import write_whatships_browser
 from kumiki_reference_lab.catalog.whatships_direct_measure import measure_whatships_to_repository
+from kumiki_reference_lab.catalog.whatships_ephemeral_acquire import acquire_and_measure_x_video
 from kumiki_reference_lab.catalog.whatships_direct_measure_batch import measure_whatships_batch
 from kumiki_reference_lab.catalog.whatships_research_summary import summarize_tracked_whatships_observations
 from kumiki_reference_lab.catalog.whatships_analysis_store import (
@@ -619,6 +620,30 @@ def build_parser() -> argparse.ArgumentParser:
     batch_measure.add_argument("--cut-threshold", type=float, default=.25)
     batch_measure.add_argument("--ffmpeg", default="ffmpeg")
     batch_measure.add_argument("--ffprobe", default="ffprobe")
+    acquire_ws = commands.add_parser(
+        "whatships-acquire-measure",
+        help="opt-in ephemeral public X original-video acquisition and source-PTS research persistence")
+    acquire_ws.add_argument("source_id", help="What Ships source ID with enriched original X post")
+    acquire_ws.add_argument("--snapshot", type=Path,
+        default=Path("research/whatships-index-2026-11-10.json"))
+    acquire_ws.add_argument("--repository-root", type=Path,
+        default=Path("research/analysis/whatships"))
+    acquire_ws.add_argument("--rights-basis", required=True,
+        choices=("own-original-work","written-permission",
+                 "permissive-license","other-lawful-authorization"))
+    acquire_ws.add_argument("--rights-note", required=True,
+        help="specific legal basis, kept temporarily and never committed to Git")
+    acquire_ws.add_argument("--identity-note", required=True,
+        help="operator evidence the original X video matches this exact catalog entry")
+    acquire_ws.add_argument("--acknowledge-rights", action="store_true")
+    acquire_ws.add_argument("--yt-dlp", default="yt-dlp")
+    acquire_ws.add_argument("--timeout-seconds", type=int, default=240)
+    acquire_ws.add_argument("--window-seconds", type=int, default=10)
+    acquire_ws.add_argument("--window-count", type=int, default=4)
+    acquire_ws.add_argument("--max-samples", type=int, default=12)
+    acquire_ws.add_argument("--ffmpeg", default="ffmpeg")
+    acquire_ws.add_argument("--ffprobe", default="ffprobe")
+
     measure_ws = commands.add_parser(
         "whatships-measure",
         help="measure bound local source frames and sync actual PTS observations straight to Git research JSON")
@@ -1213,6 +1238,18 @@ def main(argv: list[str] | None = None) -> int:
                 width=args.width,height=args.height,
                 cut_threshold=args.cut_threshold,ffmpeg=args.ffmpeg,
                 ffprobe=args.ffprobe),
+                indent=2,sort_keys=True,ensure_ascii=False))
+            return 0
+        if args.command == "whatships-acquire-measure":
+            print(json.dumps(acquire_and_measure_x_video(
+                args.snapshot,args.source_id,args.repository_root,
+                rights_basis=args.rights_basis,rights_note=args.rights_note,
+                identity_note=args.identity_note,
+                acknowledge_rights=args.acknowledge_rights,
+                yt_dlp=args.yt_dlp,timeout_seconds=args.timeout_seconds,
+                window_seconds=args.window_seconds,
+                window_count=args.window_count,max_samples=args.max_samples,
+                ffmpeg=args.ffmpeg,ffprobe=args.ffprobe),
                 indent=2,sort_keys=True,ensure_ascii=False))
             return 0
         if args.command == "whatships-measure":
