@@ -495,6 +495,10 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Evaluate source-bound visual-change guesses only against reviewed human labels")
     sub = parser.add_subparsers(dest="operation", required=True)
+    pack = sub.add_parser("review-pack", help="create a local HTML human review workbench beside ignored PNG frames")
+    pack.add_argument("--workspace", type=Path, required=True)
+    pack.add_argument("--insights", type=Path, required=True)
+    pack.add_argument("--out", type=Path, help="optional new HTML filename inside the ignored workspace")
     template = sub.add_parser("template", help="create a pending, never pre-approved label file")
     template.add_argument("--insights", type=Path, required=True)
     template.add_argument("--out", type=Path, required=True)
@@ -507,6 +511,13 @@ def main(argv: list[str] | None = None) -> int:
     aggregate.add_argument("--out", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
+        if args.operation == "review-pack":
+            from kumiki_reference_lab.pipeline.sequence_review_workbench import create_review_pack
+
+            result = create_review_pack(
+                args.workspace, args.insights, out=args.out)
+            print(result)
+            return 0
         if args.operation == "aggregate":
             reports = [_load(path)[0] for path in args.reports]
             result = aggregate_benchmarks(reports)
