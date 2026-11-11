@@ -2,7 +2,7 @@
 
 **Research checked:** November 11, 2026
 **Machine-readable cohort:** [`research/popular-movie-videos.v1.json`](../research/popular-movie-videos.v1.json)  
-**Evidence level:** 13 official YouTube uploads with attributable popularity observations; **13 corresponding film-promotion sources actually processed** (seven Disney-hosted trailers and six Apple iTunes Store movie previews) in 39 non-overlapping 20-second windows (780 seconds total), plus separate limited manual visual observations of the original five. Apple retail previews are **not verified identical** to the catalog's YouTube uploads. Extracted numerical evidence is committed; video, audio and image files are not.
+**Evidence level:** 13 cataloged official YouTube uploads with attributable popularity observations; **14 film-promotion editions actually processed** (seven Disney-hosted trailers, six Apple iTunes Store movie previews, and one independently published Blender Studio *OVERGROWN* PeerTube teaser) in 42 non-overlapping 20-second windows (840 seconds total), plus separate limited manual visual observations of the original five. Apple retail previews are **not verified identical** to the catalog's YouTube uploads. Extracted numerical evidence is committed; video, audio and image files are not.
 
 **Measured data:** the canonical [`research/analysis/movie-promotions/`](../research/analysis/movie-promotions/) folder holds [`index.json`](../research/analysis/movie-promotions/index.json) and one granular JSON file per analyzed trailer. It retains per-window source PTS, cut-candidate positions, two-dimensional motion results, sampled image appearance, decoded audio RMS/peak trajectories, onset candidates, edit rhythms and AV-cut comparisons. No source videos, frame images, signed CDN URLs or dialogue transcripts are committed.
 
@@ -202,7 +202,7 @@ copy before attributing artistic intent or deciding on component gaps.
 
 The [derived image-motion proxies](../research/analysis/movie-promotions/derived/image-motion-proxies.v1.json)
 aggregate the original low-resolution phase-correlation and sparse-flow
-evidence across 13 filmed promotion editions and 39 windows. This is a
+evidence across the original 13 catalog-associated promotion editions and their 39 windows. The separate Blender Studio *OVERGROWN* teaser adds three new independently measured windows to the current machine-readable dataset. This is a
 different question from the cut-to-audio experiment above.
 
 | 2D sample status | Number of sampled pairs |
