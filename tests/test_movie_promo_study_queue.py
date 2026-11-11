@@ -51,6 +51,16 @@ class MoviePromoQueueTests(unittest.TestCase):
         self.assertTrue(any("upload URL mismatch" in x for x in result))
         self.assertTrue(any("duplicate slug" in x for x in result))
 
+    def test_disguised_evidence_host_rejected(self):
+        data = copy.deepcopy(self.queue)
+        data["entries"][0]["viewEvidence"]["sourceUrl"] = "https://youtube.com@evil.example/watch?v=123"
+        self.assertTrue(any("unsafe evidence URL" in x for x in audit(data, self.catalog)))
+
+    def test_missing_film_metadata_rejected(self):
+        data = copy.deepcopy(self.queue)
+        data["entries"][0]["filmStudio"] = ""
+        self.assertTrue(any("invalid film metadata" in x for x in audit(data, self.catalog)))
+
     def test_view_counts_cannot_be_strings(self):
         data = copy.deepcopy(self.queue)
         data["entries"][0]["viewEvidence"]["reportedViews"] = "60 million"
