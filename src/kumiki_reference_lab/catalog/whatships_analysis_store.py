@@ -26,7 +26,7 @@ SCHEMA_VERSION = "kumiki.whatships-repository-analysis.v1"
 INDEX_VERSION = "kumiki.whatships-repository-analysis-index.v1"
 _BASENAME = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
 _MAX_NOTES = 200
-_MAX_WINDOWS = 6
+_MAX_WINDOWS = 64  # Total source windows stored per film; each new decode batch still <=6
 _MAX_SAMPLES = 24
 
 
@@ -619,9 +619,40 @@ def _atomic_write_bytes(path: Path, content: bytes) -> None:
         temporary.unlink(missing_ok=True)
 
 
+def _append_numeric_windows(existing: dict[str,Any],
+                            incoming: dict[str,Any]) -> dict[str,Any]:
+    """Merge only disjoint or byte-identical source-window observations.
+
+    Reject overlapping source windows even if measured with different
+    decoders/resolutions: overlap cannot be silently reconciled into an
+    independently reproducible timeline.
+    """
+    if (existing.get("sourceSha256") != incoming.get("sourceSha256") or
+            existing.get("evidenceStatus") != incoming.get("evidenceStatus")):
+        raise ValueError("cannot append numeric evidence from different source video bytes")
+    prior = existing["windows"]
+    fresh = incoming["windows"]
+    combined = list(prior)
+    for proposed in fresh:
+        match = next((old for old in combined
+                      if old["startSeconds"] < proposed["endSeconds"] and
+                         proposed["startSeconds"] < old["endSeconds"]), None)
+        if match is not None:
+            if match != proposed:
+                raise ValueError(
+                    "overlapping numeric source windows differ; use --replace-existing "
+                    "only for an intentional full numeric evidence replacement")
+            continue
+        combined.append(proposed)
+    combined.sort(key=lambda row:(row["startSeconds"],row["endSeconds"]))
+    if len(combined) > _MAX_WINDOWS:
+        raise ValueError("source-window research record exceeds bounded per-film limit")
+    return {**existing,"windows":combined}
+
+
 def sync_repository_analysis(
     snapshot_path: Path, incoming: Path, root: Path, *,
-    replace_existing: bool = False,
+    replace_existing: bool = False, append_numeric_windows: bool = False,
 ) -> dict[str,Any]:
     """Merge an analyzed export into the Git-tracked canonical corpus.
 
@@ -629,8 +660,11 @@ def sync_repository_analysis(
     replaced/downgraded. Explicit replace is still under Git version control.
     Prevalidates every input before writing; on errors, restores old bytes.
     """
-    if type(replace_existing) is not bool or root.resolve() == incoming.resolve():
-        raise ValueError("sync requires a distinct incoming directory and explicit replacement policy")
+    if (type(replace_existing) is not bool or
+            type(append_numeric_windows) is not bool or
+            (replace_existing and append_numeric_windows) or
+            root.resolve() == incoming.resolve()):
+        raise ValueError("sync needs distinct directories; append and replace are mutually exclusive")
     existing_stats = validate_repository_analysis(root,snapshot_path)
     incoming_stats = validate_repository_analysis(incoming,snapshot_path)
     original_index = _read_json(root/"index.json")
@@ -656,6 +690,10 @@ def sync_repository_analysis(
             raise ValueError("source or catalog identity conflict during analysis sync")
         combined = dict(prior["evidence"])
         for kind,layer in new["evidence"].items():
+            if (kind == "numericVisual" and kind in combined and
+                    append_numeric_windows):
+                combined[kind] = _append_numeric_windows(combined[kind],layer)
+                continue
             if kind in combined and combined[kind] != layer and not replace_existing:
                 raise ValueError("existing source analysis evidence differs; explicit --replace-existing required")
             combined[kind] = layer
