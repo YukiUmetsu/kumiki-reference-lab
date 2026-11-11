@@ -51,6 +51,7 @@ from kumiki_reference_lab.catalog.whatships_media_bindings import (
     register_local_media, media_coverage, eligible_bound_media,
 )
 from kumiki_reference_lab.catalog.whatships_data_dashboard import write_whatships_browser
+from kumiki_reference_lab.catalog.whatships_direct_measure import measure_whatships_to_repository
 from kumiki_reference_lab.catalog.whatships_research_summary import summarize_tracked_whatships_observations
 from kumiki_reference_lab.catalog.whatships_analysis_store import (
     export_repository_analysis, validate_repository_analysis,
@@ -595,6 +596,27 @@ def build_parser() -> argparse.ArgumentParser:
     visual_probe.add_argument("--ffprobe", default="ffprobe")
     visual_probe.add_argument("--rights-status", choices=RIGHTS_STATUSES,
                               default="review-required")
+
+    measure_ws = commands.add_parser(
+        "whatships-measure",
+        help="measure bound local source frames and sync actual PTS observations straight to Git research JSON")
+    measure_ws.add_argument("bindings", type=Path, help="private authorized media-bindings.json")
+    measure_ws.add_argument("source_id", help="one exact whatships:slug")
+    measure_ws.add_argument("--snapshot", type=Path,
+        default=Path("research/whatships-index-2026-11-10.json"))
+    measure_ws.add_argument("--repository-root", type=Path,
+        default=Path("research/analysis/whatships"),
+        help="version-controlled canonical per-video research data directory")
+    measure_ws.add_argument("--window-seconds", type=int, default=10)
+    measure_ws.add_argument("--window-count", type=int, default=4)
+    measure_ws.add_argument("--max-samples", type=int, default=12)
+    measure_ws.add_argument("--width", type=int, default=160)
+    measure_ws.add_argument("--height", type=int, default=90)
+    measure_ws.add_argument("--cut-threshold", type=float, default=.25)
+    measure_ws.add_argument("--replace-existing", action="store_true",
+        help="explicitly replace prior numeric video evidence for this source")
+    measure_ws.add_argument("--ffmpeg", default="ffmpeg")
+    measure_ws.add_argument("--ffprobe", default="ffprobe")
 
     analyze_ws = commands.add_parser(
         "whatships-analyze",
@@ -1155,6 +1177,17 @@ def main(argv: list[str] | None = None) -> int:
                 width=args.width, height=args.height,
                 cut_threshold=args.cut_threshold, ffmpeg=args.ffmpeg,
                 ffprobe=args.ffprobe, rights_status=args.rights_status))
+            return 0
+        if args.command == "whatships-measure":
+            print(json.dumps(measure_whatships_to_repository(
+                args.snapshot, args.bindings, args.source_id,
+                args.repository_root, window_seconds=args.window_seconds,
+                window_count=args.window_count, max_samples=args.max_samples,
+                width=args.width, height=args.height,
+                cut_threshold=args.cut_threshold,
+                replace_existing=args.replace_existing,
+                ffmpeg=args.ffmpeg, ffprobe=args.ffprobe),
+                indent=2, sort_keys=True, ensure_ascii=False))
             return 0
         if args.command == "whatships-analyze":
             print(run_whatships_local_analysis(
