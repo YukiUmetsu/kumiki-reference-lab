@@ -35,9 +35,13 @@ def build_cinematic_catalog(root: Path, *,
     source_summary = {}
     technique_sources: dict[str, set[str]] = collections.defaultdict(set)
     duration = []
+    total_bytes = 0
     for path in files:
         if path.is_symlink() or not path.is_file() or path.stat().st_size > 8_000_000:
             raise ValueError("unsafe or oversized insights file")
+        total_bytes += path.stat().st_size
+        if total_bytes > 128 * 1024 * 1024:
+            raise ValueError("catalog input exceeds total JSON read budget")
         item = json.loads(path.read_text(encoding="utf-8"))
         if item.get("schemaVersion") != "kumiki.online-cinematic-insights.v1":
             raise ValueError("unexpected insights schema")
