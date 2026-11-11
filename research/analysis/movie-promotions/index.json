@@ -393,13 +393,168 @@
       "catalogId": "marvel-endgame-trailer",
       "sampledCoverageSeconds": 60,
       "sampledCoverageFraction": 0.4105
+    },
+    {
+      "id": "zootopia-2",
+      "officialPlayerUrl": "https://video.disney.com/watch/zootopia-2-trailer-63b2807aa1399deb74651fcd",
+      "sourceSha256": "13b574710d6a9afa561647223c2e4e61ddfdf1cea2d3ce06e0297a2a19458259",
+      "sourceDurationSeconds": 141.182993,
+      "sourceResolution": [
+        960,
+        400
+      ],
+      "windows": [
+        {
+          "window": "opening",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "windowSourceSha256": "13b574710d6a9afa561647223c2e4e61ddfdf1cea2d3ce06e0297a2a19458259",
+          "cutCandidateCount": 9,
+          "observedInterCutIntervalCount": 8,
+          "medianInterCandidateGapSeconds": 1.877,
+          "audioLevelAttackCandidateCount": 19,
+          "meanSampledLumaProxy": 0.4007,
+          "meanSampledSaturation": 0.4087,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 13,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "cut-boundary": 8,
+            "single-image-translation-candidate": 2,
+            "insufficient-consensus": 1
+          },
+          "cutCandidateCountAtThreshold015": 10
+        },
+        {
+          "window": "middle",
+          "sourceOffsetSeconds": 61,
+          "scanSeconds": 20,
+          "windowSourceSha256": "689c4c87db29d0f53c16d1025b5353df57313cbc37912d64135a05e7fce03cfc",
+          "cutCandidateCount": 10,
+          "observedInterCutIntervalCount": 9,
+          "medianInterCandidateGapSeconds": 1.668,
+          "audioLevelAttackCandidateCount": 5,
+          "meanSampledLumaProxy": 0.3965,
+          "meanSampledSaturation": 0.4509,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 13,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "cut-boundary": 9,
+            "single-image-translation-candidate": 1,
+            "ambiguous-dominant-group": 1
+          },
+          "cutCandidateCountAtThreshold015": 11
+        },
+        {
+          "window": "ending",
+          "sourceOffsetSeconds": 121,
+          "scanSeconds": 20,
+          "windowSourceSha256": "8225a4d6fd428e4f815eb38bcf991f4402e25b0d22fd3c27626149b1af07c89c",
+          "cutCandidateCount": 3,
+          "observedInterCutIntervalCount": 2,
+          "medianInterCandidateGapSeconds": 6.048,
+          "audioLevelAttackCandidateCount": 3,
+          "meanSampledLumaProxy": 0.2062,
+          "meanSampledSaturation": 0.3948,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 14,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "insufficient-consensus": 5,
+            "cut-boundary": 3,
+            "single-image-translation-candidate": 3
+          },
+          "cutCandidateCountAtThreshold015": 5
+        }
+      ],
+      "catalogId": "disney-zootopia-2-trailer",
+      "sampledCoverageSeconds": 60,
+      "sampledCoverageFraction": 0.425
+    },
+    {
+      "id": "force-awakens",
+      "officialPlayerUrl": "https://video.disney.com/watch/star-wars-the-force-awakens-trailer-official-522807c0b6c6761590ef1bee",
+      "sourceSha256": "daf98d39f3658931f476d9a9f1bf4faafe8488eb84b903f9488f4e96b4a5db2c",
+      "sourceDurationSeconds": 138.221555,
+      "sourceResolution": [
+        960,
+        400
+      ],
+      "windows": [
+        {
+          "window": "opening",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "windowSourceSha256": "daf98d39f3658931f476d9a9f1bf4faafe8488eb84b903f9488f4e96b4a5db2c",
+          "cutCandidateCount": 4,
+          "observedInterCutIntervalCount": 3,
+          "medianInterCandidateGapSeconds": 5.005,
+          "audioLevelAttackCandidateCount": 4,
+          "meanSampledLumaProxy": 0.1998,
+          "meanSampledSaturation": 0.5054,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 17,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "single-image-translation-candidate": 5,
+            "cut-boundary": 4,
+            "insufficient-consensus": 2
+          },
+          "cutCandidateCountAtThreshold015": 5
+        },
+        {
+          "window": "middle",
+          "sourceOffsetSeconds": 59,
+          "scanSeconds": 20,
+          "windowSourceSha256": "d28c933373a359f1305cad67a417f73dfba7c98dc11debf5a26f4ae63f5db89d",
+          "cutCandidateCount": 6,
+          "observedInterCutIntervalCount": 5,
+          "medianInterCandidateGapSeconds": 3.712,
+          "audioLevelAttackCandidateCount": 0,
+          "meanSampledLumaProxy": 0.2975,
+          "meanSampledSaturation": 0.3893,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 14,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "insufficient-consensus": 7,
+            "cut-boundary": 4
+          },
+          "cutCandidateCountAtThreshold015": 18
+        },
+        {
+          "window": "ending",
+          "sourceOffsetSeconds": 118,
+          "scanSeconds": 20,
+          "windowSourceSha256": "35bfa4209171fb046eee78c32a484de96c937e0fb49d09f7edfacd7fee873008",
+          "cutCandidateCount": 0,
+          "observedInterCutIntervalCount": 0,
+          "medianInterCandidateGapSeconds": null,
+          "audioLevelAttackCandidateCount": 1,
+          "meanSampledLumaProxy": 0.0309,
+          "meanSampledSaturation": 0.1333,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 16,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "insufficient-consensus": 4,
+            "multiple-image-translations": 4,
+            "single-image-translation-candidate": 3
+          },
+          "cutCandidateCountAtThreshold015": 0
+        }
+      ],
+      "catalogId": "star-wars-force-awakens-trailer",
+      "sampledCoverageSeconds": 60,
+      "sampledCoverageFraction": 0.4341
     }
   ],
   "detectorThresholds": [
     0.25,
     0.15
   ],
-  "scope": "15 non-overlapping 20-second windows; sampled coverage only, not complete trailer. No manual verification of automated cut or audio-onset candidates.",
+  "scope": "21 non-overlapping 20-second windows across seven trailers; sampled coverage only, not complete trailer. No manual verification of automated cut or audio-onset candidates.",
   "caveats": [
     "FFmpeg scene-difference candidates are not confirmed edits and can react to motion, effects and flashes; threshold sensitivity is reported.",
     "Display luma and saturation are sampled, encoded-frame proxies rather than light-rig measurements or footage-wide statistics.",
