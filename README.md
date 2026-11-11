@@ -80,6 +80,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Source-PTS verified long-video seek backend:** [`backends.ffmpeg.source_seek`](docs/source-pts-seek-decoding.md) selects frames by original timestamps in later video windows using FFprobe and FFmpeg `-ss -copyts`, with exact PTS/timebase verification. Real synthetic media tests cover 125–143 seconds. This backend now powers character detection, description, interaction review and QA in long windows, while windows ending within 120 seconds retain the prefix decoder.
 
+**All What Ships videos, not only selected genres:** [`whatships-all refresh/report/queue`](docs/whatships-full-coverage.md) validates and inventories every published video from the official public index, across all eight categories, with category-fair backlog planning, new/delisted slug audits, and explicit missing detail/media/visual evidence. The frozen November 10 snapshot contains 2,861 videos; 419 have detailed metadata. This catalogs metadata, **not permission to download or a claim that all media was watched**.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |

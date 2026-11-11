@@ -43,6 +43,9 @@ from kumiki_reference_lab.catalog.browser_observations import (
     load_browser_observations, search_browser_observations,
 )
 from kumiki_reference_lab.catalog.popular_videos import load_popular_videos, search_popular_videos
+from kumiki_reference_lab.catalog.whatships_full_coverage import (
+    refresh_full_whatships_catalog, summarize_full_snapshot, plan_full_snapshot,
+)
 from kumiki_reference_lab.catalog.video_sources import (
     get_source_reference, load_source_references, search_source_references,
     summarize_source_references,
@@ -544,6 +547,33 @@ def build_parser() -> argparse.ArgumentParser:
             sub.add_argument("--limit", type=int, default=20)
         if action == "search":
             sub.add_argument("query", help="technique, story goal, title or creator")
+    full_ws = commands.add_parser(
+        "whatships-all",
+        help="maintain all What Ships video metadata, audit gaps and plan a fair backlog")
+    full_actions = full_ws.add_subparsers(dest="whatships_action", required=True)
+    refresh = full_actions.add_parser(
+        "refresh", help="fetch the official public index once and create an immutable full snapshot")
+    refresh.add_argument("--previous", type=Path,
+                         default=Path("research/whatships-index-2026-11-10.json"))
+    refresh.add_argument("--index-file", type=Path,
+                         help="optional locally supplied official index JSON, for offline refresh")
+    refresh.add_argument("--out", type=Path, required=True, help="new output directory")
+    refresh.add_argument("--timeout", type=int, default=25)
+    refresh.add_argument("--retrieved-on", help="explicit ISO snapshot date (for deterministic offline runs)")
+
+    report = full_actions.add_parser("report", help="count all indexed videos and evidence gaps")
+    report.add_argument("--snapshot", type=Path,
+                        default=Path("research/whatships-index-2026-11-10.json"))
+
+    queue = full_actions.add_parser("queue", help="list all remaining metadata and media-source needs")
+    queue.add_argument("--snapshot", type=Path,
+                       default=Path("research/whatships-index-2026-11-10.json"))
+    queue.add_argument("--limit", type=int, default=50,
+                       help="maximum visible rows; 10000 to request complete queue")
+    queue.add_argument("--category",
+                       choices=("ai", "developer-tools", "design", "motion",
+                                "productivity", "consumer", "hardware", "other"))
+    queue.add_argument("--missing-detail-only", action="store_true")
     sources = commands.add_parser(
         "video-sources", help="browse normalized YouTube and What Ships references without media downloads")
     source_actions = sources.add_subparsers(dest="source_action", required=True)
@@ -920,6 +950,20 @@ def main(argv: list[str] | None = None) -> int:
                                                 limit=args.limit)
                 print(json.dumps({"query": query, "results": results, "count": len(results),
                                   "retrievedOn": collection["retrievedOn"]}, indent=2, sort_keys=True))
+            return 0
+        if args.command == "whatships-all":
+            if args.whatships_action == "refresh":
+                print(refresh_full_whatships_catalog(
+                    args.previous, args.out, index_file=args.index_file,
+                    timeout=args.timeout, retrieved_on=args.retrieved_on))
+            elif args.whatships_action == "report":
+                print(json.dumps(summarize_full_snapshot(args.snapshot),
+                                 indent=2, sort_keys=True, ensure_ascii=False))
+            else:
+                print(json.dumps(plan_full_snapshot(
+                    args.snapshot, limit=args.limit, category=args.category,
+                    missing_detail_only=args.missing_detail_only),
+                    indent=2, sort_keys=True, ensure_ascii=False))
             return 0
         if args.command == "video-sources":
             collection = load_source_references(args.youtube_root, args.whatships)
