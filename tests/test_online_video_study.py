@@ -230,5 +230,21 @@ class SemanticAndRunnerTests(unittest.TestCase):
             self.assertFalse((root / "research" / "analysis" / "online-videos").exists())
 
 
+
+class NoDependencyTemporalSmokeTests(unittest.TestCase):
+    def test_raw_rgb_block_motion_fallback(self):
+        # Runs in the existing cheap Python CI without FFmpeg, NumPy or OpenCV.
+        from kumiki_reference_lab.pipeline.online_temporal import (
+            match_image_plane_motion,
+        )
+        original = bytes(64 * 36 * 3)
+        evidence = match_image_plane_motion(
+            original, original, width=64, height=36)
+        self.assertEqual(evidence["status"], "abstain-insufficient-texture")
+        self.assertIsNone(evidence["dominantVectorPixels"])
+
+
+
+
 if __name__ == "__main__":
     unittest.main()
