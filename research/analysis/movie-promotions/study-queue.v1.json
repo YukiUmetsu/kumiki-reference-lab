@@ -1,0 +1,413 @@
+{
+  "schemaVersion": "kumiki.movie-promotion-study-queue.v1",
+  "retrievedOn": "2026-11-11",
+  "researchStatus": "metadata-only-no-media-analysis",
+  "sourceCaveat": "Each URL points to a particular official uploader's YouTube video. Reported views come from search/third-party indexing and can be stale. The counts are cumulative upload-level views, not unique viewers, campaign reach, or causal effect. Proposed research tags are questions, not measurements or verified visual properties.",
+  "target": "Add diverse high-popularity official trailers to the future source-hashed movie-promotion study corpus. Existing 13 measured promo editions remain in index.json and are not duplicated here.",
+  "nextSteps": "Acquire access to a legitimate, accessible official edition; record edition identity and original SHA-256; run bounded first/middle/last studies; commit only numeric evidence; match upload identity explicitly or mark it not verified. Never put source footage in Git.",
+  "entries": [
+    {
+      "id": "the-batman-main-trailer",
+      "title": "The Batman",
+      "filmStudio": "Warner Bros. Pictures",
+      "officialUploader": "Warner Bros.",
+      "filmReleaseYear": 2022,
+      "youtubeId": "mqqft2x_Aa4",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=mqqft2x_Aa4",
+      "publishedOn": "2021-10-16",
+      "viewEvidence": {
+        "reportedViews": 67558772,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=mqqft2x_Aa4",
+        "note": "Indexed/third-party lifetime views, not live verified YouTube Analytics"
+      },
+      "candidateResearchTags": [
+        "noir-visual-language",
+        "mystery-reveal",
+        "contrast"
+      ],
+      "studyQuestion": "Does the measured distribution of near-black frames and cut intervals differ from other hero trailers?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "first-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
+      "id": "avatar-way-of-water-trailer",
+      "title": "Avatar: The Way of Water",
+      "filmStudio": "20th Century Studios",
+      "officialUploader": "Avatar",
+      "filmReleaseYear": 2022,
+      "youtubeId": "d9MyW72ELq0",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=d9MyW72ELq0",
+      "publishedOn": "2022-11-02",
+      "viewEvidence": {
+        "reportedViews": 62828912,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=d9MyW72ELq0",
+        "note": "Indexed/third-party lifetime views, not live verified YouTube Analytics"
+      },
+      "candidateResearchTags": [
+        "environmental-scale",
+        "character-focus",
+        "color"
+      ],
+      "studyQuestion": "How does subject legibility change between close-up dialogue and large environmental compositions?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "second-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
+      "id": "jurassic-world-rebirth-trailer",
+      "title": "Jurassic World Rebirth",
+      "filmStudio": "Universal Pictures",
+      "officialUploader": "Universal Pictures",
+      "filmReleaseYear": 2025,
+      "youtubeId": "jan5CFWs9ic",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=jan5CFWs9ic",
+      "publishedOn": "2025-02-05",
+      "viewEvidence": {
+        "reportedViews": 56681375,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=jan5CFWs9ic",
+        "note": "Indexed/third-party lifetime views, not live verified YouTube Analytics"
+      },
+      "candidateResearchTags": [
+        "creature-scale",
+        "suspense",
+        "action"
+      ],
+      "studyQuestion": "How are tension-building holds and creature reveals distributed relative to candidate cuts?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "first-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
+      "id": "spiderverse-across-trailer-2",
+      "title": "Spider-Man: Across the Spider-Verse",
+      "filmStudio": "Sony Pictures Animation",
+      "officialUploader": "Sony Pictures Entertainment",
+      "filmReleaseYear": 2023,
+      "youtubeId": "shW9i6k8cB0",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=shW9i6k8cB0",
+      "publishedOn": "2023-04-04",
+      "viewEvidence": {
+        "reportedViews": 54237440,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=shW9i6k8cB0",
+        "note": "Indexed/third-party lifetime views, not live verified YouTube Analytics"
+      },
+      "candidateResearchTags": [
+        "stylized-animation",
+        "multi-character",
+        "palette"
+      ],
+      "studyQuestion": "How frequently do palette and graphic style shifts coincide with edit candidates?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "first-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
+      "id": "john-wick-4-trailer",
+      "title": "John Wick: Chapter 4",
+      "filmStudio": "Lionsgate",
+      "officialUploader": "Lionsgate Movies",
+      "filmReleaseYear": 2023,
+      "youtubeId": "qEVUtrk8_B4",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=qEVUtrk8_B4",
+      "publishedOn": "2022-11-10",
+      "viewEvidence": {
+        "reportedViews": 53722684,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=qEVUtrk8_B4",
+        "note": "Indexed/third-party lifetime views, not live verified YouTube Analytics"
+      },
+      "candidateResearchTags": [
+        "action-geography",
+        "blocking",
+        "cut-timing"
+      ],
+      "studyQuestion": "Do long action holds cluster before and after rapid cut sequences in sampled windows?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "first-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
+      "id": "top-gun-maverick-new-trailer",
+      "title": "Top Gun: Maverick",
+      "filmStudio": "Paramount Pictures",
+      "officialUploader": "Paramount Pictures",
+      "filmReleaseYear": 2022,
+      "youtubeId": "giXco2jaZ_4",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=giXco2jaZ_4",
+      "publishedOn": "2022-03-29",
+      "viewEvidence": {
+        "reportedViews": 45209567,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "third-party-channel-statistics",
+        "sourceUrl": "https://trari.com/en/c/paramountpictures/",
+        "note": "Indexed/third-party lifetime views, not live verified YouTube Analytics"
+      },
+      "candidateResearchTags": [
+        "vehicle-motion",
+        "physical-scale",
+        "editing"
+      ],
+      "studyQuestion": "Can scene-motion proxies distinguish aircraft-dominated shots from quiet dialogue windows without inferring physical camera movement?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "second-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
+      "id": "mission-impossible-fallout-trailer",
+      "title": "Mission: Impossible – Fallout",
+      "filmStudio": "Paramount Pictures",
+      "officialUploader": "Paramount Pictures",
+      "filmReleaseYear": 2018,
+      "youtubeId": "wb49-oV0F78",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=wb49-oV0F78",
+      "publishedOn": "2018-02-04",
+      "viewEvidence": {
+        "reportedViews": 44545104,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=wb49-oV0F78",
+        "note": "Indexed/third-party lifetime views, not live verified YouTube Analytics"
+      },
+      "candidateResearchTags": [
+        "action-pacing",
+        "sound-onsets",
+        "stunts"
+      ],
+      "studyQuestion": "How sensitive are action montage edit candidates to the scene threshold and audio-attack proximity?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "second-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
+      "id": "minecraft-final-trailer",
+      "title": "A Minecraft Movie",
+      "filmStudio": "Warner Bros. Pictures",
+      "officialUploader": "Warner Bros.",
+      "filmReleaseYear": 2025,
+      "youtubeId": "8B1EtVPBSMw",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=8B1EtVPBSMw",
+      "publishedOn": "2025-02-27",
+      "viewEvidence": {
+        "reportedViews": 39585552,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=8B1EtVPBSMw",
+        "note": "Indexed/third-party lifetime views, not live verified YouTube Analytics"
+      },
+      "candidateResearchTags": [
+        "game-world-translation",
+        "live-action-vfx",
+        "comedy"
+      ],
+      "studyQuestion": "How do measured image-color shifts track transitions between familiar game imagery and live-action material?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "second-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
+      "id": "guardians-galaxy-vol3-trailer",
+      "title": "Guardians of the Galaxy Vol. 3",
+      "filmStudio": "Marvel Studios",
+      "officialUploader": "Marvel Entertainment",
+      "filmReleaseYear": 2023,
+      "youtubeId": "u3V5KDHRQvk",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=u3V5KDHRQvk",
+      "publishedOn": "2022-12-01",
+      "viewEvidence": {
+        "reportedViews": 36351240,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=u3V5KDHRQvk",
+        "note": "Indexed/third-party lifetime views, not live verified YouTube Analytics"
+      },
+      "candidateResearchTags": [
+        "ensemble",
+        "emotional-pacing",
+        "audio-cuts"
+      ],
+      "studyQuestion": "How do ensemble sections differ in cut cadence from emotionally quiet passages?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "second-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
+      "id": "everything-everywhere-trailer",
+      "title": "Everything Everywhere All at Once",
+      "filmStudio": "A24",
+      "officialUploader": "A24",
+      "filmReleaseYear": 2022,
+      "youtubeId": "wxN1T1uxQ2g",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=wxN1T1uxQ2g",
+      "publishedOn": "2021-12-14",
+      "viewEvidence": {
+        "reportedViews": 35994752,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=wxN1T1uxQ2g",
+        "note": "Indexed/third-party lifetime views, not live verified YouTube Analytics"
+      },
+      "candidateResearchTags": [
+        "genre-contrast",
+        "rapid-montage",
+        "visual-variation"
+      ],
+      "studyQuestion": "Do shifts in sampled visual appearance correlate with short candidate cut intervals?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "first-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
+      "id": "wicked-official-trailer",
+      "title": "Wicked",
+      "filmStudio": "Universal Pictures",
+      "officialUploader": "Universal Pictures",
+      "filmReleaseYear": 2024,
+      "youtubeId": "6COmYeLsz4c",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=6COmYeLsz4c",
+      "publishedOn": "2024-05-15",
+      "viewEvidence": {
+        "reportedViews": 24950853,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=6COmYeLsz4c",
+        "note": "Indexed/third-party lifetime views, not live verified YouTube Analytics"
+      },
+      "candidateResearchTags": [
+        "musical-structure",
+        "color-contrast",
+        "character-duo"
+      ],
+      "studyQuestion": "What is the relationship between dialogue/music level attacks and cut-candidate placement?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "second-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
+      "id": "wild-robot-trailer",
+      "title": "The Wild Robot",
+      "filmStudio": "DreamWorks Animation",
+      "officialUploader": "Universal Pictures",
+      "filmReleaseYear": 2024,
+      "youtubeId": "67vbA5ZJdKQ",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=67vbA5ZJdKQ",
+      "publishedOn": "2024-03-05",
+      "viewEvidence": {
+        "reportedViews": 22309184,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=67vbA5ZJdKQ",
+        "note": "Indexed/third-party lifetime views, not live verified YouTube Analytics"
+      },
+      "candidateResearchTags": [
+        "stylized-animation",
+        "environmental-storytelling",
+        "character-scale"
+      ],
+      "studyQuestion": "How do sampled contrast and saturation patterns compare with other animated trailers?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "first-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
+      "id": "puss-in-boots-last-wish-trailer",
+      "title": "Puss in Boots: The Last Wish",
+      "filmStudio": "DreamWorks Animation",
+      "officialUploader": "Universal Pictures",
+      "filmReleaseYear": 2022,
+      "youtubeId": "xgZLXyqbYOc",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=xgZLXyqbYOc",
+      "publishedOn": "2022-03-15",
+      "viewEvidence": {
+        "reportedViews": 20140223,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=xgZLXyqbYOc",
+        "note": "Indexed/third-party lifetime views, not live verified YouTube Analytics"
+      },
+      "candidateResearchTags": [
+        "stylized-action",
+        "comic-timing",
+        "character-pose"
+      ],
+      "studyQuestion": "Are action sequences measurably denser in cuts than dialogue windows, and where are the exceptions?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "second-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    }
+  ]
+}
