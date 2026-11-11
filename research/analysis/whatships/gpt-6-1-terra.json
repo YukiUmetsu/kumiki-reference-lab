@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "kumiki.whatships-repository-analysis.v1",
+  "sourceId": "whatships:gpt-6-1-terra",
+  "watchUrl": "https://whatships.com/videos/gpt-6-1-terra/",
+  "catalogSnapshotOn": "2026-11-10",
+  "catalogSnapshotSha256": "bcd18c1758d6e160bbe55eb79e11bcd2390a3c907a782bfbeaa387e0a034b01d",
+  "sourceMediaSha256": null,
+  "coverage": {
+    "hasBrowserSpotCheck": true,
+    "hasSampledNumericSourceFrames": false,
+    "hasUnreviewedCharacterJob": false,
+    "fullFilmReviewed": false
+  },
+  "evidence": {
+    "browserSpotCheck": {
+      "observedOn": "2026-11-10",
+      "method": "browser-player",
+      "coverage": "selected-moments-only",
+      "visualTags": [
+        "cinematic-imagery",
+        "product-ui-demo",
+        "3d-modeling"
+      ],
+      "visibleMoments": [
+        "A globe behind oversized white type introduces the product.",
+        "An aerial city-and-tram image precedes a prompt card asking for a 3D model.",
+        "A later shot displays a yellow tram model in a Blender-style modeling viewport."
+      ],
+      "techniqueHypotheses": [
+        "Test connecting cinematic subject context to a concrete application demonstration without inferring that the film verifies the advertised capability."
+      ],
+      "sourcePts": null,
+      "evidenceStatus": "browser-moments-observed-no-timestamp-or-complete-film-review"
+    }
+  },
+  "limits": [
+    "No record should be interpreted as verified full-video coverage.",
+    "Observed browser moments lack original PTS unless separately analyzed.",
+    "RGB/cut metrics are source-frame numerical proxies, not camera/lighting/style truth.",
+    "Model-generated character observations have not been human-reviewed.",
+    "No local paths, original media, private notes or source-video frames are included."
+  ]
+}
