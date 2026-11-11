@@ -81,3 +81,7 @@ The dated [source-observation technique rollup](../whatships-observed-techniques
 ## Direct numeric analysis, without a character VLM
 
 [whatships-measure](../../../docs/whatships-direct-research.md) uses an already bound authorized local video and records actual original-source-PTS frames and numeric motion/color/cut measurements **directly in this Git directory**. It does not require a character model, an intermediate private study index or a backfill. It preserves existing partial browser notes; explicit `--replace-existing` is required for changed numeric measurements. Review `git diff`, then commit ordinary source-linked research JSON.
+
+## Source-PTS frame inventory denominators
+
+Newly measured records store `scan.sourcePtsFramesSeenInInventory` for each sampled window, in addition to every frame's original source PTS. The validated research report aggregates **sampled frames / inventoried frames in those same requested windows**; it does *not* divide by estimated full-video FPS, nor claim continuous footage was examined. Legacy research records without an independently verified inventory omit this denominator, and their fractions remain unknown. Every sample's rational PTS must fall within its declared source window. The catalog-wide number of analyzed videos remains evidence-based, not imputed from metadata.
