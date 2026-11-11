@@ -104,6 +104,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Exact measured-frame coverage accounting:** source-PTS analysis records now preserve the count of frames inventoried by FFprobe inside each sampled window alongside the decoded frame count. The Git research rollup reports the fraction of scanned-window frames actually measured and abstains from claiming whole-film coverage; timestamps outside claimed windows fail validation. See [direct measurement](docs/whatships-direct-research.md).
 
+**Scale source-frame video research across bound What Ships films:** [`whatships-measure-batch`](docs/whatships-direct-batch.md) processes up to four authorized local videos per invocation, fairly interleaved across categories, and checkpoints each successful source's PTS RGB/cut/image-change evidence directly in `research/analysis/whatships/`. Completed SHA-identical films are skipped; failed media remain retryable. It never downloads source videos, runs Ollama, commits Git changes or claims human-reviewed film coverage.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
