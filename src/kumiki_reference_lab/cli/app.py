@@ -52,6 +52,7 @@ from kumiki_reference_lab.catalog.whatships_media_bindings import (
 )
 from kumiki_reference_lab.catalog.whatships_data_dashboard import write_whatships_browser
 from kumiki_reference_lab.catalog.whatships_direct_measure import measure_whatships_to_repository
+from kumiki_reference_lab.catalog.whatships_direct_measure_batch import measure_whatships_batch
 from kumiki_reference_lab.catalog.whatships_research_summary import summarize_tracked_whatships_observations
 from kumiki_reference_lab.catalog.whatships_analysis_store import (
     export_repository_analysis, validate_repository_analysis,
@@ -597,6 +598,27 @@ def build_parser() -> argparse.ArgumentParser:
     visual_probe.add_argument("--rights-status", choices=RIGHTS_STATUSES,
                               default="review-required")
 
+    batch_measure = commands.add_parser(
+        "whatships-measure-batch",
+        help="measure several operator-bound videos, checkpointing real original-PTS results in Git")
+    batch_measure.add_argument("bindings", type=Path, help="private authorized media-bindings.json")
+    batch_measure.add_argument("--snapshot", type=Path,
+        default=Path("research/whatships-index-2026-11-10.json"))
+    batch_measure.add_argument("--repository-root", type=Path,
+        default=Path("research/analysis/whatships"))
+    batch_measure.add_argument("--max-videos", type=int, default=2)
+    batch_measure.add_argument("--start-offset", type=int, default=0)
+    batch_measure.add_argument("--category", choices=(
+        "ai","developer-tools","design","motion","productivity",
+        "consumer","hardware","other"))
+    batch_measure.add_argument("--window-seconds", type=int, default=10)
+    batch_measure.add_argument("--window-count", type=int, default=4)
+    batch_measure.add_argument("--max-samples", type=int, default=12)
+    batch_measure.add_argument("--width", type=int, default=160)
+    batch_measure.add_argument("--height", type=int, default=90)
+    batch_measure.add_argument("--cut-threshold", type=float, default=.25)
+    batch_measure.add_argument("--ffmpeg", default="ffmpeg")
+    batch_measure.add_argument("--ffprobe", default="ffprobe")
     measure_ws = commands.add_parser(
         "whatships-measure",
         help="measure bound local source frames and sync actual PTS observations straight to Git research JSON")
@@ -1177,6 +1199,17 @@ def main(argv: list[str] | None = None) -> int:
                 width=args.width, height=args.height,
                 cut_threshold=args.cut_threshold, ffmpeg=args.ffmpeg,
                 ffprobe=args.ffprobe, rights_status=args.rights_status))
+            return 0
+        if args.command == "whatships-measure-batch":
+            print(json.dumps(measure_whatships_batch(
+                args.snapshot,args.bindings,args.repository_root,
+                max_videos=args.max_videos,start_offset=args.start_offset,
+                category=args.category,window_seconds=args.window_seconds,
+                window_count=args.window_count,max_samples=args.max_samples,
+                width=args.width,height=args.height,
+                cut_threshold=args.cut_threshold,ffmpeg=args.ffmpeg,
+                ffprobe=args.ffprobe),
+                indent=2,sort_keys=True,ensure_ascii=False))
             return 0
         if args.command == "whatships-measure":
             print(json.dumps(measure_whatships_to_repository(
