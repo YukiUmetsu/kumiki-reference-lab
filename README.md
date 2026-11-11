@@ -73,6 +73,17 @@ tracking. Neither model guesses nor motion proves subject identity.
 The default workflow adds **zero model calls**. See
 [local region review and complex probes](docs/local-region-review-and-complex-probes.md).
 
+## Multi-region temporal events for online reference videos
+
+The frame-review pipeline now reports source-hashed, **shot-local** screen-space
+events for concurrently tracked regions, including translated centers,
+apparent size changes, moving closer/farther, box-overlap onset, horizontal
+order changes and shared displacement. `multiRegionTemporal.reviewTasks`
+suggests a few exact frames for inexpensive later visual review. No
+Magnitude inference or extra video download is needed. The measurements
+are **not** recognized character actions, dialogue, physical contact or
+cross-cut identity. See [online multi-region temporal events](docs/online-multi-region-temporal-events.md).
+
 ## Why this exists
 
 Professional motion graphics depend on more than shaders and easing presets:
