@@ -18,6 +18,11 @@ SCHEMA = "kumiki.movie-promotion-image-motion-proxies.v1"
 THRESHOLD_FRACTION_PER_SECOND = 0.01
 
 
+def _rounded(value: float, digits: int) -> float:
+    """Stable decimal rounding for the Git-tracked evidence importer."""
+    return math.floor((value + 2.220446049250313e-16) * (10 ** digits) + 0.5) / (10 ** digits)
+
+
 def _git_blob_sha(data: bytes) -> str:
     return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
 
@@ -110,7 +115,7 @@ def build_motion_report(index: dict, details: dict[str, tuple[dict, str]],
                 "measuredImageTranslationPairs": len(measured_speeds),
                 "measuredPairsAboveExploratoryMagnitudeThreshold": material_count,
                 "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": (
-                    round(statistics.median(measured_speeds), 6) if measured_speeds else None),
+                    _rounded(statistics.median(measured_speeds), 6) if measured_speeds else None),
                 "sparseFlowPairCount": len(sparse_pairs),
                 "sparseFlowPairStatuses": dict(sorted(sparse_statuses.items())),
                 "calibratedPhysicalCameraConfidence": False,
