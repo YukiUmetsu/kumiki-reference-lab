@@ -30,6 +30,7 @@ from kumiki_reference_lab.pipeline.motion_timing import (
     build_seeded_motion_timing, propose_original_timing_recipes,
 )
 from kumiki_reference_lab.pipeline.multi_region_temporal import build_multi_region_temporal
+from kumiki_reference_lab.pipeline.motion_mechanic_ideas import propose_motion_mechanics
 from kumiki_reference_lab.pipeline.online_event_review import review_multi_region_events
 from kumiki_reference_lab.pipeline.three_anchor_sequence_review import (
     review_three_anchor_sequences,
@@ -308,6 +309,7 @@ def analyze_cinematic_workspace(
     complex_probes: bool = False, max_complex_probes: int = 4,
     complex_probe_frames: int = 12,
     max_multi_events: int = 80, max_multi_review_tasks: int = 24,
+    max_mechanic_ideas: int = 24,
     multi_action_model: str | None = None, max_multi_action_calls: int = 8,
     multi_action_port: int = 10100, multi_action_timeout: int = 120,
     sequence_model: str | None = None, max_sequence_calls: int = 8,
@@ -393,6 +395,8 @@ def analyze_cinematic_workspace(
     multi_region = build_multi_region_temporal(
         subjects, numeric, shots, max_events=max_multi_events,
         max_review_tasks=max_multi_review_tasks)
+    motion_mechanics = propose_motion_mechanics(
+        multi_region, max_candidates=max_mechanic_ideas)
     multi_review = (review_multi_region_events(
         workspace, subjects, shots, multi_region,
         model=multi_action_model, max_calls=max_multi_action_calls,
@@ -450,6 +454,7 @@ def analyze_cinematic_workspace(
         "seededSubjectTracks": subjects,
         "seededMotionTiming": timing,
         "multiRegionTemporal": multi_region,
+        "originalMotionMechanicIdeas": motion_mechanics,
         "multiRegionVisualReview": multi_review,
         "threeAnchorSequenceReview": sequence_review,
         "kumikiTimingProposals": propose_original_timing_recipes(timing),
@@ -466,6 +471,9 @@ def analyze_cinematic_workspace(
             "complexRegionGeometry": (
                 "Short successful feature tracks on complex backgrounds can include "
                 "camera or background motion and do not identify a semantic object."),
+            "animationMechanics": (
+                "The originalMotionMechanicIdeas are source-geometry-linked design "
+                "inspiration, not source animation keyframes or verified component APIs."),
             "motionTiming": (
                 "Seeded box-center timing curves are normalized sampled hypotheses, "
                 "not recovered original animation keys, poses or easing settings."),
@@ -513,6 +521,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--complex-probe-frames", type=int, default=12)
     parser.add_argument("--max-multi-events", type=int, default=80)
     parser.add_argument("--max-multi-review-tasks", type=int, default=24)
+    parser.add_argument("--max-mechanic-ideas", type=int, default=24)
     parser.add_argument("--multi-action-model", default=None,
                         help="local Magnitude vision model for optional two-frame event review")
     parser.add_argument("--max-multi-action-calls", type=int, default=8)
@@ -544,6 +553,7 @@ def main(argv: list[str] | None = None) -> int:
             complex_probe_frames=opts.complex_probe_frames,
             max_multi_events=opts.max_multi_events,
             max_multi_review_tasks=opts.max_multi_review_tasks,
+            max_mechanic_ideas=opts.max_mechanic_ideas,
             multi_action_model=opts.multi_action_model,
             max_multi_action_calls=opts.max_multi_action_calls,
             multi_action_port=opts.multi_action_port,
