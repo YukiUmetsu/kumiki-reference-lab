@@ -10,6 +10,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from kumiki_reference_lab.backends.ffmpeg.probe import ProbeError
+from kumiki_reference_lab.analyzers.appearance.source_visual_probe import analyze_source_visual_window
 from kumiki_reference_lab.pipeline.local_character_study import run_local_character_study
 from kumiki_reference_lab.reviews.character_scene import load_character_scene
 from kumiki_reference_lab.backends.ffmpeg.source_seek import (
@@ -122,6 +123,22 @@ class OriginalPtsSourceSeekTests(unittest.TestCase):
         self.assertEqual(scene["utterances"], [])
         for gallery in ("tracklet-qa", "character-qa", "interaction-qa"):
             self.assertTrue((destination / gallery / "index.html").is_file())
+
+    def test_late_window_visual_proxies_use_actual_125_second_pts(self):
+        visual = analyze_source_visual_window(
+            self.path, start_seconds=125, seconds=3,
+            max_samples=8, width=160, height=90,
+            rights_status="user-declared-authorized")
+        self.assertEqual(visual["scan"]["decoder"], "verified-seek-original-pts-v1")
+        self.assertEqual(visual["scan"]["sampledSourcePtsCount"], 8)
+        self.assertEqual(visual["scan"]["sampledPtsStart"], 125*10240)
+        self.assertEqual(visual["scan"]["sourceWindowEndSeconds"], 128)
+        self.assertEqual(visual["sampledWindowSummary"]["withinShotComparedPairs"], 7)
+        self.assertEqual(visual["cutCandidatePts"], [])
+        self.assertTrue(all(
+            frame["sourcePts"] >= 125*10240 for frame in visual["sampledFrames"]))
+        self.assertEqual(visual["evidenceStatus"],
+                         "original-source-pts-sampled-numeric-proxies-not-human-reviewed")
 
     def test_late_off_grid_start_is_not_rounded_or_renumbered(self):
         result = probe_source_window(
