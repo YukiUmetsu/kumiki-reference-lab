@@ -11,7 +11,10 @@ import statistics
 from typing import Any
 
 SCHEMA_VERSION = "kumiki.screen-motion-timing.v1"
-_ALLOWED_STATUS = {"operator-provided-seed", "tracked-screen-region-candidate"}
+_ALLOWED_STATUS = {
+    "operator-provided-seed", "auto-proposed-region",
+    "tracked-screen-region-candidate",
+}
 
 
 def _finite(value: Any, field: str) -> float:
@@ -51,8 +54,9 @@ def _samples(observations: Any) -> list[dict[str, Any]]:
         scale = _finite(row.get("screenScaleRatioFromSeed"), "scale")
         if scale <= 0 or scale > 100:
             raise ValueError("invalid tracked scale")
-        if i == 0 and row["status"] != "operator-provided-seed":
-            raise ValueError("timing first observation must be operator-seeded")
+        if i == 0 and row["status"] not in (
+                "operator-provided-seed", "auto-proposed-region"):
+            raise ValueError("timing first observation must be a stated seed")
         if i:
             previous = validated[-1]
             if index != previous["index"] + 1 or seconds <= previous["seconds"]:
@@ -94,7 +98,7 @@ def _keyframe_samples(samples: list[dict[str, Any]], progress: list[float],
 def _abstain(track: dict[str, Any], reason: str, *, valid_count: int) -> dict[str, Any]:
     return {
         "subjectId": track["id"], "shotId": track["shotId"],
-        "kind": track["kind"], "identityProvenance": "operator-seeded-not-model-recognized",
+        "kind": track["kind"], "identityProvenance": track["identityProvenance"],
         "status": reason, "observedFrameCount": valid_count,
         "easingCandidate": None, "keyframeSamples": [],
         "interpretation": "insufficient-evidence-for-timing-curve",
@@ -121,9 +125,16 @@ def analyze_seeded_track(track: dict[str, Any], *,
             or type(track.get("shotId")) is not str or not track["shotId"]
             or track.get("kind") not in (
                 "animated-character", "person", "product", "text", "prop", "other")
-            or track.get("identityProvenance") != "operator-seeded-not-model-recognized"):
+            or track.get("identityProvenance") not in (
+                "operator-seeded-not-model-recognized",
+                "auto-motion-proposal-not-semantic-identity")):
         raise ValueError("timing input has invalid track identity or provenance")
     observations = _samples(track.get("observations"))
+    auto = track["identityProvenance"] == "auto-motion-proposal-not-semantic-identity"
+    if (observations[0]["index"] != track.get("startFrameIndex")
+            or (auto and track["observations"][0]["status"] != "auto-proposed-region")
+            or (not auto and track["observations"][0]["status"] != "operator-provided-seed")):
+        raise ValueError("timing seed provenance and first frame disagree")
     if len(observations) < min_observations:
         return _abstain(track, "abstain-too-few-supported-observations",
                         valid_count=len(observations))
@@ -194,8 +205,9 @@ def analyze_seeded_track(track: dict[str, Any], *,
     return {
         "subjectId": track["id"], "shotId": track["shotId"],
         "kind": track["kind"],
-        "identityProvenance": "operator-seeded-not-model-recognized",
-        "status": ("timing-shape-candidate" if supported
+        "identityProvenance": track["identityProvenance"],
+        "status": ("timing-shape-candidate-unverified-auto-region" if supported and auto
+                   else "timing-shape-candidate" if supported
                    else "measured-progress-easing-ambiguous"),
         "observedFrameCount": len(observations),
         "startFrameIndex": observations[0]["index"],
@@ -259,7 +271,8 @@ def build_seeded_motion_timing(
             "trackCount": 0, "supportedCurveCount": 0,
             "tracks": [], "limits": _limitations(),
         }
-    if (status != "seeded-2d-region-motion-candidates"
+    if (status not in ("seeded-2d-region-motion-candidates",
+                       "auto-seeded-2d-region-motion-candidates")
             or type(source_sha) is not str or len(source_sha) != 64
             or any(c not in "0123456789abcdef" for c in source_sha)):
         raise ValueError("unsupported timing track source or provenance")
@@ -323,7 +336,7 @@ def _limitations() -> list[str]:
     return [
         "Easing families are fits to observed ROI box centers, NOT original easing settings.",
         "Does not reconstruct character poses, joint motion, text glyph animation or deformation.",
-        "Only opt-in operator-seeded, shot-local contiguous feature-supported tracks qualify.",
+        "Only shot-local contiguous feature-supported tracks qualify; automatic seeds remain unclassified proposals.",
         "Scale and rotation are screen-space affine proxies, not depth or physical rotation.",
         "Held progress may be caused by tracking jitter or subject/image composition.",
         "Abstains on unsupported, short, reversing, outlying or discontinuous trajectories.",
@@ -354,6 +367,7 @@ def propose_original_timing_recipes(
             "sourceSubjectSeedId": track["subjectId"],
             "sourceShotId": track["shotId"],
             "sourceSha256": timing["sourceSha256"],
+            "identityProvenance": track["identityProvenance"],
             "timingFamilyHypothesis": candidate["family"],
             "sourceDurationSecondsObserved": track["durationSeconds"],
             "targetDurationSeconds": None,
