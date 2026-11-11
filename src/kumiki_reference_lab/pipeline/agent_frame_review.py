@@ -305,7 +305,7 @@ def cleanup_workspace(workspace: Path) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Agent-friendly frame-by-frame review")
-    parser.add_argument("command", choices=["show", "next", "annotate", "export", "cleanup"])
+    parser.add_argument("command", choices=["show", "next", "annotate", "infer", "export", "cleanup"])
     parser.add_argument("--workspace", type=Path, required=True)
     parser.add_argument("--index", type=int, default=0)
     parser.add_argument("--after", type=int, default=-1)
@@ -317,6 +317,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--description", default="")
     parser.add_argument("--evidence", default="")
     parser.add_argument("--confidence", choices=["low", "medium", "high"], default="low")
+    parser.add_argument("--model", help="local Magnitude vision model for infer")
+    parser.add_argument("--port", type=int, default=10100)
+    parser.add_argument("--timeout", type=int, default=120)
+    parser.add_argument("--no-save", action="store_true", help="infer without saving an annotation")
     args = parser.parse_args(argv)
     try:
         if args.command == "show":
@@ -330,6 +334,13 @@ def main(argv: list[str] | None = None) -> int:
                 args.workspace, start=args.index, end=args.end,
                 category=args.category, description=args.description,
                 evidence=args.evidence, confidence=args.confidence,
+            )
+        elif args.command == "infer":
+            from kumiki_reference_lab.pipeline.magnitude_vision import infer_workspace_frame
+            result = infer_workspace_frame(
+                args.workspace, index=args.index, category=args.category,
+                model=args.model, port=args.port, timeout_seconds=args.timeout,
+                save=not args.no_save,
             )
         elif args.command == "export":
             result = {"savedTo": str(export_annotations(args.workspace))}
