@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "kumiki.whatships-research-coverage-report.v1",
+  "catalogSnapshotOn": "2026-11-10",
+  "catalogVideoCount": 2861,
+  "trackedEvidenceRecordCount": 9,
+  "partiallyObservedVideoCount": 9,
+  "sourcePtsNumericVideoCount": 0,
+  "sourcePtsMeasuredWindowCount": 0,
+  "sourcePtsSampledFrameCount": 0,
+  "fullyHumanReviewedVideoCount": 0,
+  "trackedRecordsByCategory": {
+    "ai": 1,
+    "design": 1,
+    "developer-tools": 1,
+    "hardware": 1,
+    "motion": 5
+  },
+  "observedVisualTags": {
+    "product-ui-demo": 4,
+    "cinematic-imagery": 3,
+    "kinetic-typography": 2,
+    "live-action": 2,
+    "screen-recording": 2,
+    "3d-modeling": 1,
+    "character-icon": 1,
+    "easing-demo": 1,
+    "editorial-collage": 1,
+    "generated-image-output": 1,
+    "high-contrast-color": 1,
+    "multi-window-cursor": 1,
+    "product-demonstration": 1,
+    "refractive-ui": 1,
+    "talking-head": 1,
+    "technical-illustration": 1
+  },
+  "methodLimits": [
+    "Visual tags count only explicitly observed, selected-moment browser spot checks.",
+    "Missing styles among unobserved catalog videos are unknown, not negative observations.",
+    "The observed cohort is not random; style-frequency figures are not population estimates.",
+    "Original-PTS sampled RGB and cut data do not prove camera work, physical lighting or film quality.",
+    "A completed character model or numeric probe does not constitute full human review."
+  ]
+}
