@@ -78,6 +78,12 @@ class MoviePromoAuditTests(unittest.TestCase):
         self.write()
         self.assertTrue(any("scan duration mismatch" in x for x in audit(self.root)))
 
+    def test_unmeasured_study_queue_is_not_a_film_detail(self):
+        (self.root / "study-queue.v1.json").write_text(
+            '{"researchStatus":"metadata-only-no-media-analysis"}',
+            encoding="utf-8")
+        self.assertEqual(audit(self.root), [])
+
     def test_detects_unindexed_file(self):
         (self.root / "orphan.json").write_text("{}")
         self.assertTrue(any("unindexed" in x for x in audit(self.root)))
