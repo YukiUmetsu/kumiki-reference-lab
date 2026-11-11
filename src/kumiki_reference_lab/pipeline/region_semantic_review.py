@@ -147,9 +147,10 @@ def review_region_proposals(
         raise ValueError("region proposals disagree with source evidence")
     width, height = manifest["width"], manifest["height"]
     calls = 0
+    unavailable = False
     reviews: list[dict[str, Any]] = []
     for proposal in discovery["proposals"]:
-        if calls >= max_calls:
+        if calls >= max_calls or unavailable:
             break
         indices = proposal.get("observedFrameIndices")
         if (not isinstance(indices, list) or len(indices) < 2
@@ -182,10 +183,20 @@ def review_region_proposals(
                 result = _magnitude_region_category(
                     [original, cropped], model=model, port=port,
                     timeout_seconds=timeout_seconds)
-            except (ValueError, OSError):
+            except (ValueError, OSError) as exc:
+                # A missing server/unsupported vision endpoint should not
+                # consume the remaining budget in repeated long timeouts.
+                unavailable = (
+                    "region request unavailable" in str(exc)
+                    or "rejected visual request" in str(exc)
+                )
                 review["labels"].append({
                     "frameIndex": index, "category": "unknown",
-                    "status": "model-abstained"})
+                    "status": ("local-model-unavailable" if unavailable
+                               else "model-abstained")})
+                if unavailable:
+                    review["status"] = "local-model-unavailable"
+                    break
                 continue
             review["frameIndices"].append(index)
             review["labels"].append({
@@ -196,14 +207,15 @@ def review_region_proposals(
             })
         valid = [v["category"] for v in review["labels"]
                  if v["status"] == "unreviewed-model-category-hypothesis"]
-        if len(valid) == 2 and valid[0] == valid[1] != "unknown":
-            review["proposedCategory"] = valid[0]
-            review["status"] = "two-frame-agreement-unverified"
-        elif len(valid) == 1 and valid[0] != "unknown":
-            review["proposedCategory"] = valid[0]
-            review["status"] = "single-frame-guess-unverified"
-        elif len(set(valid)) > 1:
-            review["status"] = "conflicting-local-model-hypotheses"
+        if not unavailable:
+            if len(valid) == 2 and valid[0] == valid[1] != "unknown":
+                review["proposedCategory"] = valid[0]
+                review["status"] = "two-frame-agreement-unverified"
+            elif len(valid) == 1 and valid[0] != "unknown":
+                review["proposedCategory"] = valid[0]
+                review["status"] = "single-frame-guess-unverified"
+            elif len(set(valid)) > 1:
+                review["status"] = "conflicting-local-model-hypotheses"
         reviews.append(review)
     return {
         "schemaVersion": VERSION,
@@ -213,7 +225,8 @@ def review_region_proposals(
         "reviewedProposalCount": len(reviews),
         "unreviewedProposalCount": len(discovery["proposals"]) - len(reviews),
         "reviews": reviews,
-        "status": "unverified-local-region-category-hypotheses",
+        "status": ("local-model-unavailable-partial-review" if unavailable
+                   else "unverified-local-region-category-hypotheses"),
         "limitations": [
             "Two-frame agreement is repeatability of a weak model, not classification accuracy.",
             "No named person/character, demographic details, actions or dialogue.",
