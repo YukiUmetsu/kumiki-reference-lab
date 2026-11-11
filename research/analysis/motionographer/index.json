@@ -1,11 +1,11 @@
 {
   "schemaVersion": "kumiki.motionographer-index.v1",
-  "generatedAt": "2026-11-11T21:09:39.468808Z",
+  "generatedAt": "2026-11-11T21:10:06.706178Z",
   "catalogSha256": "23f813dafb11e546fc8c62f962bf435b8d7aa75e4a00f3c4179f6459e68b7893",
   "counts": {
-    "measured": 15,
+    "measured": 20,
     "no-video": 7385,
-    "pending": 48,
+    "pending": 43,
     "unsupported-format": 1053,
     "unsupported-host-not-allowlisted": 17,
     "unsupported-other-embed": 56,
@@ -2035,7 +2035,18 @@
       "mediaSlug": "NIC_REB_Splats_A_221102_v002",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 17.5,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "sourceSha256": "b769b4d6981305483cc629fe4cefcd4b62af8a9ac893fcd72500b414993a86b4",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.621308,
+      "meanSaturation": 0.002542,
+      "recordPath": "videos/nickelodeon-global-rebrand-project-breakdown--NIC_REB_Splats_A_221102_v002.json"
     },
     {
       "postId": 77182,
@@ -2045,7 +2056,18 @@
       "mediaSlug": "NIC_REB_Splats_B_221103_v005",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 20.416667,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "sourceSha256": "6f224ef4afc8f83c0f9a631c1c8b256301cd4e5ab26775ac2bb103d3953d8d54",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.472794,
+      "meanSaturation": 0.002406,
+      "recordPath": "videos/nickelodeon-global-rebrand-project-breakdown--NIC_REB_Splats_B_221103_v005.json"
     },
     {
       "postId": 77182,
@@ -2055,7 +2077,18 @@
       "mediaSlug": "NIC_REB_Bumpers_N_UHD_20230222_2151_sRGB",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 5.046708,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "sourceSha256": "b98670aae4b846cee15468f4452164a8bbaa609914e880b356964f0afb471b60",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 30.0,
+      "meanDisplayLuma": 0.632921,
+      "meanSaturation": 0.782849,
+      "recordPath": "videos/nickelodeon-global-rebrand-project-breakdown--NIC_REB_Bumpers_N_UHD_20230222_2151_sRGB.json"
     },
     {
       "postId": 77454,
@@ -6545,7 +6578,18 @@
       "mediaSlug": "dontblink-text",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 6.471667,
+      "resolution": [
+        1280,
+        720
+      ],
+      "sourceSha256": "6c6cefa86c244fa64b0375203dd725123c9db3e0ba125cdd371868abd5186ba0",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.049148,
+      "meanSaturation": 0.0,
+      "recordPath": "videos/4-ways-dont-blink-is-a-masterclass-of-type-and-rhythm--dontblink-text.json"
     },
     {
       "postId": 64918,
@@ -6555,7 +6599,18 @@
       "mediaSlug": "dontblink-reengineered",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 1.663333,
+      "resolution": [
+        1280,
+        720
+      ],
+      "sourceSha256": "3db256d2bb478a5102d417825ead998646d04b02b977df9682362d85472db74c",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.050551,
+      "meanSaturation": 0.0,
+      "recordPath": "videos/4-ways-dont-blink-is-a-masterclass-of-type-and-rhythm--dontblink-reengineered.json"
     },
     {
       "postId": 64918,
