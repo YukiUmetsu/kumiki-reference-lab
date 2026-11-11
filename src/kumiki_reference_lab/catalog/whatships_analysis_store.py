@@ -193,6 +193,8 @@ def _read_verified_visual_data(
                     "sourceStreamIndex": doc["sourceStreamIndex"],
                     "sourceTimebase": doc["sourceTimebase"],
                     "sampledSourcePtsCount": scan["sampledSourcePtsCount"],
+                    **({"sourcePtsFramesSeenInInventory":scan["sourcePtsFramesSeenInInventory"]}
+                       if "sourcePtsFramesSeenInInventory" in scan else {}),
                     "decoder": scan["decoder"],
                     "cutThreshold": scan["cutThreshold"],
                     "frameWidth": scan["frameWidth"], "frameHeight": scan["frameHeight"],
@@ -439,9 +441,11 @@ def _validate_record(record: Any, sid: str, snapshot_sha: str) -> None:
             raise ValueError("numeric original source window not ordered/bounded")
         previous_end=end
         scan = window["scan"]
-        if (not isinstance(scan,dict) or set(scan) != {
-                "sourceStreamIndex","sourceTimebase","sampledSourcePtsCount",
-                "decoder","cutThreshold","frameWidth","frameHeight"} or
+        scan_keys = {
+            "sourceStreamIndex","sourceTimebase","sampledSourcePtsCount",
+            "decoder","cutThreshold","frameWidth","frameHeight"}
+        if (not isinstance(scan,dict) or
+                set(scan) not in (scan_keys, scan_keys|{"sourcePtsFramesSeenInInventory"}) or
                 type(scan["sourceStreamIndex"]) is not int or
                 not 0 <= scan["sourceStreamIndex"] <= 64 or
                 scan["decoder"] not in (
@@ -480,6 +484,15 @@ def _validate_record(record: Any, sid: str, snapshot_sha: str) -> None:
                 exact_number(val,"meanRgb")
         if pts != sorted(set(pts)):
             raise ValueError("numeric original-source-PTS order invalid")
+        for source_pts in pts:
+            timestamp = source_pts*timebase
+            if not Fraction(start) <= timestamp < Fraction(end):
+                raise ValueError("numeric source PTS lies outside claimed sample window")
+        if "sourcePtsFramesSeenInInventory" in scan:
+            inventory = scan["sourcePtsFramesSeenInInventory"]
+            if (type(inventory) is not int or
+                    not len(pts) <= inventory <= 1000000):
+                raise ValueError("source PTS frame inventory must include sampled frames")
         cuts=window["cutCandidatePts"]
         if (not isinstance(cuts,list) or cuts!=sorted(set(cuts)) or
                 any(type(p) is not int or not pts[0]<=p<=pts[-1] for p in cuts)):
