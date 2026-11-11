@@ -62,6 +62,17 @@ Candidates remain **unclassified** (never auto-identified characters,
 people or products); complex backgrounds and global flashes abstain.
 See [automatic region discovery](docs/auto-motion-region-discovery.md).
 
+### Optional local region categories and complex-scene probes
+
+With `kumiki-insights --auto-regions --region-model MODEL`, a small local
+Magnitude vision model can propose broad, **unverified** categories for
+source-hashed moving regions in two bounded crop-and-context calls per region.
+With `--probe-complex-regions` and optional OpenCV, short feature-supported
+geometry trials allow some complex-background proposals to enter anonymous
+tracking. Neither model guesses nor motion proves subject identity.
+The default workflow adds **zero model calls**. See
+[local region review and complex probes](docs/local-region-review-and-complex-probes.md).
+
 ## Why this exists
 
 Professional motion graphics depend on more than shaders and easing presets:

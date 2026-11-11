@@ -24,6 +24,8 @@ from kumiki_reference_lab.pipeline.temporal_motion import build_temporal_motion
 from kumiki_reference_lab.pipeline.screen_text import build_screen_text
 from kumiki_reference_lab.pipeline.seeded_subjects import build_seeded_region_tracks
 from kumiki_reference_lab.pipeline.auto_region_discovery import discover_motion_regions
+from kumiki_reference_lab.pipeline.region_semantic_review import review_region_proposals
+from kumiki_reference_lab.pipeline.complex_region_probe import probe_complex_regions
 from kumiki_reference_lab.pipeline.motion_timing import (
     build_seeded_motion_timing, propose_original_timing_recipes,
 )
@@ -296,12 +298,19 @@ def analyze_cinematic_workspace(
     roi_seeds: Path | None = None, max_roi_frames: int = 240,
     auto_regions: bool = False, max_auto_pairs: int = 36,
     max_auto_regions: int = 6,
+    region_model: str | None = None, max_region_calls: int = 8,
+    region_model_port: int = 10100, region_timeout: int = 120,
+    complex_probes: bool = False, max_complex_probes: int = 4,
+    complex_probe_frames: int = 12,
 ) -> Path:
     manifest, numeric, reference = load_workspace(workspace)
-    if any(type(v) is not bool for v in (motion, ocr, overwrite, auto_regions)):
+    if any(type(v) is not bool for v in (
+            motion, ocr, overwrite, auto_regions, complex_probes)):
         raise ValueError("insights options must be booleans")
     if auto_regions and roi_seeds is not None:
         raise ValueError("use either --auto-regions or --roi-seeds, not both")
+    if not auto_regions and (region_model is not None or complex_probes):
+        raise ValueError("region-model and complex probes require --auto-regions")
     result = reference.with_suffix(".insights.json")
     if (result.exists() or result.is_symlink()) and not overwrite:
         raise ValueError("cinematic insights already exist; pass --overwrite")
@@ -325,13 +334,39 @@ def analyze_cinematic_workspace(
             "status": "not-requested", "sourceSha256": manifest["sourceSha256"],
             "proposals": [], "autoTrackSeedCount": 0,
         })
+    region_review = (review_region_proposals(
+        workspace, auto_proposals, model=region_model,
+        max_calls=max_region_calls, port=region_model_port,
+        timeout_seconds=region_timeout)
+        if region_model is not None else {
+            "status": "not-requested", "sourceSha256": manifest["sourceSha256"],
+            "modelCalls": 0, "reviews": [],
+        })
+    complex_region_probes = (probe_complex_regions(
+        workspace, shots, auto_proposals,
+        max_probes=max_complex_probes, probe_frames=complex_probe_frames)
+        if complex_probes else {
+            "status": "not-requested", "sourceSha256": manifest["sourceSha256"],
+            "supportedSeedCount": 0,
+        })
+    auto_seed_subjects = (
+        list(auto_proposals["autoTrackSeeds"]["subjects"]) if auto_regions else []
+    )
+    if complex_probes:
+        auto_seed_subjects.extend(
+            complex_region_probes["acceptedSeeds"]["subjects"])
+    auto_seed_subjects = auto_seed_subjects[:8]
     if roi_seeds is not None:
         subjects = build_seeded_region_tracks(
             workspace, shots, roi_seeds, max_frames_per_subject=max_roi_frames)
-    elif auto_regions and auto_proposals["autoTrackSeedCount"]:
+    elif auto_regions and auto_seed_subjects:
         subjects = build_seeded_region_tracks(
-            workspace, shots, seeds_document=auto_proposals["autoTrackSeeds"],
-            max_frames_per_subject=max_roi_frames)
+            workspace, shots, seeds_document={
+                "schemaVersion": "kumiki.online-region-seeds.v1",
+                "seedOrigin": "auto-motion-proposal",
+                "sourceSha256": manifest["sourceSha256"],
+                "subjects": auto_seed_subjects,
+            }, max_frames_per_subject=max_roi_frames)
     else:
         subjects = {
             "status": ("not-measured-no-auto-regions" if auto_regions
@@ -375,6 +410,8 @@ def analyze_cinematic_workspace(
         "temporalMotion": movement,
         "screenText": text,
         "autoRegionProposals": auto_proposals,
+        "regionSemanticReview": region_review,
+        "complexRegionProbes": complex_region_probes,
         "seededSubjectTracks": subjects,
         "seededMotionTiming": timing,
         "kumikiTimingProposals": propose_original_timing_recipes(timing),
@@ -385,6 +422,12 @@ def analyze_cinematic_workspace(
             "characterIdentity": (
                 "Use existing seeded ROI character tracker with verified identity; "
                 "anonymous optical-flow points cannot establish identity."),
+            "regionCategories": (
+                "Local Magnitude region categories are unverified visual suggestions, "
+                "not identities, and never authorize tracking or label a seeded subject."),
+            "complexRegionGeometry": (
+                "Short successful feature tracks on complex backgrounds can include "
+                "camera or background motion and do not identify a semantic object."),
             "motionTiming": (
                 "Seeded box-center timing curves are normalized sampled hypotheses, "
                 "not recovered original animation keys, poses or easing settings."),
@@ -419,6 +462,15 @@ def main(argv: list[str] | None = None) -> int:
                         help="propose and optionally track anonymous moving regions without AI")
     parser.add_argument("--max-auto-pairs", type=int, default=36)
     parser.add_argument("--max-auto-regions", type=int, default=6)
+    parser.add_argument("--region-model", default=None,
+                        help="optional local Magnitude model ID for anonymous region labels")
+    parser.add_argument("--max-region-calls", type=int, default=8)
+    parser.add_argument("--region-model-port", type=int, default=10100)
+    parser.add_argument("--region-timeout", type=int, default=120)
+    parser.add_argument("--probe-complex-regions", action="store_true",
+                        help="opt-in short OpenCV geometry probes for complex backgrounds")
+    parser.add_argument("--max-complex-probes", type=int, default=4)
+    parser.add_argument("--complex-probe-frames", type=int, default=12)
     parser.add_argument("--overwrite", action="store_true")
     opts = parser.parse_args(argv)
     try:
@@ -430,6 +482,13 @@ def main(argv: list[str] | None = None) -> int:
             roi_seeds=opts.roi_seeds, max_roi_frames=opts.max_roi_frames,
             auto_regions=opts.auto_regions, max_auto_pairs=opts.max_auto_pairs,
             max_auto_regions=opts.max_auto_regions,
+            region_model=opts.region_model,
+            max_region_calls=opts.max_region_calls,
+            region_model_port=opts.region_model_port,
+            region_timeout=opts.region_timeout,
+            complex_probes=opts.probe_complex_regions,
+            max_complex_probes=opts.max_complex_probes,
+            complex_probe_frames=opts.complex_probe_frames,
         )
     except (ValueError, OSError, KeyError, TypeError, json.JSONDecodeError) as exc:
         parser.exit(2, f"cinematic intelligence failed: {exc}\n")

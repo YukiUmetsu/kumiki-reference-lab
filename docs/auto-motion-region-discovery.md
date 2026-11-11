@@ -87,6 +87,16 @@ identity matters. A small Magnitude vision model may help a coding agent
 inspect and **propose** labels, but no model text automatically changes
 the unclassified provenance of these geometric regions.
 
+## Optional visual categories and complex-background probes
+
+Add `--region-model YOUR_MAGNITUDE_MODEL_ID --max-region-calls 8` to request
+bounded, explicitly unverified category hypotheses on localhost. Add
+`--probe-complex-regions --complex-probe-frames 12` to test whether
+anonymous complex-background components support a short local
+feature track before extending it. These flags are independent; neither
+changes a proposal into an identified character or product. See
+[local region review](local-region-review-and-complex-probes.md).
+
 ## Test
 
     PYTHONPATH=src python -m unittest tests.test_auto_region_discovery -q
