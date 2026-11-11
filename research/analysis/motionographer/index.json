@@ -1,11 +1,11 @@
 {
   "schemaVersion": "kumiki.motionographer-index.v1",
-  "generatedAt": "2026-11-11T21:10:48.694795Z",
+  "generatedAt": "2026-11-11T21:11:11.591771Z",
   "catalogSha256": "23f813dafb11e546fc8c62f962bf435b8d7aa75e4a00f3c4179f6459e68b7893",
   "counts": {
-    "measured": 30,
+    "measured": 35,
     "no-video": 7385,
-    "pending": 33,
+    "pending": 28,
     "unsupported-format": 1053,
     "unsupported-host-not-allowlisted": 17,
     "unsupported-other-embed": 56,
@@ -8170,7 +8170,18 @@
       "mediaSlug": "rabbithole",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 5.0,
+      "resolution": [
+        720,
+        404
+      ],
+      "sourceSha256": "cd4a6cd4ba84c2286a23fea960463878eb365ac7c6e360aa21e378fa7121ce90",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.5258,
+      "meanSaturation": 0.530588,
+      "recordPath": "videos/down-the-rabbit-hole--rabbithole.json"
     },
     {
       "postId": 62229,
@@ -8380,7 +8391,18 @@
       "mediaSlug": "hockey_1",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 4.629625,
+      "resolution": [
+        854,
+        480
+      ],
+      "sourceSha256": "3fcb52b579cdb4d19da4fe9cd739de85be9f0b790035b6244cf55642e4536288",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.558454,
+      "meanSaturation": 0.072392,
+      "recordPath": "videos/gentleman-scholar-animates-with-techniques-from-a-to-z-for-bleacher-report--hockey_1.json"
     },
     {
       "postId": 61718,
@@ -8690,7 +8712,18 @@
       "mediaSlug": "g-header",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 9.8,
+      "resolution": [
+        2480,
+        1240
+      ],
+      "sourceSha256": "26615dd66cf4ac1a3daa39789a29e013a095ba809bae2fccfb34200b92301c42",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.978822,
+      "meanSaturation": 0.021152,
+      "recordPath": "videos/interview-motion-design-and-the-google-identity--g-header.json"
     },
     {
       "postId": 60704,
@@ -8700,7 +8733,18 @@
       "mediaSlug": "g-dots",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 20.516667,
+      "resolution": [
+        1680,
+        904
+      ],
+      "sourceSha256": "64736527e5496fc9e64c37b57203c8622063b2fdf0ea3d6114e301efc9bfc776",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.949619,
+      "meanSaturation": 0.006451,
+      "recordPath": "videos/interview-motion-design-and-the-google-identity--g-dots.json"
     },
     {
       "postId": 60704,
@@ -8710,7 +8754,18 @@
       "mediaSlug": "g-logotype",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 29.15,
+      "resolution": [
+        1680,
+        904
+      ],
+      "sourceSha256": "e6d5cdd03cb96aa434323701dcbf1c6945aa2b164139b402ccf9bebbacfbd9f7",
+      "windowCount": 2,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.944395,
+      "meanSaturation": 0.00285,
+      "recordPath": "videos/interview-motion-design-and-the-google-identity--g-logotype.json"
     },
     {
       "postId": 60704,
