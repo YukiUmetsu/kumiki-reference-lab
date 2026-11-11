@@ -88,6 +88,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Resumable authorized What Ships footage studies:** [`whatships-analyze`](docs/whatships-resumable-local-analysis.md) runs source-SHA-verified, bounded local character and interaction analysis for privately bound video entries, checkpoints each film, retries failures and reports redacted per-category progress. Frame evidence is real source PTS, but AI labels remain unreviewed and short sampling windows do not equal complete film coverage.
 
+**Actual-frame appearance and editing proxies:** [`source-visual-probe`](docs/source-pts-visual-probes.md) measures original-PTS-sampled display RGB brightness/saturation, image-change magnitude and FFmpeg hard-cut candidates for authorized local footage, including later windows up to one hour. It does **not** infer real lights, camera trajectory, lens, style or artistic intent from these numeric proxies.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
