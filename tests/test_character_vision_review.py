@@ -185,6 +185,8 @@ class CharacterVisionReviewTests(unittest.TestCase):
     def test_escaped_model_text_in_html(self):
         self.vision["observations"][0]["appearance"] = (
             "Red jacket <script>alert('x')</script> dark hair")
+        self.scene["characters"][0]["visualDescription"] = (
+            self.vision["observations"][0]["appearance"])
         self.save()
         page = self.build().read_text()
         self.assertIn("&lt;script&gt;", page)
