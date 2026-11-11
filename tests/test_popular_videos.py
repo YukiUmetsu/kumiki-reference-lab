@@ -19,6 +19,7 @@ from kumiki_reference_lab.cli.app import main
 ROOT = Path(__file__).resolve().parents[1]
 COLLECTION = ROOT / "research/popular-explainer-videos.v1.json"
 CINEMATIC = ROOT / "research/popular-cinematic-videos.v1.json"
+MOVIE_PROMOS = ROOT / "research/popular-movie-videos.v1.json"
 
 
 class PopularVideoTests(unittest.TestCase):
@@ -68,14 +69,28 @@ class PopularVideoTests(unittest.TestCase):
         self.assertTrue(all(item["rights"] == {"usage": "inspiration-only", "redistributionAuthorized": False}
                             and item["reviewStatus"] == "editorial-candidate-not-frame-reviewed" for item in items))
         all_videos = load_popular_videos(ROOT / "research")
-        self.assertEqual(len(all_videos["entries"]), 40)
-        self.assertEqual(sum(item["viewEvidence"]["viewCount"] for item in all_videos["entries"]), 2_540_497_165)
-        self.assertEqual(len({item["youtubeId"] for item in all_videos["entries"]}), 40)
-        self.assertEqual(len({item["creator"] for item in all_videos["entries"]}), 26)
+        self.assertEqual(len(all_videos["entries"]), 53)
+        self.assertEqual(sum(item["viewEvidence"]["viewCount"] for item in all_videos["entries"]), 3_653_141_867)
+        self.assertEqual(len({item["youtubeId"] for item in all_videos["entries"]}), 53)
+        self.assertEqual(len({item["creator"] for item in all_videos["entries"]}), 34)
         self.assertEqual(search_popular_videos(all_videos, "title sequence")[0]["id"],
                          "stranger-things-title-sequence")
         self.assertEqual(search_popular_videos(all_videos, "match cut")[0]["id"],
                          "nike-you-cant-stop-us")
+
+    def test_movie_promotion_cohort_is_separate_searchable_and_inspiration_only(self):
+        movies = load_popular_videos(MOVIE_PROMOS)
+        items = movies["entries"]
+        self.assertEqual(len(items), 13)
+        self.assertGreaterEqual(len({entry["creator"] for entry in items}), 8)
+        self.assertEqual(sum(entry["viewEvidence"]["viewCount"] for entry in items), 1_112_644_702)
+        self.assertEqual([entry["viewEvidence"]["viewCount"] for entry in items],
+                         sorted((entry["viewEvidence"]["viewCount"] for entry in items), reverse=True))
+        self.assertTrue(all(entry["reviewStatus"] == "editorial-candidate-not-frame-reviewed"
+                            and entry["rights"] == {"usage": "inspiration-only", "redistributionAuthorized": False}
+                            for entry in items))
+        self.assertEqual(search_popular_videos(movies, "comic timing")[0]["id"],
+                         "pixar-inside-out-2-trailer")
 
     def test_directory_rejects_ambiguous_or_unsafe_cohorts(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -148,7 +163,7 @@ class PopularVideoTests(unittest.TestCase):
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
             self.assertEqual(main(["video-references", "validate", "--root", str(ROOT / "research")]), 0)
-        self.assertEqual(json.loads(stdout.getvalue())["entryCount"], 40)
+        self.assertEqual(json.loads(stdout.getvalue())["entryCount"], 53)
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
             self.assertEqual(main(["video-references", "search", "cinematic lighting", "--root",

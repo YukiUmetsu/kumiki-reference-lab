@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "kumiki.popular-video-references.v1",
+  "retrievedOn": "2026-11-10",
+  "methodology": "Editorial cross-studio selection of official movie-promotion videos, chosen for recognizable release campaigns, multiple visual idioms and evidence of substantial YouTube playback. Exact video IDs and public view-count sources were checked November 10, 2026; numbers are indexed or third-party observations, not live YouTube Analytics, not unique viewers, not a comparable opening-week metric, and not evidence of retention, sales or cinematic quality. Suggested techniques are research questions, not frame-verified findings. Five Disney-hosted trailers have separate partial browser-frame viewing notes in docs/movie-promotion-video-research.md; no reference media was downloaded or redistributed. All entries remain editorial candidates until an authorized local source is measured and human reviewed.",
+  "entries": [
+    {
+      "id": "marvel-infinity-war-first-trailer", "title": "Marvel Studios' Avengers: Infinity War Official Trailer", "creator": "Marvel Entertainment", "publishedOn": "2017-11-29", "youtubeId": "6ZfuNTqbHE8", "videoUrl": "https://www.youtube.com/watch?v=6ZfuNTqbHE8",
+      "viewEvidence": {"viewCount": 272776813, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=6ZfuNTqbHE8", "sourceSnapshotOn": null},
+      "techniqueTags": ["franchise-ensemble", "scale-contrast", "character-reveal", "dramatic-lighting"],
+      "studyQuestion": "How does the trailer alternate character recognition with cosmic-scale stakes, and what happens to edit density and audio attacks near its climax?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "marvel-endgame-trailer", "title": "Marvel Studios' Avengers: Endgame - Official Trailer", "creator": "Marvel Entertainment", "publishedOn": "2019-03-14", "youtubeId": "TcMBFSGVi1c", "videoUrl": "https://www.youtube.com/watch?v=TcMBFSGVi1c",
+      "viewEvidence": {"viewCount": 169056922, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=TcMBFSGVi1c", "sourceSnapshotOn": null},
+      "techniqueTags": ["franchise-ensemble", "emotional-recap", "suspense-build", "logo-payoff"],
+      "studyQuestion": "Does a more retrospective emotional setup change hold durations, color contrast and cut-to-audio relationships compared with Infinity War?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "star-wars-force-awakens-trailer", "title": "Star Wars: The Force Awakens Trailer (Official)", "creator": "Star Wars", "publishedOn": "2015-10-19", "youtubeId": "sGbxmsDFVnE", "videoUrl": "https://www.youtube.com/watch?v=sGbxmsDFVnE",
+      "viewEvidence": {"viewCount": 112744418, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=sGbxmsDFVnE", "sourceSnapshotOn": null},
+      "techniqueTags": ["franchise-nostalgia", "character-reveal", "space-spectacle", "musical-build"],
+      "studyQuestion": "How are iconic objects, newly introduced characters and wide spatial reveals timed to musical and dialogue-driven anticipation?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "disney-frozen-2-trailer", "title": "Frozen 2 Official Trailer", "creator": "Walt Disney Animation Studios", "publishedOn": "2019-06-11", "youtubeId": "Zi4LMpSDccc", "videoUrl": "https://www.youtube.com/watch?v=Zi4LMpSDccc",
+      "viewEvidence": {"viewCount": 103393863, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=Zi4LMpSDccc", "sourceSnapshotOn": null},
+      "techniqueTags": ["animated-character", "elemental-effects", "landscape-scale", "emotional-journey"],
+      "studyQuestion": "How does a highly legible animated heroine remain the point of attention through changing weather, scale and effects intensity?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "warner-barbie-main-trailer", "title": "Barbie | Main Trailer", "creator": "Warner Bros. Pictures", "publishedOn": "2023-05-25", "youtubeId": "pBk4NYhWNMM", "videoUrl": "https://www.youtube.com/watch?v=pBk4NYhWNMM",
+      "viewEvidence": {"viewCount": 91650972, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=pBk4NYhWNMM", "sourceSnapshotOn": null},
+      "techniqueTags": ["production-design", "high-saturation-palette", "comic-contrast", "choreography"],
+      "studyQuestion": "How do a narrowly controlled palette, theatrical production design and comic setups keep a crowded promotional montage coherent?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "sony-spider-man-no-way-home-trailer", "title": "SPIDER-MAN: NO WAY HOME - Official Trailer (HD)", "creator": "Sony Pictures Entertainment", "publishedOn": "2021-11-16", "youtubeId": "JfVOs4VSpmA", "videoUrl": "https://www.youtube.com/watch?v=JfVOs4VSpmA",
+      "viewEvidence": {"viewCount": 87714634, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=JfVOs4VSpmA", "sourceSnapshotOn": null},
+      "techniqueTags": ["franchise-reveal", "ensemble-action", "suspense-build", "visual-effects"],
+      "studyQuestion": "How does the trailer reveal returning antagonists without losing the central character's motivations or the audience's sense of space?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "pixar-inside-out-2-trailer", "title": "Inside Out 2 | Official Trailer", "creator": "Pixar", "publishedOn": "2024-03-07", "youtubeId": "LEjhY15eCx0", "videoUrl": "https://www.youtube.com/watch?v=LEjhY15eCx0",
+      "viewEvidence": {"viewCount": 69230602, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=LEjhY15eCx0", "sourceSnapshotOn": null},
+      "techniqueTags": ["character-ensemble", "expressive-pose", "palette-coded-roles", "comic-timing"],
+      "studyQuestion": "How do character color, silhouette, facial acting and shifts between inner-world and real-world scenes convey several emotions efficiently?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "universal-oppenheimer-trailer", "title": "Oppenheimer | Official Trailer", "creator": "Universal Pictures", "publishedOn": "2022-12-18", "youtubeId": "bK6ldnjE3Y0", "videoUrl": "https://www.youtube.com/watch?v=bK6ldnjE3Y0",
+      "viewEvidence": {"viewCount": 48855241, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=bK6ldnjE3Y0", "sourceSnapshotOn": null},
+      "techniqueTags": ["historical-drama", "macro-textures", "suspense-build", "practical-effects"],
+      "studyQuestion": "How can a dialogue-heavy historical thriller build dread through image texture, visual contrast and sound transitions rather than continuous action?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "marvel-deadpool-wolverine-trailer", "title": "Deadpool & Wolverine | Official Trailer | In Theaters July 26", "creator": "Marvel Entertainment", "publishedOn": "2024-04-22", "youtubeId": "73_1biulkYk", "videoUrl": "https://www.youtube.com/watch?v=73_1biulkYk",
+      "viewEvidence": {"viewCount": 40018842, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=73_1biulkYk", "sourceSnapshotOn": null},
+      "techniqueTags": ["two-character-conflict", "comic-contrast", "action-montage", "franchise-recognition"],
+      "studyQuestion": "How are contrasting two-character personalities, jokes and sudden physical action balanced within a short promotional arc?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "illumination-super-mario-trailer", "title": "The Super Mario Bros. Movie | Official Trailer", "creator": "Universal Pictures / Illumination", "publishedOn": "2022-11-29", "youtubeId": "TnGl01FkMMo", "videoUrl": "https://www.youtube.com/watch?v=TnGl01FkMMo",
+      "viewEvidence": {"viewCount": 36570000, "approximate": true, "sourceKind": "third-party-video-statistics", "sourceUrl": "https://vidiq.com/youtube-stats/channel/%40illumination/", "sourceSnapshotOn": null},
+      "techniqueTags": ["animated-franchise", "recognizable-world", "slapstick-action", "character-ensemble"],
+      "studyQuestion": "How quickly do familiar settings, character silhouettes and stylized motion communicate a new story without heavy exposition?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "warner-dune-part-two-trailer", "title": "Dune: Part Two | Official Trailer", "creator": "Warner Bros. Pictures", "publishedOn": "2023-05-03", "youtubeId": "Way9Dexny3w", "videoUrl": "https://www.youtube.com/watch?v=Way9Dexny3w",
+      "viewEvidence": {"viewCount": 31124342, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=Way9Dexny3w", "sourceSnapshotOn": null},
+      "techniqueTags": ["epic-scale", "desert-palette", "character-silhouette", "environmental-spectacle"],
+      "studyQuestion": "How does a limited environmental palette and movement between intimate faces and enormous landscapes create readable scale?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "disney-zootopia-2-trailer", "title": "Zootopia 2 | Trailer", "creator": "Walt Disney Animation Studios", "publishedOn": "2025-07-30", "youtubeId": "BjkIOU5PhyQ", "videoUrl": "https://www.youtube.com/watch?v=BjkIOU5PhyQ",
+      "viewEvidence": {"viewCount": 26516743, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=BjkIOU5PhyQ", "sourceSnapshotOn": null},
+      "techniqueTags": ["buddy-character", "animated-acting", "comic-blocking", "city-worldbuilding"],
+      "studyQuestion": "How do two lead characters remain independently legible during comic exchanges and movement through a busy animal city?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    },
+    {
+      "id": "disney-moana-2-trailer", "title": "Moana 2 | Official Trailer", "creator": "Walt Disney Animation Studios", "publishedOn": "2024-08-09", "youtubeId": "hDZ7y8RP5HE", "videoUrl": "https://www.youtube.com/watch?v=hDZ7y8RP5HE",
+      "viewEvidence": {"viewCount": 22991310, "approximate": false, "sourceKind": "youtube-search-index", "sourceUrl": "https://www.youtube.com/watch?v=hDZ7y8RP5HE", "sourceSnapshotOn": null},
+      "techniqueTags": ["ocean-spectacle", "character-ensemble", "musical-narrative", "environmental-scale"],
+      "studyQuestion": "How do expressive animated characters stay readable against large moving ocean surfaces and broad adventure geography?",
+      "reviewStatus": "editorial-candidate-not-frame-reviewed", "rights": {"usage": "inspiration-only", "redistributionAuthorized": false}
+    }
+  ]
+}
