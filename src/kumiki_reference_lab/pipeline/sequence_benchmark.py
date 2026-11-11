@@ -141,6 +141,8 @@ def _insights_sequences(insights: dict[str, Any]
                 "category": category,
                 "status": status,
             }
+        if phases[0]["phase"] != _PHASES[0]:
+            raise ValueError("partial sequence must start at first-to-middle phase")
         result.append({
             "sequenceId": ident,
             "shotId": shot_id, "subjectIds": subjects,
@@ -154,6 +156,8 @@ def _insights_sequences(insights: dict[str, Any]
 def make_label_template(insights: dict[str, Any], *, insights_sha: str
                         ) -> dict[str, Any]:
     source, model, rows = _insights_sequences(insights)
+    if not rows:
+        raise ValueError("no three-anchor predictions available for human labeling")
     return {
         "schemaVersion": LABEL_VERSION, "sourceSha256": source,
         "insightsFileSha256": insights_sha,
@@ -234,6 +238,14 @@ def _div(a: int, b: int) -> float | None:
 
 
 def _score(phases: list[dict[str, Any]]) -> dict[str, Any]:
+    for row in phases:
+        actual, prediction = row["humanCategory"], row["prediction"]
+        expected = ("human-unobservable-excluded" if actual == _UNOBSERVABLE
+                    else "model-abstained" if prediction == _ABSTAIN
+                    else "correct" if actual == prediction
+                    else "incorrect-category")
+        if row.get("status") != expected:
+            raise ValueError("phase correctness field conflicts with reviewed labels")
     scored = [x for x in phases if x["humanCategory"] != _UNOBSERVABLE]
     excluded = len(phases) - len(scored)
     attempts = [x for x in scored if x["prediction"] != _ABSTAIN]
@@ -355,6 +367,25 @@ def evaluate_sequence_labels(
     }
 
 
+def _full_sequence_metrics(phases: list[dict[str, Any]]) -> dict[str, Any]:
+    grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for row in phases:
+        grouped[row["sequenceId"]].append(row)
+    reviewed, correct = 0, 0
+    for samples in grouped.values():
+        if (len(samples) != 2
+                or [x["phase"] for x in samples] != list(_PHASES)
+                or samples[0]["shotId"] != samples[1]["shotId"]
+                or samples[0]["frameIndices"][1] != samples[1]["frameIndices"][0]):
+            raise ValueError("aggregate sequence phase anchors are duplicated or misaligned")
+        if all(x["humanCategory"] != _UNOBSERVABLE for x in samples):
+            reviewed += 1
+            correct += all(x["status"] == "correct" for x in samples)
+    return {"fullyObservableSequenceCount": reviewed,
+            "fullyCorrectSequenceCount": correct,
+            "fullSequenceExactAccuracy": _div(correct, reviewed)}
+
+
 def aggregate_benchmarks(reports: list[dict[str, Any]]) -> dict[str, Any]:
     if not isinstance(reports, list) or not 1 <= len(reports) <= 100:
         raise ValueError("aggregate expects 1..100 bounded benchmark reports")
@@ -374,13 +405,29 @@ def aggregate_benchmarks(reports: list[dict[str, Any]]) -> dict[str, Any]:
         phase_rows = report.get("phases")
         if not isinstance(phase_rows, list) or len(phase_rows) > 24:
             raise ValueError("invalid bounded benchmark phase rows")
+        if (not _integer(report.get("sequenceCount"), low=1, high=12)
+                or len(phase_rows) != report["sequenceCount"] * 2):
+            raise ValueError("aggregate benchmark sequence and phase counts differ")
         for phase in phase_rows:
             if (not isinstance(phase, dict)
+                    or set(phase) != {"sequenceId", "shotId", "phase",
+                                      "frameIndices", "humanCategory",
+                                      "prediction", "status"}
+                    or type(phase.get("sequenceId")) is not str
+                    or type(phase.get("shotId")) is not str
+                    or phase.get("phase") not in _PHASES
+                    or not isinstance(phase.get("frameIndices"), list)
+                    or len(phase["frameIndices"]) != 2
+                    or any(type(i) is not int or i < 0
+                           for i in phase["frameIndices"])
+                    or phase["frameIndices"][0] >= phase["frameIndices"][1]
                     or phase.get("humanCategory") not in (_KINDS | {_UNOBSERVABLE})
+                    or phase.get("humanCategory") == "unknown"
                     or phase.get("prediction") not in (_KINDS | {_ABSTAIN})
                     or phase.get("prediction") == "unknown"):
-                raise ValueError("aggregate benchmark has invalid phase labels")
-        recomputed = _score(phase_rows)
+                raise ValueError("aggregate benchmark has invalid phase labels or anchors")
+        recomputed = {**_score(phase_rows),
+                      **_full_sequence_metrics(phase_rows)}
         metrics = report.get("metrics")
         if not isinstance(metrics, dict) or any(
                 metrics.get(key) != value for key, value in recomputed.items()):
@@ -393,7 +440,7 @@ def aggregate_benchmarks(reports: list[dict[str, Any]]) -> dict[str, Any]:
             "modelTag": model,
             "distinctSourceCount": len(entries),
             "sequenceCount": sum(r["sequenceCount"] for r in entries),
-            "metrics": _score(rows),
+            "metrics": {**_score(rows), **_full_sequence_metrics(rows)},
             "status": "human-declared-sampled-source-evaluation",
         })
     return {
