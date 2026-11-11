@@ -213,6 +213,14 @@ class RegionReviewTests(unittest.TestCase):
         self.assertEqual(result["reviews"][0]["proposedCategory"], "unknown")
         self.assertEqual(model.call_count, 1)
 
+    def test_rejects_region_frames_claiming_wrong_shot(self):
+        tampered = dict(self.discovery)
+        tampered["proposals"] = [dict(self.discovery["proposals"][0])]
+        tampered["proposals"][0]["shotId"] = "shot-does-not-exist"
+        with self.assertRaisesRegex(ValueError, "shot boundary"):
+            review_region_proposals(
+                self.workspace, tampered, model="mini", max_calls=2)
+
     def test_rejects_source_mismatch_and_invalid_model(self):
         report = {**self.discovery, "sourceSha256": "b" * 64}
         with self.assertRaisesRegex(ValueError, "source evidence"):
