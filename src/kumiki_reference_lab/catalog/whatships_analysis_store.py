@@ -8,8 +8,10 @@ No automatic human-review certification or inferred camera/lighting labels.
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
+from fractions import Fraction
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -101,20 +103,89 @@ def _read_verified_visual_data(
                     or not isinstance(cuts,list) or cuts != sorted(set(cuts))
                     or len(cuts) > 10000):
                 raise ValueError("visual original-PTS frame timeline is malformed")
-            # Pixel measurements are all numeric/finite and must match the
-            # validated dashboard projection before we publish them.
+            # Whitelist every nested numeric field, not just top-level JSON,
+            # because private report files must NEVER leak local paths or notes.
+            tb = doc.get("sourceTimebase")
+            if (not isinstance(tb,dict) or set(tb) != {"numerator","denominator"} or
+                    any(type(tb.get(k)) is not int or tb[k] <= 0
+                        for k in ("numerator","denominator"))):
+                raise ValueError("visual source timebase invalid")
+            timebase = Fraction(tb["numerator"],tb["denominator"])
+            def rational(value: Any) -> Fraction:
+                if (not isinstance(value,dict) or set(value) != {"numerator","denominator"}
+                        or any(type(value.get(k)) is not int for k in
+                               ("numerator","denominator"))
+                        or value["denominator"] <= 0):
+                    raise ValueError("original PTS time rational malformed")
+                return Fraction(value["numerator"],value["denominator"])
+            def fraction(value: Any, name: str, *, ceiling: float = 1) -> float:
+                if (type(value) not in (float,int) or not math.isfinite(value)
+                        or not 0 <= value <= ceiling):
+                    raise ValueError("unapproved/nonfinite metric: "+name)
+                return value
+            frame_rows = []
             for frame in sampled:
                 if not isinstance(frame,dict) or set(frame) != {
                     "sourcePts","sourceSeconds","appearance"}:
                     raise ValueError("visual frame carries unapproved data")
-                if type(frame["sourcePts"]) is not int or not isinstance(frame["appearance"],dict):
-                    raise ValueError("visual frame original PTS/meter invalid")
+                pts = frame["sourcePts"]
+                if type(pts) is not int or abs(pts) > 2**53 or (
+                    frame_rows and pts <= frame_rows[-1]["sourcePts"]):
+                    raise ValueError("visual source PTS missing, duplicate or nonmonotonic")
+                if rational(frame["sourceSeconds"]) != pts*timebase:
+                    raise ValueError("visual frame time does not match original PTS/timebase")
                 appearance = frame["appearance"]
-                if set(appearance) != {
-                    "meanRgb","meanDisplayLumaProxy","displayLumaStdDev",
-                    "meanSaturationProxy","shadowPixelFraction","brightPixelFraction"
-                }:
+                keys = (
+                    "meanDisplayLumaProxy","displayLumaStdDev",
+                    "meanSaturationProxy","shadowPixelFraction","brightPixelFraction")
+                if (not isinstance(appearance,dict) or
+                        set(appearance) != set(keys)|{"meanRgb"} or
+                        not isinstance(appearance["meanRgb"],list) or
+                        len(appearance["meanRgb"]) != 3):
                     raise ValueError("visual frame appearance keys changed")
+                meters = {k:fraction(appearance[k],k) for k in keys}
+                meters["meanRgb"] = [fraction(v,"meanRgb") for v in appearance["meanRgb"]]
+                frame_rows.append({
+                    "sourcePts":pts,
+                    "sourceSeconds":frame["sourceSeconds"],
+                    "appearance":meters,
+                })
+            pair_rows = []
+            for i,pair in enumerate(pairs):
+                if (not isinstance(pair,dict) or set(pair) != {
+                    "startPts","endPts","sourceDeltaSeconds","status",
+                    "meanAbsoluteDisplayRgbDelta",
+                    "meanAbsoluteDisplayRgbDeltaPerSecond"} or
+                    type(pair["startPts"]) is not int or
+                    type(pair["endPts"]) is not int or
+                    pair["startPts"] != frame_rows[i]["sourcePts"] or
+                    pair["endPts"] != frame_rows[i+1]["sourcePts"] or
+                    rational(pair["sourceDeltaSeconds"]) !=
+                    (pair["endPts"]-pair["startPts"])*timebase):
+                    raise ValueError("frame change not anchored to original source PTS")
+                status = pair["status"]
+                delta = pair["meanAbsoluteDisplayRgbDelta"]
+                rate = pair["meanAbsoluteDisplayRgbDeltaPerSecond"]
+                if status == "cut-candidate-between-samples":
+                    if delta is not None or rate is not None:
+                        raise ValueError("cut-spanning pair must abstain from image motion")
+                elif status == "rgb-image-difference-proxy":
+                    fraction(delta,"meanAbsoluteDisplayRgbDelta")
+                    fraction(rate,"meanAbsoluteDisplayRgbDeltaPerSecond",ceiling=100000)
+                else:
+                    raise ValueError("unapproved RGB pair interpretation")
+                pair_rows.append({k:pair[k] for k in (
+                    "startPts","endPts","sourceDeltaSeconds","status",
+                    "meanAbsoluteDisplayRgbDelta",
+                    "meanAbsoluteDisplayRgbDeltaPerSecond")})
+            if (len(cuts) != summary["cutCandidateCountBetweenFirstAndLastSample"] or
+                    any(type(p) is not int for p in cuts) or
+                    any(p < frame_rows[0]["sourcePts"] or
+                        p > frame_rows[-1]["sourcePts"] for p in cuts)):
+                raise ValueError("visual cut PTS not anchored to sampled original frames")
+            if (summary["withinShotComparedPairs"]+summary["cutSeparatedPairs"]
+                    != len(pair_rows)):
+                raise ValueError("visual comparisons do not cover sampled-frame pairs")
             windows.append({
                 "startSeconds": item["startSeconds"], "endSeconds": item["endSeconds"],
                 "scan": {
@@ -126,8 +197,8 @@ def _read_verified_visual_data(
                     "frameWidth": scan["frameWidth"], "frameHeight": scan["frameHeight"],
                 },
                 "cutCandidatePts": cuts,
-                "sampledFrames": sampled,
-                "sampledFramePairs": pairs,
+                "sampledFrames": frame_rows,
+                "sampledFramePairs": pair_rows,
                 "sampledWindowSummary": {
                     key:summary[key] for key in (
                         "cutCandidateCountBetweenFirstAndLastSample",
@@ -310,7 +381,9 @@ def validate_repository_analysis(path: Path, snapshot_path: Path) -> dict[str,An
                     not isinstance(numeric.get("windows"),list) or
                     not 1 <= len(numeric["windows"]) <= _MAX_WINDOWS):
                 raise ValueError("repository numeric source fingerprint/windows malformed")
-    if (index.get("browserSpotCheckCount") != browser_count or
+    if (index.get("catalogSnapshotSha256") != __import__("hashlib").sha256(
+            snapshot_path.read_bytes()).hexdigest() or
+            index.get("browserSpotCheckCount") != browser_count or
             index.get("sampledNumericVideoCount") != numeric_count or
             index.get("fullFilmReviewedCount") != 0):
         raise ValueError("repository index misstates observation coverage")
