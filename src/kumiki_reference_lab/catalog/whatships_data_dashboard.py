@@ -135,6 +135,7 @@ def build_whatships_browser(
         layers = persisted["evidence"] if persisted else {}
         spot = layers.get("browserSpotCheck")
         archived_numeric = layers.get("numericVisual")
+        archived_audio = layers.get("numericAudio")
         character_status = ("completed-unreviewed" if study and
                             study["status"] == "completed-unreviewed"
                             else "failed" if study else "not-run")
@@ -175,7 +176,19 @@ def build_whatships_browser(
             "metadataStatus":entry["evidenceStatus"],
             "mediaStatus":"operator-attested" if sid in media else "unbound",
             "characterStatus":character_status,"numericStatus":visual_status,
-            "numeric":numeric_summary,"humanReviewed":False,
+            "numeric":numeric_summary,
+            "audioStatus":("decoded-pcm-energy-unreviewed" if archived_audio else "not-run"),
+            "audioEnergy":({
+                "windowsMeasured":len(archived_audio["windows"]),
+                "windows":[{
+                    "startSeconds":w["startSeconds"],
+                    "endSeconds":w["endSeconds"],
+                    "decodedBuckets":len(w["decodedFrames"]),
+                    "rmsDbfs":w["summary"]["rmsDbfs"],
+                    "nearSilenceFrameFraction":w["summary"]["nearSilenceFrameFraction"],
+                } for w in archived_audio["windows"]],
+            } if archived_audio else None),
+            "humanReviewed":False,
             "repositoryAnalysisStatus":(
                 "tracked-partial-evidence" if persisted else "none"),
             "visualObservationTags":spot["visualTags"] if spot else [],
@@ -189,7 +202,7 @@ def build_whatships_browser(
             counts["repositoryEvidenceRecords"] += 1
         if spot:
             counts["browserSpotCheckRecords"] += 1
-        for k in ("metadataStatus","mediaStatus","characterStatus","numericStatus"):
+        for k in ("metadataStatus","mediaStatus","characterStatus","numericStatus","audioStatus"):
             counts[k+":"+str(row[k])] += 1
     for p,s in signatures:
         require_unchanged(p,s)
@@ -221,7 +234,7 @@ def _csv(data: dict[str, Any]) -> str:
     fields = ("sourceId","title","creator","category","watchUrl","originalUrl",
               "views","viewsCapturedAt","durationSeconds","publishedOn",
               "metadataStatus","mediaStatus","characterStatus","numericStatus",
-              "measuredWindowCount","humanReviewed")
+              "audioStatus","measuredWindowCount","humanReviewed")
     file = io.StringIO(newline="")
     writer = csv.writer(file,lineterminator="\n")
     writer.writerow(fields)
@@ -260,7 +273,7 @@ dialog::backdrop{background:#192f4d99}dl{display:grid;grid-template-columns:150p
 <label>Title, creator, description or tag<input type="search" id="search" placeholder="e.g. motion, paper cut"></label>
 <label>Category<select id="category"><option value="">All categories</option></select></label>
 <label>Metadata<select id="metadata"><option value="">Any</option><option value="detail-snapshot">Detailed</option><option value="index-only">Index only</option></select></label>
-<label>Evidence<select id="evidence"><option value="">All</option><option value="bound">Authorized file linked</option><option value="observed">Saved visual observations</option><option value="characters">Unreviewed character study</option><option value="numeric">Numerical visual samples</option></select></label>
+<label>Evidence<select id="evidence"><option value="">All</option><option value="bound">Authorized file linked</option><option value="observed">Saved visual observations</option><option value="characters">Unreviewed character study</option><option value="numeric">Numerical visual samples</option><option value="audio">Numeric audio energy</option></select></label>
 <label>Sort<select id="sort"><option value="title">Title</option><option value="views">Known views, descending</option><option value="recent">Known publication date, descending</option></select></label>
 </section><p id="found" aria-live="polite"></p>
 <div class="wrap"><table><thead><tr><th>Video</th><th>Creator</th><th>Category</th><th>Views</th><th>Duration</th><th>Evidence</th><th>Inspect</th></tr></thead><tbody id="rows"></tbody></table></div>
@@ -280,6 +293,7 @@ function stat(name,value){const x=el("div");x.className="stat";x.append(el("b",v
 function status(x){if(x.numericStatus==="sampled-numeric-unreviewed")return "Pixel measurements (unreviewed)";
 if(x.characterStatus==="completed-unreviewed")return "Character model (unreviewed)";
 if(x.visualObservationTags.length)return "Saved partial visual spotcheck";
+if(x.audioStatus==="decoded-pcm-energy-unreviewed")return "Audio energy (unreviewed)";
 if(x.mediaStatus==="operator-attested")return "Local source linked";return "Metadata only";}
 let page=0,filtered=[];
 function details(x){
@@ -289,7 +303,7 @@ const pairs=[["ID",x.sourceId],["Creator",x.creator],["Category",x.category],
 ["Published",x.publishedOn||"Unknown"],["Duration",x.durationSeconds===null?"Unknown":x.durationSeconds+" seconds"],
 ["Historical views",count(x.views)+" captured "+(x.viewsCapturedAt||"unknown")],
 ["Metadata",x.metadataStatus],["Media",x.mediaStatus],["Character",x.characterStatus],
-["Numeric image evidence",x.numericStatus],["Source-linked research",x.repositoryAnalysisStatus],
+["Numeric image evidence",x.numericStatus],["Numeric audio energy",x.audioStatus],["Source-linked research",x.repositoryAnalysisStatus],
 ["Spot-check coverage",x.spotCheckCoverage||"Not observed"],
 ["Observed on",x.browserObservedOn||"Unknown"],["Human full-video reviewed","No"],
 ["Tags",(x.tags||[]).join(", ")||"Not captured"],["Description",x.description||"Not captured"]];
@@ -306,6 +320,16 @@ if(x.visibleMoments.length){
   const hy=el("ul");for(const text of x.techniqueHypotheses)hy.append(el("li",text));
   out.append(hy);
  }
+}
+if(x.audioEnergy){
+ out.append(el("h3","Audio envelope samples (clock alignment not independently verified)"));
+ const t=el("table"),h=el("tr");
+ for(const name of ["Requested seconds","PCM energy buckets","RMS dBFS","Near-silence fraction"])h.append(el("th",name));
+ t.append(h);
+ for(const w of x.audioEnergy.windows){const row=el("tr");
+ for(const val of [w.startSeconds+"–"+w.endSeconds,w.decodedBuckets,fmt(w.rmsDbfs),fmt(w.nearSilenceFrameFraction)])row.append(el("td",val));
+ t.append(row);}
+ out.append(t);
 }
 if(x.numeric){out.append(el("h3","Sampled original-source video windows"));
 const t=el("table"),head=el("tr");for(const name of ["Time (seconds)","Sampled frames","PTS inventory","Cut candidates","Display luma","Saturation","Within-shot RGB change"])head.append(el("th",name));t.append(head);
@@ -324,7 +348,8 @@ filtered=data.entries.filter(x=>(!cat||x.category===cat)&&(!meta||x.metadataStat
 &&(!ev||(ev==="bound"&&x.mediaStatus==="operator-attested")
 ||(ev==="observed"&&x.repositoryAnalysisStatus==="tracked-partial-evidence")
 ||(ev==="characters"&&x.characterStatus==="completed-unreviewed")
-||(ev==="numeric"&&x.numericStatus==="sampled-numeric-unreviewed")));
+||(ev==="numeric"&&x.numericStatus==="sampled-numeric-unreviewed")
+||(ev==="audio"&&x.audioStatus==="decoded-pcm-energy-unreviewed")));
 const normal=(a,b)=>a.title.localeCompare(b.title)||a.sourceId.localeCompare(b.sourceId);
 if(byId("sort").value==="views")filtered.sort((a,b)=>(b.views??-1)-(a.views??-1)||normal(a,b));
 else if(byId("sort").value==="recent")filtered.sort((a,b)=>(b.publishedOn||"").localeCompare(a.publishedOn||"")||normal(a,b));
@@ -347,7 +372,8 @@ stat("Detailed",count(c["metadataStatus:detail-snapshot"]||0)),
 stat("Locally bound",count(c["mediaStatus:operator-attested"]||0)),
 stat("Git-linked observations",count(c["repositoryEvidenceRecords"]||0)),
 stat("Character studied",count(c["characterStatus:completed-unreviewed"]||0)),
-stat("Numeric visual sampled",count(c["numericStatus:sampled-numeric-unreviewed"]||0)));
+stat("Numeric visual sampled",count(c["numericStatus:sampled-numeric-unreviewed"]||0)),
+stat("Audio energy measured",count(c["audioStatus:decoded-pcm-energy-unreviewed"]||0)));
 byId("date").textContent="Snapshot: "+data.retrievedOn+" | catalog SHA-256: "+data.snapshotSha256;
 for(const name of ["search","category","metadata","evidence","sort"])byId(name).addEventListener("input",()=>{page=0;render();});
 byId("prev").addEventListener("click",()=>{page--;render();});
