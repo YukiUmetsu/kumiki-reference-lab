@@ -137,6 +137,14 @@ class TimingInferenceTests(unittest.TestCase):
                              "not-measured-no-supported-seeded-tracks")
             self.assertEqual(result["tracks"], [])
             self.assertEqual(propose_original_timing_recipes(result), [])
+            source_bound = build_seeded_motion_timing(
+                {"status": status, "tracks": []},
+                numeric={"sourceSha256": SHA})
+            self.assertEqual(source_bound["sourceSha256"], SHA)
+            with self.assertRaisesRegex(ValueError, "source identity"):
+                build_seeded_motion_timing(
+                    {"status": status, "sourceSha256": "f" * 64, "tracks": []},
+                    numeric={"sourceSha256": SHA})
         with self.assertRaises(ValueError):
             build_seeded_motion_timing({
                 **seeded_report(seeded_track()), "sourceSha256": "wrong"})
