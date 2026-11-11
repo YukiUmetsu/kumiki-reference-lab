@@ -461,3 +461,64 @@ def write_temporal_report(workspace: Path, *, max_motion_pairs: int = 96,
         raise ValueError("unsafe temporal output symlink")
     _write_json_atomic(destination, report)
     return destination
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Standalone fallback CLI, independently usable without Magnitude/OpenCV.
+
+    Example: python -m kumiki_reference_lab.pipeline.online_temporal
+             motion --workspace workspace/frame-review/<id>
+    """
+    import argparse
+    import json
+
+    parser = argparse.ArgumentParser(
+        description="Dependency-free shot grouping and local RGB block matching.")
+    parser.add_argument("command", choices=["shots", "motion"])
+    parser.add_argument("--workspace", type=Path, required=True)
+    parser.add_argument("--after-shot", type=int, default=-1)
+    parser.add_argument("--limit", type=int, default=12)
+    parser.add_argument("--min-shot-frames", type=int, default=4)
+    parser.add_argument("--max-motion-pairs", type=int, default=96)
+    parser.add_argument("--stride", type=int, default=8)
+    parser.add_argument("--search-radius", type=int, default=3)
+    options = parser.parse_args(argv)
+    try:
+        from kumiki_reference_lab.pipeline.agent_frame_review import load_workspace
+        if options.command == "shots":
+            if (options.after_shot < -1 or type(options.limit) is not int
+                    or not 1 <= options.limit <= 50):
+                raise ValueError("invalid shot paging limits")
+            manifest, numeric, _ = load_workspace(options.workspace)
+            plan = build_shot_plan(
+                numeric, minimum_shot_frames=options.min_shot_frames)
+            shots = plan["shots"]
+            selected = shots[options.after_shot + 1:
+                             options.after_shot + 1 + options.limit]
+            result = {
+                "schemaVersion": VERSION,
+                "sourceSha256": manifest["sourceSha256"],
+                "totalShotCandidates": len(shots),
+                "shots": selected,
+                "nextAfterShotIndex": (selected[-1]["shotIndex"]
+                                       if selected else None),
+                "hasMore": options.after_shot + 1 + len(selected) < len(shots),
+                "status": "unverified-candidates",
+            }
+        else:
+            output = write_temporal_report(
+                options.workspace, max_motion_pairs=options.max_motion_pairs,
+                stride=options.stride,
+                minimum_shot_frames=options.min_shot_frames,
+                search_radius=options.search_radius,
+            )
+            result = {"savedTo": str(output),
+                      "status": "sampled-image-plane-proxy-not-camera-track"}
+    except (ValueError, OSError, KeyError) as exc:
+        parser.exit(2, f"temporal analysis failed: {exc}\n")
+    print(json.dumps(result, sort_keys=True, indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
