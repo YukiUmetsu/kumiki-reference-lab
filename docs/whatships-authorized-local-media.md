@@ -57,6 +57,6 @@ The `coverage.json`, `report`, and `queue` results deliberately **omit local pat
 
 ## Boundary to the next stage
 
-A successfully registered clip is **eligible for local analysis** only after the bytes and declared source relationship are checked. The next worker should consume the private ledger and run `character-study-local` or `character-study-batch` under explicit bounded budgets, preserving provenance and review status. It must not use the site watch URL as an FFmpeg input, silently upload footage, or treat a completed model run as a human-reviewed cinematic measurement.
+A successfully registered clip is **eligible for local analysis** only after the bytes and declared source relationship are checked. The [resumable worker](whatships-resumable-local-analysis.md) now consumes the private ledger and runs bounded `character-study-batch` analysis with source-SHA verification and per-film checkpoints. It must not use the site watch URL as an FFmpeg input, silently upload footage, or treat a completed model run as a human-reviewed cinematic measurement.
 
 This PR's offline tests mock FFprobe for small synthetic byte files, test SHA changes, exact catalog IDs and absence of path leakage from reports. **It has not verified the user's ownership of any What Ships video or actually bound real third-party footage.**

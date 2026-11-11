@@ -86,6 +86,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Private rights-attested source bindings:** [`whatships-media bind/report/queue`](docs/whatships-authorized-local-media.md) links one exact catalog `whatships:slug` with one operator-authorized local video by SHA-256, source timebase and rights/identity notes. Reports redact paths, and verification refuses changed media. Registration is **not** proof of copyright permission, correct identity or footage analysis.
 
+**Resumable authorized What Ships footage studies:** [`whatships-analyze`](docs/whatships-resumable-local-analysis.md) runs source-SHA-verified, bounded local character and interaction analysis for privately bound video entries, checkpoints each film, retries failures and reports redacted per-category progress. Frame evidence is real source PTS, but AI labels remain unreviewed and short sampling windows do not equal complete film coverage.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
