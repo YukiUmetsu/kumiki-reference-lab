@@ -79,6 +79,7 @@ def _parse_subject_boxes(payload: Any, *, frame_width: int,
 def detect_local_ollama_subjects(
     source: Path, out: Path, *, model: str, port: int = 11434,
     seconds: int = 10, max_samples: int = 8,
+    start_seconds: int = 0,
     width: int = 320, height: int = 180,
     cut_threshold: float = 0.25, timeout_seconds: int = 180,
     ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
@@ -91,6 +92,8 @@ def detect_local_ollama_subjects(
             type(timeout_seconds) is not int or not 5 <= timeout_seconds <= 300):
         raise ValueError("local Ollama port or timeout invalid")
     if (type(seconds) is not int or not 1 <= seconds <= 30 or
+            type(start_seconds) is not int or start_seconds < 0 or
+            start_seconds + seconds > 120 or
             type(max_samples) is not int or not 5 <= max_samples <= 12 or
             type(width) is not int or not 64 <= width <= 320 or
             type(height) is not int or not 36 <= height <= 180 or
@@ -106,14 +109,18 @@ def detect_local_ollama_subjects(
     stream = source_info["video"]["streamIndex"]
     timebase_json = source_info["video"]["sourceTimebase"]
     timebase = Fraction(timebase_json["numerator"], timebase_json["denominator"])
-    source_frames = read_frame_pts(source, stream, seconds=seconds, ffprobe=ffprobe)
+    source_frames = read_frame_pts(
+        source, stream, seconds=seconds, ffprobe=ffprobe,
+        start_seconds=start_seconds, source_timebase=timebase,
+    )
     samples = select_motion_samples(source_frames, max_samples)
+    source_prefix = start_seconds + seconds
     decoded = read_rgb_frames(
         source, stream, [x.ordinal for x in samples], [x.pts for x in samples],
-        timebase=timebase, seconds=seconds, width=width, height=height, ffmpeg=ffmpeg,
+        timebase=timebase, seconds=source_prefix, width=width, height=height, ffmpeg=ffmpeg,
     )
     cut_result = detect_hard_cut_pts(
-        source, stream, seconds=seconds, threshold=cut_threshold, ffmpeg=ffmpeg)
+        source, stream, seconds=source_prefix, threshold=cut_threshold, ffmpeg=ffmpeg)
     if cut_result.timebase != timebase:
         raise ValueError("source cut timebase differs from verified video stream timebase")
     entries = []
