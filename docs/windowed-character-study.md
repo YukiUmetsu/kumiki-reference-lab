@@ -25,11 +25,11 @@ Each call writes a separate immutable study and review bundle; no automatic iden
 ### Boundaries
 
 - The window is `[start_seconds, start_seconds + max_seconds)` in **source-relative presentation time**. `start_seconds` is a nonnegative integer; `max_seconds` remains 1–30 seconds.
-- Existing safety bounds constrain **start + duration to at most 120 seconds**, even if the source video is longer. This is a deliberate source-prefix decoder budget, not a claim that longer films are unimportant. It can be raised later through a separately verified seek/window decoding implementation.
+- A study window can now end at up to **3600 seconds (one hour)** into the source. Each requested window remains 1–30 seconds. The 120-second boundary switches the underlying decoding strategy, not the source identity or clock.
 - Original FFprobe decoded frame ordinals and PTS are preserved. This is not FPS multiplication, timestamp renumbering, or clip re-encoding.
-- FFmpeg still decodes a bounded **prefix** (up to the window end) to safely select the original frame ordinals. This is more costly for late windows but avoids unverified seek-to-frame mappings.
-- Cut detection and downstream QA receive the same required prefix length; every selected frame's PTS is checked against the source stream and normalized clock.
-- The output `study-manifest.json` includes both `scanStartSeconds` and `scanPrefixSeconds`, plus duration and model-call budgets.
+- Windows ending within 120 seconds keep the original prefix/ordinal decoder. Later windows use input-side FFmpeg `-ss` and `-copyts`, independently inventory the original PTS with FFprobe, and **fail if decoded PTS/timebase differ**. No approximate nearest-frame guess is allowed.
+- Cut detection, local vision descriptions, actor-target interactions and all QA galleries use the same appropriate prefix or exact-PTS seek strategy. Every selected frame must match the source stream's original rational timebase.
+- The output `study-manifest.json` includes `scanStartSeconds`, `sourceWindowEndSeconds`, `sourceDecodeMode`, and `scanPrefixSeconds` (null when seeking rather than decoding the entire source prefix), plus duration/model-call budgets.
 - Apple Vision remains a human-region baseline, while local Ollama supports provisional animated/animal/human character boxes. Neither detector's accuracy is established by window support alone.
 
 ### Tests
