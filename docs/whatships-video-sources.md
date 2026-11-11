@@ -1,6 +1,6 @@
-# YouTube and What Ships as reference-video sources
+# YouTube, What Ships, and optional Directors' Library sources
 
-Kumiki Reference Lab's `video-sources` command provides a **provider-neutral, metadata-only discovery interface** for YouTube and [What Ships](https://whatships.com/). It does not download, stream, transcode, or inspect third-party video assets.
+Kumiki Reference Lab's `video-sources` command provides a **provider-neutral, metadata-only discovery interface** for YouTube, [What Ships](https://whatships.com/), and optional [Directors' Library](https://directorslibrary.com/) records. It does not download, stream, transcode, or inspect third-party video assets.
 
 ## Usage
 
@@ -13,9 +13,14 @@ PYTHONPATH=src python -m kumiki_reference_lab video-sources list --provider what
 PYTHONPATH=src python -m kumiki_reference_lab video-sources search "paper motion" --provider whatships
 PYTHONPATH=src python -m kumiki_reference_lab video-sources show whatships:figma-3980
 PYTHONPATH=src python -m kumiki_reference_lab video-sources observations --visual-tag editorial-collage
+
+# Opt in to the separate Directors' Library page catalog:
+PYTHONPATH=src python -m kumiki_reference_lab video-sources search "distance" \
+  --provider directors-library \
+  --directors-library research/analysis/directors-library/index-2026-11-11-pages5.json
 ```
 
-All outputs are JSON. `show` returns a **browser page** in `watchUrl` and the original X URL in `originalUrl`, when the What Ships detail record provides one. For YouTube references, both URLs point to the canonical YouTube video. IDs are provider-qualified (`youtube:<video-id>`, `whatships:<slug>`) to avoid cross-provider collisions.
+All outputs are JSON. `show` returns a **browser page** in `watchUrl` and the original X URL in `originalUrl`, when the What Ships detail record provides one. For YouTube references, both URLs point to the canonical YouTube video. IDs are provider-qualified (`youtube:<video-id>`, `whatships:<slug>`, `directors-library:<site-path>`) to avoid cross-provider collisions. Directors' Library's `originalUrl` is only a sanitized embedded-player reference, **not a licensed downloadable file**. Its `publishedOn` is the site's post date, not necessarily the film's original release. Unknown views and durations stay `null`.
 
 `report` summarizes source and category coverage, known view snapshots, known durations, and category medians. Missing evidence stays missing; a category with no verified view snapshots has a `null` median. This is a **metadata coverage report**, not a quality, virality, shot-cut frequency, camera or lighting analysis.
 
@@ -38,6 +43,6 @@ Missing detail records stay `evidenceStatus: index-only`: views, publish date, d
 
 ## Extensibility and safe analysis
 
-The normalized interface in `catalog/video_sources.py` separates a provider's URL and provenance from the numerical analysis source. A new provider adds a validating adapter that outputs the same fields without changing the legacy YouTube-only `video-references` contract. Never feed a `watchUrl` to FFmpeg as though it were a video file. What Ships explicitly describes its player as viewing access, **not a download CDN**; the original creators retain content rights. The presence of a playable video does not grant redistribution permission.
+The normalized interface in `catalog/video_sources.py` separates a provider's URL and provenance from the numerical analysis source. A new provider adds a validating adapter that outputs the same fields without changing the legacy YouTube-only `video-references` contract. Never feed a `watchUrl` or iframe `originalUrl` to FFmpeg as though it were a licensed source file. What Ships explicitly describes its player as viewing access, **not a download CDN**; the original creators retain content rights. Directors' Library's [terms](https://directorslibrary.com/cookies-legal/) prohibit copying without permission. Vimeo downloads are controlled by individual video owners and cannot be assumed from an embedded player. The presence of a playable video does not grant redistribution permission.
 
 For actually measured cinematography, use the browser to form *review questions*, then obtain a separately authorized local media file and use `study-reference`, `visual-events` or `visual-style-review` with source timestamps and hashes. Record visual style, camera movement, lighting and cut frequency **only** from actually reviewed footage; titles, tags, posters and motion-category labels are not visual measurements. See [reference-study](reference-study.md) and [timecoded visual style reviews](timecoded-visual-style-review.md).

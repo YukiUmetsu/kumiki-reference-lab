@@ -1,0 +1,532 @@
+{
+  "methodology": "Public schema.org metadata only. Player references are not media licenses. No video bytes, frames, audio, editorial descriptions or technique claims were collected.",
+  "retrievedOn": "2026-11-11",
+  "schemaVersion": "kumiki.directors-library-metadata.v1",
+  "source": {
+    "archiveUrl": "https://directorslibrary.com/videos/latest/",
+    "pagesCrawled": 2,
+    "publisher": "Directors' Library",
+    "termsUrl": "https://directorslibrary.com/cookies-legal/"
+  },
+  "totals": {
+    "videoFilesDownloaded": 0,
+    "videoPagesInspected": 30,
+    "videosMeasured": 0
+  },
+  "videos": [
+    {
+      "category": "campaigns",
+      "directors": [
+        "Evan Ravo"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:campaigns:distance-x-asics",
+      "playerProvider": "vimeo",
+      "playerUrl": "https://player.vimeo.com/video/1236008415",
+      "sitePublishedOn": "2026-11-11",
+      "rightsStatus": "permission-required",
+      "subcategory": null,
+      "title": "Distance x Asics",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/campaigns/distance-x-asics/"
+    },
+    {
+      "category": "film-tv",
+      "directors": [
+        "Gabriela Osio Vanden",
+        "Jack Weisman"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:film-tv:documentary:nuisance-bear",
+      "playerProvider": "youtube",
+      "playerUrl": "https://www.youtube.com/embed/dL4lFKY8Cy4",
+      "sitePublishedOn": "2026-11-11",
+      "rightsStatus": "permission-required",
+      "subcategory": "documentary",
+      "title": "Nuisance Bear",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/film-tv/documentary/nuisance-bear/"
+    },
+    {
+      "category": "music-videos",
+      "directors": [
+        "Naghmeh Pour"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:music-videos:ghazali-elyanna",
+      "playerProvider": "vimeo",
+      "playerUrl": "https://player.vimeo.com/video/1244196098",
+      "sitePublishedOn": "2026-11-10",
+      "rightsStatus": "permission-required",
+      "subcategory": null,
+      "title": "‘Ghazali’ Elyanna",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/music-videos/ghazali-elyanna/"
+    },
+    {
+      "category": "campaigns",
+      "directors": [
+        "Caleb Joye"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:campaigns:show-em-detroit-pistons",
+      "playerProvider": "vimeo",
+      "playerUrl": "https://player.vimeo.com/video/1236887161",
+      "sitePublishedOn": "2026-11-09",
+      "rightsStatus": "permission-required",
+      "subcategory": null,
+      "title": "‘Show ‘Em’ Detroit Pistons",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/campaigns/show-em-detroit-pistons/"
+    },
+    {
+      "category": "shorts",
+      "directors": [
+        "Tony Blahd",
+        "Lydia Fine"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:shorts:documentary-short:picture-a-tree",
+      "playerProvider": "youtube",
+      "playerUrl": "https://www.youtube.com/embed/lfk3ZPV3QFQ",
+      "sitePublishedOn": "2026-11-08",
+      "rightsStatus": "permission-required",
+      "subcategory": "documentary-short",
+      "title": "Picture a Tree",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/shorts/documentary-short/picture-a-tree/"
+    },
+    {
+      "category": "film-tv",
+      "directors": [
+        "Gar O'Rourke"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:film-tv:documentary:the-siege-of-paradise",
+      "playerProvider": "youtube",
+      "playerUrl": "https://www.youtube.com/embed/HdrkOFVBM70",
+      "sitePublishedOn": "2026-11-08",
+      "rightsStatus": "permission-required",
+      "subcategory": "documentary",
+      "title": "The Siege of Paradise",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/film-tv/documentary/the-siege-of-paradise/"
+    },
+    {
+      "category": "shorts",
+      "directors": [
+        "Kevin Koch",
+        "Emma Holzapfel"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:shorts:narrative-short:haze-2",
+      "playerProvider": "vimeo",
+      "playerUrl": "https://player.vimeo.com/video/1097448081",
+      "sitePublishedOn": "2026-11-07",
+      "rightsStatus": "permission-required",
+      "subcategory": "narrative-short",
+      "title": "HAZE",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/shorts/narrative-short/haze-2/"
+    },
+    {
+      "category": "shorts",
+      "directors": [
+        "Louise Wachtmeister"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:shorts:creative-shorts:when-i-grow-up-fotografiska",
+      "playerProvider": "vimeo",
+      "playerUrl": "https://player.vimeo.com/video/1234055190",
+      "sitePublishedOn": "2026-11-06",
+      "rightsStatus": "permission-required",
+      "subcategory": "creative-shorts",
+      "title": "‘When I Grow Up’ Fotografiska",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/shorts/creative-shorts/when-i-grow-up-fotografiska/"
+    },
+    {
+      "category": "music-videos",
+      "directors": [
+        "James Mackel"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:music-videos:tarantino-lisa",
+      "playerProvider": "youtube",
+      "playerUrl": "https://www.youtube.com/embed/-5ZXrO_lYSA",
+      "sitePublishedOn": "2026-11-05",
+      "rightsStatus": "permission-required",
+      "subcategory": null,
+      "title": "‘Tarantino’ LISA",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/music-videos/tarantino-lisa/"
+    },
+    {
+      "category": "film-tv",
+      "directors": [
+        "Mike Leigh"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:film-tv:movies:tender-loving-care-2",
+      "playerProvider": "youtube",
+      "playerUrl": "https://www.youtube.com/embed/-CDgxJgiQY4",
+      "sitePublishedOn": "2026-11-05",
+      "rightsStatus": "permission-required",
+      "subcategory": "movies",
+      "title": "Tender Loving Care",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/film-tv/movies/tender-loving-care-2/"
+    },
+    {
+      "category": "shorts",
+      "directors": [
+        "Elisa Baudoin"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:shorts:creative-shorts:pmu-what",
+      "playerProvider": "vimeo",
+      "playerUrl": "https://player.vimeo.com/video/1176016539",
+      "sitePublishedOn": "2026-11-04",
+      "rightsStatus": "permission-required",
+      "subcategory": "creative-shorts",
+      "title": "PMU What?",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/shorts/creative-shorts/pmu-what/"
+    },
+    {
+      "category": "film-tv",
+      "directors": [
+        "Ang Geck Geck Priscilla"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:film-tv:movies:ah-girl",
+      "playerProvider": "youtube",
+      "playerUrl": "https://www.youtube.com/embed/o-LkpJ4ACxk",
+      "sitePublishedOn": "2026-11-04",
+      "rightsStatus": "permission-required",
+      "subcategory": "movies",
+      "title": "Ah Girl",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/film-tv/movies/ah-girl/"
+    },
+    {
+      "category": "shorts",
+      "directors": [
+        "Nina Gofur"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:shorts:creative-shorts:terrain",
+      "playerProvider": "vimeo",
+      "playerUrl": "https://player.vimeo.com/video/1231370019",
+      "sitePublishedOn": "2026-11-03",
+      "rightsStatus": "permission-required",
+      "subcategory": "creative-shorts",
+      "title": "Terrain",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/shorts/creative-shorts/terrain/"
+    },
+    {
+      "category": "shorts",
+      "directors": [
+        "Lula Cucchiara"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:shorts:documentary-short:only-child",
+      "playerProvider": "vimeo",
+      "playerUrl": "https://player.vimeo.com/video/1237107759",
+      "sitePublishedOn": "2026-11-02",
+      "rightsStatus": "permission-required",
+      "subcategory": "documentary-short",
+      "title": "Only Child",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/shorts/documentary-short/only-child/"
+    },
+    {
+      "category": "film-tv",
+      "directors": [
+        "Marcus Carlsson"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:film-tv:movies:the-quiet-beekeeper",
+      "playerProvider": "youtube",
+      "playerUrl": "https://www.youtube.com/embed/kL9EIAx6EPQ",
+      "sitePublishedOn": "2026-11-01",
+      "rightsStatus": "permission-required",
+      "subcategory": "movies",
+      "title": "The Quiet Beekeeper",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/film-tv/movies/the-quiet-beekeeper/"
+    },
+    {
+      "category": "campaigns",
+      "directors": [
+        "Giannis Gripeos"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:campaigns:designed-for-life-suri",
+      "playerProvider": "vimeo",
+      "playerUrl": "https://player.vimeo.com/video/1233662456",
+      "sitePublishedOn": "2026-10-31",
+      "rightsStatus": "permission-required",
+      "subcategory": null,
+      "title": "‘Designed for Life’ Suri",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/campaigns/designed-for-life-suri/"
+    },
+    {
+      "category": "music-videos",
+      "directors": [
+        "Charlie Di Placido"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:music-videos:is-it-that-deep-cat-burns",
+      "playerProvider": "youtube",
+      "playerUrl": "https://www.youtube.com/embed/U_k0BHVD4QY",
+      "sitePublishedOn": "2026-10-30",
+      "rightsStatus": "permission-required",
+      "subcategory": null,
+      "title": "‘Is it That Deep?’ Cat Burns",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/music-videos/is-it-that-deep-cat-burns/"
+    },
+    {
+      "category": "music-videos",
+      "directors": [
+        "Alex Takács"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:music-videos:gas-bicep",
+      "playerProvider": "youtube",
+      "playerUrl": "https://www.youtube.com/embed/ydRyOr3KYD0",
+      "sitePublishedOn": "2026-10-29",
+      "rightsStatus": "permission-required",
+      "subcategory": null,
+      "title": "‘Gas’ Bicep",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/music-videos/gas-bicep/"
+    },
+    {
+      "category": "shorts",
+      "directors": [
+        "Remy Cats"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:shorts:creative-shorts:close-up-residentie-orkest",
+      "playerProvider": "vimeo",
+      "playerUrl": "https://player.vimeo.com/video/1236482505",
+      "sitePublishedOn": "2026-10-27",
+      "rightsStatus": "permission-required",
+      "subcategory": "creative-shorts",
+      "title": "‘Close Up’ Residentie Orkest",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/shorts/creative-shorts/close-up-residentie-orkest/"
+    },
+    {
+      "category": "music-videos",
+      "directors": [
+        "Jules Harbulot",
+        "Giorgio Cassano"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:music-videos:dead-hand-freestyle-irko",
+      "playerProvider": "youtube",
+      "playerUrl": "https://www.youtube.com/embed/OlAbqwpKi-E",
+      "sitePublishedOn": "2026-10-26",
+      "rightsStatus": "permission-required",
+      "subcategory": null,
+      "title": "‘Dead Hand Freestyle’ Irko",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/music-videos/dead-hand-freestyle-irko/"
+    },
+    {
+      "category": "shorts",
+      "directors": [
+        "Marko Roth"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:shorts:documentary-short:the-art-of-entering-the-sea",
+      "playerProvider": "vimeo",
+      "playerUrl": "https://player.vimeo.com/video/1225933284",
+      "sitePublishedOn": "2026-10-26",
+      "rightsStatus": "permission-required",
+      "subcategory": "documentary-short",
+      "title": "The Art Of Entering The Sea",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/shorts/documentary-short/the-art-of-entering-the-sea/"
+    },
+    {
+      "category": "film-tv",
+      "directors": [
+        "Eddie Sánchez"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:film-tv:documentary:mexicanamerican",
+      "playerProvider": "youtube",
+      "playerUrl": "https://www.youtube.com/embed/CHhfF-rEliI",
+      "sitePublishedOn": "2026-10-25",
+      "rightsStatus": "permission-required",
+      "subcategory": "documentary",
+      "title": "Mexicanamerican",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/film-tv/documentary/mexicanamerican/"
+    },
+    {
+      "category": "shorts",
+      "directors": [
+        "Carson Beale"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:shorts:documentary-short:the-most-honest-actor",
+      "playerProvider": "vimeo",
+      "playerUrl": "https://player.vimeo.com/video/1164300739",
+      "sitePublishedOn": "2026-10-24",
+      "rightsStatus": "permission-required",
+      "subcategory": "documentary-short",
+      "title": "The Most Honest Actor",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/shorts/documentary-short/the-most-honest-actor/"
+    },
+    {
+      "category": "shorts",
+      "directors": [
+        "Asra & Kiljan"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:shorts:dance-short:rift",
+      "playerProvider": "vimeo",
+      "playerUrl": "https://player.vimeo.com/video/1180830917",
+      "sitePublishedOn": "2026-10-23",
+      "rightsStatus": "permission-required",
+      "subcategory": "dance-short",
+      "title": "RIFT",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/shorts/dance-short/rift/"
+    },
+    {
+      "category": "music-videos",
+      "directors": [
+        "Chris Kirtley"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:music-videos:the-blaydon-races-hector-gannet",
+      "playerProvider": "vimeo",
+      "playerUrl": "https://player.vimeo.com/video/1235909736",
+      "sitePublishedOn": "2026-10-22",
+      "rightsStatus": "permission-required",
+      "subcategory": null,
+      "title": "‘The Blaydon Races’ Hector Gannet",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/music-videos/the-blaydon-races-hector-gannet/"
+    },
+    {
+      "category": "music-videos",
+      "directors": [
+        "Adrian Villagomez"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:music-videos:coda-dpat",
+      "playerProvider": "youtube",
+      "playerUrl": "https://www.youtube.com/embed/qsh2di5c-nI",
+      "sitePublishedOn": "2026-10-21",
+      "rightsStatus": "permission-required",
+      "subcategory": null,
+      "title": "‘Coda’ Dpat",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/music-videos/coda-dpat/"
+    },
+    {
+      "category": "shorts",
+      "directors": [
+        "Graham Foy"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:shorts:creative-shorts:encounters",
+      "playerProvider": "vimeo",
+      "playerUrl": "https://player.vimeo.com/video/1235504361",
+      "sitePublishedOn": "2026-10-20",
+      "rightsStatus": "permission-required",
+      "subcategory": "creative-shorts",
+      "title": "Encounters",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/shorts/creative-shorts/encounters/"
+    },
+    {
+      "category": "campaigns",
+      "directors": [
+        "Martin de Thurah"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:campaigns:curiosity-equinor",
+      "playerProvider": "youtube",
+      "playerUrl": "https://www.youtube.com/embed/FND0AVr_68s",
+      "sitePublishedOn": "2026-10-19",
+      "rightsStatus": "permission-required",
+      "subcategory": null,
+      "title": "‘Curiosity’ Equinor",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/campaigns/curiosity-equinor/"
+    },
+    {
+      "category": "film-tv",
+      "directors": [
+        "Lê Bảo"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:film-tv:movies:hearing",
+      "playerProvider": "youtube",
+      "playerUrl": "https://www.youtube.com/embed/YPI8tDWHIAE",
+      "sitePublishedOn": "2026-10-19",
+      "rightsStatus": "permission-required",
+      "subcategory": "movies",
+      "title": "Hearing",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/film-tv/movies/hearing/"
+    },
+    {
+      "category": "shorts",
+      "directors": [
+        "Flint"
+      ],
+      "durationSeconds": null,
+      "id": "directors-library:2026:shorts:narrative-short:belhem",
+      "playerProvider": "vimeo",
+      "playerUrl": "https://player.vimeo.com/video/1234397802",
+      "sitePublishedOn": "2026-10-18",
+      "rightsStatus": "permission-required",
+      "subcategory": "narrative-short",
+      "title": "Belhem",
+      "videoAnalysisStatus": "not-performed",
+      "viewCount": null,
+      "watchUrl": "https://directorslibrary.com/2026/latest/shorts/narrative-short/belhem/"
+    }
+  ]
+}
