@@ -95,6 +95,17 @@ establish character identity, intent, dialogue, physical contact, or a
 reusable production animation. See
 [local event visual review](docs/online-event-visual-review.md).
 
+### Three-anchor temporal sequences with a small local vision model
+
+`kumiki-insights --roi-seeds seeds.json --sequence-model LOCAL_VISION_MODEL
+--max-sequences 4 --max-sequence-calls 8` reviews three source-verified,
+same-shot frames as **two short two-image comparisons**. Redundant
+geometry events share calls and the output `threeAnchorSequenceReview`
+records bounded phase descriptions and uncertainty, not recognized body
+actions, identities, dialogue or verified choreography. This is opt-in;
+the deterministic no-AI default remains available. See
+[three-anchor sequence review](docs/three-anchor-sequence-review.md).
+
 ## Why this exists
 
 Professional motion graphics depend on more than shaders and easing presets:
