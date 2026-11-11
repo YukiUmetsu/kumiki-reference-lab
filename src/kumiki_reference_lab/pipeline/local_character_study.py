@@ -147,7 +147,7 @@ def run_local_character_study(
             "detectedRegionProposals": sum(
                 len(frame["detections"]) for frame in detections["frames"]),
             "provisionalTracklets": tracklet_summary["trackletCount"],
-            "reviewedCharacterIds": len(observed_scene["characters"]),
+            "provisionalCharacterIdsObserved": len(observed_scene["characters"]),
             "visionAppearanceProposals": len(observed_scene["appearances"]),
             "interactionStageRequested": interactions,
             "qaStageRequested": review,
