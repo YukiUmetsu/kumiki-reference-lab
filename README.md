@@ -51,6 +51,17 @@ This needs **no additional AI model calls**. Results appear in
 **not original animation keyframes, a verified easing function, or a
 character rig**. See [seeded motion timing](docs/seeded-motion-timing.md).
 
+## Automatic discovery of anonymous moving regions
+
+Use `kumiki-insights --workspace PATH --auto-regions` to discover
+recurring moving areas on simple backgrounds from cached local PNGs.
+**No AI model or OpenCV is needed for proposals.** With optional
+OpenCV/NumPy, high-support regions automatically enter existing
+shot-local tracking, where simple screen-space timing fits may be derived.
+Candidates remain **unclassified** (never auto-identified characters,
+people or products); complex backgrounds and global flashes abstain.
+See [automatic region discovery](docs/auto-motion-region-discovery.md).
+
 ## Why this exists
 
 Professional motion graphics depend on more than shaders and easing presets:
