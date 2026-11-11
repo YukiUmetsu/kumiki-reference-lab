@@ -9,6 +9,32 @@ This is the **canonical, Git-tracked numerical evidence dataset** for official m
 
 The current cohort covers **all 13 films in the popularity catalog**: seven Disney-player trailers (*Inside Out 2*, *Frozen 2*, *Moana 2*, *Avengers: Infinity War*, *Avengers: Endgame*, *Zootopia 2*, *Star Wars: The Force Awakens*) and six Apple iTunes Store movie previews (*Barbie*, *Oppenheimer*, *Spider-Man: No Way Home*, *Dune: Part Two*, *The Super Mario Bros. Movie*, *Deadpool & Wolverine*). Each has three selected 20-second windows, preserving **780 seconds of machine-measured evidence**, not verified full trailers. Additional films should extend the same index and add their own per-video files; never overwrite an earlier source SHA or segment silently.
 
+## Keep every derived report synchronized
+
+Whenever a *new verified film measurement* changes `index.json` or
+a per-film detail JSON, **all three** derived reports must be updated
+in the same PR: `derived/comparison.v1.json`,
+`derived/timed-events.v1.json` and `derived/image-motion-proxies.v1.json`.
+Otherwise the source Git blob hashes and cross-file indexes are stale.
+
+```bash
+# After numeric-only source evidence is exported and audited:
+python scripts/audit_movie_promo_evidence.py
+python scripts/rebuild_movie_promo_derived.py
+
+# Before committing, verify all three against the measured source files:
+python scripts/rebuild_movie_promo_derived.py --verify
+PYTHONPATH=. python -m unittest tests.test_movie_promo_derivation_pipeline -q
+```
+
+This command performs **no network requests, downloads or video decoding**.
+It validates source-vs-detail identities, prepares all three JSON reports in
+a temporary directory, and replaces them only after successful generation.
+It does not edit the original measurement files. Its `--verify` mode
+rejects missing, stale or unexpectedly added derived JSON. Keep this step
+**after any temporary source footage has been deleted**, and stage only the
+three derived JSON files alongside the original numeric evidence.
+
 ## How to inspect or extend it
 
 ```bash
