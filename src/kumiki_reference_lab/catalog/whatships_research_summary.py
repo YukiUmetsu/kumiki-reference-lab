@@ -22,6 +22,11 @@ def summarize_tracked_whatships_observations(
     measured_frames = sum(sum(window["sampledFrames"] for window in row["numeric"]["windows"])
                           for row in numeric)
     measured_windows = sum(row["numeric"]["windowsMeasured"] for row in numeric)
+    windows_with_inventory = [
+        w for row in numeric for w in row["numeric"]["windows"]
+        if w["inventoriedFrames"] is not None]
+    inventoried_frames = sum(w["inventoriedFrames"] for w in windows_with_inventory)
+    sampled_with_inventory = sum(w["sampledFrames"] for w in windows_with_inventory)
     return {
         "schemaVersion":"kumiki.whatships-research-coverage-report.v1",
         "catalogSnapshotOn":data["retrievedOn"],
@@ -31,6 +36,12 @@ def summarize_tracked_whatships_observations(
         "sourcePtsNumericVideoCount":len(numeric),
         "sourcePtsMeasuredWindowCount":measured_windows,
         "sourcePtsSampledFrameCount":measured_frames,
+        "windowsWithVerifiedPtsInventoryCount":len(windows_with_inventory),
+        "sourcePtsInventoriedFrameCountInThoseWindows":inventoried_frames,
+        "sourcePtsSampledFrameCountInThoseWindows":sampled_with_inventory,
+        "sampledFrameFractionOfInventoriedWindowFrames":(
+            round(sampled_with_inventory/inventoried_frames,6)
+            if inventoried_frames else None),
         "fullyHumanReviewedVideoCount":0,
         "trackedRecordsByCategory":dict(sorted(category_counts.items())),
         "observedVisualTags":dict(sorted(style_counts.items(),
