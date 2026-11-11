@@ -17,6 +17,7 @@ from kumiki_reference_lab.analyzers.media.inspect import inspect_source, sha256_
 from kumiki_reference_lab.analyzers.techniques.propose import _json_file
 from kumiki_reference_lab.backends.ffmpeg.frames import read_frame_pts
 from kumiki_reference_lab.backends.ffmpeg.raw_frames import read_rgb_frames
+from kumiki_reference_lab.backends.ffmpeg.source_seek import decode_verified_later_source_frames
 from kumiki_reference_lab.core.provenance import file_signature, require_unchanged
 from kumiki_reference_lab.pipeline.character_vision_review import _load_json, _bound_proposals
 from kumiki_reference_lab.pipeline.local_character_interactions import (
@@ -78,6 +79,12 @@ def _check_inputs(
             raise ValueError(f"interaction QA requires valid source rendering parameter {key}")
     if interaction.get("pairOrdering") != "sorted-tracklet-ids-first-red-second-cyan":
         raise ValueError("interaction QA requires known red/cyan tracklet ordering")
+    seek_start = interaction.get("seekStartSeconds")
+    if seek_start is not None and (
+            type(seek_start) is not int or seek_start < 0 or
+            interaction["scanSeconds"] > 30 or
+            seek_start+interaction["scanSeconds"] > 3600):
+        raise ValueError("interaction QA cannot replay the declared later seek window")
     decisions = interaction.get("pairDecisions")
     if (not isinstance(decisions, list) or len(decisions) > 12 or
             type(interaction.get("candidatePairs")) is not int or
@@ -232,28 +239,37 @@ def build_interaction_review(
     pts = sorted({p for row in bound for p in (row["startPts"], row["endPts"])})
     frame_bytes = {}
     if pts:
-        records = read_frame_pts(
-            source, tracklets["sourceStreamIndex"], seconds=interaction["scanSeconds"],
-            ffprobe=ffprobe,
-        )
-        by_pts: dict[int, list[int]] = {}
-        for record in records:
-            if record.pts is not None:
-                by_pts.setdefault(record.pts, []).append(record.ordinal)
-        ordinals = []
-        for p in pts:
-            choices = by_pts.get(p, [])
-            if len(choices) != 1:
-                raise ValueError("interaction QA source frame PTS missing or ambiguous")
-            ordinals.append(choices[0])
-        if ordinals != sorted(set(ordinals)):
-            raise ValueError("interaction QA original frame ordinals not chronological")
-        decoded = read_rgb_frames(
-            source, tracklets["sourceStreamIndex"], ordinals, pts,
-            timebase=Fraction(**tracklets["sourceTimebase"]),
-            seconds=interaction["scanSeconds"], width=interaction["renderWidth"],
-            height=interaction["renderHeight"], ffmpeg=ffmpeg,
-        )
+        if interaction.get("seekStartSeconds") is not None:
+            decoded = decode_verified_later_source_frames(
+                source, tracklets["sourceStreamIndex"], pts,
+                timebase=Fraction(**tracklets["sourceTimebase"]),
+                start_seconds=interaction["seekStartSeconds"],
+                seconds=interaction["scanSeconds"],
+                width=interaction["renderWidth"], height=interaction["renderHeight"],
+                ffprobe=ffprobe, ffmpeg=ffmpeg)
+        else:
+            records = read_frame_pts(
+                source, tracklets["sourceStreamIndex"], seconds=interaction["scanSeconds"],
+                ffprobe=ffprobe,
+            )
+            by_pts: dict[int, list[int]] = {}
+            for record in records:
+                if record.pts is not None:
+                    by_pts.setdefault(record.pts, []).append(record.ordinal)
+            ordinals = []
+            for p in pts:
+                choices = by_pts.get(p, [])
+                if len(choices) != 1:
+                    raise ValueError("interaction QA source frame PTS missing or ambiguous")
+                ordinals.append(choices[0])
+            if ordinals != sorted(set(ordinals)):
+                raise ValueError("interaction QA original frame ordinals not chronological")
+            decoded = read_rgb_frames(
+                source, tracklets["sourceStreamIndex"], ordinals, pts,
+                timebase=Fraction(**tracklets["sourceTimebase"]),
+                seconds=interaction["scanSeconds"], width=interaction["renderWidth"],
+                height=interaction["renderHeight"], ffmpeg=ffmpeg,
+            )
         frame_bytes = dict(zip(pts, decoded, strict=True))
     for path, signature in zip(source_files, signatures, strict=True):
         require_unchanged(path, signature)
