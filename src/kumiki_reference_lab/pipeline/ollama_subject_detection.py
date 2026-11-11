@@ -19,6 +19,9 @@ from kumiki_reference_lab.analyzers.motion.review import _png_rgb
 from kumiki_reference_lab.backends.ffmpeg.frames import read_frame_pts
 from kumiki_reference_lab.backends.ffmpeg.raw_frames import read_rgb_frames
 from kumiki_reference_lab.backends.ffmpeg.scene import detect_hard_cut_pts
+from kumiki_reference_lab.backends.ffmpeg.source_seek import (
+    probe_source_window, decode_rgb_source_pts_seek, detect_source_window_cuts_seek,
+)
 from kumiki_reference_lab.core.provenance import file_signature, require_unchanged
 from kumiki_reference_lab.pipeline.ollama_character_perception import (
     _MODEL, _VIDEO_EXTENSIONS, _ollama_json,
@@ -93,7 +96,7 @@ def detect_local_ollama_subjects(
         raise ValueError("local Ollama port or timeout invalid")
     if (type(seconds) is not int or not 1 <= seconds <= 30 or
             type(start_seconds) is not int or start_seconds < 0 or
-            start_seconds + seconds > 120 or
+            start_seconds + seconds > 3600 or
             type(max_samples) is not int or not 5 <= max_samples <= 12 or
             type(width) is not int or not 64 <= width <= 320 or
             type(height) is not int or not 36 <= height <= 180 or
@@ -109,18 +112,37 @@ def detect_local_ollama_subjects(
     stream = source_info["video"]["streamIndex"]
     timebase_json = source_info["video"]["sourceTimebase"]
     timebase = Fraction(timebase_json["numerator"], timebase_json["denominator"])
-    source_frames = read_frame_pts(
-        source, stream, seconds=seconds, ffprobe=ffprobe,
-        start_seconds=start_seconds, source_timebase=timebase,
-    )
-    samples = select_motion_samples(source_frames, max_samples)
     source_prefix = start_seconds + seconds
-    decoded = read_rgb_frames(
-        source, stream, [x.ordinal for x in samples], [x.pts for x in samples],
-        timebase=timebase, seconds=source_prefix, width=width, height=height, ffmpeg=ffmpeg,
-    )
-    cut_result = detect_hard_cut_pts(
-        source, stream, seconds=source_prefix, threshold=cut_threshold, ffmpeg=ffmpeg)
+    if source_prefix > 120:
+        # Source-seek uses exact original timestamps instead of re-decoding a
+        # potentially hour-long prefix and inventing local frame ordinals.
+        window = probe_source_window(
+            source, stream, timebase=timebase, start_seconds=start_seconds,
+            seconds=seconds, ffprobe=ffprobe,
+        )
+        samples = select_motion_samples(list(window.frames), max_samples)
+        decoded = decode_rgb_source_pts_seek(
+            source, stream, [frame.pts for frame in samples], window=window,
+            width=width, height=height, ffmpeg=ffmpeg,
+        )
+        cut_result = detect_source_window_cuts_seek(
+            source, stream, window=window, threshold=cut_threshold,
+            ffmpeg=ffmpeg,
+        )
+    else:
+        source_frames = read_frame_pts(
+            source, stream, seconds=seconds, ffprobe=ffprobe,
+            start_seconds=start_seconds, source_timebase=timebase,
+        )
+        samples = select_motion_samples(source_frames, max_samples)
+        decoded = read_rgb_frames(
+            source, stream, [x.ordinal for x in samples], [x.pts for x in samples],
+            timebase=timebase, seconds=source_prefix, width=width, height=height,
+            ffmpeg=ffmpeg,
+        )
+        cut_result = detect_hard_cut_pts(
+            source, stream, seconds=source_prefix, threshold=cut_threshold,
+            ffmpeg=ffmpeg)
     if cut_result.timebase != timebase:
         raise ValueError("source cut timebase differs from verified video stream timebase")
     entries = []
