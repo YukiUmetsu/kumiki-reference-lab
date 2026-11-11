@@ -100,6 +100,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Observed technique frequencies are stored in Git:** [What Ships November 10 technique rollup](research/analysis/whatships-observed-techniques-2026-11-10.json) summarizes the nine source-linked partial browser observations and explicitly distinguishes them from the 2,861 indexed videos and zero complete human-reviewed films. CI verifies this derived report against the canonical per-video JSON; do not extrapolate the nine-video cohort to overall What Ships popularity.
 
+**Measure a bound What Ships video directly into versioned research data (no Ollama required):** [`whatships-measure`](docs/whatships-direct-research.md) decodes original-PTS source frames, validates file SHA/stream/timebase, computes RGB/cut/image-change evidence and merges it into `research/analysis/whatships/<slug>.json`, preserving prior observations. It does **not** automatically commit/push, copy footage or certify camera/light/film-style claims.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
