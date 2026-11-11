@@ -84,6 +84,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Progress toward 100% detailed What Ships metadata:** [`whatships-all enrich`](docs/whatships-detail-enrichment.md) consumes small, rate-limited batches of the directory's public read-only `get_video` catalog interface, retaining exact source links and historical view timestamps. Unknown/invalid details remain pending; no video files or frames are acquired. This command has mocked offline protocol tests, but its live MCP compatibility must still be verified.
 
+**Private rights-attested source bindings:** [`whatships-media bind/report/queue`](docs/whatships-authorized-local-media.md) links one exact catalog `whatships:slug` with one operator-authorized local video by SHA-256, source timebase and rights/identity notes. Reports redact paths, and verification refuses changed media. Registration is **not** proof of copyright permission, correct identity or footage analysis.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |

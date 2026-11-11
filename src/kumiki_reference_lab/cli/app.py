@@ -44,6 +44,9 @@ from kumiki_reference_lab.catalog.browser_observations import (
 )
 from kumiki_reference_lab.catalog.popular_videos import load_popular_videos, search_popular_videos
 from kumiki_reference_lab.catalog.whatships_detail_enrich import enrich_whatships_details
+from kumiki_reference_lab.catalog.whatships_media_bindings import (
+    register_local_media, media_coverage, eligible_bound_media,
+)
 from kumiki_reference_lab.catalog.whatships_full_coverage import (
     refresh_full_whatships_catalog, summarize_full_snapshot, plan_full_snapshot,
 )
@@ -548,6 +551,46 @@ def build_parser() -> argparse.ArgumentParser:
             sub.add_argument("--limit", type=int, default=20)
         if action == "search":
             sub.add_argument("query", help="technique, story goal, title or creator")
+    media_ws = commands.add_parser(
+        "whatships-media",
+        help="privately bind authorized local footage to exact What Ships catalog identities")
+    media_actions = media_ws.add_subparsers(dest="media_action", required=True)
+    bind = media_actions.add_parser(
+        "bind", help="operator-attest one exact What Ships entry and one hashed local video")
+    bind.add_argument("source_id", help="exact ID such as whatships:paper-mono-code")
+    bind.add_argument("video", type=Path, help="already authorized local video, never a watch URL")
+    bind.add_argument("--snapshot", type=Path,
+                      default=Path("research/whatships-index-2026-11-10.json"))
+    bind.add_argument("--previous", type=Path,
+                      help="existing PRIVATE bindings JSON; immutable copy-on-write")
+    bind.add_argument("--rights-basis", required=True, choices=(
+        "own-original-work", "written-permission",
+        "permissive-license", "other-lawful-authorization"))
+    bind.add_argument("--rights-note", required=True,
+                      help="rights provenance: license, permission or original work")
+    bind.add_argument("--identity-note", required=True,
+                      help="why this exact local video matches the catalog watch page")
+    bind.add_argument("--acknowledge-rights", action="store_true",
+                      help="affirm rights and source identity are operator-asserted, not independently verified")
+    bind.add_argument("--out", type=Path, required=True,
+                      help="new private directory; never commit media-bindings.json")
+    bind.add_argument("--ffprobe", default="ffprobe")
+
+    media_report = media_actions.add_parser("report",
+        help="redacted count of source-linked local footage and analysis gaps")
+    media_report.add_argument("--snapshot", type=Path,
+                              default=Path("research/whatships-index-2026-11-10.json"))
+    media_report.add_argument("bindings", type=Path, help="private media-bindings.json")
+    media_report.add_argument("--verify-files", action="store_true",
+                              help="rehash all bound files (can be expensive)")
+
+    media_queue = media_actions.add_parser("queue",
+        help="SHA-verify the private local-media ledger and print a path-redacted eligible queue")
+    media_queue.add_argument("bindings", type=Path, help="private media-bindings.json")
+    media_queue.add_argument("--snapshot", type=Path,
+                             default=Path("research/whatships-index-2026-11-10.json"))
+    media_queue.add_argument("--limit", type=int, default=20)
+
     full_ws = commands.add_parser(
         "whatships-all",
         help="maintain all What Ships video metadata, audit gaps and plan a fair backlog")
@@ -964,6 +1007,23 @@ def main(argv: list[str] | None = None) -> int:
                                                 limit=args.limit)
                 print(json.dumps({"query": query, "results": results, "count": len(results),
                                   "retrievedOn": collection["retrievedOn"]}, indent=2, sort_keys=True))
+            return 0
+        if args.command == "whatships-media":
+            if args.media_action == "bind":
+                print(register_local_media(
+                    args.snapshot, args.video, args.source_id, args.out,
+                    rights_basis=args.rights_basis, rights_note=args.rights_note,
+                    identity_note=args.identity_note,
+                    acknowledge_rights=args.acknowledge_rights,
+                    previous=args.previous, ffprobe=args.ffprobe))
+            elif args.media_action == "report":
+                print(json.dumps(media_coverage(
+                    args.snapshot, args.bindings, verify_files=args.verify_files),
+                    indent=2, sort_keys=True, ensure_ascii=False))
+            else:
+                print(json.dumps(eligible_bound_media(
+                    args.snapshot, args.bindings, limit=args.limit),
+                    indent=2, sort_keys=True, ensure_ascii=False))
             return 0
         if args.command == "whatships-all":
             if args.whatships_action == "enrich":
