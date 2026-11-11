@@ -198,6 +198,45 @@ hypotheses, **not** proof that a particular movie used a specific tool,
 transition or cinematic recipe. Review at full speed with an authorized
 copy before attributing artistic intent or deciding on component gaps.
 
+## What measured image translation says (and does not say)
+
+The [derived image-motion proxies](../research/analysis/movie-promotions/derived/image-motion-proxies.v1.json)
+aggregate the original low-resolution phase-correlation and sparse-flow
+evidence across 13 filmed promotion editions and 39 windows. This is a
+different question from the cut-to-audio experiment above.
+
+| 2D sample status | Number of sampled pairs |
+| --- | ---: |
+| Measured image-translation candidate | 522 |
+| Candidate cut boundary | 246 |
+| Unobservable low texture | 105 |
+| Ambiguous image correlation | 24 |
+| **All sampled phase-correlation pairs** | **897** |
+
+Among those 522 measurable pairs, 303 exceed an explicitly arbitrary,
+exploratory magnitude of 0.01 normalized frame fraction per second.
+A separate sparse-flow pass yielded 64 single-image-translation
+candidates, 12 multiple-image-translation candidates, 159
+insufficient-consensus results, 187 cut-boundary results and 7
+ambiguous-dominant-group results.
+
+A useful numerical contrast to examine by manually reviewing the
+actual footage is *Frozen 2*'s sampled middle (19 measurable
+phase-correlation pairs, 16 above the exploratory magnitude threshold)
+versus *Inside Out 2*'s sampled opening (9 measurable, 2 above).
+**This is not evidence that one film moves the camera more.**
+Object animation, scene content, rendering style, low texture, tracking
+failure and cut boundaries all influence the classifications.
+The original frame sequence was sparsely sampled at 160×90 for image
+translation, so fast motions may alias and fine movements may disappear.
+
+Potential **Kumiki UI design experiments**, pending human interpretation
+of authorized source footage, include distinct presets for
+composition-held moments versus global apparent movement, with
+explicit per-shot confidence/abstention reporting. Do not turn a
+phase-correlation magnitude into a literal camera keyframe without
+scene-level validation or independent reconstructed geometry.
+
 ## Cross-studio comparison questions
 
 | Pair | Controlled question for future source-verified analysis | Why this matters to Kumiki |
