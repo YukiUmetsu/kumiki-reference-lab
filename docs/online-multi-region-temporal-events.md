@@ -83,6 +83,17 @@ estimated generic FPS.
 - Without feature-supported ROI tracks, the result explicitly records
   `not-measured-no-supported-roi-tracks` instead of inventing interactions.
 
+## Optional low-call local visual validation
+
+Pass `--multi-action-model YOUR_MAGNITUDE_VISION_MODEL_ID
+--max-multi-action-calls 8` with seeded or automatically proposed ROIs to
+inspect two color-outlined event anchor frames per bounded local model call.
+The output `multiRegionVisualReview` is separate from deterministic
+`multiRegionTemporal` geometry. Visual labels remain low-confidence
+hypotheses, never confirmed gestures, contact, identity or dialogue.
+Without the flag, this stage makes zero model calls.
+See [event visual review](online-event-visual-review.md).
+
 ## Test
 
     PYTHONPATH=src python -m unittest tests.test_multi_region_temporal -q
