@@ -66,6 +66,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Character interaction evidence QA (new):** [`review-character-interactions` and `character-interaction-feedback`](docs/character-interaction-quality-review.md) replay the exact original source frames with red/cyan actor–target boxes and collect per-pair human verdicts. Positive predictions and abstentions are scored separately; pending/unclear judgments never become apparent successes. All media stays local and inference accuracy remains unverified until adjudicated.
 
+**Automatic local subject localization, including animation:** [`local-character-detect`](docs/local-ollama-subject-detection.md) uses a previously installed localhost Ollama vision model to propose human, cartoon, animal and anthropomorphic bounding boxes from source-PTS-verified video frames. It emits the existing detector schema for provisional tracking and visual QA. Bounding boxes are **model hypotheses**, not accuracy-calibrated detections or verified identities. No remote model/API is required.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
