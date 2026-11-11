@@ -4,9 +4,11 @@ from __future__ import annotations
 import io
 import json
 import random
+import sys
 import tempfile
 import unittest
 from contextlib import redirect_stdout
+from unittest.mock import patch
 from pathlib import Path
 
 from kumiki_reference_lab.analyzers.motion.review import _png_rgb
@@ -48,7 +50,10 @@ def _numeric(count: int = 30, cuts: tuple[int, ...] = (10, 20)) -> dict:
             "frameIndex": i, "decodedSeconds": round(i / 10, 6),
             "decodedPts": i * 100, "cutCandidate": i in cuts,
             "appearance": {"displayLumaProxy": .5,
-                           "meanRgb": [.5, .5, .5]},
+                           "meanRgb": [.5, .5, .5],
+                           "saturationProxy": .25,
+                           "brightPixelFraction": .1,
+                           "darkPixelFraction": .1},
             "changeFromPrevious": (
                 {"meanPixelDelta": difference,
                  "changedPixelFraction": difference} if i else None),
@@ -154,6 +159,35 @@ class TemporalWorkspaceTests(unittest.TestCase):
             self.workspace, study_id=ID,
             watch_url="https://example.org/reference",
             numeric=self.numeric, preview_width=WIDTH, preview_height=HEIGHT)
+
+    def test_cinematic_insights_gets_stdlib_motion_without_cv2(self):
+        from kumiki_reference_lab.pipeline.temporal_motion import build_temporal_motion
+        from kumiki_reference_lab.pipeline.shot_intelligence import build_shot_intelligence
+        shots = build_shot_intelligence(self.numeric)
+        # Force the exact optional-dependency absence that cheap CI and
+        # smaller local systems may experience.
+        with patch.dict(sys.modules, {"cv2": None, "numpy": None}):
+            data = build_temporal_motion(
+                self.workspace, shots, max_pairs=8)
+        self.assertEqual(
+            data["status"], "measured-sampled-stdlib-block-motion-proxies")
+        self.assertEqual(data["reportedPairCount"], len(data["pairs"]))
+        self.assertLessEqual(len(data["pairs"]), 8)
+        self.assertEqual(data["featureTracklets"], [])
+        for pair in data["pairs"]:
+            shot = next(s for s in shots["shots"]
+                        if s["shotId"] == pair["shotId"])
+            self.assertGreaterEqual(
+                pair["startFrameIndex"], shot["startFrameIndex"])
+            self.assertLess(
+                pair["endFrameIndex"], shot["endFrameIndexExclusive"])
+            self.assertEqual(
+                pair["globalImageMotion"]["interpretation"],
+                "not-optical-flow-not-verified-physical-camera")
+            self.assertNotEqual(
+                pair["globalImageMotion"]["status"],
+                "supported-screen-affine-candidate")
+            self.assertIsNone(pair["meanImageFeatureSpeedPixelsPerSecond"])
 
     def test_png_roundtrip_and_crc_detection(self):
         path = self.workspace / "frames" / "frame-000000.png"
