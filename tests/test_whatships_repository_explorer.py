@@ -129,6 +129,21 @@ class WhatshipsRepositoryExplorerTests(unittest.TestCase):
         self.assertEqual(data["sourcePtsNumericVideoCount"],0)
         self.assertEqual(data["fullyHumanReviewedVideoCount"],0)
 
+    def test_committed_observed_technique_rollup_matches_current_source_records(self):
+        # The committed aggregate is data, not an illustrative report. Force
+        # updates whenever canonical source-linked video observations change.
+        computed = summarize_tracked_whatships_observations(
+            ROOT/"research/whatships-index-2026-11-10.json",
+            ROOT/"research/analysis/whatships")
+        stored = json.loads((
+            ROOT/"research/analysis/whatships-observed-techniques-2026-11-10.json"
+        ).read_text())
+        self.assertEqual(stored, computed)
+        self.assertEqual(stored["partiallyObservedVideoCount"],9)
+        self.assertEqual(stored["catalogVideoCount"],2861)
+        self.assertEqual(stored["fullyHumanReviewedVideoCount"],0)
+        self.assertEqual(stored["observedVisualTags"]["product-ui-demo"],4)
+
     def test_cli_browse_can_disable_committed_overlay(self):
         out=self.work/"cli-browser"
         buf=io.StringIO()

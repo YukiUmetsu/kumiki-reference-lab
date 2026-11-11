@@ -98,6 +98,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Search research evidence already checked into Git:** `whatships-all browse --out runs/whatships-catalog` overlays the validated `research/analysis/whatships/` per-video observations by default. `whatships-all research-report` counts source-linked visual tags and true sampled-PTS metrics without inventing camera/lighting labels or treating catalog entries as reviewed videos. See [where the video data lives](docs/whatships-video-data-location.md).
 
+**Observed technique frequencies are stored in Git:** [What Ships November 10 technique rollup](research/analysis/whatships-observed-techniques-2026-11-10.json) summarizes the nine source-linked partial browser observations and explicitly distinguishes them from the 2,861 indexed videos and zero complete human-reviewed films. CI verifies this derived report against the canonical per-video JSON; do not extrapolate the nine-video cohort to overall What Ships popularity.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |

@@ -79,3 +79,7 @@ PYTHONPATH=src python -m kumiki_reference_lab whatships-all research-report \
 ```
 
 By default `browse` reads the committed evidence corpus, shows observed video moments and their technique hypotheses, and filters by saved observations. `--no-repository-analysis` disables this layer. `research-report` counts only evidence that is in the codebase, not unobserved catalog metadata. The original nine partial browser observations have no original frame timestamps. Tag frequencies are not population estimates.
+
+## Committed cross-video technique summary
+
+The dated [source-observation technique rollup](../research/analysis/whatships-observed-techniques-2026-11-10.json) reports per-tag frequencies for the nine partially observed videos, per-category counts, and the total 2,861-video catalog denominator. These counts describe **only explicitly recorded visual observations**, not all the indexed films, and cannot support claims about causal virality, lighting frequencies or camera movements. The lightweight GitHub CI recomputes the report from the canonical source records, so editing/adding research observations requires updating this summary in the same commit.

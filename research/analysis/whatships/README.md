@@ -73,3 +73,7 @@ The store is intended for future category-level statistics, engineering regressi
 ## Analyze the saved cohort without private footage
 
 Use `whatships-all research-report` to count and group *actual committed observations*, visual tags and later original-PTS measurements. `whatships-all browse --out runs/whatships-catalog` builds an offline HTML table from the full dated catalog and overlays this verified `research/analysis/whatships/` dataset by default. Select **Saved visual observations** to see films with observed moments; open Details to read the observations and explicitly labeled technique hypotheses. This does not turn metadata-only entries into analyzed videos.
+
+## Committed cross-video technique summary
+
+The dated [source-observation technique rollup](../whatships-observed-techniques-2026-11-10.json) reports per-tag frequencies for the nine partially observed videos, per-category counts, and the total 2,861-video catalog denominator. These counts describe **only explicitly recorded visual observations**, not all the indexed films, and cannot support claims about causal virality, lighting frequencies or camera movements. The lightweight GitHub CI recomputes the report from the canonical source records, so editing/adding research observations requires updating this summary in the same commit.
