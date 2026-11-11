@@ -92,6 +92,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Actual-frame appearance and editing proxies:** [`source-visual-probe`](docs/source-pts-visual-probes.md) measures original-PTS-sampled display RGB brightness/saturation, image-change magnitude and FFmpeg hard-cut candidates for authorized local footage, including later windows up to one hour. It does **not** infer real lights, camera trajectory, lens, style or artistic intent from these numeric proxies.
 
+**No-repeat numeric visual backfill:** [`whatships-visual-backfill`](docs/whatships-visual-backfill.md) adds original-PTS cut/color/brightness/image-change measurements to previously completed private What Ships character studies without rerunning VLM inference. All outputs are SHA-bound and resumable, and redacted reports never imply that camera/lighting/style judgments are verified.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
