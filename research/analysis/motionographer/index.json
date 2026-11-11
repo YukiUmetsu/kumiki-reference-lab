@@ -1,10 +1,11 @@
 {
   "schemaVersion": "kumiki.motionographer-index.v1",
-  "generatedAt": "2026-11-11T21:02:23.373543Z",
+  "generatedAt": "2026-11-11T21:07:44.091041Z",
   "catalogSha256": "23f813dafb11e546fc8c62f962bf435b8d7aa75e4a00f3c4179f6459e68b7893",
   "counts": {
+    "measured": 5,
     "no-video": 7385,
-    "pending": 63,
+    "pending": 58,
     "unsupported-format": 1053,
     "unsupported-host-not-allowlisted": 17,
     "unsupported-other-embed": 56,
@@ -39,7 +40,18 @@
       "mediaSlug": "dreamcat-making-of",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 36.245011,
+      "resolution": [
+        1280,
+        720
+      ],
+      "sourceSha256": "944446dfa9983432ca1e83930cee1ee582dc8b02b1ea22be9a8ac9905469c3f0",
+      "windowCount": 3,
+      "cutCandidateRatePerMinute": 42.0,
+      "meanDisplayLuma": 0.365962,
+      "meanSaturation": 0.297872,
+      "recordPath": "videos/im-having-a-breakdown-dreamcat-the-monster-that-wasnt-his--dreamcat-making-of.json"
     },
     {
       "postId": 92493,
@@ -49,7 +61,18 @@
       "mediaSlug": "dreamcat-monster-breakdown",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 3.32,
+      "resolution": [
+        1920,
+        920
+      ],
+      "sourceSha256": "e35742af54c36f956ae65b3cdf4838888803737db886126a3e4caf8edfd4c311",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.119986,
+      "meanSaturation": 0.33964,
+      "recordPath": "videos/im-having-a-breakdown-dreamcat-the-monster-that-wasnt-his--dreamcat-monster-breakdown.json"
     },
     {
       "postId": 92493,
@@ -59,7 +82,18 @@
       "mediaSlug": "dreamcat-forest-breakdown",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 12.48,
+      "resolution": [
+        1920,
+        920
+      ],
+      "sourceSha256": "3f41f43f1eb5f0df4618a7aa0606cc75ce1584a11f14f730772a465244b547f1",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.121094,
+      "meanSaturation": 0.335171,
+      "recordPath": "videos/im-having-a-breakdown-dreamcat-the-monster-that-wasnt-his--dreamcat-forest-breakdown.json"
     },
     {
       "postId": 92493,
@@ -69,7 +103,18 @@
       "mediaSlug": "dreamcat-studio-breakdown",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 13.44,
+      "resolution": [
+        1920,
+        920
+      ],
+      "sourceSha256": "9da80a27fa6297777d3ad9d38c99fff8ac147670563d6d2573ab6ba30bd02cb9",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 24.0,
+      "meanDisplayLuma": 0.379746,
+      "meanSaturation": 0.335607,
+      "recordPath": "videos/im-having-a-breakdown-dreamcat-the-monster-that-wasnt-his--dreamcat-studio-breakdown.json"
     },
     {
       "postId": 92493,
@@ -79,7 +124,18 @@
       "mediaSlug": "dreamcat-ending-breakdown",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 50.16,
+      "resolution": [
+        1280,
+        612
+      ],
+      "sourceSha256": "cb41a9439c529e7c381639e71648c871bef93c47070cdc4bb418dc0ea0d680db",
+      "windowCount": 4,
+      "cutCandidateRatePerMinute": 61.5,
+      "meanDisplayLuma": 0.422323,
+      "meanSaturation": 0.221543,
+      "recordPath": "videos/im-having-a-breakdown-dreamcat-the-monster-that-wasnt-his--dreamcat-ending-breakdown.json"
     },
     {
       "postId": 92493,
