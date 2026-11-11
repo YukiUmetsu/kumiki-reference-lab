@@ -108,8 +108,7 @@ class BlenderPublisherResearchTests(unittest.TestCase):
         index = json.loads(source)
         self.assertTrue(any(x["id"] == research.TARGETS["overgrown"]["id"]
                             for x in index["videos"]))
-        self.assertFalse(any(x["id"] == research.TARGETS["agent327"]["id"]
-                             for x in index["videos"]))
+        self.assertEqual(len({x["id"] for x in index["videos"]}), len(index["videos"]))
         self.assertEqual(source, research.INDEX.read_bytes())
 
 
