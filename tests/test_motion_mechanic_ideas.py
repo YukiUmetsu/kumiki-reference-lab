@@ -161,7 +161,7 @@ class OriginalMechanicIdeasTests(unittest.TestCase):
             self.assertEqual(mechanics["sourceSha256"], HASH)
             self.assertLessEqual(mechanics["proposedMechanicCount"], 3)
             self.assertTrue(mechanics["proposals"])
-            self.assertIn("not-executable", json.dumps(mechanics["limitations"]))
+            self.assertIn("No executable animation", json.dumps(mechanics["limitations"]))
             self.assertFalse(any(
                 item["registryApiVerifiedForThisRecipe"]
                 for item in mechanics["proposals"]
