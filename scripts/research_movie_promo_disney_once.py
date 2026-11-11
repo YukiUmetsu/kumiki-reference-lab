@@ -1,6 +1,6 @@
-"""One-shot, source-hashed analysis of an openly playable Disney trailer.
+"""One-shot, source-hashed analysis of a public Apple movie promotional preview.
 
-Only downloads a public, unauthenticated publisher stream. All audiovisual
+Only downloads a public, unauthenticated Apple Store promotional preview. All audiovisual
 media and image galleries live in TemporaryDirectory and are deleted before
 the resulting numeric JSON is staged. Never circumvent DRM or authorization.
 """
@@ -12,13 +12,13 @@ import hashlib
 import json
 import math
 import re
-import shutil
 import statistics
 import subprocess
 import tempfile
-from datetime import date
 from fractions import Fraction
 from pathlib import Path
+from urllib.parse import urlencode, urlparse
+from urllib.request import Request, urlopen
 
 from scripts.audit_movie_promo_evidence import audit
 from scripts.export_movie_promo_evidence import build_evidence
@@ -28,9 +28,9 @@ from scripts.summarize_movie_promo_evidence import build_comparison
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "research/analysis/movie-promotions"
 INDEX = DATA / "index.json"
-DETAIL = DATA / "elemental-official-trailer.json"
-SOURCE_URL = "https://video.disney.com/watch/elemental-official-trailer-5f7f993024c6cebd6b4f2a72"
-VIDEO_ID = "elemental-official-trailer"
+DETAIL = DATA / "wild-robot-apple-preview.json"
+VIDEO_ID = "wild-robot-apple-preview"
+APPLE_SEARCH = "https://itunes.apple.com/search"
 
 
 def run(*command: str, output: bool = False) -> str:
@@ -99,17 +99,64 @@ def window_summary(window: dict) -> dict:
     }
 
 
-def acquire_public_source(directory: Path) -> Path:
+def _apple_host(url: str) -> bool:
+    parsed = urlparse(url)
+    host = parsed.hostname or ""
+    return parsed.scheme == "https" and (
+        host in {"itunes.apple.com", "video-ssl.itunes.apple.com", "mzstatic.com"}
+        or host.endswith(".mzstatic.com")
+        or host.endswith(".itunes.apple.com")
+    )
+
+
+def acquire_public_source(directory: Path) -> tuple[Path, dict]:
+    # Official US iTunes movie catalog. No cookies, account, geo tricks, DRM,
+    # rented film, proxy, scraping of private endpoints, or third-party mirrors.
+    query = APPLE_SEARCH + "?" + urlencode({
+        "term": "The Wild Robot", "country": "US", "media": "movie",
+        "entity": "movie", "limit": 25,
+    })
+    with urlopen(Request(query, headers={"Accept": "application/json"}),
+                 timeout=40) as response:
+        payload = response.read(1_000_001)
+    if len(payload) > 1_000_000:
+        raise ValueError("Apple API response unexpectedly large")
+    options = json.loads(payload)["results"]
+    eligible = [
+        item for item in options
+        if item.get("trackName", "").strip().casefold() == "the wild robot"
+        and str(item.get("releaseDate", "")).startswith("2024")
+        and isinstance(item.get("previewUrl"), str)
+        and isinstance(item.get("trackId"), int)
+        and isinstance(item.get("trackViewUrl"), str)
+        and _apple_host(item["previewUrl"])
+        and _apple_host(item["trackViewUrl"])
+    ]
+    if not eligible:
+        raise ValueError("Apple did not offer an exact 2024 Wild Robot movie preview")
+    if len({item["trackId"] for item in eligible}) > 1:
+        raise ValueError("Apple returned ambiguous multiple exact-title movie editions")
+    item = eligible[0]
     target = directory / (VIDEO_ID + ".mp4")
-    # The normal publisher stream only: no cookies, authentication, proxies,
-    # DRM workarounds or third-party mirror URLs. yt-dlp's Disney extractor.
-    run("yt-dlp", "--no-playlist", "--no-progress", "--no-warnings",
-        "--max-filesize", "200M",
-        "-f", "best[ext=mp4][height<=480]/best[ext=mp4]",
-        "-o", str(target), SOURCE_URL)
-    if not target.is_file() or target.stat().st_size < 100_000:
-        raise ValueError("publisher did not provide a usable public MP4")
-    return target
+    request = Request(item["previewUrl"], headers={"Accept": "video/*"})
+    total = 0
+    with urlopen(request, timeout=90) as response:
+        if not _apple_host(response.geturl()):
+            raise ValueError("Apple preview redirected to unapproved host")
+        with target.open("wb") as outfile:
+            while chunk := response.read(1024 * 1024):
+                total += len(chunk)
+                if total > 200 * 1024 * 1024:
+                    raise ValueError("Apple preview exceeds 200 MiB safety budget")
+                outfile.write(chunk)
+    if total < 100_000:
+        raise ValueError("Apple returned no usable public promotional media")
+    # Never retain a temporary preview/CDN URL in Git.
+    return target, {
+        "sourceTrackId": str(item["trackId"]),
+        "officialPlayerUrl": item["trackViewUrl"].split("?")[0],
+        "sourceEdition": "Apple iTunes Store promotional movie preview (not the verified YouTube trailer)",
+    }
 
 
 def generate() -> None:
@@ -125,7 +172,7 @@ def generate() -> None:
         runs_root = temp / "runs"
         media.mkdir()
         runs_root.mkdir()
-        original = acquire_public_source(media)
+        original, edition = acquire_public_source(media)
         duration, resolution = media_info(original)
         original_sha = sha256_file(original)
         offsets = {
@@ -137,12 +184,14 @@ def generate() -> None:
             raise ValueError("sample windows overlap or exceed the original")
         plan = {
             "id": VIDEO_ID,
-            "catalogId": "uncataloged-disney-elemental-official-trailer",
-            "officialPlayerUrl": SOURCE_URL,
+            "catalogId": "uncataloged-apple-wild-robot-preview",
+            "officialPlayerUrl": edition["officialPlayerUrl"],
+            "sourceTrackId": edition["sourceTrackId"],
+            "sourceEdition": edition["sourceEdition"],
             "sourceSha256": original_sha,
             "sourceDurationSeconds": duration,
             "sourceResolution": resolution,
-            "catalogUploadIdentityMatch": "not-cataloged",
+            "catalogUploadIdentityMatch": "not-verified",
             "windows": [],
         }
         for name, offset in offsets.items():
@@ -179,7 +228,9 @@ def generate() -> None:
             "sourceSha256": plan["sourceSha256"],
             "sourceDurationSeconds": duration,
             "sourceResolution": resolution,
-            "catalogUploadIdentityMatch": "not-cataloged",
+            "catalogUploadIdentityMatch": "not-verified",
+            "sourceTrackId": edition["sourceTrackId"],
+            "sourceEdition": edition["sourceEdition"],
             "windows": summaries,
         }
         index["videos"].append(record)
@@ -189,9 +240,10 @@ def generate() -> None:
             "source-hashed movie promotions; not whole-trailer coverage."
         )
         index["method"] += (
-            " Additional Elemental official Disney public-player video was "
-            "downloaded with unauthenticated public access, hashed, measured "
-            "in three bounded windows, and deleted immediately after export."
+            " Additional The Wild Robot public Apple retail preview was "
+            "downloaded without authentication, hashed, measured in three "
+            "bounded windows, and deleted immediately after export. It is "
+            "not verified identical to the DreamWorks YouTube upload."
         )
         index["mediaCleanupStatus"] = "verified-deleted-after-export"
         # Fail closed while the temporary footage still exists: nothing is
