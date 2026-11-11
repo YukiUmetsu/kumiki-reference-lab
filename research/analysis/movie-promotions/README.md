@@ -20,10 +20,10 @@ Otherwise the source Git blob hashes and cross-file indexes are stale.
 ```bash
 # After numeric-only source evidence is exported and audited:
 python scripts/audit_movie_promo_evidence.py
-python scripts/rebuild_movie_promo_derived.py
+python -m scripts.rebuild_movie_promo_derived
 
 # Before committing, verify all three against the measured source files:
-python scripts/rebuild_movie_promo_derived.py --verify
+python -m scripts.rebuild_movie_promo_derived --verify
 PYTHONPATH=. python -m unittest tests.test_movie_promo_derivation_pipeline -q
 ```
 
