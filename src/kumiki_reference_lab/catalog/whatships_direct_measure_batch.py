@@ -27,6 +27,7 @@ def measure_whatships_batch(
     max_videos: int = 2, start_offset: int = 0, category: str | None = None,
     window_seconds: int = 10, window_count: int = 4, max_samples: int = 12,
     width: int = 160, height: int = 90, cut_threshold: float = .25,
+    image_translation: bool = False,
     ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
 ) -> dict[str, Any]:
     """Process unmeasured bound videos in category-balanced catalog order.
@@ -36,7 +37,8 @@ def measure_whatships_batch(
     --start-offset, without lying that a study succeeded.
     """
     if (type(max_videos) is not int or not 1 <= max_videos <= 4 or
-            type(start_offset) is not int or start_offset < 0):
+            type(start_offset) is not int or start_offset < 0 or
+            type(image_translation) is not bool):
         raise ValueError("batch accepts 1..4 authorized videos and a nonnegative offset")
     if category is not None and category not in (
             "ai","developer-tools","design","motion","productivity",
@@ -89,7 +91,7 @@ def measure_whatships_batch(
                 window_seconds=window_seconds,window_count=window_count,
                 max_samples=max_samples,width=width,height=height,
                 cut_threshold=cut_threshold,ffmpeg=ffmpeg,ffprobe=ffprobe,
-                replace_existing=False)
+                replace_existing=False,image_translation=image_translation)
             # Cross-check that the requested source is really stored in the
             # verified Git corpus before incrementing the completed count.
             validate_repository_analysis(repository_root,snapshot_path)
