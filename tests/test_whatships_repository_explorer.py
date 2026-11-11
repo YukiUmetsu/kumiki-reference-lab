@@ -101,7 +101,7 @@ class WhatshipsRepositoryExplorerTests(unittest.TestCase):
         self.assertIn("not population estimates",report["methodLimits"][2])
 
     def test_invalid_repository_snapshot_fails_closed(self):
-        with self.assertRaisesRegex(ValueError,"snapshot"):
+        with self.assertRaisesRegex(ValueError,"source mismatch"):
             build_whatships_browser(
                 ROOT/"research/whatships-index-2026-11-10.json",
                 repository_root=self.repository)
