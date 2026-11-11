@@ -1,11 +1,11 @@
 {
   "schemaVersion": "kumiki.motionographer-index.v1",
-  "generatedAt": "2026-11-11T21:10:23.844490Z",
+  "generatedAt": "2026-11-11T21:10:48.694795Z",
   "catalogSha256": "23f813dafb11e546fc8c62f962bf435b8d7aa75e4a00f3c4179f6459e68b7893",
   "counts": {
-    "measured": 25,
+    "measured": 30,
     "no-video": 7385,
-    "pending": 38,
+    "pending": 33,
     "unsupported-format": 1053,
     "unsupported-host-not-allowlisted": 17,
     "unsupported-other-embed": 56,
@@ -7145,7 +7145,18 @@
       "mediaSlug": "Patreon_BTS_03",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 4.25,
+      "resolution": [
+        720,
+        526
+      ],
+      "sourceSha256": "34e4f1d60102063917d5209c94589767c98c3474e8c6f7ebc5f2cd32e91617a1",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.250804,
+      "meanSaturation": 0.353557,
+      "recordPath": "videos/making-the-motionographer-patreon-launch-video--Patreon_BTS_03.json"
     },
     {
       "postId": 63700,
@@ -7215,7 +7226,18 @@
       "mediaSlug": "2016-04-26_16x9_capture_mg_v1",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 33.25,
+      "resolution": [
+        1438,
+        828
+      ],
+      "sourceSha256": "ee1ca66066ff0f7181c7affac2555f60102baf613ea435ec890f4463a7af3fab",
+      "windowCount": 2,
+      "cutCandidateRatePerMinute": 15.0,
+      "meanDisplayLuma": 0.779369,
+      "meanSaturation": 0.065159,
+      "recordPath": "videos/animade-launches-boords-storyboarding-tool--2016-04-26_16x9_capture_mg_v1.json"
     },
     {
       "postId": 63496,
@@ -7245,7 +7267,18 @@
       "mediaSlug": "squall-shortDemo",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 68.133333,
+      "resolution": [
+        1200,
+        592
+      ],
+      "sourceSha256": "d2bbabcb3c78b03e42ca2405fec567b524add913e8da1f82cfa2dc94b9cb7787",
+      "windowCount": 4,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.147508,
+      "meanSaturation": 0.296961,
+      "recordPath": "videos/marcus-eckert-releases-squall-for-ae-to-ios-workflow--squall-shortDemo.json"
     },
     {
       "postId": 63487,
@@ -7255,7 +7288,18 @@
       "mediaSlug": "transition-letter",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 5.233333,
+      "resolution": [
+        1280,
+        720
+      ],
+      "sourceSha256": "ff9e637aeaca491068512232383d3c3bde72c124bab946e4d86cc01cae63cac3",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.121582,
+      "meanSaturation": 0.166376,
+      "recordPath": "videos/marcus-eckert-releases-squall-for-ae-to-ios-workflow--transition-letter.json"
     },
     {
       "postId": 63447,
@@ -7775,7 +7819,18 @@
       "mediaSlug": "Avocado_Pregnant",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 5.2,
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sourceSha256": "769405fb892464b95001b1b1013809d2b16def882e788fe94659fe7c04dccf4e",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.973568,
+      "meanSaturation": 0.022882,
+      "recordPath": "videos/process-the-feel-good-bakery--Avocado_Pregnant.json"
     },
     {
       "postId": 62618,
