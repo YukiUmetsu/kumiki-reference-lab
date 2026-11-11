@@ -187,7 +187,7 @@ class OllamaCharacterVisionTests(unittest.TestCase):
         ):
             with self.subTest(change=change), self.assertRaises(ValueError):
                 describe_local_characters(self.source, self.report, self.out,
-                                          model="vision:8b", **change)
+                                          **{"model": "vision:8b", **change})
         self.assertFalse(self.out.exists())
 
     def test_cli_arguments(self):
