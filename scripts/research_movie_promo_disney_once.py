@@ -147,7 +147,7 @@ def generate() -> None:
                 run("ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
                     "-ss", str(offset), "-i", str(original), "-t", "20",
                     "-map", "0:v:0", "-map", "0:a:0",
-                    "-vf", "scale=trunc(min(960,iw)/2)*2:-2",
+                    "-vf", "scale=640:-2",
                     "-c:v", "libx264", "-preset", "veryfast", "-crf", "25",
                     "-c:a", "aac", "-b:a", "96k", str(clip))
             if not clip.is_file():
