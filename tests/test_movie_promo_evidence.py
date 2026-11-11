@@ -3,6 +3,8 @@
 import json
 import re
 import unittest
+from uuid import UUID
+from urllib.parse import urlparse
 from pathlib import Path
 
 
@@ -21,15 +23,17 @@ class MoviePromoEvidenceTests(unittest.TestCase):
             "inside-out-2", "frozen-2", "moana-2", "infinity-war",
             "endgame", "zootopia-2", "force-awakens", "barbie",
             "oppenheimer", "spider-man-no-way-home", "dune-part-two",
-            "super-mario-bros", "deadpool-wolverine",
+            "super-mario-bros", "deadpool-wolverine", "overgrown-blender-teaser",
         }
         ids = [video["id"] for video in summary["videos"]]
         self.assertEqual(len(ids), len(set(ids)), "duplicate trailer IDs")
         self.assertTrue(expected_sources.issubset(ids))
         self.assertEqual(
             {path.name for path in EVIDENCE.glob("*.json")},
-            {"index.json", *(video_id + ".json" for video_id in ids)},
-            "each summary trailer must have exactly one tracked evidence file",
+            {"index.json", "study-queue.v1.json",
+             *(video_id + ".json" for video_id in ids)},
+            "each summary trailer must have exactly one tracked evidence file "
+            "and study-queue metadata must remain separate",
         )
         sha = re.compile(r"^[0-9a-f]{64}$")
         for video in summary["videos"]:
@@ -45,7 +49,18 @@ class MoviePromoEvidenceTests(unittest.TestCase):
                     self.assertEqual(report["sourceTrackId"], video["sourceTrackId"])
                     self.assertEqual(video["catalogUploadIdentityMatch"], "not-verified")
                     self.assertEqual(report["catalogUploadIdentityMatch"], "not-verified")
-                    self.assertTrue(video["sourceTrackId"].isdigit())
+                    edition = video["sourceEdition"]
+                    if edition.startswith("Apple iTunes Store"):
+                        self.assertTrue(video["sourceTrackId"].isdigit())
+                    elif edition.startswith("Blender Studio official PeerTube"):
+                        source_uuid = UUID(video["sourceTrackId"])
+                        self.assertEqual(str(source_uuid), video["sourceTrackId"])
+                        url = urlparse(video["officialPlayerUrl"])
+                        self.assertEqual(url.scheme, "https")
+                        self.assertEqual(url.hostname, "video.blender.org")
+                        self.assertEqual(url.path, f"/videos/watch/{source_uuid}")
+                    else:
+                        self.fail(f"unverified promotional source edition: {edition}")
                 self.assertEqual([w["window"] for w in report["windows"]],
                                  ["opening", "middle", "ending"])
                 for reported, planned in zip(report["windows"], video["windows"], strict=True):
