@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - scripts/research_movie_promo_disney_once.py
+      - scripts/audit_movie_promo_evidence.py
+      - tests/test_movie_promo_evidence_audit.py
       - .github/workflows/measure-disney-trailer-once.yml
 
 permissions:
