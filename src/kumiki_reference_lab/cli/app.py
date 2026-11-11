@@ -70,6 +70,7 @@ from kumiki_reference_lab.pipeline.character_motion import run_character_motion
 from kumiki_reference_lab.pipeline.subject_detections import run_subject_detections
 from kumiki_reference_lab.pipeline.subject_tracklet_review import build_subject_tracklet_review
 from kumiki_reference_lab.pipeline.ollama_character_perception import describe_local_characters
+from kumiki_reference_lab.pipeline.ollama_subject_detection import detect_local_ollama_subjects
 from kumiki_reference_lab.pipeline.local_character_interactions import analyze_local_interactions
 from kumiki_reference_lab.pipeline.interaction_review import (
     build_interaction_review, summarize_interaction_feedback,
@@ -706,6 +707,23 @@ def build_parser() -> argparse.ArgumentParser:
     interactions.add_argument("--height", type=int, default=180)
     interactions.add_argument("--ffmpeg", default="ffmpeg")
     interactions.add_argument("--ffprobe", default="ffprobe")
+    local_subjects = commands.add_parser(
+        "local-character-detect",
+        help="propose human, animated and animal subject boxes with already installed local Ollama vision model")
+    local_subjects.add_argument("source", type=Path, help="authorized local reference video")
+    local_subjects.add_argument("--out", type=Path, required=True, help="new subject detection JSON")
+    local_subjects.add_argument("--model", required=True, help="locally installed Ollama vision model")
+    local_subjects.add_argument("--port", type=int, default=11434)
+    local_subjects.add_argument("--max-seconds", type=int, default=10)
+    local_subjects.add_argument("--max-samples", type=int, default=8)
+    local_subjects.add_argument("--width", type=int, default=320)
+    local_subjects.add_argument("--height", type=int, default=180)
+    local_subjects.add_argument("--threshold", type=float, default=0.25)
+    local_subjects.add_argument("--timeout-seconds", type=int, default=180)
+    local_subjects.add_argument("--ffmpeg", default="ffmpeg")
+    local_subjects.add_argument("--ffprobe", default="ffprobe")
+    local_subjects.add_argument("--rights-status", choices=RIGHTS_STATUSES,
+                                default="review-required")
     local_vision = commands.add_parser(
         "local-character-vision",
         help="describe visual subject crops and two-frame motion using a local Ollama vision model")
@@ -980,6 +998,14 @@ def main(argv: list[str] | None = None) -> int:
                 port=args.port, max_pairs=args.max_pairs, gap_seconds=args.gap_seconds,
                 scan_seconds=args.scan_seconds, timeout_seconds=args.timeout_seconds,
                 width=args.width, height=args.height, ffmpeg=args.ffmpeg, ffprobe=args.ffprobe))
+            return 0
+        if args.command == "local-character-detect":
+            print(detect_local_ollama_subjects(
+                args.source, args.out, model=args.model, port=args.port,
+                seconds=args.max_seconds, max_samples=args.max_samples,
+                width=args.width, height=args.height, cut_threshold=args.threshold,
+                timeout_seconds=args.timeout_seconds, ffmpeg=args.ffmpeg,
+                ffprobe=args.ffprobe, rights_status=args.rights_status))
             return 0
         if args.command == "local-character-vision":
             print(describe_local_characters(
