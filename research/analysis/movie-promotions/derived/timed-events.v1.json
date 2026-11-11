@@ -1,0 +1,3415 @@
+{
+  "schemaVersion": "kumiki.movie-promotion-timed-events.v1",
+  "sourceIndexGitBlobSha": "6c51281975542635e3c8b6d0beef8486f359b0b7",
+  "method": "Source-PTS rational cut and audio RMS-rise candidates from source-hashed local study windows. Cut candidates use detector 0.25; audio attacks use the original pre-existing level-rise detector. Cut bins are [0,5), [5,10), [10,15), [15,20) seconds per selected clip. Nearest audio attack is signed audio-minus-video milliseconds, with 250ms inclusive proximity.",
+  "limitations": "Only three selected 20-second windows per source, not entire trailer. Cut candidates can be flashes/changes, audio RMS rises are not validated music beats, dialogue, or effects; nearness is not causality or creative synchronization. Reencoded middle/end clips have approximate original offsets. No copied media, visual scene tags or physical-camera inferences.",
+  "coverage": {
+    "sourceCount": 13,
+    "windowCount": 39,
+    "sampledSeconds": 780,
+    "cutCandidateCount025": 268,
+    "audioLevelAttackCandidateCount": 109,
+    "cutCandidatesWithin250MsOfAudioAttack": 25
+  },
+  "videos": [
+    {
+      "id": "barbie",
+      "catalogId": "warner-barbie-main-trailer",
+      "originalSourceSha256": "e947627b15eef96baf9a7273d679bd88a95345480a50bb38c4b6ec7f169eb2e9",
+      "detailGitBlobSha": "24e42011a032ee7f2718b3232242a5af69c248e5",
+      "sourceEdition": "Apple iTunes Store promotional movie preview (not verified identical to catalog YouTube upload)",
+      "catalogUploadIdentityMatch": "not-verified",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "e947627b15eef96baf9a7273d679bd88a95345480a50bb38c4b6ec7f169eb2e9",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 24000,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "exact-opening",
+          "cutCandidateCount025": 7,
+          "audioLevelAttackCandidateCount": 7,
+          "cutCandidatesWithin250MsOfAudioAttack": 2,
+          "cutCandidateCountsByFiveSecondBin": [
+            1,
+            2,
+            2,
+            2
+          ],
+          "medianInteriorCandidateGapSeconds": 2.690187,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 24024,
+              "localSeconds": 1.001,
+              "nearestAudioAttackDeltaMs": 19,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 144144,
+              "localSeconds": 6.006,
+              "nearestAudioAttackDeltaMs": -4986,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 200200,
+              "localSeconds": 8.341667,
+              "nearestAudioAttackDeltaMs": 3476,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 273273,
+              "localSeconds": 11.386375,
+              "nearestAudioAttackDeltaMs": 431,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 305305,
+              "localSeconds": 12.721042,
+              "nearestAudioAttackDeltaMs": -904,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 449449,
+              "localSeconds": 18.727042,
+              "nearestAudioAttackDeltaMs": -245,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 473473,
+              "localSeconds": 19.728042,
+              "nearestAudioAttackDeltaMs": -666,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 44992,
+              "localSeconds": 1.020227,
+              "measuredRmsRiseDb": 35.0006
+            },
+            {
+              "sourceAudioPts": 521152,
+              "localSeconds": 11.817506,
+              "measuredRmsRiseDb": 14.531
+            },
+            {
+              "sourceAudioPts": 738240,
+              "localSeconds": 16.740136,
+              "measuredRmsRiseDb": 13.2839
+            },
+            {
+              "sourceAudioPts": 744384,
+              "localSeconds": 16.879456,
+              "measuredRmsRiseDb": 12.5356
+            },
+            {
+              "sourceAudioPts": 761792,
+              "localSeconds": 17.274195,
+              "measuredRmsRiseDb": 14.9698
+            },
+            {
+              "sourceAudioPts": 815040,
+              "localSeconds": 18.481633,
+              "measuredRmsRiseDb": 12.3517
+            },
+            {
+              "sourceAudioPts": 840640,
+              "localSeconds": 19.062132,
+              "measuredRmsRiseDb": 20.017
+            }
+          ]
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "9a79ad3351b3e92b7b699ab62cf24140e216af0646a451092ac23ca748e25230",
+          "sourceOffsetSeconds": 71,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 24000,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 10,
+          "audioLevelAttackCandidateCount": 9,
+          "cutCandidatesWithin250MsOfAudioAttack": 1,
+          "cutCandidateCountsByFiveSecondBin": [
+            1,
+            2,
+            2,
+            5
+          ],
+          "medianInteriorCandidateGapSeconds": 1.209542,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 64047,
+              "localSeconds": 2.668625,
+              "nearestAudioAttackDeltaMs": 373,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 121104,
+              "localSeconds": 5.046,
+              "nearestAudioAttackDeltaMs": -123,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 150133,
+              "localSeconds": 6.255542,
+              "nearestAudioAttackDeltaMs": -1333,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 323306,
+              "localSeconds": 13.471083,
+              "nearestAudioAttackDeltaMs": -8548,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 358341,
+              "localSeconds": 14.930875,
+              "nearestAudioAttackDeltaMs": -10008,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 382365,
+              "localSeconds": 15.931875,
+              "nearestAudioAttackDeltaMs": -11009,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 442425,
+              "localSeconds": 18.434375,
+              "nearestAudioAttackDeltaMs": -13512,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 454437,
+              "localSeconds": 18.934875,
+              "nearestAudioAttackDeltaMs": -14012,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 466449,
+              "localSeconds": 19.435375,
+              "nearestAudioAttackDeltaMs": -14513,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 478461,
+              "localSeconds": 19.935875,
+              "nearestAudioAttackDeltaMs": -15013,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 58368,
+              "localSeconds": 1.323537,
+              "measuredRmsRiseDb": 16.2545
+            },
+            {
+              "sourceAudioPts": 70656,
+              "localSeconds": 1.602177,
+              "measuredRmsRiseDb": 15.0042
+            },
+            {
+              "sourceAudioPts": 92160,
+              "localSeconds": 2.089796,
+              "measuredRmsRiseDb": 38.265
+            },
+            {
+              "sourceAudioPts": 134144,
+              "localSeconds": 3.041814,
+              "measuredRmsRiseDb": 25.8786
+            },
+            {
+              "sourceAudioPts": 151552,
+              "localSeconds": 3.436553,
+              "measuredRmsRiseDb": 12.1584
+            },
+            {
+              "sourceAudioPts": 181248,
+              "localSeconds": 4.109932,
+              "measuredRmsRiseDb": 13.0482
+            },
+            {
+              "sourceAudioPts": 200704,
+              "localSeconds": 4.551111,
+              "measuredRmsRiseDb": 24.0963
+            },
+            {
+              "sourceAudioPts": 208896,
+              "localSeconds": 4.736871,
+              "measuredRmsRiseDb": 12.6332
+            },
+            {
+              "sourceAudioPts": 217088,
+              "localSeconds": 4.92263,
+              "measuredRmsRiseDb": 12.2774
+            }
+          ]
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "787469667a23a2dc9767c61dd75a903aa82cdbec2cf48f2b025f202ac95e7bfc",
+          "sourceOffsetSeconds": 141,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 24000,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 13,
+          "audioLevelAttackCandidateCount": 9,
+          "cutCandidatesWithin250MsOfAudioAttack": 3,
+          "cutCandidateCountsByFiveSecondBin": [
+            2,
+            4,
+            5,
+            2
+          ],
+          "medianInteriorCandidateGapSeconds": 0.980146,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 58058,
+              "localSeconds": 2.419083,
+              "nearestAudioAttackDeltaMs": 3014,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 87087,
+              "localSeconds": 3.628625,
+              "nearestAudioAttackDeltaMs": 1805,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 162162,
+              "localSeconds": 6.75675,
+              "nearestAudioAttackDeltaMs": 116,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 179179,
+              "localSeconds": 7.465792,
+              "nearestAudioAttackDeltaMs": 336,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 198198,
+              "localSeconds": 8.25825,
+              "nearestAudioAttackDeltaMs": -456,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 219219,
+              "localSeconds": 9.134125,
+              "nearestAudioAttackDeltaMs": -1332,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 247247,
+              "localSeconds": 10.301958,
+              "nearestAudioAttackDeltaMs": 542,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 273273,
+              "localSeconds": 11.386375,
+              "nearestAudioAttackDeltaMs": -543,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 284284,
+              "localSeconds": 11.845167,
+              "nearestAudioAttackDeltaMs": 670,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 301301,
+              "localSeconds": 12.554208,
+              "nearestAudioAttackDeltaMs": -39,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 351351,
+              "localSeconds": 14.639625,
+              "nearestAudioAttackDeltaMs": 12,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 391391,
+              "localSeconds": 16.307958,
+              "nearestAudioAttackDeltaMs": -1656,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 411411,
+              "localSeconds": 17.142125,
+              "nearestAudioAttackDeltaMs": -2490,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 239616,
+              "localSeconds": 5.433469,
+              "measuredRmsRiseDb": 17.4606
+            },
+            {
+              "sourceAudioPts": 303104,
+              "localSeconds": 6.873107,
+              "measuredRmsRiseDb": 19.5711
+            },
+            {
+              "sourceAudioPts": 344064,
+              "localSeconds": 7.801905,
+              "measuredRmsRiseDb": 12.9733
+            },
+            {
+              "sourceAudioPts": 478208,
+              "localSeconds": 10.843719,
+              "measuredRmsRiseDb": 14.4088
+            },
+            {
+              "sourceAudioPts": 551936,
+              "localSeconds": 12.515556,
+              "measuredRmsRiseDb": 13.2238
+            },
+            {
+              "sourceAudioPts": 586752,
+              "localSeconds": 13.305034,
+              "measuredRmsRiseDb": 23.8164
+            },
+            {
+              "sourceAudioPts": 595968,
+              "localSeconds": 13.514014,
+              "measuredRmsRiseDb": 16.0979
+            },
+            {
+              "sourceAudioPts": 628736,
+              "localSeconds": 14.257052,
+              "measuredRmsRiseDb": 19.2748
+            },
+            {
+              "sourceAudioPts": 646144,
+              "localSeconds": 14.651791,
+              "measuredRmsRiseDb": 14.7287
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "deadpool-wolverine",
+      "catalogId": "marvel-deadpool-wolverine-trailer",
+      "originalSourceSha256": "ef8a72653e014ecbda21d3415fb39ec2dd680e0a6f741c8de6fd903e0a2ff787",
+      "detailGitBlobSha": "3682d481ac2f528a4aa5f8b0007180596390e53e",
+      "sourceEdition": "Apple iTunes Store promotional movie preview (not verified identical to catalog YouTube upload)",
+      "catalogUploadIdentityMatch": "not-verified",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "ef8a72653e014ecbda21d3415fb39ec2dd680e0a6f741c8de6fd903e0a2ff787",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 12288,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "exact-opening",
+          "cutCandidateCount025": 3,
+          "audioLevelAttackCandidateCount": 4,
+          "cutCandidatesWithin250MsOfAudioAttack": 1,
+          "cutCandidateCountsByFiveSecondBin": [
+            1,
+            1,
+            1,
+            0
+          ],
+          "medianInteriorCandidateGapSeconds": 3.270833,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 47616,
+              "localSeconds": 3.875,
+              "nearestAudioAttackDeltaMs": 235,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 64512,
+              "localSeconds": 5.25,
+              "nearestAudioAttackDeltaMs": -1140,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 128000,
+              "localSeconds": 10.416667,
+              "nearestAudioAttackDeltaMs": 775,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 181248,
+              "localSeconds": 4.109932,
+              "measuredRmsRiseDb": 14.1965
+            },
+            {
+              "sourceAudioPts": 493568,
+              "localSeconds": 11.192018,
+              "measuredRmsRiseDb": 13.2288
+            },
+            {
+              "sourceAudioPts": 547840,
+              "localSeconds": 12.422676,
+              "measuredRmsRiseDb": 13.6249
+            },
+            {
+              "sourceAudioPts": 634880,
+              "localSeconds": 14.396372,
+              "measuredRmsRiseDb": 12.2012
+            }
+          ]
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "47d52590532339a7b3cb8e1adff200639e132912effec68a5888325a7ce2705e",
+          "sourceOffsetSeconds": 62,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 12288,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 2,
+          "audioLevelAttackCandidateCount": 1,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            0,
+            0,
+            2,
+            0
+          ],
+          "medianInteriorCandidateGapSeconds": 1.791667,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 125440,
+              "localSeconds": 10.208333,
+              "nearestAudioAttackDeltaMs": -8328,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 147456,
+              "localSeconds": 12,
+              "nearestAudioAttackDeltaMs": -10119,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 82944,
+              "localSeconds": 1.880816,
+              "measuredRmsRiseDb": 13.832
+            }
+          ]
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "aae99d8219ec40a58514380832b72b5629675ddaf4b6da4723f122f499976837",
+          "sourceOffsetSeconds": 124,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 12288,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 1,
+          "audioLevelAttackCandidateCount": 7,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            0,
+            0,
+            1,
+            0
+          ],
+          "medianInteriorCandidateGapSeconds": null,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 126976,
+              "localSeconds": 10.333333,
+              "nearestAudioAttackDeltaMs": -302,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 207872,
+              "localSeconds": 4.713651,
+              "measuredRmsRiseDb": 12.672
+            },
+            {
+              "sourceAudioPts": 380928,
+              "localSeconds": 8.637823,
+              "measuredRmsRiseDb": 16.2768
+            },
+            {
+              "sourceAudioPts": 401408,
+              "localSeconds": 9.102222,
+              "measuredRmsRiseDb": 15.3023
+            },
+            {
+              "sourceAudioPts": 415744,
+              "localSeconds": 9.427302,
+              "measuredRmsRiseDb": 16.8305
+            },
+            {
+              "sourceAudioPts": 423936,
+              "localSeconds": 9.613061,
+              "measuredRmsRiseDb": 13.6769
+            },
+            {
+              "sourceAudioPts": 433152,
+              "localSeconds": 9.822041,
+              "measuredRmsRiseDb": 27.889
+            },
+            {
+              "sourceAudioPts": 442368,
+              "localSeconds": 10.03102,
+              "measuredRmsRiseDb": 18.8082
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dune-part-two",
+      "catalogId": "warner-dune-part-two-trailer",
+      "originalSourceSha256": "9c8fc42cd7b8aa08c8e17b4c13156bea52ae577fb6db13ba21558554c1f91934",
+      "detailGitBlobSha": "4ee2a2497acea5d1b186c929a5db4fb26c7e8805",
+      "sourceEdition": "Apple iTunes Store promotional movie preview (not verified identical to catalog YouTube upload)",
+      "catalogUploadIdentityMatch": "not-verified",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "9c8fc42cd7b8aa08c8e17b4c13156bea52ae577fb6db13ba21558554c1f91934",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 24000,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "exact-opening",
+          "cutCandidateCount025": 11,
+          "audioLevelAttackCandidateCount": 1,
+          "cutCandidatesWithin250MsOfAudioAttack": 1,
+          "cutCandidateCountsByFiveSecondBin": [
+            3,
+            3,
+            3,
+            2
+          ],
+          "medianInteriorCandidateGapSeconds": 1.438938,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 24024,
+              "localSeconds": 1.001,
+              "nearestAudioAttackDeltaMs": 90,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 77077,
+              "localSeconds": 3.211542,
+              "nearestAudioAttackDeltaMs": -2120,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 80080,
+              "localSeconds": 3.336667,
+              "nearestAudioAttackDeltaMs": -2245,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 186186,
+              "localSeconds": 7.75775,
+              "nearestAudioAttackDeltaMs": -6666,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 207207,
+              "localSeconds": 8.633625,
+              "nearestAudioAttackDeltaMs": -7542,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 223223,
+              "localSeconds": 9.300958,
+              "nearestAudioAttackDeltaMs": -8210,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 260260,
+              "localSeconds": 10.844167,
+              "nearestAudioAttackDeltaMs": -9753,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 292292,
+              "localSeconds": 12.178833,
+              "nearestAudioAttackDeltaMs": -11087,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 338338,
+              "localSeconds": 14.097417,
+              "nearestAudioAttackDeltaMs": -13006,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 405405,
+              "localSeconds": 16.891875,
+              "nearestAudioAttackDeltaMs": -15801,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 426426,
+              "localSeconds": 17.76775,
+              "nearestAudioAttackDeltaMs": -16676,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 48128,
+              "localSeconds": 1.091338,
+              "measuredRmsRiseDb": 21.776
+            }
+          ]
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "7b5c48b084cb09e791f6b88b6f1d60a3c761b5ea29e31de30f4c016366bff214",
+          "sourceOffsetSeconds": 82,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 24000,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 8,
+          "audioLevelAttackCandidateCount": 0,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            0,
+            3,
+            2,
+            3
+          ],
+          "medianInteriorCandidateGapSeconds": 1.710042,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 137120,
+              "localSeconds": 5.713333,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 165148,
+              "localSeconds": 6.881167,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 193176,
+              "localSeconds": 8.049,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 272255,
+              "localSeconds": 11.343958,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 323306,
+              "localSeconds": 13.471083,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 395378,
+              "localSeconds": 16.474083,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 436419,
+              "localSeconds": 18.184125,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 461444,
+              "localSeconds": 19.226833,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": []
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "293858a934b5a5e791d8be44882c6d519f559c5d0e1ada79c697c7aa546b175d",
+          "sourceOffsetSeconds": 163,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 24000,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 6,
+          "audioLevelAttackCandidateCount": 2,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            3,
+            1,
+            2,
+            0
+          ],
+          "medianInteriorCandidateGapSeconds": 1.876875,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 15999,
+              "localSeconds": 0.666625,
+              "nearestAudioAttackDeltaMs": 8180,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 61044,
+              "localSeconds": 2.5435,
+              "nearestAudioAttackDeltaMs": 6303,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 82065,
+              "localSeconds": 3.419375,
+              "nearestAudioAttackDeltaMs": 5427,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 133116,
+              "localSeconds": 5.5465,
+              "nearestAudioAttackDeltaMs": 3300,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 241224,
+              "localSeconds": 10.051,
+              "nearestAudioAttackDeltaMs": -415,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 279262,
+              "localSeconds": 11.635917,
+              "nearestAudioAttackDeltaMs": -2000,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 390144,
+              "localSeconds": 8.846803,
+              "measuredRmsRiseDb": 12.8683
+            },
+            {
+              "sourceAudioPts": 424960,
+              "localSeconds": 9.636281,
+              "measuredRmsRiseDb": 20.7355
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "endgame",
+      "catalogId": "marvel-endgame-trailer",
+      "originalSourceSha256": "1073b09a9aaf09619c0b8585f753f60f3398f52934b0aa29d2db8f34d562f46d",
+      "detailGitBlobSha": "7aa00011bd7d362c14ceb81e512187c05ba05f07",
+      "sourceEdition": "Disney official public-player",
+      "catalogUploadIdentityMatch": "not-verified",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "1073b09a9aaf09619c0b8585f753f60f3398f52934b0aa29d2db8f34d562f46d",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 11988,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "exact-opening",
+          "cutCandidateCount025": 4,
+          "audioLevelAttackCandidateCount": 2,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            0,
+            2,
+            1,
+            1
+          ],
+          "medianInteriorCandidateGapSeconds": 3.378378,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 74500,
+              "localSeconds": 6.214548,
+              "nearestAudioAttackDeltaMs": 4281,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 115000,
+              "localSeconds": 9.592926,
+              "nearestAudioAttackDeltaMs": 902,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 157500,
+              "localSeconds": 13.138138,
+              "nearestAudioAttackDeltaMs": -2643,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 196000,
+              "localSeconds": 16.349683,
+              "nearestAudioAttackDeltaMs": -5854,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 2048,
+              "localSeconds": 0.04644,
+              "measuredRmsRiseDb": 41.8336
+            },
+            {
+              "sourceAudioPts": 462848,
+              "localSeconds": 10.49542,
+              "measuredRmsRiseDb": 12.9536
+            }
+          ]
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "4a4447b40052d3c495a38220fcb54c5dad07cdf127f7be15cd9c2936af689a23",
+          "sourceOffsetSeconds": 63,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 11988,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 2,
+          "audioLevelAttackCandidateCount": 0,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            0,
+            0,
+            2,
+            0
+          ],
+          "medianInteriorCandidateGapSeconds": 1.54321,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 131992,
+              "localSeconds": 11.010344,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 150492,
+              "localSeconds": 12.553554,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": []
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "25bc5a57a9b36f33ed855310a61d9bc2550cd309599e1ba901d26248739b76f4",
+          "sourceOffsetSeconds": 126,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 11988,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 5,
+          "audioLevelAttackCandidateCount": 1,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            0,
+            3,
+            2,
+            0
+          ],
+          "medianInteriorCandidateGapSeconds": 1.710043,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 78000,
+              "localSeconds": 6.506507,
+              "nearestAudioAttackDeltaMs": 7425,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 92000,
+              "localSeconds": 7.674341,
+              "nearestAudioAttackDeltaMs": 6258,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 114000,
+              "localSeconds": 9.50951,
+              "nearestAudioAttackDeltaMs": 4422,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 143500,
+              "localSeconds": 11.970304,
+              "nearestAudioAttackDeltaMs": 1962,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 162500,
+              "localSeconds": 13.555222,
+              "nearestAudioAttackDeltaMs": 377,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 614400,
+              "localSeconds": 13.931973,
+              "measuredRmsRiseDb": 13.0676
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "force-awakens",
+      "catalogId": "star-wars-force-awakens-trailer",
+      "originalSourceSha256": "daf98d39f3658931f476d9a9f1bf4faafe8488eb84b903f9488f4e96b4a5db2c",
+      "detailGitBlobSha": "285c9c9b376812230b8b4ff05ab26b8583673646",
+      "sourceEdition": "Disney official public-player",
+      "catalogUploadIdentityMatch": "not-verified",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "daf98d39f3658931f476d9a9f1bf4faafe8488eb84b903f9488f4e96b4a5db2c",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 11988,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "exact-opening",
+          "cutCandidateCount025": 4,
+          "audioLevelAttackCandidateCount": 4,
+          "cutCandidatesWithin250MsOfAudioAttack": 2,
+          "cutCandidateCountsByFiveSecondBin": [
+            0,
+            1,
+            2,
+            1
+          ],
+          "medianInteriorCandidateGapSeconds": 5.005005,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 60500,
+              "localSeconds": 5.046713,
+              "nearestAudioAttackDeltaMs": 1641,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 120500,
+              "localSeconds": 10.051718,
+              "nearestAudioAttackDeltaMs": 2696,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 152500,
+              "localSeconds": 12.721054,
+              "nearestAudioAttackDeltaMs": 27,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 217500,
+              "localSeconds": 18.143143,
+              "nearestAudioAttackDeltaMs": -32,
+              "audioAttackWithin250Ms": true
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 294912,
+              "localSeconds": 6.687347,
+              "measuredRmsRiseDb": 26.0686
+            },
+            {
+              "sourceAudioPts": 562176,
+              "localSeconds": 12.747755,
+              "measuredRmsRiseDb": 22.0851
+            },
+            {
+              "sourceAudioPts": 680960,
+              "localSeconds": 15.44127,
+              "measuredRmsRiseDb": 14.2161
+            },
+            {
+              "sourceAudioPts": 798720,
+              "localSeconds": 18.111565,
+              "measuredRmsRiseDb": 13.6299
+            }
+          ]
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "d28c933373a359f1305cad67a417f73dfba7c98dc11debf5a26f4ae63f5db89d",
+          "sourceOffsetSeconds": 59,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 11988,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 6,
+          "audioLevelAttackCandidateCount": 0,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            1,
+            1,
+            1,
+            3
+          ],
+          "medianInteriorCandidateGapSeconds": 3.712045,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 50500,
+              "localSeconds": 4.212546,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 95000,
+              "localSeconds": 7.924591,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 142000,
+              "localSeconds": 11.845179,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 229000,
+              "localSeconds": 19.102436,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 229500,
+              "localSeconds": 19.144144,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 233500,
+              "localSeconds": 19.477811,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": []
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "35bfa4209171fb046eee78c32a484de96c937e0fb49d09f7edfacd7fee873008",
+          "sourceOffsetSeconds": 118,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 11988,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 0,
+          "audioLevelAttackCandidateCount": 1,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "medianInteriorCandidateGapSeconds": null,
+          "cutEvents": [],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 131072,
+              "localSeconds": 2.972154,
+              "measuredRmsRiseDb": 15.8266
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "frozen-2",
+      "catalogId": "disney-frozen-2-trailer",
+      "originalSourceSha256": "dca093bbb0e1b9afb28885d3a092083afa2ee2b7afcaca617f8efa484046cdaa",
+      "detailGitBlobSha": "176966f8d85e91c861fe1cfff75add8ad5b3f152",
+      "sourceEdition": "Disney official public-player",
+      "catalogUploadIdentityMatch": "not-verified",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "dca093bbb0e1b9afb28885d3a092083afa2ee2b7afcaca617f8efa484046cdaa",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 11988,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "exact-opening",
+          "cutCandidateCount025": 5,
+          "audioLevelAttackCandidateCount": 0,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            0,
+            2,
+            0,
+            3
+          ],
+          "medianInteriorCandidateGapSeconds": 1.751752,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 79500,
+              "localSeconds": 6.631632,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 107500,
+              "localSeconds": 8.967301,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 199000,
+              "localSeconds": 16.599933,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 213000,
+              "localSeconds": 17.767768,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 227000,
+              "localSeconds": 18.935602,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": []
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "a6bcff50a9626b1c10a27abafbd7473b70802cdd82baea7b17dcee1ff9477640",
+          "sourceOffsetSeconds": 47,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 11988,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 2,
+          "audioLevelAttackCandidateCount": 0,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            0,
+            0,
+            0,
+            2
+          ],
+          "medianInteriorCandidateGapSeconds": 2.585919,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 201500,
+              "localSeconds": 16.808475,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 232500,
+              "localSeconds": 19.394394,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": []
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "20eed464e2a68269109cf35a633768a0a1963f8e10d0aa9b4f8c8758c7fee890",
+          "sourceOffsetSeconds": 93,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 11988,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 1,
+          "audioLevelAttackCandidateCount": 1,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "medianInteriorCandidateGapSeconds": null,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 30000,
+              "localSeconds": 2.502503,
+              "nearestAudioAttackDeltaMs": 2490,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 220160,
+              "localSeconds": 4.99229,
+              "measuredRmsRiseDb": 16.4702
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "infinity-war",
+      "catalogId": "marvel-infinity-war-first-trailer",
+      "originalSourceSha256": "d80396433e9bb5d9329b979c7bca610736a54ee804152a1b99295b03ec35952f",
+      "detailGitBlobSha": "13e3d0a01ce2e6d782a573ff900caa5042fbacb6",
+      "sourceEdition": "Disney official public-player",
+      "catalogUploadIdentityMatch": "not-verified",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "d80396433e9bb5d9329b979c7bca610736a54ee804152a1b99295b03ec35952f",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 11988,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "exact-opening",
+          "cutCandidateCount025": 2,
+          "audioLevelAttackCandidateCount": 0,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            0,
+            0,
+            2,
+            0
+          ],
+          "medianInteriorCandidateGapSeconds": 1.918585,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 128000,
+              "localSeconds": 10.677344,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 151000,
+              "localSeconds": 12.595929,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": []
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "15d25a4fcd30006b3c8388e68a2b717288326e05cb5090e02ed21444e9ce685d",
+          "sourceOffsetSeconds": 62,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 11988,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 9,
+          "audioLevelAttackCandidateCount": 0,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            2,
+            1,
+            3,
+            3
+          ],
+          "medianInteriorCandidateGapSeconds": 1.272105,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 500,
+              "localSeconds": 0.041708,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 19500,
+              "localSeconds": 1.626627,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 75500,
+              "localSeconds": 6.297965,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 163000,
+              "localSeconds": 13.59693,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 170000,
+              "localSeconds": 14.180848,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 170500,
+              "localSeconds": 14.222556,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 211000,
+              "localSeconds": 17.600934,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 222500,
+              "localSeconds": 18.560227,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 233000,
+              "localSeconds": 19.436103,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": []
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "2a73d84754e43f6aeb0604c175a4947694f832b04268c6863aa040fe9ff97d06",
+          "sourceOffsetSeconds": 124,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 11988,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 2,
+          "audioLevelAttackCandidateCount": 0,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            0,
+            0,
+            1,
+            1
+          ],
+          "medianInteriorCandidateGapSeconds": 2.210544,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 164492,
+              "localSeconds": 13.721388,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 190992,
+              "localSeconds": 15.931932,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": []
+        }
+      ]
+    },
+    {
+      "id": "inside-out-2",
+      "catalogId": "pixar-inside-out-2-trailer",
+      "originalSourceSha256": "ce09522b50ccb39bb85e50f8b66381e44cf97d3722ad47cc3b8efae8b069fad8",
+      "detailGitBlobSha": "ed22a00abd17839290e4f36bff4aa47ab966ed53",
+      "sourceEdition": "Disney official public-player",
+      "catalogUploadIdentityMatch": "not-verified",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "ce09522b50ccb39bb85e50f8b66381e44cf97d3722ad47cc3b8efae8b069fad8",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 11988,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "exact-opening",
+          "cutCandidateCount025": 17,
+          "audioLevelAttackCandidateCount": 3,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            5,
+            4,
+            4,
+            4
+          ],
+          "medianInteriorCandidateGapSeconds": 0.938438,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 25000,
+              "localSeconds": 2.085419,
+              "nearestAudioAttackDeltaMs": 13077,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 26500,
+              "localSeconds": 2.210544,
+              "nearestAudioAttackDeltaMs": 12952,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 27000,
+              "localSeconds": 2.252252,
+              "nearestAudioAttackDeltaMs": 12910,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 47000,
+              "localSeconds": 3.920587,
+              "nearestAudioAttackDeltaMs": 11242,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 57000,
+              "localSeconds": 4.754755,
+              "nearestAudioAttackDeltaMs": 10408,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 67000,
+              "localSeconds": 5.588922,
+              "nearestAudioAttackDeltaMs": 9574,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 82000,
+              "localSeconds": 6.840174,
+              "nearestAudioAttackDeltaMs": 8322,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 109000,
+              "localSeconds": 9.092426,
+              "nearestAudioAttackDeltaMs": 6070,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 116000,
+              "localSeconds": 9.676343,
+              "nearestAudioAttackDeltaMs": 5486,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 123000,
+              "localSeconds": 10.26026,
+              "nearestAudioAttackDeltaMs": 4902,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 135500,
+              "localSeconds": 11.30297,
+              "nearestAudioAttackDeltaMs": 3860,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 156500,
+              "localSeconds": 13.054721,
+              "nearestAudioAttackDeltaMs": 2108,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 166500,
+              "localSeconds": 13.888889,
+              "nearestAudioAttackDeltaMs": 1274,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 191000,
+              "localSeconds": 15.932599,
+              "nearestAudioAttackDeltaMs": 298,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 203000,
+              "localSeconds": 16.9336,
+              "nearestAudioAttackDeltaMs": 365,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 217500,
+              "localSeconds": 18.143143,
+              "nearestAudioAttackDeltaMs": -844,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 228000,
+              "localSeconds": 19.019019,
+              "nearestAudioAttackDeltaMs": -1720,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 668672,
+              "localSeconds": 15.16263,
+              "measuredRmsRiseDb": 16.2094
+            },
+            {
+              "sourceAudioPts": 715776,
+              "localSeconds": 16.230748,
+              "measuredRmsRiseDb": 15.4422
+            },
+            {
+              "sourceAudioPts": 762880,
+              "localSeconds": 17.298866,
+              "measuredRmsRiseDb": 14.4157
+            }
+          ]
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "fe319caf3a9640a1a30dbd36eb95538706b8ae4e5b1ebe4e5d44c2a2889dd292",
+          "sourceOffsetSeconds": 62,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 11988,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 12,
+          "audioLevelAttackCandidateCount": 6,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            2,
+            4,
+            3,
+            3
+          ],
+          "medianInteriorCandidateGapSeconds": 1.167835,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 45500,
+              "localSeconds": 3.795462,
+              "nearestAudioAttackDeltaMs": -1497,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 59500,
+              "localSeconds": 4.963297,
+              "nearestAudioAttackDeltaMs": -2665,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 69500,
+              "localSeconds": 5.797464,
+              "nearestAudioAttackDeltaMs": -3499,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 87500,
+              "localSeconds": 7.298966,
+              "nearestAudioAttackDeltaMs": -5000,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 101000,
+              "localSeconds": 8.425092,
+              "nearestAudioAttackDeltaMs": 6111,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 112000,
+              "localSeconds": 9.342676,
+              "nearestAudioAttackDeltaMs": 5193,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 130000,
+              "localSeconds": 10.844178,
+              "nearestAudioAttackDeltaMs": 3692,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 152500,
+              "localSeconds": 12.721054,
+              "nearestAudioAttackDeltaMs": 1815,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 167500,
+              "localSeconds": 13.972306,
+              "nearestAudioAttackDeltaMs": 563,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 207500,
+              "localSeconds": 17.308976,
+              "nearestAudioAttackDeltaMs": -1473,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 221500,
+              "localSeconds": 18.47681,
+              "nearestAudioAttackDeltaMs": 1353,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 231000,
+              "localSeconds": 19.269269,
+              "nearestAudioAttackDeltaMs": 561,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 21504,
+              "localSeconds": 0.487619,
+              "measuredRmsRiseDb": 13.3702
+            },
+            {
+              "sourceAudioPts": 59392,
+              "localSeconds": 1.346757,
+              "measuredRmsRiseDb": 16.9123
+            },
+            {
+              "sourceAudioPts": 101376,
+              "localSeconds": 2.298776,
+              "measuredRmsRiseDb": 21.7007
+            },
+            {
+              "sourceAudioPts": 641024,
+              "localSeconds": 14.535692,
+              "measuredRmsRiseDb": 13.4486
+            },
+            {
+              "sourceAudioPts": 698368,
+              "localSeconds": 15.836009,
+              "measuredRmsRiseDb": 14.6531
+            },
+            {
+              "sourceAudioPts": 874496,
+              "localSeconds": 19.829841,
+              "measuredRmsRiseDb": 13.08
+            }
+          ]
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "2fbc37a225bdd91994dd774f9f4ecf74bd0894314cb9116dc5e4196e9702ad64",
+          "sourceOffsetSeconds": 124,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 11988,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 10,
+          "audioLevelAttackCandidateCount": 8,
+          "cutCandidatesWithin250MsOfAudioAttack": 3,
+          "cutCandidateCountsByFiveSecondBin": [
+            3,
+            1,
+            1,
+            5
+          ],
+          "medianInteriorCandidateGapSeconds": 1.668335,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 1992,
+              "localSeconds": 0.166166,
+              "nearestAudioAttackDeltaMs": 1506,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 36992,
+              "localSeconds": 3.085752,
+              "nearestAudioAttackDeltaMs": 560,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 56992,
+              "localSeconds": 4.754087,
+              "nearestAudioAttackDeltaMs": -226,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 93492,
+              "localSeconds": 7.798799,
+              "nearestAudioAttackDeltaMs": -43,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 140492,
+              "localSeconds": 11.719386,
+              "nearestAudioAttackDeltaMs": -3964,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 199492,
+              "localSeconds": 16.640974,
+              "nearestAudioAttackDeltaMs": 77,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 209992,
+              "localSeconds": 17.51685,
+              "nearestAudioAttackDeltaMs": -798,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 210992,
+              "localSeconds": 17.600267,
+              "nearestAudioAttackDeltaMs": -882,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 212992,
+              "localSeconds": 17.7671,
+              "nearestAudioAttackDeltaMs": -1049,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 227492,
+              "localSeconds": 18.976643,
+              "nearestAudioAttackDeltaMs": -2258,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 73728,
+              "localSeconds": 1.671837,
+              "measuredRmsRiseDb": 14.9741
+            },
+            {
+              "sourceAudioPts": 160768,
+              "localSeconds": 3.645533,
+              "measuredRmsRiseDb": 14.9864
+            },
+            {
+              "sourceAudioPts": 171008,
+              "localSeconds": 3.877732,
+              "measuredRmsRiseDb": 15.9814
+            },
+            {
+              "sourceAudioPts": 184320,
+              "localSeconds": 4.179592,
+              "measuredRmsRiseDb": 14.5472
+            },
+            {
+              "sourceAudioPts": 199680,
+              "localSeconds": 4.527891,
+              "measuredRmsRiseDb": 12.5354
+            },
+            {
+              "sourceAudioPts": 245760,
+              "localSeconds": 5.572789,
+              "measuredRmsRiseDb": 21.825
+            },
+            {
+              "sourceAudioPts": 342016,
+              "localSeconds": 7.755465,
+              "measuredRmsRiseDb": 12.0614
+            },
+            {
+              "sourceAudioPts": 737280,
+              "localSeconds": 16.718367,
+              "measuredRmsRiseDb": 24.1981
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "moana-2",
+      "catalogId": "disney-moana-2-trailer",
+      "originalSourceSha256": "99fa5ecf395748c7e1626831669a47c948473f839d303b7f4212d6efbc893e96",
+      "detailGitBlobSha": "c3f8d1146d7c58c9c0c5e9b86ab21598dd0595b9",
+      "sourceEdition": "Disney official public-player",
+      "catalogUploadIdentityMatch": "not-verified",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "99fa5ecf395748c7e1626831669a47c948473f839d303b7f4212d6efbc893e96",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 11988,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "exact-opening",
+          "cutCandidateCount025": 11,
+          "audioLevelAttackCandidateCount": 1,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            0,
+            4,
+            3,
+            4
+          ],
+          "medianInteriorCandidateGapSeconds": 1.021855,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 60500,
+              "localSeconds": 5.046713,
+              "nearestAudioAttackDeltaMs": 6424,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 76000,
+              "localSeconds": 6.339673,
+              "nearestAudioAttackDeltaMs": 5131,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 85000,
+              "localSeconds": 7.090424,
+              "nearestAudioAttackDeltaMs": 4380,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 96500,
+              "localSeconds": 8.049716,
+              "nearestAudioAttackDeltaMs": 3421,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 131000,
+              "localSeconds": 10.927594,
+              "nearestAudioAttackDeltaMs": 543,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 148500,
+              "localSeconds": 12.387387,
+              "nearestAudioAttackDeltaMs": -917,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 159000,
+              "localSeconds": 13.263263,
+              "nearestAudioAttackDeltaMs": -1793,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 196000,
+              "localSeconds": 16.349683,
+              "nearestAudioAttackDeltaMs": -4879,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 209000,
+              "localSeconds": 17.434101,
+              "nearestAudioAttackDeltaMs": -5963,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 217500,
+              "localSeconds": 18.143143,
+              "nearestAudioAttackDeltaMs": -6672,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 228500,
+              "localSeconds": 19.060727,
+              "nearestAudioAttackDeltaMs": -7590,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 505856,
+              "localSeconds": 11.470658,
+              "measuredRmsRiseDb": 19.0558
+            }
+          ]
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "d6464e555ab77abdce9553a7ceb0d1bdd2bbd857996d3cbafe6a7f1ee8cecb6f",
+          "sourceOffsetSeconds": 55,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 11988,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 9,
+          "audioLevelAttackCandidateCount": 3,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            1,
+            2,
+            4,
+            2
+          ],
+          "medianInteriorCandidateGapSeconds": 1.79346,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 22000,
+              "localSeconds": 1.835169,
+              "nearestAudioAttackDeltaMs": 4388,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 81000,
+              "localSeconds": 6.756757,
+              "nearestAudioAttackDeltaMs": -534,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 100000,
+              "localSeconds": 8.341675,
+              "nearestAudioAttackDeltaMs": -2119,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 124000,
+              "localSeconds": 10.343677,
+              "nearestAudioAttackDeltaMs": -4121,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 136500,
+              "localSeconds": 11.386386,
+              "nearestAudioAttackDeltaMs": -5163,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 149500,
+              "localSeconds": 12.470804,
+              "nearestAudioAttackDeltaMs": -6248,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 175000,
+              "localSeconds": 14.597931,
+              "nearestAudioAttackDeltaMs": 4419,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 186000,
+              "localSeconds": 15.515516,
+              "nearestAudioAttackDeltaMs": 3502,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 218500,
+              "localSeconds": 18.22656,
+              "nearestAudioAttackDeltaMs": 791,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 274432,
+              "localSeconds": 6.222948,
+              "measuredRmsRiseDb": 12.3152
+            },
+            {
+              "sourceAudioPts": 838656,
+              "localSeconds": 19.017143,
+              "measuredRmsRiseDb": 16.6343
+            },
+            {
+              "sourceAudioPts": 875520,
+              "localSeconds": 19.853061,
+              "measuredRmsRiseDb": 26.4935
+            }
+          ]
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "7db5dab9e8fa6e9ada21078e584265670560024376b50d7bbf10876c27ebf26b",
+          "sourceOffsetSeconds": 110,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 11988,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 5,
+          "audioLevelAttackCandidateCount": 2,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            4,
+            0,
+            1,
+            0
+          ],
+          "medianInteriorCandidateGapSeconds": 1.54321,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 992,
+              "localSeconds": 0.082749,
+              "nearestAudioAttackDeltaMs": 7951,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 10992,
+              "localSeconds": 0.916917,
+              "nearestAudioAttackDeltaMs": 7117,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 19492,
+              "localSeconds": 1.625959,
+              "nearestAudioAttackDeltaMs": 6408,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 46492,
+              "localSeconds": 3.878212,
+              "nearestAudioAttackDeltaMs": 4156,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 129492,
+              "localSeconds": 10.801802,
+              "nearestAudioAttackDeltaMs": -2628,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 354304,
+              "localSeconds": 8.034104,
+              "measuredRmsRiseDb": 25.3777
+            },
+            {
+              "sourceAudioPts": 360448,
+              "localSeconds": 8.173424,
+              "measuredRmsRiseDb": 13.0975
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "oppenheimer",
+      "catalogId": "universal-oppenheimer-trailer",
+      "originalSourceSha256": "ca67b4d91a4ed5fd95725bff2110758c42344bbfa102ec8425af355d1d16a4c5",
+      "detailGitBlobSha": "24aebc851f80cd5c4610bfee0c1fe5a764b12293",
+      "sourceEdition": "Apple iTunes Store promotional movie preview (not verified identical to catalog YouTube upload)",
+      "catalogUploadIdentityMatch": "not-verified",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "ca67b4d91a4ed5fd95725bff2110758c42344bbfa102ec8425af355d1d16a4c5",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 24000,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "exact-opening",
+          "cutCandidateCount025": 11,
+          "audioLevelAttackCandidateCount": 5,
+          "cutCandidatesWithin250MsOfAudioAttack": 5,
+          "cutCandidateCountsByFiveSecondBin": [
+            2,
+            1,
+            3,
+            5
+          ],
+          "medianInteriorCandidateGapSeconds": 0.938438,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 25025,
+              "localSeconds": 1.042708,
+              "nearestAudioAttackDeltaMs": 1,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 32032,
+              "localSeconds": 1.334667,
+              "nearestAudioAttackDeltaMs": -291,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 123123,
+              "localSeconds": 5.130125,
+              "nearestAudioAttackDeltaMs": -23,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 244244,
+              "localSeconds": 10.176833,
+              "nearestAudioAttackDeltaMs": -5070,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 267267,
+              "localSeconds": 11.136125,
+              "nearestAudioAttackDeltaMs": 5720,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 322322,
+              "localSeconds": 13.430083,
+              "nearestAudioAttackDeltaMs": 3426,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 393393,
+              "localSeconds": 16.391375,
+              "nearestAudioAttackDeltaMs": 465,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 403403,
+              "localSeconds": 16.808458,
+              "nearestAudioAttackDeltaMs": 48,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 404404,
+              "localSeconds": 16.850167,
+              "nearestAudioAttackDeltaMs": 6,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 426426,
+              "localSeconds": 17.76775,
+              "nearestAudioAttackDeltaMs": -238,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 430430,
+              "localSeconds": 17.934583,
+              "nearestAudioAttackDeltaMs": -405,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 46016,
+              "localSeconds": 1.043447,
+              "measuredRmsRiseDb": 32.1902
+            },
+            {
+              "sourceAudioPts": 225216,
+              "localSeconds": 5.106939,
+              "measuredRmsRiseDb": 19.0617
+            },
+            {
+              "sourceAudioPts": 743360,
+              "localSeconds": 16.856236,
+              "measuredRmsRiseDb": 81.4392
+            },
+            {
+              "sourceAudioPts": 773056,
+              "localSeconds": 17.529615,
+              "measuredRmsRiseDb": 92.3658
+            },
+            {
+              "sourceAudioPts": 819136,
+              "localSeconds": 18.574512,
+              "measuredRmsRiseDb": 12.3936
+            }
+          ]
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "1b63f59bdab45cb39e9bc4989ebecc88d6fd98ac604881dccc5149a69a58f6c3",
+          "sourceOffsetSeconds": 82,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 24000,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 8,
+          "audioLevelAttackCandidateCount": 0,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            3,
+            4,
+            1,
+            0
+          ],
+          "medianInteriorCandidateGapSeconds": 1.042708,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 18001,
+              "localSeconds": 0.750042,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 42025,
+              "localSeconds": 1.751042,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 99082,
+              "localSeconds": 4.128417,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 120103,
+              "localSeconds": 5.004292,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 141124,
+              "localSeconds": 5.880167,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 180163,
+              "localSeconds": 7.506792,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 217200,
+              "localSeconds": 9.05,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 242225,
+              "localSeconds": 10.092708,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": []
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "eddeebe7f966702bc4987d8b93e13cbe94e568e3d210c7f50fc40619788bcd1b",
+          "sourceOffsetSeconds": 163,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 24000,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 8,
+          "audioLevelAttackCandidateCount": 0,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            0,
+            1,
+            4,
+            3
+          ],
+          "medianInteriorCandidateGapSeconds": 0.875875,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 187170,
+              "localSeconds": 7.79875,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 268251,
+              "localSeconds": 11.177125,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 300283,
+              "localSeconds": 12.511792,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 324307,
+              "localSeconds": 13.512792,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 345328,
+              "localSeconds": 14.388667,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 364347,
+              "localSeconds": 15.181125,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 365348,
+              "localSeconds": 15.222833,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 383366,
+              "localSeconds": 15.973583,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": []
+        }
+      ]
+    },
+    {
+      "id": "spider-man-no-way-home",
+      "catalogId": "sony-spider-man-no-way-home-trailer",
+      "originalSourceSha256": "299a9c1caa2a0b2c21473b414a718e1bbb859dda5ef91c938aaf7c1f89ed1e89",
+      "detailGitBlobSha": "0f9eb7a7cd4e6342be84dc59cef665eedbf3531b",
+      "sourceEdition": "Apple iTunes Store promotional movie preview (not verified identical to catalog YouTube upload)",
+      "catalogUploadIdentityMatch": "not-verified",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "299a9c1caa2a0b2c21473b414a718e1bbb859dda5ef91c938aaf7c1f89ed1e89",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 24000,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "exact-opening",
+          "cutCandidateCount025": 10,
+          "audioLevelAttackCandidateCount": 4,
+          "cutCandidatesWithin250MsOfAudioAttack": 1,
+          "cutCandidateCountsByFiveSecondBin": [
+            2,
+            3,
+            1,
+            4
+          ],
+          "medianInteriorCandidateGapSeconds": 1.668333,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 24024,
+              "localSeconds": 1.001,
+              "nearestAudioAttackDeltaMs": -4,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 79079,
+              "localSeconds": 3.294958,
+              "nearestAudioAttackDeltaMs": -2298,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 123123,
+              "localSeconds": 5.130125,
+              "nearestAudioAttackDeltaMs": -4133,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 153153,
+              "localSeconds": 6.381375,
+              "nearestAudioAttackDeltaMs": -5384,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 193193,
+              "localSeconds": 8.049708,
+              "nearestAudioAttackDeltaMs": 5486,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 245245,
+              "localSeconds": 10.218542,
+              "nearestAudioAttackDeltaMs": 3317,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 377377,
+              "localSeconds": 15.724042,
+              "nearestAudioAttackDeltaMs": -1376,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 406406,
+              "localSeconds": 16.933583,
+              "nearestAudioAttackDeltaMs": 1571,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 432432,
+              "localSeconds": 18.018,
+              "nearestAudioAttackDeltaMs": 487,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 466466,
+              "localSeconds": 19.436083,
+              "nearestAudioAttackDeltaMs": -931,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 43968,
+              "localSeconds": 0.997007,
+              "measuredRmsRiseDb": 62.175
+            },
+            {
+              "sourceAudioPts": 596928,
+              "localSeconds": 13.535782,
+              "measuredRmsRiseDb": 14.5533
+            },
+            {
+              "sourceAudioPts": 632768,
+              "localSeconds": 14.348481,
+              "measuredRmsRiseDb": 12.111
+            },
+            {
+              "sourceAudioPts": 816064,
+              "localSeconds": 18.504853,
+              "measuredRmsRiseDb": 14.4132
+            }
+          ]
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "578d8cec66abd71a149a3d7bb34f62663b0bd61a037a9bacf180a65dea9f0eb5",
+          "sourceOffsetSeconds": 41,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 24000,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 12,
+          "audioLevelAttackCandidateCount": 0,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            2,
+            4,
+            4,
+            2
+          ],
+          "medianInteriorCandidateGapSeconds": 1.126125,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 13997,
+              "localSeconds": 0.583208,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 94077,
+              "localSeconds": 3.919875,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 120103,
+              "localSeconds": 5.004292,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 169152,
+              "localSeconds": 7.048,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 196179,
+              "localSeconds": 8.174125,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 232215,
+              "localSeconds": 9.675625,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 271254,
+              "localSeconds": 11.30225,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 294277,
+              "localSeconds": 12.261542,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 313296,
+              "localSeconds": 13.054,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 333316,
+              "localSeconds": 13.888167,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 373356,
+              "localSeconds": 15.5565,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 383366,
+              "localSeconds": 15.973583,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": []
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "5c2da752ffd8edeff08a699a5bd0192374560b848f115b5c1008846bd8cc0dce",
+          "sourceOffsetSeconds": 81,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 24000,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 12,
+          "audioLevelAttackCandidateCount": 1,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            5,
+            5,
+            2,
+            0
+          ],
+          "medianInteriorCandidateGapSeconds": 0.75075,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 23006,
+              "localSeconds": 0.958583,
+              "nearestAudioAttackDeltaMs": 9769,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 63046,
+              "localSeconds": 2.626917,
+              "nearestAudioAttackDeltaMs": 8101,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 94077,
+              "localSeconds": 3.919875,
+              "nearestAudioAttackDeltaMs": 6808,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 111094,
+              "localSeconds": 4.628917,
+              "nearestAudioAttackDeltaMs": 6099,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 117100,
+              "localSeconds": 4.879167,
+              "nearestAudioAttackDeltaMs": 5848,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 120103,
+              "localSeconds": 5.004292,
+              "nearestAudioAttackDeltaMs": 5723,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 167150,
+              "localSeconds": 6.964583,
+              "nearestAudioAttackDeltaMs": 3763,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 182165,
+              "localSeconds": 7.590208,
+              "nearestAudioAttackDeltaMs": 3137,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 193176,
+              "localSeconds": 8.049,
+              "nearestAudioAttackDeltaMs": 2679,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 211194,
+              "localSeconds": 8.79975,
+              "nearestAudioAttackDeltaMs": 1928,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 297280,
+              "localSeconds": 12.386667,
+              "nearestAudioAttackDeltaMs": -1659,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 338321,
+              "localSeconds": 14.096708,
+              "nearestAudioAttackDeltaMs": -3369,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 473088,
+              "localSeconds": 10.727619,
+              "measuredRmsRiseDb": 13.8366
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "super-mario-bros",
+      "catalogId": "illumination-super-mario-trailer",
+      "originalSourceSha256": "3060ca0c8ca3e5b6cc764b846cb81711ed9517200bd0f76ea37df8cfc13d411f",
+      "detailGitBlobSha": "0f62a6c1c1ad7d75856888f97784f8de04779b19",
+      "sourceEdition": "Apple iTunes Store promotional movie preview (not verified identical to catalog YouTube upload)",
+      "catalogUploadIdentityMatch": "not-verified",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "3060ca0c8ca3e5b6cc764b846cb81711ed9517200bd0f76ea37df8cfc13d411f",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 24000,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "exact-opening",
+          "cutCandidateCount025": 2,
+          "audioLevelAttackCandidateCount": 0,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            1,
+            1,
+            0,
+            0
+          ],
+          "medianInteriorCandidateGapSeconds": 4.5045,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 65065,
+              "localSeconds": 2.711042,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 173173,
+              "localSeconds": 7.215542,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": []
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "516eef0799d23be3ddd131de49b204f60184db4265f70ef993ed1879c15d602f",
+          "sourceOffsetSeconds": 36,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 24000,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 14,
+          "audioLevelAttackCandidateCount": 0,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            6,
+            6,
+            1,
+            1
+          ],
+          "medianInteriorCandidateGapSeconds": 0.667333,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 25008,
+              "localSeconds": 1.042,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 35018,
+              "localSeconds": 1.459083,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 50033,
+              "localSeconds": 2.084708,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 76059,
+              "localSeconds": 3.169125,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 100083,
+              "localSeconds": 4.170125,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 116099,
+              "localSeconds": 4.837458,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 132115,
+              "localSeconds": 5.504792,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 160143,
+              "localSeconds": 6.672625,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 176159,
+              "localSeconds": 7.339958,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 191174,
+              "localSeconds": 7.965583,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 218201,
+              "localSeconds": 9.091708,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 236219,
+              "localSeconds": 9.842458,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 251234,
+              "localSeconds": 10.468083,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 446429,
+              "localSeconds": 18.601208,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": []
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "7f8932913b3bf3a7a83dc6747c4ef1c71c42aa6dd392050adadf6941f3d60a7e",
+          "sourceOffsetSeconds": 72,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 24000,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 2,
+          "audioLevelAttackCandidateCount": 0,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            0,
+            0,
+            2,
+            0
+          ],
+          "medianInteriorCandidateGapSeconds": 0.625625,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 289272,
+              "localSeconds": 12.053,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 304287,
+              "localSeconds": 12.678625,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": []
+        }
+      ]
+    },
+    {
+      "id": "zootopia-2",
+      "catalogId": "disney-zootopia-2-trailer",
+      "originalSourceSha256": "13b574710d6a9afa561647223c2e4e61ddfdf1cea2d3ce06e0297a2a19458259",
+      "detailGitBlobSha": "3b9013c947dbdab8d288da043d0c6b17b2dc74c1",
+      "sourceEdition": "Disney official public-player",
+      "catalogUploadIdentityMatch": "not-verified",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "13b574710d6a9afa561647223c2e4e61ddfdf1cea2d3ce06e0297a2a19458259",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 11988,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "exact-opening",
+          "cutCandidateCount025": 9,
+          "audioLevelAttackCandidateCount": 19,
+          "cutCandidatesWithin250MsOfAudioAttack": 4,
+          "cutCandidateCountsByFiveSecondBin": [
+            2,
+            2,
+            1,
+            4
+          ],
+          "medianInteriorCandidateGapSeconds": 1.876877,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 14000,
+              "localSeconds": 1.167835,
+              "nearestAudioAttackDeltaMs": -1121,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 36000,
+              "localSeconds": 3.003003,
+              "nearestAudioAttackDeltaMs": -193,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 63500,
+              "localSeconds": 5.296964,
+              "nearestAudioAttackDeltaMs": -699,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 77500,
+              "localSeconds": 6.464798,
+              "nearestAudioAttackDeltaMs": -312,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 135500,
+              "localSeconds": 11.30297,
+              "nearestAudioAttackDeltaMs": 5,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 184000,
+              "localSeconds": 15.348682,
+              "nearestAudioAttackDeltaMs": 348,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 207000,
+              "localSeconds": 17.267267,
+              "nearestAudioAttackDeltaMs": -201,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 220000,
+              "localSeconds": 18.351685,
+              "nearestAudioAttackDeltaMs": 456,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 234000,
+              "localSeconds": 19.51952,
+              "nearestAudioAttackDeltaMs": 171,
+              "audioAttackWithin250Ms": true
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 2048,
+              "localSeconds": 0.04644,
+              "measuredRmsRiseDb": 41.1178
+            },
+            {
+              "sourceAudioPts": 123904,
+              "localSeconds": 2.809615,
+              "measuredRmsRiseDb": 13.1086
+            },
+            {
+              "sourceAudioPts": 148480,
+              "localSeconds": 3.366893,
+              "measuredRmsRiseDb": 13.089
+            },
+            {
+              "sourceAudioPts": 202752,
+              "localSeconds": 4.597551,
+              "measuredRmsRiseDb": 14.862
+            },
+            {
+              "sourceAudioPts": 271360,
+              "localSeconds": 6.153288,
+              "measuredRmsRiseDb": 13.5715
+            },
+            {
+              "sourceAudioPts": 316416,
+              "localSeconds": 7.174966,
+              "measuredRmsRiseDb": 14.9189
+            },
+            {
+              "sourceAudioPts": 330752,
+              "localSeconds": 7.500045,
+              "measuredRmsRiseDb": 15.7705
+            },
+            {
+              "sourceAudioPts": 336896,
+              "localSeconds": 7.639365,
+              "measuredRmsRiseDb": 16.4179
+            },
+            {
+              "sourceAudioPts": 433152,
+              "localSeconds": 9.822041,
+              "measuredRmsRiseDb": 18.0834
+            },
+            {
+              "sourceAudioPts": 443392,
+              "localSeconds": 10.05424,
+              "measuredRmsRiseDb": 13.5693
+            },
+            {
+              "sourceAudioPts": 498688,
+              "localSeconds": 11.308118,
+              "measuredRmsRiseDb": 12.9574
+            },
+            {
+              "sourceAudioPts": 547840,
+              "localSeconds": 12.422676,
+              "measuredRmsRiseDb": 15.4302
+            },
+            {
+              "sourceAudioPts": 632832,
+              "localSeconds": 14.349932,
+              "measuredRmsRiseDb": 21.177
+            },
+            {
+              "sourceAudioPts": 692224,
+              "localSeconds": 15.696689,
+              "measuredRmsRiseDb": 12.4252
+            },
+            {
+              "sourceAudioPts": 732160,
+              "localSeconds": 16.602268,
+              "measuredRmsRiseDb": 12.735
+            },
+            {
+              "sourceAudioPts": 752640,
+              "localSeconds": 17.066667,
+              "measuredRmsRiseDb": 14.0337
+            },
+            {
+              "sourceAudioPts": 829440,
+              "localSeconds": 18.808163,
+              "measuredRmsRiseDb": 19.9855
+            },
+            {
+              "sourceAudioPts": 836608,
+              "localSeconds": 18.970703,
+              "measuredRmsRiseDb": 13.5042
+            },
+            {
+              "sourceAudioPts": 868352,
+              "localSeconds": 19.690522,
+              "measuredRmsRiseDb": 12.8427
+            }
+          ]
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "689c4c87db29d0f53c16d1025b5353df57313cbc37912d64135a05e7fce03cfc",
+          "sourceOffsetSeconds": 61,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 11988,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 10,
+          "audioLevelAttackCandidateCount": 5,
+          "cutCandidatesWithin250MsOfAudioAttack": 2,
+          "cutCandidateCountsByFiveSecondBin": [
+            2,
+            2,
+            3,
+            3
+          ],
+          "medianInteriorCandidateGapSeconds": 1.668335,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 11500,
+              "localSeconds": 0.959293,
+              "nearestAudioAttackDeltaMs": 1804,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 53500,
+              "localSeconds": 4.462796,
+              "nearestAudioAttackDeltaMs": 228,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 99000,
+              "localSeconds": 8.258258,
+              "nearestAudioAttackDeltaMs": 3212,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 113000,
+              "localSeconds": 9.426093,
+              "nearestAudioAttackDeltaMs": 2045,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 129500,
+              "localSeconds": 10.802469,
+              "nearestAudioAttackDeltaMs": 668,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 138000,
+              "localSeconds": 11.511512,
+              "nearestAudioAttackDeltaMs": -41,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 166000,
+              "localSeconds": 13.847181,
+              "nearestAudioAttackDeltaMs": 1919,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 180000,
+              "localSeconds": 15.015015,
+              "nearestAudioAttackDeltaMs": 751,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 211500,
+              "localSeconds": 17.642643,
+              "nearestAudioAttackDeltaMs": -1876,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 231500,
+              "localSeconds": 19.310978,
+              "nearestAudioAttackDeltaMs": -3545,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 121856,
+              "localSeconds": 2.763175,
+              "measuredRmsRiseDb": 17.486
+            },
+            {
+              "sourceAudioPts": 154624,
+              "localSeconds": 3.506213,
+              "measuredRmsRiseDb": 13.7279
+            },
+            {
+              "sourceAudioPts": 206848,
+              "localSeconds": 4.690431,
+              "measuredRmsRiseDb": 12.0907
+            },
+            {
+              "sourceAudioPts": 505856,
+              "localSeconds": 11.470658,
+              "measuredRmsRiseDb": 16.9149
+            },
+            {
+              "sourceAudioPts": 695296,
+              "localSeconds": 15.766349,
+              "measuredRmsRiseDb": 12.8432
+            }
+          ]
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "8225a4d6fd428e4f815eb38bcf991f4402e25b0d22fd3c27626149b1af07c89c",
+          "sourceOffsetSeconds": 121,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 11988,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "denominator": 44100,
+            "numerator": 1
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 3,
+          "audioLevelAttackCandidateCount": 3,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            1,
+            1,
+            1,
+            0
+          ],
+          "medianInteriorCandidateGapSeconds": 6.047714,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 30992,
+              "localSeconds": 2.585252,
+              "nearestAudioAttackDeltaMs": 7841,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 91492,
+              "localSeconds": 7.631965,
+              "nearestAudioAttackDeltaMs": 2794,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 175992,
+              "localSeconds": 14.680681,
+              "nearestAudioAttackDeltaMs": -2351,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 459776,
+              "localSeconds": 10.42576,
+              "measuredRmsRiseDb": 15.0472
+            },
+            {
+              "sourceAudioPts": 474112,
+              "localSeconds": 10.750839,
+              "measuredRmsRiseDb": 14.7773
+            },
+            {
+              "sourceAudioPts": 543744,
+              "localSeconds": 12.329796,
+              "measuredRmsRiseDb": 12.621
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

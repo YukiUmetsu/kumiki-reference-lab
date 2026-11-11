@@ -167,6 +167,37 @@ sections or infer viewer retention and conversion from them.
 
 For official international animation and genre expansion candidates beyond the 13 measured promo editions, see the [26-source studio-diverse movie research queue](../research/analysis/movie-promotions/study-queue.v1.json) and the [November 11 international research memo](movie-promotion-international-expansion-2026-11-11.md). The queued uploads are **not measured film evidence** and must not be conflated with the measured index.
 
+## Timecoded pacing and audio-level proximity: measured evidence
+
+A new [source-PTS candidate timeline](../research/analysis/movie-promotions/derived/timed-events.v1.json)
+derives explicit per-cut timestamps and audio-rise offsets from the 13
+already-measured detail reports. Each of the 39 sampled windows spans 20
+seconds, split into four five-second bins. The method uses the detector
+threshold 0.25, not independently confirmed editorial shot boundaries.
+
+| Sampled film/segment | Cut candidates by consecutive 5-second bin | Audio-rise candidates in the same 20-second window | Cuts within 250 ms of a detected audio attack |
+| --- | --- | ---: | ---: |
+| *Inside Out 2*, opening | 5 / 4 / 4 / 4 | 3 | 0 |
+| *Barbie*, ending (Apple retail preview) | 2 / 4 / 5 / 2 | 9 | 3 |
+| *The Super Mario Bros. Movie*, middle (Apple preview) | 6 / 6 / 1 / 1 | 0 | 0 |
+| *Star Wars: The Force Awakens*, ending | 0 / 0 / 0 / 0 | 1 | 0 |
+
+Across all sampled windows there are **268 source-PTS cut candidates** and
+**109 audio RMS-rise candidates**, with **25 cuts within ±250 ms** of an
+audio-rise candidate. A null nearest-audio offset denotes **no detected
+audio attack**, not silence. These counts can inform *what to review next*
+but do not justify claims about music syncing, actual scene content,
+physical camera moves, real lighting, or which animated characters appear.
+
+For `kumiki-ui` and `ai-content-generation`, useful **original motion
+experiments** to prototype from these timing differences include:
+a programmable multi-phase edit-density envelope, deliberately held
+compositions between more active transitions, and optional cut-to-sound
+cue alignment with independent sound assets. These are new design
+hypotheses, **not** proof that a particular movie used a specific tool,
+transition or cinematic recipe. Review at full speed with an authorized
+copy before attributing artistic intent or deciding on component gaps.
+
 ## Cross-studio comparison questions
 
 | Pair | Controlled question for future source-verified analysis | Why this matters to Kumiki |
