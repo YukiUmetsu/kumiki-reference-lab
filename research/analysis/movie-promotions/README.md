@@ -23,9 +23,11 @@ All entries retain `review-required` rights status, and the source MP4s, extract
 
 ## Expansion queue: new studio and movie types
 
-[study-queue.v1.json](study-queue.v1.json) now holds **13 additional official
-YouTube trailer uploads** selected from Warner Bros., Sony Pictures Animation,
-Universal/DreamWorks, Paramount, Lionsgate, Marvel, 20th Century and A24.
+[study-queue.v1.json](study-queue.v1.json) now holds **26 additional official
+YouTube trailer uploads** across Warner Bros., Sony, Netflix, Universal/DreamWorks,
+Paramount, Lionsgate, Marvel, 20th Century, A24, Toho, Aniplex, CMC Pictures,
+Cartoon Saloon/Apple TV and others. See [the international animation and genre
+expansion study](../../../docs/movie-promotion-international-expansion-2026-11-11.md).
 They are **not yet analyzed footage** and do **not** appear in `index.json`
 or the derived measured comparison. Each entry preserves a specific YouTube
 upload ID, publisher, publication date, an attributed view-count observation,

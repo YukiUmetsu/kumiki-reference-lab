@@ -165,6 +165,8 @@ review ambiguous cuts and timecode character-action/lighting hypotheses.
 Do not generalize the current selected-window averages to a trailer's unseen
 sections or infer viewer retention and conversion from them.
 
+For official international animation and genre expansion candidates beyond the 13 measured promo editions, see the [26-source studio-diverse movie research queue](../research/analysis/movie-promotions/study-queue.v1.json) and the [November 11 international research memo](movie-promotion-international-expansion-2026-11-11.md). The queued uploads are **not measured film evidence** and must not be conflated with the measured index.
+
 ## Cross-studio comparison questions
 
 | Pair | Controlled question for future source-verified analysis | Why this matters to Kumiki |

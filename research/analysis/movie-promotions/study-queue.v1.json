@@ -2,8 +2,8 @@
   "schemaVersion": "kumiki.movie-promotion-study-queue.v1",
   "retrievedOn": "2026-11-11",
   "researchStatus": "metadata-only-no-media-analysis",
-  "sourceCaveat": "Each URL points to a particular official uploader's YouTube video. Reported views come from search/third-party indexing and can be stale. The counts are cumulative upload-level views, not unique viewers, campaign reach, or causal effect. Proposed research tags are questions, not measurements or verified visual properties.",
-  "target": "Add diverse high-popularity official trailers to the future source-hashed movie-promotion study corpus. Existing 13 measured promo editions remain in index.json and are not duplicated here.",
+  "sourceCaveat": "Specific public publisher video URLs were checked through search; reported views are snapshot/index figures, may be stale and are not live YouTube Analytics, unique people, full-campaign reach, or evidence of retention and causality. Proposed style/animation tags are study questions rather than verified frame observations. All queued entries remain metadata-only.",
+  "target": "Broaden the movie-promotion study cohort across genres, animation techniques, distributors and regions. The 13 already measured sources remain in index.json and are not duplicated in this queue.",
   "nextSteps": "Acquire access to a legitimate, accessible official edition; record edition identity and original SHA-256; run bounded first/middle/last studies; commit only numeric evidence; match upload identity explicitly or mark it not verified. Never put source footage in Git.",
   "entries": [
     {
@@ -162,6 +162,37 @@
       }
     },
     {
+      "id": "how-to-train-your-dragon-live-action-trailer",
+      "title": "How to Train Your Dragon (2025)",
+      "filmStudio": "Universal Pictures / DreamWorks",
+      "officialUploader": "Universal Pictures",
+      "filmReleaseYear": 2025,
+      "youtubeId": "22w7z_lT6YM",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=22w7z_lT6YM",
+      "publishedOn": "2025-02-12",
+      "viewEvidence": {
+        "reportedViews": 46548775,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=22w7z_lT6YM",
+        "note": "Source-specific reported YouTube views observed via public search/index on 2026-11-11; not unique people, retention or live YouTube Analytics."
+      },
+      "candidateResearchTags": [
+        "animated-to-live-action",
+        "creature-performance",
+        "subject-scale"
+      ],
+      "studyQuestion": "How do the trailer's character and creature reveal intervals compare with the original animated films or other creature-led trailers?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "first-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
       "id": "top-gun-maverick-new-trailer",
       "title": "Top Gun: Maverick",
       "filmStudio": "Paramount Pictures",
@@ -255,6 +286,37 @@
       }
     },
     {
+      "id": "kung-fu-panda-4-trailer",
+      "title": "Kung Fu Panda 4",
+      "filmStudio": "DreamWorks Animation",
+      "officialUploader": "Universal Pictures",
+      "filmReleaseYear": 2024,
+      "youtubeId": "_inKs4eeHiI",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=_inKs4eeHiI",
+      "publishedOn": "2023-12-13",
+      "viewEvidence": {
+        "reportedViews": 39458514,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=_inKs4eeHiI",
+        "note": "Source-specific reported YouTube views observed via public search/index on 2026-11-11; not unique people, retention or live YouTube Analytics."
+      },
+      "candidateResearchTags": [
+        "stylized-character-action",
+        "comic-holds",
+        "color-separation"
+      ],
+      "studyQuestion": "Do character-reaction holds and stylized fight passages exhibit distinct edit candidate densities?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "second-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
       "id": "guardians-galaxy-vol3-trailer",
       "title": "Guardians of the Galaxy Vol. 3",
       "filmStudio": "Marvel Studios",
@@ -317,6 +379,68 @@
       }
     },
     {
+      "id": "sinners-trailer-2",
+      "title": "Sinners",
+      "filmStudio": "Warner Bros. Pictures",
+      "officialUploader": "Warner Bros.",
+      "filmReleaseYear": 2025,
+      "youtubeId": "7joulECTx_U",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=7joulECTx_U",
+      "publishedOn": "2025-01-28",
+      "viewEvidence": {
+        "reportedViews": 33004799,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=7joulECTx_U",
+        "note": "Source-specific reported YouTube views observed via public search/index on 2026-11-11; not unique people, retention or live YouTube Analytics."
+      },
+      "candidateResearchTags": [
+        "horror-tension",
+        "music-driven-editing",
+        "low-key-appearance"
+      ],
+      "studyQuestion": "How do relative brightness, audio attacks, and edit-candidate timing change around the trailer's suspense reveals?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "first-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
+      "id": "kpop-demon-hunters-trailer",
+      "title": "KPop Demon Hunters",
+      "filmStudio": "Sony Pictures Animation / Netflix",
+      "officialUploader": "Netflix",
+      "filmReleaseYear": 2025,
+      "youtubeId": "AzCAwdp1uIQ",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=AzCAwdp1uIQ",
+      "publishedOn": "2025-05-22",
+      "viewEvidence": {
+        "reportedViews": 27354543,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=AzCAwdp1uIQ",
+        "note": "Source-specific reported YouTube views observed via public search/index on 2026-11-11; not unique people, retention or live YouTube Analytics."
+      },
+      "candidateResearchTags": [
+        "stylized-character-acting",
+        "music-performance",
+        "ensemble-choreography"
+      ],
+      "studyQuestion": "How do cut candidates and audience-attention proxies differ between musical performance and multi-character action passages?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "first-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
       "id": "wicked-official-trailer",
       "title": "Wicked",
       "filmStudio": "Universal Pictures",
@@ -338,6 +462,37 @@
         "character-duo"
       ],
       "studyQuestion": "What is the relationship between dialogue/music level attacks and cut-candidate placement?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "second-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
+      "id": "f1-movie-main-trailer",
+      "title": "F1 The Movie",
+      "filmStudio": "Apple Original Films / Warner Bros.",
+      "officialUploader": "Warner Bros.",
+      "filmReleaseYear": 2025,
+      "youtubeId": "8yh9BPUBbbQ",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=8yh9BPUBbbQ",
+      "publishedOn": "2025-05-12",
+      "viewEvidence": {
+        "reportedViews": 24194371,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=8yh9BPUBbbQ",
+        "note": "Source-specific reported YouTube views observed via public search/index on 2026-11-11; not unique people, retention or live YouTube Analytics."
+      },
+      "candidateResearchTags": [
+        "vehicle-action",
+        "motivated-camera",
+        "sound-edit-rhythm"
+      ],
+      "studyQuestion": "How often do racing-motion sequences shift into dialogue holds, and are source-audio attacks concentrated near edits?",
       "researchStatus": "metadata-only-not-frame-reviewed",
       "mediaAnalysisStatus": "not-performed",
       "proposedAcquisitionPriority": "second-wave",
@@ -403,6 +558,254 @@
       "researchStatus": "metadata-only-not-frame-reviewed",
       "mediaAnalysisStatus": "not-performed",
       "proposedAcquisitionPriority": "second-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
+      "id": "transformers-one-trailer",
+      "title": "Transformers One",
+      "filmStudio": "Paramount Animation",
+      "officialUploader": "Paramount Pictures",
+      "filmReleaseYear": 2024,
+      "youtubeId": "5a09yJU-mCI",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=5a09yJU-mCI",
+      "publishedOn": "2024-04-18",
+      "viewEvidence": {
+        "reportedViews": 19371011,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=5a09yJU-mCI",
+        "note": "Source-specific reported YouTube views observed via public search/index on 2026-11-11; not unique people, retention or live YouTube Analytics."
+      },
+      "candidateResearchTags": [
+        "mechanical-transformation",
+        "character-duo",
+        "animated-environments"
+      ],
+      "studyQuestion": "How do mechanical transformation sequences preserve subject readability despite changing silhouettes and scene motion?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "first-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
+      "id": "godzilla-minus-one-trailer-2",
+      "title": "Godzilla Minus One",
+      "filmStudio": "Toho",
+      "officialUploader": "GODZILLA OFFICIAL by TOHO",
+      "filmReleaseYear": 2023,
+      "youtubeId": "VvSrHIX5a-0",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=VvSrHIX5a-0",
+      "publishedOn": "2023-11-03",
+      "viewEvidence": {
+        "reportedViews": 18896968,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=VvSrHIX5a-0",
+        "note": "Source-specific reported YouTube views observed via public search/index on 2026-11-11; not unique people, retention or live YouTube Analytics."
+      },
+      "candidateResearchTags": [
+        "creature-scale",
+        "destruction-vfx",
+        "suspense-pacing"
+      ],
+      "studyQuestion": "How do small-human to giant-creature scale transitions relate to cut density and display-contrast changes?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "first-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
+      "id": "tmnt-mutant-mayhem-trailer",
+      "title": "Teenage Mutant Ninja Turtles: Mutant Mayhem",
+      "filmStudio": "Paramount Pictures / Nickelodeon Movies",
+      "officialUploader": "Paramount Pictures",
+      "filmReleaseYear": 2023,
+      "youtubeId": "IHvzw4Ibuho",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=IHvzw4Ibuho",
+      "publishedOn": "2023-05-31",
+      "viewEvidence": {
+        "reportedViews": 18206728,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=IHvzw4Ibuho",
+        "note": "Source-specific reported YouTube views observed via public search/index on 2026-11-11; not unique people, retention or live YouTube Analytics."
+      },
+      "candidateResearchTags": [
+        "sketch-textured-animation",
+        "teen-character-acting",
+        "ensemble-blocking"
+      ],
+      "studyQuestion": "How do ensemble blocking, graphic line treatments and energetic action maintain readable character identities?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "first-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
+      "id": "bad-guys-2-trailer",
+      "title": "The Bad Guys 2",
+      "filmStudio": "DreamWorks Animation",
+      "officialUploader": "Universal Pictures",
+      "filmReleaseYear": 2025,
+      "youtubeId": "TY1lWh20VSw",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=TY1lWh20VSw",
+      "publishedOn": "2024-11-21",
+      "viewEvidence": {
+        "reportedViews": 18161480,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=TY1lWh20VSw",
+        "note": "Source-specific reported YouTube views observed via public search/index on 2026-11-11; not unique people, retention or live YouTube Analytics."
+      },
+      "candidateResearchTags": [
+        "animated-heist",
+        "comic-action",
+        "character-ensemble"
+      ],
+      "studyQuestion": "Where does comedic timing create longer holds amid animated action compared with other DreamWorks promos?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "second-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
+      "id": "godzilla-minus-zero-trailer-3",
+      "title": "Godzilla Minus Zero",
+      "filmStudio": "Toho",
+      "officialUploader": "GODZILLA OFFICIAL by TOHO",
+      "filmReleaseYear": 2026,
+      "youtubeId": "Pu0pH5BuCPM",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=Pu0pH5BuCPM",
+      "publishedOn": "2026-11-05",
+      "viewEvidence": {
+        "reportedViews": 8236784,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "third-party-video-statistics",
+        "sourceUrl": "https://chartslist.com/youtube/video/Pu0pH5BuCPM/godzilla-minus-zero-official-trailer-3-now-playing/",
+        "note": "Source-specific reported YouTube views observed via public search/index on 2026-11-11; not unique people, retention or live YouTube Analytics."
+      },
+      "candidateResearchTags": [
+        "kaiju-scale",
+        "imax-composition",
+        "destruction-vfx"
+      ],
+      "studyQuestion": "Do shot scale, brightness, and cut candidate pacing differ from the Godzilla Minus One trailer edition sampled in the same way?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "first-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
+      "id": "wolfwalkers-trailer",
+      "title": "Wolfwalkers",
+      "filmStudio": "Cartoon Saloon / Apple TV",
+      "officialUploader": "Apple TV",
+      "filmReleaseYear": 2020,
+      "youtubeId": "d_Z_tybgPgg",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=d_Z_tybgPgg",
+      "publishedOn": "2020-10-08",
+      "viewEvidence": {
+        "reportedViews": 6068151,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=d_Z_tybgPgg",
+        "note": "Source-specific reported YouTube views observed via public search/index on 2026-11-11; not unique people, retention or live YouTube Analytics."
+      },
+      "candidateResearchTags": [
+        "hand-drawn-texture",
+        "shape-language",
+        "nature-composition"
+      ],
+      "studyQuestion": "How do hand-drawn textures, flattened shapes and character staging compare with CG-animated trailer treatments?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "first-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
+      "id": "ne-zha-2-international-trailer",
+      "title": "Ne Zha 2",
+      "filmStudio": "Coco Cartoon / CMC Pictures",
+      "officialUploader": "CMC Pictures",
+      "filmReleaseYear": 2025,
+      "youtubeId": "nsXQijb0F4I",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=nsXQijb0F4I",
+      "publishedOn": "2025-01-29",
+      "viewEvidence": {
+        "reportedViews": 4198770,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=nsXQijb0F4I",
+        "note": "Source-specific reported YouTube views observed via public search/index on 2026-11-11; not unique people, retention or live YouTube Analytics."
+      },
+      "candidateResearchTags": [
+        "chinese-mythology",
+        "stylized-cg-animation",
+        "magical-effects"
+      ],
+      "studyQuestion": "How do mythological character action, environmental scale and magical visual effects affect image-plane motion evidence?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "first-wave",
+      "rights": {
+        "referenceOnly": true,
+        "mediaProcessingPermission": "not-established",
+        "redistributionAuthorized": false
+      }
+    },
+    {
+      "id": "demon-slayer-infinity-castle-trailer",
+      "title": "Demon Slayer: Kimetsu no Yaiba – Infinity Castle",
+      "filmStudio": "ufotable / Aniplex",
+      "officialUploader": "Aniplex USA",
+      "filmReleaseYear": 2025,
+      "youtubeId": "9kb7vK11_Rw",
+      "officialYoutubeUrl": "https://www.youtube.com/watch?v=9kb7vK11_Rw",
+      "publishedOn": "2025-06-28",
+      "viewEvidence": {
+        "reportedViews": 607708,
+        "retrievedOn": "2026-11-11",
+        "sourceKind": "youtube-search-index",
+        "sourceUrl": "https://www.youtube.com/watch?v=9kb7vK11_Rw",
+        "note": "Source-specific reported YouTube views observed via public search/index on 2026-11-11; not unique people, retention or live YouTube Analytics."
+      },
+      "candidateResearchTags": [
+        "anime-two-dimensional",
+        "three-dimensional-backgrounds",
+        "action-transition"
+      ],
+      "studyQuestion": "How can a separate human style review identify 2D-character versus 3D-environment treatment without mistaking 2D optical flow for physical camera motion?",
+      "researchStatus": "metadata-only-not-frame-reviewed",
+      "mediaAnalysisStatus": "not-performed",
+      "proposedAcquisitionPriority": "first-wave",
       "rights": {
         "referenceOnly": true,
         "mediaProcessingPermission": "not-established",
