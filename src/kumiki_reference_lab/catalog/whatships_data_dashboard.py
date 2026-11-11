@@ -82,6 +82,7 @@ def _project_numeric(artifacts: list[dict[str, Any]], expected_sha: str) -> dict
 def build_whatships_browser(
     snapshot_path: Path, *, bindings_path: Path | None = None,
     analysis_path: Path | None = None, numeric_path: Path | None = None,
+    repository_root: Path | None = None,
 ) -> dict[str, Any]:
     """Whitelisted public metadata + verified private artifacts, never private paths."""
     if (analysis_path is not None and bindings_path is None or
@@ -109,10 +110,25 @@ def build_whatships_browser(
             numeric_path, config=prior["configuration"], source_rows=media,
             original_studies={k:v for k,v in studied.items()
                               if v["status"] == "completed-unreviewed"})}
+    committed = {}
+    if repository_root is not None:
+        # Runtime import avoids circular dependency: the analysis exporter
+        # reuses the ordinary catalog dashboard without a committed overlay.
+        from kumiki_reference_lab.catalog.whatships_analysis_store import validate_repository_analysis
+        validate_repository_analysis(repository_root,snapshot_path)
+        repo_index=_read_json(repository_root/"index.json")
+        committed={
+            row["sourceId"]:_read_json(repository_root/row["recordPath"])
+            for row in repo_index["entries"]
+        }
     entries, counts = [], Counter()
     for entry in catalog:
         sid = entry["id"]
         study, numeric = studied.get(sid), measured.get(sid)
+        persisted = committed.get(sid)
+        layers = persisted["evidence"] if persisted else {}
+        spot = layers.get("browserSpotCheck")
+        archived_numeric = layers.get("numericVisual")
         character_status = ("completed-unreviewed" if study and
                             study["status"] == "completed-unreviewed"
                             else "failed" if study else "not-run")
@@ -122,6 +138,26 @@ def build_whatships_browser(
         numeric_summary = (_project_numeric(
             numeric["probeArtifacts"],media[sid]["mediaSha256"])
             if visual_status == "sampled-numeric-unreviewed" else None)
+        if archived_numeric is not None:
+            if (numeric_summary is not None and media[sid]["mediaSha256"] !=
+                    archived_numeric["sourceSha256"]):
+                raise ValueError("private media and committed numeric evidence reference different source bytes")
+            if numeric_summary is None:
+                numeric_summary = {
+                    "windowsMeasured":len(archived_numeric["windows"]),
+                    "windows":[{
+                        "startSeconds":w["startSeconds"],
+                        "endSeconds":w["endSeconds"],
+                        "sampledFrames":len(w["sampledFrames"]),
+                        "cutCandidates":len(w["cutCandidatePts"]),
+                        "meanDisplayLuma":w["sampledWindowSummary"]["meanSampledDisplayLumaProxy"],
+                        "meanSaturation":w["sampledWindowSummary"]["meanSampledSaturationProxy"],
+                        "withinShotRgbChange":w["sampledWindowSummary"]["meanWithinShotDisplayRgbDelta"],
+                    } for w in archived_numeric["windows"]],
+                }
+                visual_status = "sampled-numeric-unreviewed"
+        if character_status == "not-run" and "characterStudyStatus" in layers:
+            character_status = "completed-unreviewed"
         row = {
             "sourceId":sid, "title":entry["title"], "creator":entry["creator"],
             "category":entry["category"],"watchUrl":entry["watchUrl"],
@@ -133,8 +169,19 @@ def build_whatships_browser(
             "mediaStatus":"operator-attested" if sid in media else "unbound",
             "characterStatus":character_status,"numericStatus":visual_status,
             "numeric":numeric_summary,"humanReviewed":False,
+            "repositoryAnalysisStatus":(
+                "tracked-partial-evidence" if persisted else "none"),
+            "visualObservationTags":spot["visualTags"] if spot else [],
+            "visibleMoments":spot["visibleMoments"] if spot else [],
+            "techniqueHypotheses":spot["techniqueHypotheses"] if spot else [],
+            "spotCheckCoverage":spot["coverage"] if spot else None,
+            "browserObservedOn":spot["observedOn"] if spot else None,
         }
         entries.append(row)
+        if persisted:
+            counts["repositoryEvidenceRecords"] += 1
+        if spot:
+            counts["browserSpotCheckRecords"] += 1
         for k in ("metadataStatus","mediaStatus","characterStatus","numericStatus"):
             counts[k+":"+str(row[k])] += 1
     for p,s in signatures:
@@ -293,12 +340,14 @@ def _html(data: dict[str, Any]) -> str:
 def write_whatships_browser(
     snapshot_path: Path, out: Path, *, bindings_path: Path | None = None,
     analysis_path: Path | None = None, numeric_path: Path | None = None,
+    repository_root: Path | None = None,
 ) -> Path:
     if out.exists() or out.is_symlink():
         raise ValueError("browser output must be a new nonexisting directory")
     data = build_whatships_browser(
         snapshot_path, bindings_path=bindings_path,
-        analysis_path=analysis_path, numeric_path=numeric_path)
+        analysis_path=analysis_path, numeric_path=numeric_path,
+        repository_root=repository_root)
     out.parent.mkdir(parents=True,exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".kumiki-whatships-browser-",dir=out.parent) as folder:
         staged=Path(folder)
