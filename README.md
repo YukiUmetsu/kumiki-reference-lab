@@ -62,6 +62,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Character VLM evidence quality QA:** [`review-character-vision` and `character-vision-feedback`](docs/character-vision-quality-review.md) regenerate actual source-PTS frames and subject crops beside model-proposed descriptions/motions, then report explicitly human-reviewed supported/unsupported/unclear verdicts. An empty or pending review is **not** treated as verified model accuracy. Source media and cropped people images remain local.
 
+**Directed two-character interaction hypotheses (optional):** [`local-character-interactions`](docs/local-character-interactions.md) uses a local vision model to compare two source-PTS-verified frames marked with red/cyan subject boxes, then proposes cautious actor-to-target movement with concrete evidence. It never infers speech, emotion, actual identity or demographic attributes, and does not equate visual movement with physical contact. No model weights or remote service are downloaded.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |

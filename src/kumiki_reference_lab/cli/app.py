@@ -70,6 +70,7 @@ from kumiki_reference_lab.pipeline.character_motion import run_character_motion
 from kumiki_reference_lab.pipeline.subject_detections import run_subject_detections
 from kumiki_reference_lab.pipeline.subject_tracklet_review import build_subject_tracklet_review
 from kumiki_reference_lab.pipeline.ollama_character_perception import describe_local_characters
+from kumiki_reference_lab.pipeline.local_character_interactions import analyze_local_interactions
 from kumiki_reference_lab.pipeline.character_vision_review import (
     build_character_vision_review, summarize_character_vision_feedback,
 )
@@ -669,6 +670,23 @@ def build_parser() -> argparse.ArgumentParser:
         help="report human support/rejection verdicts on a source-bound VLM review")
     character_feedback.add_argument("feedback", type=Path, help="filled review-feedback.json")
     character_feedback.add_argument("vision_manifest", type=Path, help="original character-vision.json")
+    interactions = commands.add_parser(
+        "local-character-interactions",
+        help="propose uncertain actor-target motion from two source-PTS-verified frames with local Ollama")
+    interactions.add_argument("source", type=Path)
+    interactions.add_argument("report", type=Path, help="subject-tracklets.json")
+    interactions.add_argument("vision_run", type=Path, help="local-character-vision output directory")
+    interactions.add_argument("--out", type=Path, required=True, help="new output directory")
+    interactions.add_argument("--model", required=True, help="already installed local Ollama vision model")
+    interactions.add_argument("--port", type=int, default=11434)
+    interactions.add_argument("--max-pairs", type=int, default=6)
+    interactions.add_argument("--gap-seconds", type=int, default=3)
+    interactions.add_argument("--scan-seconds", type=int, default=20)
+    interactions.add_argument("--timeout-seconds", type=int, default=180)
+    interactions.add_argument("--width", type=int, default=320)
+    interactions.add_argument("--height", type=int, default=180)
+    interactions.add_argument("--ffmpeg", default="ffmpeg")
+    interactions.add_argument("--ffprobe", default="ffprobe")
     local_vision = commands.add_parser(
         "local-character-vision",
         help="describe visual subject crops and two-frame motion using a local Ollama vision model")
@@ -926,6 +944,13 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(summarize_character_vision_feedback(
                 args.feedback, args.vision_manifest), ensure_ascii=False,
                 indent=2, sort_keys=True))
+            return 0
+        if args.command == "local-character-interactions":
+            print(analyze_local_interactions(
+                args.source, args.report, args.vision_run, args.out, model=args.model,
+                port=args.port, max_pairs=args.max_pairs, gap_seconds=args.gap_seconds,
+                scan_seconds=args.scan_seconds, timeout_seconds=args.timeout_seconds,
+                width=args.width, height=args.height, ffmpeg=args.ffmpeg, ffprobe=args.ffprobe))
             return 0
         if args.command == "local-character-vision":
             print(describe_local_characters(
