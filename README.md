@@ -58,6 +58,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **First local pixel-to-human detector (macOS, optional):** [`mac-vision-humans`](docs/mac-vision-human-detection.md) samples original-PTS source frames and runs Apple Vision's built-in human-rectangle detector via locally installed PyObjC. It outputs provider-neutral people-box proposals for `subject-detections` and `review-subject-tracklets` without downloading models or making remote calls. It supports **live-action human regions only** as an unverified baseline, not animated-character recognition, person identification, age/ethnicity classification or action understanding.
 
+**Local vision-language character observations (opt-in):** [`local-character-vision`](docs/local-character-vision.md) sends source-PTS-verified cropped subject frames to an *already installed, locally served* Ollama vision model on 127.0.0.1. It writes provisional, low-confidence descriptions and two-frame gesture/motion hypotheses to the existing `character-scene` contract. It does **not** recognize individual identities, infer demographic traits, attribute speech, or verify semantic action accuracy. No paid API or automatic model download is required.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
