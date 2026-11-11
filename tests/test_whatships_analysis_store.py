@@ -138,6 +138,7 @@ class WhatshipsRepositoryAnalysisTests(unittest.TestCase):
     def test_browser_escapes_html_script_and_csv_formula_names(self):
         data = whatships_fixture()
         data["videos"][0]["title"] = "</script><script>alert(1)</script>"
+        data["videos"][0]["detail"]["title"] = "</script><script>alert(1)</script>"
         data["videos"][1]["title"] = "=HYPERLINK('https://bad.example','click')"
         self.snapshot.write_text(json.dumps(data))
         dataset = build_whatships_browser(self.snapshot)
