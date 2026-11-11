@@ -12,6 +12,10 @@ Kumiki Reference Lab studies legally obtained motion-graphics, product-film, doc
 
 The aim is **not** to copy a film, recover an inaccessible source project, or automatically turn arbitrary footage into perfect 3D. It is to learn *why an animation works*, reconstruct its general techniques with independently created assets, and verify the quality of the resulting animation.
 
+## Agent online video studies (any public HTTPS host)
+
+Run `kumiki-watch` to acquire an authorized public video ephemerally through a provider-neutral extractor, measure **every decoded frame within time/frame budgets**, and optionally use a local Ollama vision model to propose timecoded animation, typography, character, cinematography and style cues. It saves only source-hashed reference JSON under `research/analysis/online-videos/` and deletes the source video before writing results. There is no website allowlist. Host support depends on whether a public, extractable stream exists; unauthenticated extraction is not permission to copy. See [agent online video study documentation](docs/agent-online-video-study.md) for setup, limits and safety. For low-compute local models, use [Magnitude agent frame review](docs/magnitude-agent-frame-workflow.md): optional low-resolution, locally ignored previews of every decoded frame; interactive one-frame tools; scoped Magnitude vision requests; bounded resumable scans and JSON-only annotation export.
+
 ## Why this exists
 
 Professional motion graphics depend on more than shaders and easing presets:
