@@ -76,6 +76,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Source-relative character windows:** [`--start-seconds`](docs/windowed-character-study.md) now works with `character-study-local`, `local-character-detect`, and `mac-vision-humans`, including windows that start well after the opening frame. The original source PTS/timebase is retained in detector/tracker reports and all galleries; total source prefix is currently capped at 120 seconds.
 
+**Batched character reference studies:** [`character-study-batch`](docs/character-study-batch.md) automatically runs up to six independent, nonoverlapping original-PTS windows within the initial 120 seconds of a local video. Each window includes source-frame evidence and its own provisional cast/interaction review, and the entire batch publishes atomically. It **never equates repeated local IDs across windows with the same character**.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
