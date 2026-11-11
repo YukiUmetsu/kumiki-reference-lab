@@ -1,11 +1,11 @@
 {
   "schemaVersion": "kumiki.motionographer-index.v1",
-  "generatedAt": "2026-11-11T21:07:44.091041Z",
+  "generatedAt": "2026-11-11T21:08:54.220795Z",
   "catalogSha256": "23f813dafb11e546fc8c62f962bf435b8d7aa75e4a00f3c4179f6459e68b7893",
   "counts": {
-    "measured": 5,
+    "measured": 10,
     "no-video": 7385,
-    "pending": 58,
+    "pending": 53,
     "unsupported-format": 1053,
     "unsupported-host-not-allowlisted": 17,
     "unsupported-other-embed": 56,
@@ -145,7 +145,18 @@
       "mediaSlug": "dreamcat-jedi-breakdown",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 6.32,
+      "resolution": [
+        1920,
+        920
+      ],
+      "sourceSha256": "1923031d1c970ce1b203d43fc7fd2331eeec0bcb7affec006c65e4ce6d8415d2",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.193976,
+      "meanSaturation": 0.447575,
+      "recordPath": "videos/im-having-a-breakdown-dreamcat-the-monster-that-wasnt-his--dreamcat-jedi-breakdown.json"
     },
     {
       "postId": 92493,
@@ -155,7 +166,18 @@
       "mediaSlug": "dreamcat-outtakes",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 67.946009,
+      "resolution": [
+        1280,
+        720
+      ],
+      "sourceSha256": "53b575698bd7b072ffe160e1780016f5b13e5628bd72a7a2c603818f74281688",
+      "windowCount": 4,
+      "cutCandidateRatePerMinute": 10.5,
+      "meanDisplayLuma": 0.284528,
+      "meanSaturation": 0.190769,
+      "recordPath": "videos/im-having-a-breakdown-dreamcat-the-monster-that-wasnt-his--dreamcat-outtakes.json"
     },
     {
       "postId": 92467,
@@ -495,7 +517,18 @@
       "mediaSlug": "video-webiste-offf",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 20.687007,
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sourceSha256": "1b46fc5d28056c56ea3d50e251c9cf0068c1ba6a4ac81f8049110f4eecfdb516",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 90.0,
+      "meanDisplayLuma": 0.388826,
+      "meanSaturation": 0.306028,
+      "recordPath": "videos/offf-is-not-a-festival-it-is-a-mindset--video-webiste-offf.json"
     },
     {
       "postId": 91082,
@@ -1835,7 +1868,18 @@
       "mediaSlug": "DM_PREVIZ_BEFORE_SINGLECAMERA",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 30.03,
+      "resolution": [
+        3840,
+        2160
+      ],
+      "sourceSha256": "ce30bb851c572b3e6e2661ee2109005bb7083a88755720a9bdc912979598b7e2",
+      "windowCount": 2,
+      "cutCandidateRatePerMinute": 9.0,
+      "meanDisplayLuma": 0.435095,
+      "meanSaturation": 0.006231,
+      "recordPath": "videos/the-dark-matter-title-sequence-how-we-created-it-three-times--DM_PREVIZ_BEFORE_SINGLECAMERA.json"
     },
     {
       "postId": 78193,
@@ -1865,7 +1909,18 @@
       "mediaSlug": "Mistborn_by_JMBlay_Title-1",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 9.08,
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sourceSha256": "6f3767b451a3cf702caf61adf45699fc511cc596e41a69261c7b4a7b230a0b06",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 7.5,
+      "meanDisplayLuma": 0.144436,
+      "meanSaturation": 0.083948,
+      "recordPath": "videos/mistborn--Mistborn_by_JMBlay_Title-1.json"
     },
     {
       "postId": 77965,
