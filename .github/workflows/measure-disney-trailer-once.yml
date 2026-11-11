@@ -1,23 +1,20 @@
-name: One-shot Blender Studio feature teaser measurement
+name: One-shot refresh of source-hashed movie-promotion derivatives
 
 on:
   pull_request:
     paths:
-      - scripts/research_movie_promo_disney_once.py
-      - scripts/audit_movie_promo_evidence.py
-      - tests/test_movie_promo_evidence_audit.py
       - .github/workflows/measure-disney-trailer-once.yml
 
 permissions:
   contents: write
 
 jobs:
-  blender-overgrown-research:
+  refresh-derived-evidence:
     if: >-
       github.event.pull_request.head.repo.full_name == github.repository &&
       github.head_ref == 'research/ephemeral-elemental-trailer-measurement'
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v6
         with:
@@ -26,36 +23,29 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
-      - name: Research-only ephemeral measurement
+      - name: Recompute from committed numerical evidence only
         env:
           PYTHONPATH: .:src
-          PIP_DISABLE_PIP_VERSION_CHECK: '1'
         run: |
           set -euo pipefail
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq --no-install-recommends ffmpeg
-          command -v ffmpeg
-          command -v ffprobe
-          python -m pip install -q -e '.[motion]' yt-dlp
-          python scripts/research_movie_promo_disney_once.py
           python scripts/audit_movie_promo_evidence.py
           python scripts/summarize_movie_promo_evidence.py --verify
-          python -m unittest tests.test_movie_promo_evidence_audit tests.test_movie_promo_comparison -q
+          python scripts/derive_movie_promo_timed_events.py
+          python scripts/derive_movie_promo_motion_proxies.py
+          python scripts/derive_movie_promo_timed_events.py --verify
+          python scripts/derive_movie_promo_motion_proxies.py --verify
+          python -m unittest tests.test_movie_promo_evidence_audit tests.test_movie_promo_comparison tests.test_movie_promo_timed_events -q
           git diff --check
-      - name: Stage only numeric evidence and push to the PR branch
+      - name: Commit only two refreshed numeric derivatives
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -- \
-            research/analysis/movie-promotions/index.json \
-            research/analysis/movie-promotions/overgrown-blender-teaser.json \
-            research/analysis/movie-promotions/derived/comparison.v1.json
-          test "$(git diff --cached --name-only | wc -l)" -eq 3
-          if git diff --cached --name-only | grep -E '\.(mp4|m4v|wav|mp3|aac|jpg|jpeg|png|webm|mkv)$'; then
-            echo 'Refusing to stage media' >&2; exit 1
-          fi
+            research/analysis/movie-promotions/derived/timed-events.v1.json \
+            research/analysis/movie-promotions/derived/image-motion-proxies.v1.json
+          test "$(git diff --cached --name-only | wc -l)" -eq 2
           git diff --cached --check
-          git commit -m 'data: source-hashed OVERGROWN Blender feature teaser measurements'
+          git commit -m 'data: refresh derived cut/audio and image-motion comparisons for 14th film'
           git push origin "HEAD:${GITHUB_HEAD_REF}"
