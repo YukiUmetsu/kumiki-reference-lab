@@ -18,6 +18,7 @@ from unittest.mock import patch
 
 from kumiki_reference_lab.analyzers.media.inspect import sha256_file
 from kumiki_reference_lab.pipeline.local_character_study import run_local_character_study
+from kumiki_reference_lab.pipeline.character_study_batch import run_character_study_batch
 from kumiki_reference_lab.reviews.character_scene import load_character_scene
 
 
@@ -172,6 +173,52 @@ class RealVideoCharacterStudySmoke(unittest.TestCase):
         self.assertEqual(len(scene["appearances"]), 10)
         for key in ("trackletQa", "characterQa", "interactionQa"):
             self.assertTrue((self.out / manifest["paths"][key]).is_file())
+
+    def test_two_real_ffmpeg_windows_remain_independent_with_original_pts(self):
+        destination = self.root / "batched-study"
+        with (
+            patch(
+                "kumiki_reference_lab.pipeline.ollama_subject_detection._ollama_json",
+                side_effect=self.local_boxes,
+            ),
+            patch(
+                "kumiki_reference_lab.pipeline.ollama_character_perception._ollama_chat",
+                side_effect=self.local_appearance,
+            ),
+            patch(
+                "kumiki_reference_lab.pipeline.local_character_interactions._ollama_json",
+                side_effect=self.local_interaction,
+            ),
+        ):
+            manifest_path = run_character_study_batch(
+                self.video, destination,
+                model="synthetic-local-vision:1b",
+                detector="ollama",
+                start_seconds=0, window_seconds=1, window_count=2,
+                max_samples=5, max_calls=10, max_pairs=4,
+                width=160, height=90, timeout_seconds=10,
+                review=True, interactions=True,
+            )
+        batch = json.loads(manifest_path.read_text())
+        self.assertEqual(batch["sourceSha256"], sha256_file(self.video))
+        self.assertEqual(batch["windowCount"], 2)
+        self.assertEqual(batch["identityContinuityAcrossWindows"], "not-established")
+        self.assertEqual([
+            (row["startSeconds"], row["endSeconds"]) for row in batch["windows"]
+        ], [(0,1), (1,2)])
+        original_pts = []
+        for i in range(2):
+            folder = destination / "windows" / f"window-{i:03d}"
+            original_pts.append([
+                frame["sourcePts"] for frame in json.loads(
+                    (folder / "subject-detections.json").read_text()
+                )["frames"]
+            ])
+            for gallery in ("tracklet-qa", "character-qa", "interaction-qa"):
+                self.assertTrue((folder / gallery / "index.html").is_file())
+        self.assertEqual(original_pts[0][0], 0)
+        self.assertEqual(original_pts[1][0], 10240)
+        self.assertTrue(max(original_pts[0]) < min(original_pts[1]))
 
     def test_vision_error_leaves_no_partial_study(self):
         def no_model(*args, **kwargs):
