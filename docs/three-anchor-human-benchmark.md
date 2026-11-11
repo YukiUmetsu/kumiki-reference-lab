@@ -66,6 +66,26 @@ After labeling **every** phase, set:
 This is a self-declared human review. The system cannot prove that a
 human really watched each video. Do not mark coverage complete early.
 
+### Faster offline annotation (recommended)
+
+Instead of hand-editing a JSON template, generate the standalone offline
+browser workbench:
+
+```bash
+kumiki-sequence-benchmark review-pack \
+  --workspace 'workspace/frame-review/<source-id>' \
+  --insights 'research/analysis/online-videos/<source-id>.insights.json'
+```
+
+Open the resulting `review-sequences.html` file **inside the ignored
+workspace**. It displays the original three source frames plus the
+same-shot tracked ROI outlines, without showing the model guesses.
+Select both human visible-change categories per sequence, export pending
+drafts as needed, and explicitly export the completed JSON. The approved
+download can be passed directly to `evaluate --labels` below. The page
+copies no video data, works locally, and never claims a human review was
+completed automatically. See [offline labeling details](offline-sequence-labeling.md).
+
 ## 3. Evaluate (offline, zero model calls)
 
     kumiki-sequence-benchmark evaluate \
