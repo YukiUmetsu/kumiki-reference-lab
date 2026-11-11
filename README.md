@@ -106,6 +106,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Scale source-frame video research across bound What Ships films:** [`whatships-measure-batch`](docs/whatships-direct-batch.md) processes up to four authorized local videos per invocation, fairly interleaved across categories, and checkpoints each successful source's PTS RGB/cut/image-change evidence directly in `research/analysis/whatships/`. Completed SHA-identical films are skipped; failed media remain retryable. It never downloads source videos, runs Ollama, commits Git changes or claims human-reviewed film coverage.
 
+**Build time coverage incrementally:** `whatships-measure --fill-gaps` selects the largest remaining source-time intervals and appends their verified original-PTS samples to an existing video record. It never overwrites sampled windows or claims every frame was observed; safe source-PTS addition is also available through `whatships-all sync-analysis --append-numeric-windows`. See [data collection](docs/whatships-direct-research.md).
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
