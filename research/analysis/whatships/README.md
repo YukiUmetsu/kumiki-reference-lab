@@ -15,7 +15,7 @@ Use the private rights-attested media bindings, the completed local character st
 
 After processing authorized local video, export **sanitized, complete frame-level numeric evidence** to a new Git-ready directory:
 
-\`\`\`bash
+```bash
 PYTHONPATH=src python -m kumiki_reference_lab whatships-all export-analysis \
   --snapshot research/whatships-index-2026-11-10.json \
   --observations research/whatships-browser-observations-2026-11-10.json \
@@ -23,30 +23,44 @@ PYTHONPATH=src python -m kumiki_reference_lab whatships-all export-analysis \
   --analysis-index "$HOME/whatships-private/analysis-run-002/analysis-index.json" \
   --visual-index "$HOME/whatships-private/visual-backfill-002/visual-index.json" \
   --out research/analysis/whatships-next
-\`\`\`
+```
 
-Review the generated JSON for privacy/permission before committing. When you are satisfied with the source attribution, replace or merge the corresponding per-video files into this canonical directory, update \`index.json\`, and commit them in the same Git change. Use \`whatships-all validate-analysis\` to validate the published corpus before pushing:
+Review the generated JSON for privacy/permission before committing. Then **merge verified new layers into the tracked directory** without erasing existing browser evidence:
 
-\`\`\`bash
+```bash
+PYTHONPATH=src python -m kumiki_reference_lab whatships-all sync-analysis \
+  --snapshot research/whatships-index-2026-11-10.json \
+  --incoming research/analysis/whatships-next \
+  --root research/analysis/whatships
+
+git add research/analysis/whatships
+git commit -m "data: add verified What Ships source-PTS observations"
+```
+
+`sync-analysis` merges by exact source ID and evidence type. Conflicting existing data is rejected unless `--replace-existing` is explicitly provided; Git history preserves prior versions. It checks the catalog snapshot, every source-PTS frame/pair and the typed metric schema. A failed update rolls back altered JSON files. This updates your local Git worktree, but does not commit/push on your behalf.
+
+Use `whatships-all validate-analysis` to verify the published corpus before pushing:
+
+```bash
 PYTHONPATH=src python -m kumiki_reference_lab whatships-all validate-analysis \
   --snapshot research/whatships-index-2026-11-10.json \
   --root research/analysis/whatships
-\`\`\`
+```
 
-**Important:** never commit the private \`media-bindings.json\`, \`analysis-index.json\`, \`visual-index.json\`, original footage, source thumbnails, personal system paths, access tokens or full browser session data. The exporter reads those local files only to confirm the original SHA/PTS lineage, and exports a strict whitelist of derived data without local paths.
+**Important:** never commit the private `media-bindings.json`, `analysis-index.json`, `visual-index.json`, original footage, source thumbnails, personal system paths, access tokens or full browser session data. The exporter reads those local files only to confirm the original SHA/PTS lineage, and exports a strict whitelist of derived data without local paths.
 
 ### What each JSON record preserves
 
 | Field | Meaning |
 |---|---|
-| \`sourceId\`, \`watchUrl\` | Exact catalog ID and creator/source watch page |
-| \`catalogSnapshotSha256\` | SHA-256 binding to the dated directory metadata snapshot |
-| \`sourceMediaSha256\` | SHA-256 of the actual local video bytes when numeric evidence is available; absent for browser-only notes |
-| \`evidence.browserSpotCheck\` | Partial original visible moments, source tag, style hypotheses and explicit unknown PTS |
-| \`evidence.numericVisual.windows[].sampledFrames\` | Actual original source PTS and display-referred RGB brightness/color per sampled decoded frame |
-| \`evidence.numericVisual.windows[].sampledFramePairs\` | Exact PTS-anchored image-change measurements, abstaining when a possible cut is crossed |
-| \`evidence.numericVisual.windows[].cutCandidatePts\` | Timestamped FFmpeg scene-change candidates |
-| \`evidence.characterStudyStatus\` | A completed local model job **without** publishing identities, transcripts, private file paths, or implying review |
+| `sourceId`, `watchUrl` | Exact catalog ID and creator/source watch page |
+| `catalogSnapshotSha256` | SHA-256 binding to the dated directory metadata snapshot |
+| `sourceMediaSha256` | SHA-256 of the actual local video bytes when numeric evidence is available; absent for browser-only notes |
+| `evidence.browserSpotCheck` | Partial original visible moments, source tag, style hypotheses and explicit unknown PTS |
+| `evidence.numericVisual.windows[].sampledFrames` | Actual original source PTS and display-referred RGB brightness/color per sampled decoded frame |
+| `evidence.numericVisual.windows[].sampledFramePairs` | Exact PTS-anchored image-change measurements, abstaining when a possible cut is crossed |
+| `evidence.numericVisual.windows[].cutCandidatePts` | Timestamped FFmpeg scene-change candidates |
+| `evidence.characterStudyStatus` | A completed local model job **without** publishing identities, transcripts, private file paths, or implying review |
 
 The exporter does **not** automatically publish detailed character identities, extracted speech, facial attributes, copyrighted images/audio, model prompts or full video copies. Those require an independently reviewed schema and opt-in policy before Git publication. For current research, per-frame numeric data and partial human observations are immediately machine-readable and reusable across future experiments.
 
