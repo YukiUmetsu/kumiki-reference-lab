@@ -30,7 +30,7 @@ class ComparisonTests(unittest.TestCase):
         if not source.exists() or not output.exists():
             self.skipTest("run against complete repository tree")
         data = source.read_bytes()
-        sha = hashlib.sha1(b"blob " + str(len(data)).encode("ascii") + b"\\0" + data).hexdigest()
+        sha = hashlib.sha1(b"blob " + str(len(data)).encode("ascii") + b"\0" + data).hexdigest()
         expected = build_comparison(json.loads(data), sha)
         self.assertEqual(json.loads(output.read_text(encoding="utf-8")), expected)
 
