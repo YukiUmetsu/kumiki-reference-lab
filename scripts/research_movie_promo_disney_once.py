@@ -1,6 +1,6 @@
-"""One-shot, source-hashed analysis of a public Apple movie promotional preview.
+"""One-shot, source-hashed analysis of a official Blender Studio feature-film teaser.
 
-Only downloads a public, unauthenticated Apple Store promotional preview. All audiovisual
+Only downloads public, unauthenticated media from Blender's own PeerTube server. All audiovisual
 media and image galleries live in TemporaryDirectory and are deleted before
 the resulting numeric JSON is staged. Never circumvent DRM or authorization.
 """
@@ -28,9 +28,9 @@ from scripts.summarize_movie_promo_evidence import build_comparison
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "research/analysis/movie-promotions"
 INDEX = DATA / "index.json"
-DETAIL = DATA / "wild-robot-apple-preview.json"
-VIDEO_ID = "wild-robot-apple-preview"
-APPLE_SEARCH = "https://itunes.apple.com/search"
+DETAIL = DATA / "overgrown-blender-teaser.json"
+VIDEO_ID = "overgrown-blender-teaser"
+PEERTUBE_ROOT = "https://video.blender.org"
 
 
 def run(*command: str, output: bool = False) -> str:
@@ -99,68 +99,83 @@ def window_summary(window: dict) -> dict:
     }
 
 
-def _apple_host(url: str) -> bool:
+def _publisher_host(url: str) -> bool:
     parsed = urlparse(url)
-    host = parsed.hostname or ""
-    return parsed.scheme == "https" and (
-        host in {"itunes.apple.com", "video-ssl.itunes.apple.com", "mzstatic.com"}
-        or host.endswith(".mzstatic.com")
-        or host.endswith(".itunes.apple.com")
-    )
+    return parsed.scheme == "https" and parsed.hostname == "video.blender.org"
+
+
+def _json_public_publisher(url: str) -> dict:
+    if not _publisher_host(url):
+        raise ValueError("unapproved video metadata host")
+    with urlopen(Request(url, headers={"Accept": "application/json"}),
+                 timeout=45) as response:
+        if not _publisher_host(response.geturl()):
+            raise ValueError("video API redirected outside publisher domain")
+        payload = response.read(1_000_001)
+    if len(payload) > 1_000_000:
+        raise ValueError("unexpectedly large video metadata response")
+    return json.loads(payload)
 
 
 def acquire_public_source(directory: Path) -> tuple[Path, dict]:
-    # Official US iTunes movie catalog. No cookies, account, geo tricks, DRM,
-    # rented film, proxy, scraping of private endpoints, or third-party mirrors.
-    query = APPLE_SEARCH + "?" + urlencode({
-        "term": "The Wild Robot", "country": "US", "media": "movie",
-        "entity": "movie", "limit": 25,
+    # PeerTube's public, unauthenticated official Blender Open Movies account.
+    # Do not use YouTube downloaders, private accounts, geo circumvention,
+    # DRM workarounds or mirrors.
+    search = PEERTUBE_ROOT + "/api/v1/search/videos?" + urlencode({
+        "search": "OVERGROWN", "count": 20,
     })
-    with urlopen(Request(query, headers={"Accept": "application/json"}),
-                 timeout=40) as response:
-        payload = response.read(1_000_001)
-    if len(payload) > 1_000_000:
-        raise ValueError("Apple API response unexpectedly large")
-    options = json.loads(payload)["results"]
-    eligible = [
-        item for item in options
-        if item.get("trackName", "").strip().casefold() == "the wild robot"
-        and str(item.get("releaseDate", "")).startswith("2024")
-        and isinstance(item.get("previewUrl"), str)
-        and isinstance(item.get("trackId"), int)
-        and isinstance(item.get("trackViewUrl"), str)
-        and _apple_host(item["previewUrl"])
-        and _apple_host(item["trackViewUrl"])
+    results = _json_public_publisher(search).get("data", [])
+    matched = [
+        item for item in results
+        if item.get("name", "").strip().casefold() == "overgrown - blender feature film (teaser)"
+        and (item.get("channel", {}).get("name") == "blender_open_movies"
+             or item.get("channel", {}).get("displayName") == "Blender Open Movies")
+        and isinstance(item.get("uuid"), str)
     ]
+    if len(matched) != 1:
+        raise ValueError("no unique official Blender Open Movies feature teaser found")
+    uuid = matched[0]["uuid"]
+    source_page = PEERTUBE_ROOT + "/videos/watch/" + uuid
+    metadata = _json_public_publisher(PEERTUBE_ROOT + "/api/v1/videos/" + uuid)
+    if metadata.get("uuid") != uuid:
+        raise ValueError("mismatched PeerTube video identity")
+    files = list(metadata.get("files", []))
+    for playlist in metadata.get("streamingPlaylists", []):
+        files.extend(playlist.get("files", []))
+    eligible = []
+    for item in files:
+        source_url = item.get("fileDownloadUrl") or item.get("fileUrl")
+        if not isinstance(source_url, str) or not _publisher_host(source_url):
+            continue
+        size = item.get("size")
+        if isinstance(size, int) and size > 200 * 1024 * 1024:
+            continue
+        resolution = item.get("resolution", {})
+        res_id = resolution.get("id", 0) if isinstance(resolution, dict) else 0
+        if not isinstance(res_id, int) or res_id < 240:
+            continue
+        eligible.append((abs(res_id - 480), source_url))
     if not eligible:
-        print("Apple catalog candidates:", json.dumps([
-            {"title": item.get("trackName"), "year": str(item.get("releaseDate", ""))[:4],
-             "trackId": item.get("trackId"), "hasPreview": bool(item.get("previewUrl")),
-             "previewHost": urlparse(item.get("previewUrl", "")).hostname}
-            for item in options[:12]], ensure_ascii=False), flush=True)
-        raise ValueError("Apple did not offer an exact 2024 Wild Robot movie preview")
-    if len({item["trackId"] for item in eligible}) > 1:
-        raise ValueError("Apple returned ambiguous multiple exact-title movie editions")
-    item = eligible[0]
+        raise ValueError("official PeerTube film teaser offers no bounded public file")
+    eligible.sort(key=lambda row: row[0])
     target = directory / (VIDEO_ID + ".mp4")
-    request = Request(item["previewUrl"], headers={"Accept": "video/*"})
+    request = Request(eligible[0][1], headers={"Accept": "video/*"})
     total = 0
     with urlopen(request, timeout=90) as response:
-        if not _apple_host(response.geturl()):
-            raise ValueError("Apple preview redirected to unapproved host")
+        if not _publisher_host(response.geturl()):
+            raise ValueError("publisher video redirected to unapproved host")
         with target.open("wb") as outfile:
             while chunk := response.read(1024 * 1024):
                 total += len(chunk)
                 if total > 200 * 1024 * 1024:
-                    raise ValueError("Apple preview exceeds 200 MiB safety budget")
+                    raise ValueError("public teaser exceeds 200 MiB safety budget")
                 outfile.write(chunk)
     if total < 100_000:
-        raise ValueError("Apple returned no usable public promotional media")
-    # Never retain a temporary preview/CDN URL in Git.
+        raise ValueError("publisher returned no usable promotional media")
     return target, {
-        "sourceTrackId": str(item["trackId"]),
-        "officialPlayerUrl": item["trackViewUrl"].split("?")[0],
-        "sourceEdition": "Apple iTunes Store promotional movie preview (not the verified YouTube trailer)",
+        "sourceTrackId": uuid,
+        "officialPlayerUrl": source_page,
+        "sourceEdition": "Blender Studio official PeerTube OVERGROWN feature-film teaser (not a verified YouTube edition)",
     }
 
 
@@ -189,7 +204,7 @@ def generate() -> None:
             raise ValueError("sample windows overlap or exceed the original")
         plan = {
             "id": VIDEO_ID,
-            "catalogId": "uncataloged-apple-wild-robot-preview",
+            "catalogId": "uncataloged-blender-overgrown-official-teaser",
             "officialPlayerUrl": edition["officialPlayerUrl"],
             "sourceTrackId": edition["sourceTrackId"],
             "sourceEdition": edition["sourceEdition"],
@@ -245,10 +260,10 @@ def generate() -> None:
             "source-hashed movie promotions; not whole-trailer coverage."
         )
         index["method"] += (
-            " Additional The Wild Robot public Apple retail preview was "
-            "downloaded without authentication, hashed, measured in three "
-            "bounded windows, and deleted immediately after export. It is "
-            "not verified identical to the DreamWorks YouTube upload."
+            " Additional OVERGROWN official Blender Studio public PeerTube feature "
+            "film teaser was downloaded, source-hashed, measured in three "
+            "bounded windows, then deleted after export. This is distinct "
+            "from Blender Studio YouTube editions."
         )
         index["mediaCleanupStatus"] = "verified-deleted-after-export"
         # Fail closed while the temporary footage still exists: nothing is
