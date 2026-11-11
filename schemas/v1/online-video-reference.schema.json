@@ -64,6 +64,22 @@
       },
       "additionalProperties": false
     },
+    "audioEvidence": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": ["schemaVersion", "status", "frames", "transientCandidates", "limits"],
+          "properties": {
+            "schemaVersion": {"const": "kumiki.online-audio-cues.v1"},
+            "status": {"type": "string"},
+            "frames": {"type": "array", "maxItems": 36000},
+            "transientCandidates": {"type": "array", "maxItems": 10000},
+            "audioVideoClockStatus": {"const": "not-independently-aligned"}
+          }
+        }
+      ]
+    },
     "numericEvidence": {
       "type": "object",
       "required": [
