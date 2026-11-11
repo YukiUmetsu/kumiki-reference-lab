@@ -208,13 +208,18 @@ def next_frame(workspace: Path, *, after: int = -1,
                interval: int = 24) -> dict[str, Any]:
     manifest, numeric, _ = load_workspace(workspace)
     if (type(after) is not int or not -1 <= after < manifest["frameCount"]
-            or mode not in ("every", "cuts", "changed", "interval")
+            or mode not in ("every", "cuts", "changed", "interval", "shots")
             or type(min_change) not in (int, float) or not 0 <= min_change <= 1
             or type(interval) is not int or not 1 <= interval <= 3600):
         raise ValueError("invalid frame review selection")
+    shot_frames = None
+    if mode == "shots":
+        from kumiki_reference_lab.pipeline.shot_intelligence import build_shot_intelligence
+        shot_frames = {i for shot in build_shot_intelligence(numeric)["shots"]
+                       for i in shot["representativeFrameIndices"]}
     for i in range(after + 1, manifest["frameCount"]):
         row = numeric["frames"][i]
-        if (mode == "every" or
+        if ((mode == "shots" and i in shot_frames) or mode == "every" or
                 (mode == "cuts" and row["cutCandidate"]) or
                 (mode == "changed" and row["changeFromPrevious"] and
                  row["changeFromPrevious"]["meanPixelDelta"] >= min_change) or
@@ -325,7 +330,7 @@ def scan_frames(
         raise ValueError("invalid low-resource scan budget or categories")
     manifest, numeric, _ = load_workspace(workspace)
     if (type(after) is not int or not -1 <= after < manifest["frameCount"]
-            or mode not in ("every", "changed", "cuts", "interval")
+            or mode not in ("every", "changed", "cuts", "interval", "shots")
             or type(min_change) not in (int, float) or not 0 <= min_change <= 1
             or type(interval) is not int or not 1 <= interval <= 3600):
         raise ValueError("invalid scan frame selection")
@@ -333,8 +338,18 @@ def scan_frames(
     prior = _load_annotations(workspace)
     visited = {(x["endFrameIndex"], x["category"]) for x in prior}
     # Read the numeric report ONCE, rather than reparsing it for every frame.
-    targets = [0] if after < 0 else []
-    for i in range(after + 1, manifest["frameCount"]):
+    if mode == "shots":
+        from kumiki_reference_lab.pipeline.shot_intelligence import (
+            build_shot_intelligence, prioritized_frame_plan,
+        )
+        source_shots = build_shot_intelligence(numeric)
+        plan = prioritized_frame_plan(
+            source_shots, max_frames=min(1000, manifest["frameCount"]))
+        targets = [row["frameIndex"] for row in plan["frameTasks"]
+                   if row["frameIndex"] > after]
+    else:
+        targets = [0] if after < 0 else []
+    for i in ([] if mode == "shots" else range(after + 1, manifest["frameCount"])):
         row = numeric["frames"][i]
         if (mode == "every" or
                 (mode == "cuts" and row["cutCandidate"]) or
@@ -393,7 +408,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--workspace", type=Path, required=True)
     parser.add_argument("--index", type=int, default=0)
     parser.add_argument("--after", type=int, default=-1)
-    parser.add_argument("--mode", choices=["every", "cuts", "changed", "interval"])
+    parser.add_argument("--mode", choices=["every", "cuts", "changed", "interval", "shots"])
     parser.add_argument("--interval", type=int, default=24)
     parser.add_argument("--min-change", type=float, default=.08)
     parser.add_argument("--end", type=int)
