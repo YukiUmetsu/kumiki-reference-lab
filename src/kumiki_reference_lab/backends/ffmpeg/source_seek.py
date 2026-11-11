@@ -253,3 +253,27 @@ def detect_source_window_cuts_seek(
         if not lower <= relative < upper:
             raise ProbeError("source-window cut PTS outside requested source interval")
     return CutScan(window.timebase, tuple(sorted(set(reported_pts))))
+
+
+def decode_verified_later_source_frames(
+    path: Path, stream_index: int, original_pts: list[int], *,
+    timebase: Fraction, start_seconds: int, seconds: int,
+    width: int = 320, height: int = 180,
+    ffprobe: str = "ffprobe", ffmpeg: str = "ffmpeg",
+) -> list[bytes]:
+    """Read exact original-PTS RGB frames in a later window, never closest guesses.
+
+    Intended for character observation/QA stages after the detector establishes
+    exact source timestamps. Selected PTS must exist in the independent probe
+    inventory and be reverified after the FFmpeg seek and image decoding.
+    """
+    if not original_pts or len(original_pts) > 24:
+        raise ValueError("review seek requires 1–24 original frame PTS")
+    window = probe_source_window(
+        path, stream_index, timebase=timebase,
+        start_seconds=start_seconds, seconds=seconds, ffprobe=ffprobe,
+    )
+    return decode_rgb_source_pts_seek(
+        path, stream_index, original_pts, window=window,
+        width=width, height=height, ffmpeg=ffmpeg,
+    )
