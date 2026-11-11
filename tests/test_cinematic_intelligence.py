@@ -26,6 +26,9 @@ from kumiki_reference_lab.pipeline.online_audio_cues import (
     _rms_dbfs, build_online_audio_cues,
 )
 from kumiki_reference_lab.pipeline.screen_text import parse_tesseract_tsv
+from kumiki_reference_lab.pipeline.seeded_subjects import (
+    validate_region_seeds, build_seeded_region_tracks, screen_relationship_proxies,
+)
 from kumiki_reference_lab.pipeline.shot_intelligence import (
     build_shot_intelligence, prioritized_frame_plan,
 )
@@ -243,6 +246,44 @@ class CinematicIntegrationTests(unittest.TestCase):
             motion = build_temporal_motion(
                 self.workspace, build_shot_intelligence(evidence()))
         self.assertEqual(motion["status"], "not-run-install-pip-extra-dense")
+
+    def test_bounded_seeded_subjects_and_relationship_geometry(self):
+        seed = {
+            "schemaVersion": "kumiki.online-region-seeds.v1",
+            "sourceSha256": "a" * 64,
+            "subjects": [{
+                "id": "subject-one", "kind": "animated-character",
+                "label": "Original character A", "startFrameIndex": 0,
+                "boxNormalized": [.1, .1, .4, .4],
+            }],
+        }
+        self.assertEqual(len(validate_region_seeds(
+            seed, source_sha="a" * 64, frame_count=24)), 1)
+        path = self.root / "roi-seeds.json"
+        path.write_text(json.dumps(seed))
+        with patch.dict(sys.modules, {"cv2": None}):
+            result = build_seeded_region_tracks(
+                self.workspace, build_shot_intelligence(evidence()), path)
+        self.assertEqual(result["status"], "not-run-install-pip-extra-dense")
+        seed["subjects"][0]["boxNormalized"] = [.9, .1, .4, .4]
+        with self.assertRaises(ValueError):
+            validate_region_seeds(seed, source_sha="a" * 64, frame_count=24)
+        track_a = {
+            "id": "one", "observations": [
+                {"frameIndex": 0, "boxNormalized": [.1, .2, .2, .2]},
+                {"frameIndex": 1, "boxNormalized": [.25, .2, .2, .2]},
+            ],
+        }
+        track_b = {
+            "id": "two", "observations": [
+                {"frameIndex": 0, "boxNormalized": [.7, .2, .2, .2]},
+                {"frameIndex": 1, "boxNormalized": [.6, .2, .2, .2]},
+            ],
+        }
+        proxy = screen_relationship_proxies([track_a, track_b])
+        self.assertEqual(proxy[0]["screenDistanceTrend"], "closer")
+        self.assertEqual(proxy[0]["coVisibleSampleCount"], 2)
+        self.assertIn("not-a-social-interaction", proxy[0]["status"])
 
     def test_catalog_rejects_duplicate_content_identity(self):
         first = analyze_cinematic_workspace(self.workspace, motion=False)
