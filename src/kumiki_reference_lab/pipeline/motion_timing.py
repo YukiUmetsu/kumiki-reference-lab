@@ -244,6 +244,14 @@ def build_seeded_motion_timing(
     status = seeded_tracks.get("status")
     source_sha = seeded_tracks.get("sourceSha256")
     if status in ("not-requested", "not-run-install-pip-extra-dense"):
+        # No ROI evidence must not erase source identity. The rest of the
+        # cinematic report remains source-hashed, including abstention states.
+        if numeric is not None:
+            supplied_sha = numeric.get("sourceSha256")
+            if (type(supplied_sha) is not str or len(supplied_sha) != 64 or
+                    (source_sha is not None and source_sha != supplied_sha)):
+                raise ValueError("unmeasured timing/source identity mismatch")
+            source_sha = supplied_sha
         return {
             "schemaVersion": SCHEMA_VERSION,
             "status": "not-measured-no-supported-seeded-tracks",
