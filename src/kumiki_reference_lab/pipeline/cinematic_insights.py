@@ -31,6 +31,9 @@ from kumiki_reference_lab.pipeline.motion_timing import (
 )
 from kumiki_reference_lab.pipeline.multi_region_temporal import build_multi_region_temporal
 from kumiki_reference_lab.pipeline.online_event_review import review_multi_region_events
+from kumiki_reference_lab.pipeline.three_anchor_sequence_review import (
+    review_three_anchor_sequences,
+)
 
 SCHEMA_VERSION = "kumiki.online-cinematic-insights.v1"
 
@@ -307,6 +310,9 @@ def analyze_cinematic_workspace(
     max_multi_events: int = 80, max_multi_review_tasks: int = 24,
     multi_action_model: str | None = None, max_multi_action_calls: int = 8,
     multi_action_port: int = 10100, multi_action_timeout: int = 120,
+    sequence_model: str | None = None, max_sequence_calls: int = 8,
+    max_sequences: int = 4, sequence_port: int = 10100,
+    sequence_timeout: int = 120,
 ) -> Path:
     manifest, numeric, reference = load_workspace(workspace)
     if any(type(v) is not bool for v in (
@@ -318,6 +324,8 @@ def analyze_cinematic_workspace(
         raise ValueError("region-model and complex probes require --auto-regions")
     if multi_action_model is not None and not (auto_regions or roi_seeds is not None):
         raise ValueError("multi-action-model requires --auto-regions or --roi-seeds")
+    if sequence_model is not None and not (auto_regions or roi_seeds is not None):
+        raise ValueError("sequence-model requires --auto-regions or --roi-seeds")
     result = reference.with_suffix(".insights.json")
     if (result.exists() or result.is_symlink()) and not overwrite:
         raise ValueError("cinematic insights already exist; pass --overwrite")
@@ -393,6 +401,15 @@ def analyze_cinematic_workspace(
             "status": "not-requested", "sourceSha256": manifest["sourceSha256"],
             "modelCalls": 0, "results": [],
         })
+    sequence_review = (review_three_anchor_sequences(
+        workspace, subjects, shots, multi_region,
+        model=sequence_model, max_sequences=max_sequences,
+        max_calls=max_sequence_calls, port=sequence_port,
+        timeout_seconds=sequence_timeout)
+        if sequence_model is not None else {
+            "status": "not-requested", "sourceSha256": manifest["sourceSha256"],
+            "modelCalls": 0, "sequences": [],
+        })
     notes = _read_optional_notes(
         reference.with_suffix(".frame-notes.json"),
         source_sha=manifest["sourceSha256"],
@@ -434,6 +451,7 @@ def analyze_cinematic_workspace(
         "seededMotionTiming": timing,
         "multiRegionTemporal": multi_region,
         "multiRegionVisualReview": multi_review,
+        "threeAnchorSequenceReview": sequence_review,
         "kumikiTimingProposals": propose_original_timing_recipes(timing),
         "audioVisualCues": derive_audio_visual_hypotheses(shots, audio),
         "techniqueHypotheses": cues,
@@ -453,8 +471,9 @@ def analyze_cinematic_workspace(
                 "not recovered original animation keys, poses or easing settings."),
             "characterInteraction": (
                 "Co-visible screen boxes yield measured distance/overlap/order events; "
-                "optional two-frame Magnitude visual changes are low-confidence only. "
-                "Neither proves pose, gesture, intent, contact, speech or an interaction."),
+                "optional two-frame or three-anchor Magnitude visual changes remain "
+                "unverified hypotheses. No result proves pose, contact, gesture, "
+                "dialogue, identity, intention or physical interaction."),
             "exactTypography": (
                 "OCR boxes and Magnitude notes do not establish an exact font family."),
             "lightingAndMaterials": (
@@ -499,6 +518,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-multi-action-calls", type=int, default=8)
     parser.add_argument("--multi-action-port", type=int, default=10100)
     parser.add_argument("--multi-action-timeout", type=int, default=120)
+    parser.add_argument("--sequence-model", default=None,
+                        help="optional three-frame, two-call local vision sequence hypotheses")
+    parser.add_argument("--max-sequence-calls", type=int, default=8)
+    parser.add_argument("--max-sequences", type=int, default=4)
+    parser.add_argument("--sequence-port", type=int, default=10100)
+    parser.add_argument("--sequence-timeout", type=int, default=120)
     parser.add_argument("--overwrite", action="store_true")
     opts = parser.parse_args(argv)
     try:
@@ -523,6 +548,11 @@ def main(argv: list[str] | None = None) -> int:
             max_multi_action_calls=opts.max_multi_action_calls,
             multi_action_port=opts.multi_action_port,
             multi_action_timeout=opts.multi_action_timeout,
+            sequence_model=opts.sequence_model,
+            max_sequence_calls=opts.max_sequence_calls,
+            max_sequences=opts.max_sequences,
+            sequence_port=opts.sequence_port,
+            sequence_timeout=opts.sequence_timeout,
         )
     except (ValueError, OSError, KeyError, TypeError, json.JSONDecodeError) as exc:
         parser.exit(2, f"cinematic intelligence failed: {exc}\n")
