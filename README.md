@@ -31,6 +31,14 @@ See [Temporal cinematic intelligence](docs/temporal-cinematic-intelligence.md).
 These are proposal/data pipelines, not complete automatic character identity
 tracking, physically verified camera recovery or executable Kumiki components.
 
+**Low-compute motion fallback:** If OpenCV or NumPy is not installed, `kumiki-insights`
+now uses conservative CPU-only block matching on the already retained
+low-resolution frame previews. It reports source-hashed local image-plane
+displacement and regional residuals without pretending to provide optical flow,
+camera trajectories or persistent object tracks. For a standalone versioned
+shot-and-motion report, run `python -m kumiki_reference_lab.pipeline.online_temporal
+motion --workspace PATH`. See [temporal shot analysis](docs/temporal-shot-analysis.md).
+
 ## Why this exists
 
 Professional motion graphics depend on more than shaders and easing presets:
