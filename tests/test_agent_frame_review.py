@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 from kumiki_reference_lab.pipeline.agent_frame_review import (
     annotate_frame, cleanup_workspace, export_annotations, finalize_frame_workspace,
-    load_workspace, make_frame_sink, next_frame, show_frame,
+    load_workspace, make_frame_sink, next_frame, scan_frames, show_frame,
 )
 from kumiki_reference_lab.pipeline.magnitude_vision import (
     infer_workspace_frame, magnitude_focused_observation,
@@ -113,6 +113,33 @@ class FrameReviewTests(unittest.TestCase):
         self.assertFalse(workspace.exists())
         self.assertTrue(result.exists())
         self.assertTrue(exported.exists())
+
+    @patch("kumiki_reference_lab.pipeline.magnitude_vision.infer_workspace_frame")
+    def test_small_model_scan_budget_and_resumption(self, infer):
+        _, workspace = self._study()
+        def fake_inference(ws, *, index, category, **kwargs):
+            annotate_frame(
+                ws, start=index, category=category,
+                description=f"Observed {category} change at frame {index}.",
+                evidence="Direct local frame preview available.")
+            return {"status": "unreviewed-local-model-proposal"}
+        infer.side_effect = fake_inference
+        first = scan_frames(
+            workspace, model="mini-vision", mode="changed",
+            categories=("animation", "typography"), max_calls=3,
+            min_change=.08)
+        self.assertEqual(first["modelCalls"], 3)
+        self.assertTrue(first["remainingWork"])
+        exported = json.loads(Path(first["savedTo"]).read_text())
+        self.assertEqual(len(exported["observations"]), 3)
+        second = scan_frames(
+            workspace, model="mini-vision", mode="changed",
+            categories=("animation", "typography"), max_calls=3,
+            min_change=.08)
+        self.assertEqual(second["modelCalls"], 3)
+        self.assertGreaterEqual(second["alreadyAnnotatedSkipped"], 3)
+        self.assertFalse(second["remainingWork"])
+        self.assertEqual(len(json.loads(Path(second["savedTo"]).read_text())["observations"]), 6)
 
     def test_frame_sink_disk_cap(self):
         staging = self.root / "staging"
