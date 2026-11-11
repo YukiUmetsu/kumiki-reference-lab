@@ -72,6 +72,7 @@ from kumiki_reference_lab.pipeline.subject_tracklet_review import build_subject_
 from kumiki_reference_lab.pipeline.ollama_character_perception import describe_local_characters
 from kumiki_reference_lab.pipeline.ollama_subject_detection import detect_local_ollama_subjects
 from kumiki_reference_lab.pipeline.local_character_study import run_local_character_study
+from kumiki_reference_lab.pipeline.subject_detection_benchmark import run_subject_box_benchmark
 from kumiki_reference_lab.pipeline.local_character_interactions import analyze_local_interactions
 from kumiki_reference_lab.pipeline.interaction_review import (
     build_interaction_review, summarize_interaction_feedback,
@@ -708,6 +709,15 @@ def build_parser() -> argparse.ArgumentParser:
     interactions.add_argument("--height", type=int, default=180)
     interactions.add_argument("--ffmpeg", default="ffmpeg")
     interactions.add_argument("--ffprobe", default="ffprobe")
+    box_benchmark = commands.add_parser(
+        "evaluate-character-detections",
+        help="compare source-PTS character boxes with exhaustive human-labeled sample frames")
+    box_benchmark.add_argument("source", type=Path)
+    box_benchmark.add_argument("detections", type=Path, help="subject-detections JSON")
+    box_benchmark.add_argument("ground_truth", type=Path, help="human-labeled source-PTS JSON")
+    box_benchmark.add_argument("--out", type=Path, required=True)
+    box_benchmark.add_argument("--min-iou", type=float, default=0.5)
+    box_benchmark.add_argument("--ffprobe", default="ffprobe")
     study_local = commands.add_parser(
         "character-study-local",
         help="one-command bounded local character detection, tracking, VLM observations and QA")
@@ -1019,6 +1029,11 @@ def main(argv: list[str] | None = None) -> int:
                 port=args.port, max_pairs=args.max_pairs, gap_seconds=args.gap_seconds,
                 scan_seconds=args.scan_seconds, timeout_seconds=args.timeout_seconds,
                 width=args.width, height=args.height, ffmpeg=args.ffmpeg, ffprobe=args.ffprobe))
+            return 0
+        if args.command == "evaluate-character-detections":
+            print(run_subject_box_benchmark(
+                args.source, args.detections, args.ground_truth, args.out,
+                min_iou=args.min_iou, ffprobe=args.ffprobe))
             return 0
         if args.command == "character-study-local":
             print(run_local_character_study(
