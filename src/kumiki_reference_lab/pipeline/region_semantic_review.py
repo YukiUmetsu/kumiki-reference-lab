@@ -150,6 +150,9 @@ def review_region_proposals(
             or not isinstance(discovery.get("proposals"), list)
             or len(discovery["proposals"]) > 8):
         raise ValueError("region proposals disagree with source evidence")
+    from kumiki_reference_lab.pipeline.shot_intelligence import build_shot_intelligence
+    by_shot = {s["shotId"]: s
+               for s in build_shot_intelligence(numeric)["shots"]}
     width, height = manifest["width"], manifest["height"]
     calls = 0
     unavailable = False
@@ -166,6 +169,11 @@ def review_region_proposals(
                 or type(proposal.get("id")) is not str):
             raise ValueError("region review frame evidence malformed")
         first, last = indices[0], indices[-1]
+        shot = by_shot.get(proposal.get("shotId"))
+        if (shot is None or
+                any(not shot["startFrameIndex"] <= i <
+                    shot["endFrameIndexExclusive"] for i in indices)):
+            raise ValueError("local region review crosses unverified shot boundary")
         boxes = [proposal["boxNormalized"],
                  proposal.get("lastBoxNormalized", proposal["boxNormalized"])]
         review: dict[str, Any] = {
