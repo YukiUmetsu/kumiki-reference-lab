@@ -100,11 +100,14 @@ def _detect_humans_with_vision(rgb: bytes, width: int, height: int) -> list[dict
 def detect_mac_vision_people(
     source: Path, out: Path, *, seconds: int = 10, max_samples: int = 12,
     width: int = 320, height: int = 180, cut_threshold: float = 0.25,
+    start_seconds: int = 0,
     ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
     rights_status: str = "review-required",
 ) -> Path:
     """Produce the provider-neutral detections schema from on-device Vision."""
     if (type(seconds) is not int or not 1 <= seconds <= 30 or
+            type(start_seconds) is not int or start_seconds < 0 or
+            start_seconds + seconds > 120 or
             type(max_samples) is not int or not 5 <= max_samples <= 24 or
             type(width) is not int or type(height) is not int or
             not 64 <= width <= 320 or not 36 <= height <= 180):
@@ -118,13 +121,17 @@ def detect_mac_vision_people(
     stream = source_info["video"]["streamIndex"]
     tb_dict = source_info["video"]["sourceTimebase"]
     tb = Fraction(tb_dict["numerator"], tb_dict["denominator"])
-    all_frames = read_frame_pts(source, stream, seconds=seconds, ffprobe=ffprobe)
+    all_frames = read_frame_pts(
+        source, stream, seconds=seconds, ffprobe=ffprobe,
+        start_seconds=start_seconds, source_timebase=tb,
+    )
     selected = select_motion_samples(all_frames, max_samples)
+    source_prefix = start_seconds + seconds
     rgb = read_rgb_frames(
         source, stream, [frame.ordinal for frame in selected],
         [frame.pts for frame in selected], timebase=tb,
-        seconds=seconds, width=width, height=height, ffmpeg=ffmpeg)
-    cuts = detect_hard_cut_pts(source, stream, seconds=seconds,
+        seconds=source_prefix, width=width, height=height, ffmpeg=ffmpeg)
+    cuts = detect_hard_cut_pts(source, stream, seconds=source_prefix,
                                threshold=cut_threshold, ffmpeg=ffmpeg)
     if cuts.timebase != tb:
         raise ValueError("Apple Vision source cut timestamps differ from video timebase")

@@ -183,6 +183,8 @@ class LocalCharacterStudyTests(unittest.TestCase):
             {"max_samples": 2}, {"max_seconds": 60}, {"max_calls": 40},
             {"max_pairs": 13}, {"model": "../weird"}, {"detector": "cloud"},
             {"port": False}, {"review": None}, {"width": 800},
+            {"start_seconds": -1}, {"start_seconds": True},
+            {"start_seconds": 111, "max_seconds": 10},
         ]
         for args in cases:
             with self.subTest(args=args), self.assertRaises(ValueError):
@@ -199,6 +201,10 @@ class LocalCharacterStudyTests(unittest.TestCase):
         self.assertEqual(args.command, "character-study-local")
         self.assertEqual(args.model, "vision:8b")
         self.assertTrue(args.skip_interactions)
+        later = build_parser().parse_args([
+            "character-study-local", "film.mp4", "--model", "vision:8b",
+            "--out", "runs/later", "--start-seconds", "80", "--max-seconds", "20"])
+        self.assertEqual(later.start_seconds, 80)
 
 
 if __name__ == "__main__":

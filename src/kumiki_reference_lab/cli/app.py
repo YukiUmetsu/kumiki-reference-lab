@@ -734,6 +734,8 @@ def build_parser() -> argparse.ArgumentParser:
     study_local.add_argument("--detector", choices=("ollama", "apple-vision"), default="ollama")
     study_local.add_argument("--port", type=int, default=11434)
     study_local.add_argument("--max-seconds", type=int, default=10)
+    study_local.add_argument("--start-seconds", type=int, default=0,
+                              help="source-relative window offset (prefix must stay <= 120s)")
     study_local.add_argument("--max-samples", type=int, default=8)
     study_local.add_argument("--max-calls", type=int, default=12)
     study_local.add_argument("--max-pairs", type=int, default=6)
@@ -753,6 +755,8 @@ def build_parser() -> argparse.ArgumentParser:
     local_subjects.add_argument("--model", required=True, help="locally installed Ollama vision model")
     local_subjects.add_argument("--port", type=int, default=11434)
     local_subjects.add_argument("--max-seconds", type=int, default=10)
+    local_subjects.add_argument("--start-seconds", type=int, default=0,
+                              help="source-relative window offset (prefix must stay <= 120s)")
     local_subjects.add_argument("--max-samples", type=int, default=8)
     local_subjects.add_argument("--width", type=int, default=320)
     local_subjects.add_argument("--height", type=int, default=180)
@@ -786,6 +790,8 @@ def build_parser() -> argparse.ArgumentParser:
     mac_humans.add_argument("source", type=Path, help="authorized local video file")
     mac_humans.add_argument("--out", type=Path, required=True, help="new detection JSON file")
     mac_humans.add_argument("--max-seconds", type=int, default=10)
+    mac_humans.add_argument("--start-seconds", type=int, default=0,
+                              help="source-relative window offset (prefix must stay <= 120s)")
     mac_humans.add_argument("--max-samples", type=int, default=12)
     mac_humans.add_argument("--width", type=int, default=320)
     mac_humans.add_argument("--height", type=int, default=180)
@@ -1048,7 +1054,8 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "character-study-local":
             print(run_local_character_study(
                 args.source, args.out, model=args.model, detector=args.detector,
-                max_seconds=args.max_seconds, max_samples=args.max_samples,
+                max_seconds=args.max_seconds, start_seconds=args.start_seconds,
+                max_samples=args.max_samples,
                 max_calls=args.max_calls, max_pairs=args.max_pairs,
                 width=args.width, height=args.height, port=args.port,
                 timeout_seconds=args.timeout_seconds,
@@ -1060,6 +1067,7 @@ def main(argv: list[str] | None = None) -> int:
             print(detect_local_ollama_subjects(
                 args.source, args.out, model=args.model, port=args.port,
                 seconds=args.max_seconds, max_samples=args.max_samples,
+                start_seconds=args.start_seconds,
                 width=args.width, height=args.height, cut_threshold=args.threshold,
                 timeout_seconds=args.timeout_seconds, ffmpeg=args.ffmpeg,
                 ffprobe=args.ffprobe, rights_status=args.rights_status))
@@ -1076,6 +1084,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "mac-vision-humans":
             print(detect_mac_vision_people(
                 args.source, args.out, seconds=args.max_seconds, max_samples=args.max_samples,
+                start_seconds=args.start_seconds,
                 width=args.width, height=args.height, cut_threshold=args.threshold,
                 ffmpeg=args.ffmpeg, ffprobe=args.ffprobe, rights_status=args.rights_status))
             return 0

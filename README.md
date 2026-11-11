@@ -74,6 +74,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Real-media character pipeline smoke:** [two-second synthetic FFmpeg end-to-end test](docs/real-media-character-smoke.md) verifies that local source-PTS media decoding, detector-to-tracklet handoff, character descriptions, interaction abstention, all QA galleries, and atomic rollback work against actual FFmpeg frames. Only the local vision model responses are mocked; this does **not** establish native Mac model accuracy.
 
+**Source-relative character windows:** [`--start-seconds`](docs/windowed-character-study.md) now works with `character-study-local`, `local-character-detect`, and `mac-vision-humans`, including windows that start well after the opening frame. The original source PTS/timebase is retained in detector/tracker reports and all galleries; total source prefix is currently capped at 120 seconds.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
