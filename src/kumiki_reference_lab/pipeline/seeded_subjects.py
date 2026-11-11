@@ -26,6 +26,9 @@ def validate_region_seeds(
             document.get("schemaVersion") != SEEDS_VERSION or
             document.get("sourceSha256") != source_sha):
         raise ValueError("ROI seeds source identity/version mismatch")
+    origin = document.get("seedOrigin", "operator-provided")
+    if origin not in ("operator-provided", "auto-motion-proposal"):
+        raise ValueError("unsupported ROI seed provenance")
     subjects = document.get("subjects")
     if not isinstance(subjects, list) or not 1 <= len(subjects) <= 8:
         raise ValueError("ROI seeds must contain 1..8 subjects")
@@ -45,6 +48,11 @@ def validate_region_seeds(
                 any(type(v) not in (int, float) or not math.isfinite(v)
                     for v in box)):
             raise ValueError("invalid or duplicated ROI seed")
+        if (origin == "auto-motion-proposal" and
+                (item["kind"] != "other" or
+                 not re.fullmatch(r"Unclassified motion region [1-8]",
+                                  item["label"]))):
+            raise ValueError("automatic ROI must remain unclassified")
         x, y, w, h = box
         if (x < 0 or y < 0 or w <= 0 or h <= 0 or
                 x + w > 1 + 1e-8 or y + h > 1 + 1e-8):
@@ -117,8 +125,9 @@ def screen_relationship_proxies(tracks: list[dict[str, Any]]) -> list[dict[str, 
 
 
 def build_seeded_region_tracks(
-    workspace: Path, shots: dict[str, Any], seeds_file: Path,
+    workspace: Path, shots: dict[str, Any], seeds_file: Path | None = None,
     *, max_frames_per_subject: int = 240,
+    seeds_document: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     from kumiki_reference_lab.pipeline.agent_frame_review import load_workspace
     if type(max_frames_per_subject) is not int or not 2 <= max_frames_per_subject <= 900:
@@ -126,17 +135,27 @@ def build_seeded_region_tracks(
     manifest, numeric, _ = load_workspace(workspace)
     if shots["sourceSha256"] != manifest["sourceSha256"]:
         raise ValueError("ROI and shot source identity mismatch")
-    if (seeds_file.is_symlink() or not seeds_file.is_file() or
-            seeds_file.stat().st_size > 32768):
-        raise ValueError("unsafe or oversized ROI seed JSON")
-    source_doc = json.loads(seeds_file.read_text(encoding="utf-8"))
+    if seeds_document is not None:
+        if seeds_file is not None or not isinstance(seeds_document, dict):
+            raise ValueError("specify either seeded ROI file or in-memory proposals")
+        source_doc = seeds_document
+        seed_name = "in-memory-auto-motion-proposals"
+        if source_doc.get("seedOrigin") != "auto-motion-proposal":
+            raise ValueError("in-memory ROI proposals require automatic provenance")
+    else:
+        if (seeds_file is None or seeds_file.is_symlink() or
+                not seeds_file.is_file() or seeds_file.stat().st_size > 32768):
+            raise ValueError("unsafe or oversized ROI seed JSON")
+        source_doc = json.loads(seeds_file.read_text(encoding="utf-8"))
+        seed_name = seeds_file.name
+    origin = source_doc.get("seedOrigin", "operator-provided")
     seeds = validate_region_seeds(
         source_doc, source_sha=manifest["sourceSha256"],
         frame_count=manifest["frameCount"])
     base = {
         "schemaVersion": SCHEMA_VERSION,
         "sourceSha256": manifest["sourceSha256"],
-        "seedDocument": seeds_file.name,
+        "seedDocument": seed_name, "seedOrigin": origin,
         "tracks": [], "screenRelationshipProxies": [],
         "limitations": [
             "Identity/kind/label are operator-provided seeds, not video recognition.",
@@ -182,7 +201,8 @@ def build_seeded_region_tracks(
             "screenRotationDegreesFromSeed": 0.,
             "screenScaleRatioFromSeed": 1.,
             "supportFeatureCount": None,
-            "status": "operator-provided-seed",
+            "status": ("auto-proposed-region" if origin == "auto-motion-proposal"
+                       else "operator-provided-seed"),
         }]
         end_status = "shot-boundary-or-end"
         if w * width < 12 or h * height < 12:
@@ -286,8 +306,13 @@ def build_seeded_region_tracks(
             "lastObservedFrameIndex": obs[-1]["frameIndex"],
             "observationCount": len(obs),
             "observations": obs, "endStatus": end_status,
-            "identityProvenance": "operator-seeded-not-model-recognized",
+            "identityProvenance": (
+                "auto-motion-proposal-not-semantic-identity"
+                if origin == "auto-motion-proposal"
+                else "operator-seeded-not-model-recognized"),
         })
     base["screenRelationshipProxies"] = screen_relationship_proxies(base["tracks"])
-    base["status"] = "seeded-2d-region-motion-candidates"
+    base["status"] = ("auto-seeded-2d-region-motion-candidates"
+                      if origin == "auto-motion-proposal"
+                      else "seeded-2d-region-motion-candidates")
     return base
