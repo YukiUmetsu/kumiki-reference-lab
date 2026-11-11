@@ -54,6 +54,38 @@ index/detail cross-checks, and remove the downloaded media before publishing
 a measurement PR. If access is unavailable, keep the entry metadata-only
 rather than inventing cuts, color, character actions, audio, or timestamps.
 
+## Sampled image-motion evidence and abstentions
+
+[Image-plane motion summaries](derived/image-motion-proxies.v1.json)
+derive **897 sampled image-motion pairs** from the same 39 video windows.
+Of these, **522** have measurable 2D image-translation candidates,
+**246** cross detected cut boundaries, **105** are unobservable because
+of low texture, and **24** are ambiguous correlations. A separate sparse
+optical-flow pass has **429 sampled pairs**: 64 single-translation
+candidates, 12 multiple-translation candidates, 159 insufficient-consensus
+pairs, 187 cut-boundary pairs and 7 ambiguous dominant groups.
+
+The derived output also records an **exploratory, scale-normalized
+displacement threshold** of 0.01 frame fraction per second. Of the 522
+measurable translation pairs, **303** meet the threshold. This is only
+the Euclidean magnitude of normalized *image-plane displacement over
+sampled time*, **not** a physical camera movement, an actual camera
+rotation, zoom, moving actor or independently verified motion type.
+Window-level median values condition on measurable pairs; a null means
+no measurable pairs, **not** a stationary shot.
+
+```bash
+python scripts/derive_movie_promo_motion_proxies.py --verify
+PYTHONPATH=. python -m unittest tests.test_movie_promo_motion_proxies -v
+jq '.videos[] | {id, windows: [.windows[] | {window, imageMotionPairStatuses, sparseFlowPairStatuses}]}' \
+  research/analysis/movie-promotions/derived/image-motion-proxies.v1.json
+```
+
+The generator verifies per-window source hashes, measured PTS intervals
+and source-index provenance, and it stores each detail file's Git blob
+fingerprint. A source edit requires regeneration, with committed-output
+equivalence enforced in lightweight CI.
+
 ## Timecoded candidate-edit and audio-attack timelines
 
 The reproducible [timed-event dataset](derived/timed-events.v1.json) adds
