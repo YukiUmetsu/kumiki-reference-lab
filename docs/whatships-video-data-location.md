@@ -65,3 +65,17 @@ git add research/analysis/whatships && git commit -m "data: extend What Ships an
 Conflicting evidence requires explicit `--replace-existing` and is then protected by Git history. The command does not silently push or create commits; versioned per-video records support future statistical analysis.
 
 **Current limit:** The nine source-viewing observations are selected-moment qualitative data, without accurate original PTS. Generated source-PTS metrics can be added after authorized footage is processed; they have not been fabricated for the rest of the catalog. Original media, extracted images and unredacted dialogue/identity data remain private unless separately reviewed and authorized.
+
+## Browse committed analysis and report actual research coverage
+
+```bash
+PYTHONPATH=src python -m kumiki_reference_lab whatships-all browse \
+  --repository-analysis research/analysis/whatships \
+  --out runs/browse-committed-evidence
+open runs/browse-committed-evidence/whatships-videos.html
+
+PYTHONPATH=src python -m kumiki_reference_lab whatships-all research-report \
+  --root research/analysis/whatships
+```
+
+By default `browse` reads the committed evidence corpus, shows observed video moments and their technique hypotheses, and filters by saved observations. `--no-repository-analysis` disables this layer. `research-report` counts only evidence that is in the codebase, not unobserved catalog metadata. The original nine partial browser observations have no original frame timestamps. Tag frequencies are not population estimates.
