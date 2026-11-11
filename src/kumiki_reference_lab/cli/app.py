@@ -69,6 +69,7 @@ from kumiki_reference_lab.pipeline.speech_transcribe import transcribe_local_vid
 from kumiki_reference_lab.pipeline.character_motion import run_character_motion
 from kumiki_reference_lab.pipeline.subject_detections import run_subject_detections
 from kumiki_reference_lab.pipeline.subject_tracklet_review import build_subject_tracklet_review
+from kumiki_reference_lab.pipeline.ollama_character_perception import describe_local_characters
 from kumiki_reference_lab.pipeline.mac_vision_detection import detect_mac_vision_people
 from kumiki_reference_lab.pipeline.speaker_association import associate_speakers
 from kumiki_reference_lab.pipeline.character_speech_link import link_characters_to_speech
@@ -647,6 +648,24 @@ def build_parser() -> argparse.ArgumentParser:
     asr.add_argument("--retain-audio", action="store_true",
                      help="retain hashed decoded WAV so an offline diarizer can use identical audio")
     asr.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
+    local_vision = commands.add_parser(
+        "local-character-vision",
+        help="describe visual subject crops and two-frame motion using a local Ollama vision model")
+    local_vision.add_argument("source", type=Path, help="authorized local video")
+    local_vision.add_argument("report", type=Path, help="subject-tracklets.json")
+    local_vision.add_argument("--out", type=Path, required=True, help="new output directory")
+    local_vision.add_argument("--model", required=True, help="already installed Ollama vision model")
+    local_vision.add_argument("--port", type=int, default=11434,
+                              help="local 127.0.0.1 Ollama port (no remote endpoint)")
+    local_vision.add_argument("--max-frames", type=int, default=6)
+    local_vision.add_argument("--max-calls", type=int, default=12)
+    local_vision.add_argument("--scan-seconds", type=int, default=20)
+    local_vision.add_argument("--max-pair-gap-seconds", type=int, default=3)
+    local_vision.add_argument("--timeout-seconds", type=int, default=180)
+    local_vision.add_argument("--width", type=int, default=320)
+    local_vision.add_argument("--height", type=int, default=180)
+    local_vision.add_argument("--ffmpeg", default="ffmpeg")
+    local_vision.add_argument("--ffprobe", default="ffprobe")
     mac_humans = commands.add_parser(
         "mac-vision-humans",
         help="macOS Vision local human rectangles to provider-neutral detection JSON")
@@ -875,6 +894,15 @@ def main(argv: list[str] | None = None) -> int:
                 max_seconds=args.max_seconds, timeout_seconds=args.timeout_seconds,
                 language=args.language, rights_status=args.rights_status,
                 retain_audio=args.retain_audio))
+            return 0
+        if args.command == "local-character-vision":
+            print(describe_local_characters(
+                args.source, args.report, args.out, model=args.model, port=args.port,
+                max_frames=args.max_frames, max_calls=args.max_calls,
+                scan_seconds=args.scan_seconds,
+                max_pair_gap_seconds=args.max_pair_gap_seconds,
+                timeout_seconds=args.timeout_seconds, width=args.width,
+                height=args.height, ffmpeg=args.ffmpeg, ffprobe=args.ffprobe))
             return 0
         if args.command == "mac-vision-humans":
             print(detect_mac_vision_people(
