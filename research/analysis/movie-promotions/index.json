@@ -2,7 +2,7 @@
   "schemaVersion": "kumiki.movie-promotion-measurements.v1",
   "retrievedOn": "2026-11-10 through 2026-11-11",
   "analyzedOn": "2026-11-10 through 2026-11-11",
-  "method": "Seven official Disney public-player MP4s (H.264/AAC, 400-480p) plus six Apple iTunes Store feature-movie preview MP4/M4V editions (H.264, 426p or similar). Three selected 20-second windows per video analyzed with kumiki-ref study-reference. Middle and ending windows were temporarily decoded and re-encoded with FFmpeg and linked to original source offsets. Opening windows used source media directly. Apple preview cuts are not assumed identical to studio YouTube uploads. Additional OVERGROWN official Blender Studio public PeerTube feature film teaser was downloaded, source-hashed, measured in three bounded windows, then deleted after export. This is distinct from Blender Studio YouTube editions.",
+  "method": "Seven official Disney public-player MP4s (H.264/AAC, 400-480p) plus six Apple iTunes Store feature-movie preview MP4/M4V editions (H.264, 426p or similar). Three selected 20-second windows per video analyzed with kumiki-ref study-reference. Middle and ending windows were temporarily decoded and re-encoded with FFmpeg and linked to original source offsets. Opening windows used source media directly. Apple preview cuts are not assumed identical to studio YouTube uploads. Additional OVERGROWN official Blender Studio public PeerTube feature film teaser was downloaded, source-hashed, measured in three bounded windows, then deleted after export. This is distinct from Blender Studio YouTube editions. Additional Agent 327: Operation Barbershop official Blender Open Movies public PeerTube teaser was downloaded, source-hashed, measured in three bounded windows, and deleted after numeric export. PeerTube edition identity is not assumed identical to alternate YouTube uploads.",
   "rightsStatus": "review-required",
   "videos": [
     {
@@ -1114,13 +1114,92 @@
           "cutCandidateCountAtThreshold015": 3
         }
       ]
+    },
+    {
+      "id": "agent-327-barbershop-teaser",
+      "catalogId": "uncataloged-blender-agent327-feature-teaser",
+      "officialPlayerUrl": "https://video.blender.org/videos/watch/264ff760-803e-430e-8d81-15648e904183",
+      "sourceSha256": "4aab7b1120dbdcd36ddd8d32dce2e9053b9d97d239edecf75a4d59a202384010",
+      "sourceDurationSeconds": 231.55,
+      "sourceResolution": [
+        1146,
+        480
+      ],
+      "catalogUploadIdentityMatch": "not-verified",
+      "sourceTrackId": "264ff760-803e-430e-8d81-15648e904183",
+      "sourceEdition": "Blender Studio official PeerTube Agent 327: Operation Barbershop feature-film teaser (not a verified YouTube edition)",
+      "windows": [
+        {
+          "window": "opening",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "windowSourceSha256": "4aab7b1120dbdcd36ddd8d32dce2e9053b9d97d239edecf75a4d59a202384010",
+          "cutCandidateCount": 3,
+          "observedInterCutIntervalCount": 2,
+          "medianInterCandidateGapSeconds": 6.708,
+          "audioLevelAttackCandidateCount": 1,
+          "meanSampledLumaProxy": 0.3228,
+          "meanSampledSaturation": 0.2579,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 19,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "cut-boundary": 3,
+            "insufficient-consensus": 4,
+            "multiple-image-translations": 2,
+            "single-image-translation-candidate": 2
+          },
+          "cutCandidateCountAtThreshold015": 4
+        },
+        {
+          "window": "middle",
+          "sourceOffsetSeconds": 105,
+          "scanSeconds": 20,
+          "windowSourceSha256": "8ee949e9c0d3cf6f1a10d3c8bbae4acf3c43dfc7f0609b4fdbfc2ef330056970",
+          "cutCandidateCount": 4,
+          "observedInterCutIntervalCount": 3,
+          "medianInterCandidateGapSeconds": 4.083,
+          "audioLevelAttackCandidateCount": 0,
+          "meanSampledLumaProxy": 0.2078,
+          "meanSampledSaturation": 0.3129,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 17,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "cut-boundary": 4,
+            "insufficient-consensus": 7
+          },
+          "cutCandidateCountAtThreshold015": 11
+        },
+        {
+          "window": "ending",
+          "sourceOffsetSeconds": 211,
+          "scanSeconds": 20,
+          "windowSourceSha256": "864aa64d6a741639b45dff4de74c4dcf05e48696f6a139dcdb3656be73731519",
+          "cutCandidateCount": 0,
+          "observedInterCutIntervalCount": 0,
+          "medianInterCandidateGapSeconds": null,
+          "audioLevelAttackCandidateCount": 0,
+          "meanSampledLumaProxy": 0.1639,
+          "meanSampledSaturation": 0.0714,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 16,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "insufficient-consensus": 7,
+            "multiple-image-translations": 1,
+            "single-image-translation-candidate": 3
+          },
+          "cutCandidateCountAtThreshold015": 1
+        }
+      ]
     }
   ],
   "detectorThresholds": [
     0.25,
     0.15
   ],
-  "scope": "42 selected non-overlapping 20-second windows across 14 source-hashed movie promotions; not whole-trailer coverage.",
+  "scope": "45 selected non-overlapping 20-second windows across 15 source-hashed movie promotions; not whole-trailer coverage.",
   "caveats": [
     "FFmpeg scene-difference candidates are not confirmed edits and can react to motion, effects and flashes; threshold sensitivity is reported.",
     "Display luma and saturation are sampled, encoded-frame proxies rather than light-rig measurements or footage-wide statistics.",

@@ -7,7 +7,7 @@ This is the **canonical, Git-tracked numerical evidence dataset** for official m
 | [`index.json`](index.json) | One summary entry per actually processed video, with three bounded windows, original and clip SHA-256s, source offsets, scene-difference cut sensitivity, audio attack counts, sampled display appearance and image-motion availability |
 | `<film-slug>.json` | Detailed source-PTS cut candidates, image motion, sparse flow, sampled image color/hue, per-decoded-frame audio RMS/peak levels, audio-onset candidates and AV/edit rhythm evidence; includes `overgrown-blender-teaser.json` |
 
-The dataset contains **14 measured promotional editions, 42 selected 20-second windows, and 840 seconds of machine-measured evidence**. The original 13-film popularity catalog still has seven Disney-player trailers (*Inside Out 2*, *Frozen 2*, *Moana 2*, *Avengers: Infinity War*, *Avengers: Endgame*, *Zootopia 2*, *Star Wars: The Force Awakens*) and six Apple iTunes Store movie previews (*Barbie*, *Oppenheimer*, *Spider-Man: No Way Home*, *Dune: Part Two*, *The Super Mario Bros. Movie*, *Deadpool & Wolverine*). The fourteenth source is **[OVERGROWN](overgrown-blender-teaser.json)**, Blender Studio's public PeerTube feature-film teaser, independently source-hashed and analyzed on its own publisher service. That film is **not** in the 13-video popularity catalog and must not be counted as a verified edition of a YouTube upload. Its source SHA-256 is `0c49e856a034e8de9695c96d86a048a34aa7f60286c0414069a1bcf35dab8f91`, its original duration 81.088 seconds, and its three sample offsets 0, 30 and 60 seconds. The source media and temporary analysis galleries were deleted after export. None of these 14 records has complete full-runtime human-certified coverage. New films should extend the same index and add their own per-video files; never overwrite an earlier source SHA or segment silently.
+The dataset contains **15 measured promotional editions, 45 selected 20-second windows, and 900 seconds of machine-measured evidence**. The original 13-film popularity catalog still has seven Disney-player trailers (*Inside Out 2*, *Frozen 2*, *Moana 2*, *Avengers: Infinity War*, *Avengers: Endgame*, *Zootopia 2*, *Star Wars: The Force Awakens*) and six Apple iTunes Store movie previews (*Barbie*, *Oppenheimer*, *Spider-Man: No Way Home*, *Dune: Part Two*, *The Super Mario Bros. Movie*, *Deadpool & Wolverine*). The fourteenth source is **[OVERGROWN](overgrown-blender-teaser.json)**, Blender Studio's public PeerTube feature-film teaser, independently source-hashed and analyzed on its own publisher service. That film is **not** in the 13-video popularity catalog and must not be counted as a verified edition of a YouTube upload. Its source SHA-256 is `0c49e856a034e8de9695c96d86a048a34aa7f60286c0414069a1bcf35dab8f91`, its original duration 81.088 seconds, and its three sample offsets 0, 30 and 60 seconds. The source media and temporary analysis galleries were deleted after export. None of these 14 records has complete full-runtime human-certified coverage. New films should extend the same index and add their own per-video files; never overwrite an earlier source SHA or segment silently.
 
 ## Keep every derived report synchronized
 
@@ -157,6 +157,31 @@ without installing FFmpeg or fetching copyrighted media.
 The publisher's [official PeerTube player](https://video.blender.org/videos/watch/7ad3cbee-fe5f-41c2-93ea-b108986939f4) provided a public, 81.088-second, 1146×480 film teaser. An isolated one-time hosted research run downloaded and SHA-256-hashed that media, ran `study-reference` on three non-overlapping 20-second windows, committed only numerical source-PTS evidence, and deleted temporary video, audio, and frames. At scene-change threshold 0.25 it measured **2 / 7 / 2 cut candidates** in opening/middle/ending samples, versus **2 / 8 / 3** at threshold 0.15. These are automated scene-change candidates, not verified editing decisions. The three windows contain 36 sampled appearance frames, 69 image-motion pair comparisons, and 2,811 decoded-audio level frame rows.
 
 This expands edition diversity (Blender Studio public PeerTube vs Disney player vs Apple retail preview); it **does not** establish a causal style or studio-effect comparison. The project may not treat Blender's feature-film teaser as equivalent to a Warner, Sony, or DreamWorks campaign. Reproduce the original bounded research procedure using [`scripts/research_movie_promo_overgrown.py`](../../../scripts/research_movie_promo_overgrown.py) on a legitimate public source, but do not rerun it against committed data or overwrite source editions. Keep derivative comparison manifests synchronized after adding new evidence.
+
+## Blender Studio *Agent 327: Operation Barbershop* teaser measurements
+
+The [official publisher PeerTube player](https://video.blender.org/videos/watch/264ff760-803e-430e-8d81-15648e904183)
+provided a 231.55-second, 1146×480 film teaser for an originally proposed
+animated feature. The one-shot publisher-validated job downloaded the
+public media temporarily, computed SHA-256
+`4aab7b1120dbdcd36ddd8d32dce2e9053b9d97d239edecf75a4d59a202384010`,
+and committed [three new numerical source-PTS windows](agent-327-barbershop-teaser.json).
+The opening, middle, and ending windows start at **0, 105, and 211 seconds**
+and contain **3 / 4 / 0 cut candidates** at the 0.25 threshold (and
+**4 / 11 / 1** at 0.15). These are automatically detected image-change
+candidates, not independently confirmed edits or story beats.
+The one-shot media workflow was removed after completion; downloaded video,
+temporary audio and frame galleries were not added to Git.
+
+The project's own [production background](https://www.blender.org/press/teaser-for-agent-327-operation-barbershop/)
+describes a 3D interpretation of stylized 1970s comics, multi-character
+storytelling and Blender production methods. Those published production
+facts are separate from the recorded pixel/audio statistics; **the
+dataset does not automatically identify the agent, antagonist, acting
+or camera techniques**. The publisher's PeerTube edition must not be
+conflated with third-party YouTube uploads or their view counts.
+Blender Studio [lists the film under CC BY-ND](https://studio.blender.org/projects/agent-327/pages/about/);
+the repository stores numeric evidence only, not modified film media.
 
 ## Reproducible comparisons
 

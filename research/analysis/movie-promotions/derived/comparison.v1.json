@@ -1,14 +1,70 @@
 {
   "schemaVersion": "kumiki.movie-promotion-comparison.v1",
-  "sourceIndexGitBlobSha": "23692403b40a9fe39068d2ae0faf3e25c80a30fc",
+  "sourceIndexGitBlobSha": "698773a1325044c0551e6caf0e946426f7cdc154",
   "coverage": {
-    "sourceCount": 14,
-    "windowCount": 42,
-    "sampledSeconds": 840.0
+    "sourceCount": 15,
+    "windowCount": 45,
+    "sampledSeconds": 900.0
   },
   "method": "Deterministic aggregation of 20-second source-hashed windows. Cut candidates use FFmpeg scene thresholds 0.25 and 0.15. Appearance proxy averages are weighted by frame samples. Neither cuts/minute nor visual proxies represent unobserved trailer footage.",
   "comparability": "Source families and preview editions differ; Apple retail previews are not established as identical to cataloged YouTube studio trailers. No audience behavior, confirmed edits, real camera/lighting or semantic labels are inferred.",
   "videos": [
+    {
+      "id": "agent-327-barbershop-teaser",
+      "catalogId": "uncataloged-blender-agent327-feature-teaser",
+      "sourceSha256": "4aab7b1120dbdcd36ddd8d32dce2e9053b9d97d239edecf75a4d59a202384010",
+      "sourceFamily": "other-declared-edition",
+      "sourceEdition": "Blender Studio official PeerTube Agent 327: Operation Barbershop feature-film teaser (not a verified YouTube edition)",
+      "catalogUploadIdentityMatch": "not-verified",
+      "sourceDurationSeconds": 231.55,
+      "sampledSeconds": 60.0,
+      "sampledSourceFraction": 0.2591,
+      "cutCandidateCount025": 7,
+      "cutCandidateCount015": 16,
+      "cutCandidatesPerSampledMinute025": 7.0,
+      "sensitivityExtraCandidates": 9,
+      "audioLevelAttackCandidateCount": 1,
+      "meanSampledLumaProxy": 0.2315,
+      "meanSampledSaturation": 0.2141,
+      "windows": [
+        {
+          "window": "opening",
+          "sourceOffsetSeconds": 0.0,
+          "scanSeconds": 20.0,
+          "cutCandidateCount025": 3,
+          "cutCandidateCount015": 4,
+          "cutCandidatesPerSampledMinute025": 9.0,
+          "audioLevelAttackCandidateCount": 1,
+          "appearanceFrameSamples": 12,
+          "meanSampledLumaProxy": 0.3228,
+          "meanSampledSaturation": 0.2579
+        },
+        {
+          "window": "middle",
+          "sourceOffsetSeconds": 105.0,
+          "scanSeconds": 20.0,
+          "cutCandidateCount025": 4,
+          "cutCandidateCount015": 11,
+          "cutCandidatesPerSampledMinute025": 12.0,
+          "audioLevelAttackCandidateCount": 0,
+          "appearanceFrameSamples": 12,
+          "meanSampledLumaProxy": 0.2078,
+          "meanSampledSaturation": 0.3129
+        },
+        {
+          "window": "ending",
+          "sourceOffsetSeconds": 211.0,
+          "scanSeconds": 20.0,
+          "cutCandidateCount025": 0,
+          "cutCandidateCount015": 1,
+          "cutCandidatesPerSampledMinute025": 0.0,
+          "audioLevelAttackCandidateCount": 0,
+          "appearanceFrameSamples": 12,
+          "meanSampledLumaProxy": 0.1639,
+          "meanSampledSaturation": 0.0714
+        }
+      ]
+    },
     {
       "id": "barbie",
       "catalogId": "warner-barbie-main-trailer",

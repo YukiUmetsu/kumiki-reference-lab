@@ -1,17 +1,158 @@
 {
   "schemaVersion": "kumiki.movie-promotion-timed-events.v1",
-  "sourceIndexGitBlobSha": "23692403b40a9fe39068d2ae0faf3e25c80a30fc",
+  "sourceIndexGitBlobSha": "698773a1325044c0551e6caf0e946426f7cdc154",
   "method": "Source-PTS rational cut and audio RMS-rise candidates from source-hashed local study windows. Cut candidates use detector 0.25; audio attacks use the original pre-existing level-rise detector. Cut bins are [0,5), [5,10), [10,15), [15,20) seconds per selected clip. Nearest audio attack is signed audio-minus-video milliseconds, with 250ms inclusive proximity.",
   "limitations": "Only three selected 20-second windows per source, not entire trailer. Cut candidates can be flashes/changes, audio RMS rises are not validated music beats, dialogue, or effects; nearness is not causality or creative synchronization. Reencoded middle/end clips have approximate original offsets. No copied media, visual scene tags or physical-camera inferences.",
   "coverage": {
-    "sourceCount": 14,
-    "windowCount": 42,
-    "sampledSeconds": 840,
-    "cutCandidateCount025": 279,
-    "audioLevelAttackCandidateCount": 110,
-    "cutCandidatesWithin250MsOfAudioAttack": 25
+    "sourceCount": 15,
+    "windowCount": 45,
+    "sampledSeconds": 900.0,
+    "cutCandidateCount025": 286,
+    "audioLevelAttackCandidateCount": 111,
+    "cutCandidatesWithin250MsOfAudioAttack": 26
   },
   "videos": [
+    {
+      "id": "agent-327-barbershop-teaser",
+      "catalogId": "uncataloged-blender-agent327-feature-teaser",
+      "originalSourceSha256": "4aab7b1120dbdcd36ddd8d32dce2e9053b9d97d239edecf75a4d59a202384010",
+      "detailGitBlobSha": "9b532842e6f0995b7b9441bd6df2a0c8f2bcbb13",
+      "sourceEdition": "Blender Studio official PeerTube Agent 327: Operation Barbershop feature-film teaser (not a verified YouTube edition)",
+      "catalogUploadIdentityMatch": "not-verified",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "4aab7b1120dbdcd36ddd8d32dce2e9053b9d97d239edecf75a4d59a202384010",
+          "sourceOffsetSeconds": 0.0,
+          "scanSeconds": 20.0,
+          "sourceVideoTimebase": {
+            "denominator": 12288,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "numerator": 1,
+            "denominator": 44100
+          },
+          "sourceOffsetPrecision": "exact-opening",
+          "cutCandidateCount025": 3,
+          "audioLevelAttackCandidateCount": 1,
+          "cutCandidatesWithin250MsOfAudioAttack": 1,
+          "cutCandidateCountsByFiveSecondBin": [
+            1,
+            0,
+            2,
+            0
+          ],
+          "medianInteriorCandidateGapSeconds": 6.708333,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 6656,
+              "localSeconds": 0.541667,
+              "nearestAudioAttackDeltaMs": 155.0,
+              "audioAttackWithin250Ms": true
+            },
+            {
+              "sourceVideoPts": 127488,
+              "localSeconds": 10.375,
+              "nearestAudioAttackDeltaMs": -9678.0,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 171520,
+              "localSeconds": 13.958333,
+              "nearestAudioAttackDeltaMs": -13262.0,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 30720,
+              "localSeconds": 0.696599,
+              "measuredRmsRiseDb": 35.4689
+            }
+          ]
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "8ee949e9c0d3cf6f1a10d3c8bbae4acf3c43dfc7f0609b4fdbfc2ef330056970",
+          "sourceOffsetSeconds": 105.0,
+          "scanSeconds": 20.0,
+          "sourceVideoTimebase": {
+            "denominator": 12288,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "numerator": 1,
+            "denominator": 44100
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 4,
+          "audioLevelAttackCandidateCount": 0,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            1,
+            2,
+            0,
+            1
+          ],
+          "medianInteriorCandidateGapSeconds": 4.083333,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 15360,
+              "localSeconds": 1.25,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 65536,
+              "localSeconds": 5.333333,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 80384,
+              "localSeconds": 6.541667,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 241664,
+              "localSeconds": 19.666667,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": []
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "864aa64d6a741639b45dff4de74c4dcf05e48696f6a139dcdb3656be73731519",
+          "sourceOffsetSeconds": 211.0,
+          "scanSeconds": 20.0,
+          "sourceVideoTimebase": {
+            "denominator": 12288,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "numerator": 1,
+            "denominator": 44100
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 0,
+          "audioLevelAttackCandidateCount": 0,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "medianInteriorCandidateGapSeconds": null,
+          "cutEvents": [],
+          "audioAttackEvents": []
+        }
+      ]
+    },
     {
       "id": "barbie",
       "catalogId": "warner-barbie-main-trailer",
@@ -23,8 +164,8 @@
         {
           "window": "opening",
           "windowSourceSha256": "e947627b15eef96baf9a7273d679bd88a95345480a50bb38c4b6ec7f169eb2e9",
-          "sourceOffsetSeconds": 0,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 0.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 24000,
             "numerator": 1
@@ -48,43 +189,43 @@
             {
               "sourceVideoPts": 24024,
               "localSeconds": 1.001,
-              "nearestAudioAttackDeltaMs": 19,
+              "nearestAudioAttackDeltaMs": 19.0,
               "audioAttackWithin250Ms": true
             },
             {
               "sourceVideoPts": 144144,
               "localSeconds": 6.006,
-              "nearestAudioAttackDeltaMs": -4986,
+              "nearestAudioAttackDeltaMs": -4986.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 200200,
               "localSeconds": 8.341667,
-              "nearestAudioAttackDeltaMs": 3476,
+              "nearestAudioAttackDeltaMs": 3476.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 273273,
               "localSeconds": 11.386375,
-              "nearestAudioAttackDeltaMs": 431,
+              "nearestAudioAttackDeltaMs": 431.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 305305,
               "localSeconds": 12.721042,
-              "nearestAudioAttackDeltaMs": -904,
+              "nearestAudioAttackDeltaMs": -904.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 449449,
               "localSeconds": 18.727042,
-              "nearestAudioAttackDeltaMs": -245,
+              "nearestAudioAttackDeltaMs": -245.0,
               "audioAttackWithin250Ms": true
             },
             {
               "sourceVideoPts": 473473,
               "localSeconds": 19.728042,
-              "nearestAudioAttackDeltaMs": -666,
+              "nearestAudioAttackDeltaMs": -666.0,
               "audioAttackWithin250Ms": false
             }
           ],
@@ -129,8 +270,8 @@
         {
           "window": "middle",
           "windowSourceSha256": "9a79ad3351b3e92b7b699ab62cf24140e216af0646a451092ac23ca748e25230",
-          "sourceOffsetSeconds": 71,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 71.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 24000,
             "numerator": 1
@@ -154,61 +295,61 @@
             {
               "sourceVideoPts": 64047,
               "localSeconds": 2.668625,
-              "nearestAudioAttackDeltaMs": 373,
+              "nearestAudioAttackDeltaMs": 373.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 121104,
               "localSeconds": 5.046,
-              "nearestAudioAttackDeltaMs": -123,
+              "nearestAudioAttackDeltaMs": -123.0,
               "audioAttackWithin250Ms": true
             },
             {
               "sourceVideoPts": 150133,
               "localSeconds": 6.255542,
-              "nearestAudioAttackDeltaMs": -1333,
+              "nearestAudioAttackDeltaMs": -1333.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 323306,
               "localSeconds": 13.471083,
-              "nearestAudioAttackDeltaMs": -8548,
+              "nearestAudioAttackDeltaMs": -8548.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 358341,
               "localSeconds": 14.930875,
-              "nearestAudioAttackDeltaMs": -10008,
+              "nearestAudioAttackDeltaMs": -10008.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 382365,
               "localSeconds": 15.931875,
-              "nearestAudioAttackDeltaMs": -11009,
+              "nearestAudioAttackDeltaMs": -11009.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 442425,
               "localSeconds": 18.434375,
-              "nearestAudioAttackDeltaMs": -13512,
+              "nearestAudioAttackDeltaMs": -13512.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 454437,
               "localSeconds": 18.934875,
-              "nearestAudioAttackDeltaMs": -14012,
+              "nearestAudioAttackDeltaMs": -14012.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 466449,
               "localSeconds": 19.435375,
-              "nearestAudioAttackDeltaMs": -14513,
+              "nearestAudioAttackDeltaMs": -14513.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 478461,
               "localSeconds": 19.935875,
-              "nearestAudioAttackDeltaMs": -15013,
+              "nearestAudioAttackDeltaMs": -15013.0,
               "audioAttackWithin250Ms": false
             }
           ],
@@ -263,8 +404,8 @@
         {
           "window": "ending",
           "windowSourceSha256": "787469667a23a2dc9767c61dd75a903aa82cdbec2cf48f2b025f202ac95e7bfc",
-          "sourceOffsetSeconds": 141,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 141.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 24000,
             "numerator": 1
@@ -288,79 +429,79 @@
             {
               "sourceVideoPts": 58058,
               "localSeconds": 2.419083,
-              "nearestAudioAttackDeltaMs": 3014,
+              "nearestAudioAttackDeltaMs": 3014.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 87087,
               "localSeconds": 3.628625,
-              "nearestAudioAttackDeltaMs": 1805,
+              "nearestAudioAttackDeltaMs": 1805.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 162162,
               "localSeconds": 6.75675,
-              "nearestAudioAttackDeltaMs": 116,
+              "nearestAudioAttackDeltaMs": 116.0,
               "audioAttackWithin250Ms": true
             },
             {
               "sourceVideoPts": 179179,
               "localSeconds": 7.465792,
-              "nearestAudioAttackDeltaMs": 336,
+              "nearestAudioAttackDeltaMs": 336.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 198198,
               "localSeconds": 8.25825,
-              "nearestAudioAttackDeltaMs": -456,
+              "nearestAudioAttackDeltaMs": -456.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 219219,
               "localSeconds": 9.134125,
-              "nearestAudioAttackDeltaMs": -1332,
+              "nearestAudioAttackDeltaMs": -1332.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 247247,
               "localSeconds": 10.301958,
-              "nearestAudioAttackDeltaMs": 542,
+              "nearestAudioAttackDeltaMs": 542.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 273273,
               "localSeconds": 11.386375,
-              "nearestAudioAttackDeltaMs": -543,
+              "nearestAudioAttackDeltaMs": -543.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 284284,
               "localSeconds": 11.845167,
-              "nearestAudioAttackDeltaMs": 670,
+              "nearestAudioAttackDeltaMs": 670.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 301301,
               "localSeconds": 12.554208,
-              "nearestAudioAttackDeltaMs": -39,
+              "nearestAudioAttackDeltaMs": -39.0,
               "audioAttackWithin250Ms": true
             },
             {
               "sourceVideoPts": 351351,
               "localSeconds": 14.639625,
-              "nearestAudioAttackDeltaMs": 12,
+              "nearestAudioAttackDeltaMs": 12.0,
               "audioAttackWithin250Ms": true
             },
             {
               "sourceVideoPts": 391391,
               "localSeconds": 16.307958,
-              "nearestAudioAttackDeltaMs": -1656,
+              "nearestAudioAttackDeltaMs": -1656.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 411411,
               "localSeconds": 17.142125,
-              "nearestAudioAttackDeltaMs": -2490,
+              "nearestAudioAttackDeltaMs": -2490.0,
               "audioAttackWithin250Ms": false
             }
           ],
@@ -425,8 +566,8 @@
         {
           "window": "opening",
           "windowSourceSha256": "ef8a72653e014ecbda21d3415fb39ec2dd680e0a6f741c8de6fd903e0a2ff787",
-          "sourceOffsetSeconds": 0,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 0.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 12288,
             "numerator": 1
@@ -450,19 +591,19 @@
             {
               "sourceVideoPts": 47616,
               "localSeconds": 3.875,
-              "nearestAudioAttackDeltaMs": 235,
+              "nearestAudioAttackDeltaMs": 235.0,
               "audioAttackWithin250Ms": true
             },
             {
               "sourceVideoPts": 64512,
               "localSeconds": 5.25,
-              "nearestAudioAttackDeltaMs": -1140,
+              "nearestAudioAttackDeltaMs": -1140.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 128000,
               "localSeconds": 10.416667,
-              "nearestAudioAttackDeltaMs": 775,
+              "nearestAudioAttackDeltaMs": 775.0,
               "audioAttackWithin250Ms": false
             }
           ],
@@ -492,8 +633,8 @@
         {
           "window": "middle",
           "windowSourceSha256": "47d52590532339a7b3cb8e1adff200639e132912effec68a5888325a7ce2705e",
-          "sourceOffsetSeconds": 62,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 62.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 12288,
             "numerator": 1
@@ -517,13 +658,13 @@
             {
               "sourceVideoPts": 125440,
               "localSeconds": 10.208333,
-              "nearestAudioAttackDeltaMs": -8328,
+              "nearestAudioAttackDeltaMs": -8328.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 147456,
-              "localSeconds": 12,
-              "nearestAudioAttackDeltaMs": -10119,
+              "localSeconds": 12.0,
+              "nearestAudioAttackDeltaMs": -10119.0,
               "audioAttackWithin250Ms": false
             }
           ],
@@ -538,8 +679,8 @@
         {
           "window": "ending",
           "windowSourceSha256": "aae99d8219ec40a58514380832b72b5629675ddaf4b6da4723f122f499976837",
-          "sourceOffsetSeconds": 124,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 124.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 12288,
             "numerator": 1
@@ -563,7 +704,7 @@
             {
               "sourceVideoPts": 126976,
               "localSeconds": 10.333333,
-              "nearestAudioAttackDeltaMs": -302,
+              "nearestAudioAttackDeltaMs": -302.0,
               "audioAttackWithin250Ms": false
             }
           ],
@@ -618,8 +759,8 @@
         {
           "window": "opening",
           "windowSourceSha256": "9c8fc42cd7b8aa08c8e17b4c13156bea52ae577fb6db13ba21558554c1f91934",
-          "sourceOffsetSeconds": 0,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 0.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 24000,
             "numerator": 1
@@ -643,67 +784,67 @@
             {
               "sourceVideoPts": 24024,
               "localSeconds": 1.001,
-              "nearestAudioAttackDeltaMs": 90,
+              "nearestAudioAttackDeltaMs": 90.0,
               "audioAttackWithin250Ms": true
             },
             {
               "sourceVideoPts": 77077,
               "localSeconds": 3.211542,
-              "nearestAudioAttackDeltaMs": -2120,
+              "nearestAudioAttackDeltaMs": -2120.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 80080,
               "localSeconds": 3.336667,
-              "nearestAudioAttackDeltaMs": -2245,
+              "nearestAudioAttackDeltaMs": -2245.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 186186,
               "localSeconds": 7.75775,
-              "nearestAudioAttackDeltaMs": -6666,
+              "nearestAudioAttackDeltaMs": -6666.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 207207,
               "localSeconds": 8.633625,
-              "nearestAudioAttackDeltaMs": -7542,
+              "nearestAudioAttackDeltaMs": -7542.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 223223,
               "localSeconds": 9.300958,
-              "nearestAudioAttackDeltaMs": -8210,
+              "nearestAudioAttackDeltaMs": -8210.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 260260,
               "localSeconds": 10.844167,
-              "nearestAudioAttackDeltaMs": -9753,
+              "nearestAudioAttackDeltaMs": -9753.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 292292,
               "localSeconds": 12.178833,
-              "nearestAudioAttackDeltaMs": -11087,
+              "nearestAudioAttackDeltaMs": -11087.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 338338,
               "localSeconds": 14.097417,
-              "nearestAudioAttackDeltaMs": -13006,
+              "nearestAudioAttackDeltaMs": -13006.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 405405,
               "localSeconds": 16.891875,
-              "nearestAudioAttackDeltaMs": -15801,
+              "nearestAudioAttackDeltaMs": -15801.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 426426,
               "localSeconds": 17.76775,
-              "nearestAudioAttackDeltaMs": -16676,
+              "nearestAudioAttackDeltaMs": -16676.0,
               "audioAttackWithin250Ms": false
             }
           ],
@@ -718,8 +859,8 @@
         {
           "window": "middle",
           "windowSourceSha256": "7b5c48b084cb09e791f6b88b6f1d60a3c761b5ea29e31de30f4c016366bff214",
-          "sourceOffsetSeconds": 82,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 82.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 24000,
             "numerator": 1
@@ -794,8 +935,8 @@
         {
           "window": "ending",
           "windowSourceSha256": "293858a934b5a5e791d8be44882c6d519f559c5d0e1ada79c697c7aa546b175d",
-          "sourceOffsetSeconds": 163,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 163.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 24000,
             "numerator": 1
@@ -819,37 +960,37 @@
             {
               "sourceVideoPts": 15999,
               "localSeconds": 0.666625,
-              "nearestAudioAttackDeltaMs": 8180,
+              "nearestAudioAttackDeltaMs": 8180.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 61044,
               "localSeconds": 2.5435,
-              "nearestAudioAttackDeltaMs": 6303,
+              "nearestAudioAttackDeltaMs": 6303.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 82065,
               "localSeconds": 3.419375,
-              "nearestAudioAttackDeltaMs": 5427,
+              "nearestAudioAttackDeltaMs": 5427.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 133116,
               "localSeconds": 5.5465,
-              "nearestAudioAttackDeltaMs": 3300,
+              "nearestAudioAttackDeltaMs": 3300.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 241224,
               "localSeconds": 10.051,
-              "nearestAudioAttackDeltaMs": -415,
+              "nearestAudioAttackDeltaMs": -415.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 279262,
               "localSeconds": 11.635917,
-              "nearestAudioAttackDeltaMs": -2000,
+              "nearestAudioAttackDeltaMs": -2000.0,
               "audioAttackWithin250Ms": false
             }
           ],
@@ -879,8 +1020,8 @@
         {
           "window": "opening",
           "windowSourceSha256": "1073b09a9aaf09619c0b8585f753f60f3398f52934b0aa29d2db8f34d562f46d",
-          "sourceOffsetSeconds": 0,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 0.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 11988,
             "numerator": 1
@@ -904,25 +1045,25 @@
             {
               "sourceVideoPts": 74500,
               "localSeconds": 6.214548,
-              "nearestAudioAttackDeltaMs": 4281,
+              "nearestAudioAttackDeltaMs": 4281.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 115000,
               "localSeconds": 9.592926,
-              "nearestAudioAttackDeltaMs": 902,
+              "nearestAudioAttackDeltaMs": 902.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 157500,
               "localSeconds": 13.138138,
-              "nearestAudioAttackDeltaMs": -2643,
+              "nearestAudioAttackDeltaMs": -2643.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 196000,
               "localSeconds": 16.349683,
-              "nearestAudioAttackDeltaMs": -5854,
+              "nearestAudioAttackDeltaMs": -5854.0,
               "audioAttackWithin250Ms": false
             }
           ],
@@ -942,8 +1083,8 @@
         {
           "window": "middle",
           "windowSourceSha256": "4a4447b40052d3c495a38220fcb54c5dad07cdf127f7be15cd9c2936af689a23",
-          "sourceOffsetSeconds": 63,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 63.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 11988,
             "numerator": 1
@@ -982,8 +1123,8 @@
         {
           "window": "ending",
           "windowSourceSha256": "25bc5a57a9b36f33ed855310a61d9bc2550cd309599e1ba901d26248739b76f4",
-          "sourceOffsetSeconds": 126,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 126.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 11988,
             "numerator": 1
@@ -1007,31 +1148,31 @@
             {
               "sourceVideoPts": 78000,
               "localSeconds": 6.506507,
-              "nearestAudioAttackDeltaMs": 7425,
+              "nearestAudioAttackDeltaMs": 7425.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 92000,
               "localSeconds": 7.674341,
-              "nearestAudioAttackDeltaMs": 6258,
+              "nearestAudioAttackDeltaMs": 6258.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 114000,
               "localSeconds": 9.50951,
-              "nearestAudioAttackDeltaMs": 4422,
+              "nearestAudioAttackDeltaMs": 4422.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 143500,
               "localSeconds": 11.970304,
-              "nearestAudioAttackDeltaMs": 1962,
+              "nearestAudioAttackDeltaMs": 1962.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 162500,
               "localSeconds": 13.555222,
-              "nearestAudioAttackDeltaMs": 377,
+              "nearestAudioAttackDeltaMs": 377.0,
               "audioAttackWithin250Ms": false
             }
           ],
@@ -1056,8 +1197,8 @@
         {
           "window": "opening",
           "windowSourceSha256": "daf98d39f3658931f476d9a9f1bf4faafe8488eb84b903f9488f4e96b4a5db2c",
-          "sourceOffsetSeconds": 0,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 0.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 11988,
             "numerator": 1
@@ -1081,25 +1222,25 @@
             {
               "sourceVideoPts": 60500,
               "localSeconds": 5.046713,
-              "nearestAudioAttackDeltaMs": 1641,
+              "nearestAudioAttackDeltaMs": 1641.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 120500,
               "localSeconds": 10.051718,
-              "nearestAudioAttackDeltaMs": 2696,
+              "nearestAudioAttackDeltaMs": 2696.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 152500,
               "localSeconds": 12.721054,
-              "nearestAudioAttackDeltaMs": 27,
+              "nearestAudioAttackDeltaMs": 27.0,
               "audioAttackWithin250Ms": true
             },
             {
               "sourceVideoPts": 217500,
               "localSeconds": 18.143143,
-              "nearestAudioAttackDeltaMs": -32,
+              "nearestAudioAttackDeltaMs": -32.0,
               "audioAttackWithin250Ms": true
             }
           ],
@@ -1129,8 +1270,8 @@
         {
           "window": "middle",
           "windowSourceSha256": "d28c933373a359f1305cad67a417f73dfba7c98dc11debf5a26f4ae63f5db89d",
-          "sourceOffsetSeconds": 59,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 59.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 11988,
             "numerator": 1
@@ -1193,8 +1334,8 @@
         {
           "window": "ending",
           "windowSourceSha256": "35bfa4209171fb046eee78c32a484de96c937e0fb49d09f7edfacd7fee873008",
-          "sourceOffsetSeconds": 118,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 118.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 11988,
             "numerator": 1
@@ -1236,8 +1377,8 @@
         {
           "window": "opening",
           "windowSourceSha256": "dca093bbb0e1b9afb28885d3a092083afa2ee2b7afcaca617f8efa484046cdaa",
-          "sourceOffsetSeconds": 0,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 0.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 11988,
             "numerator": 1
@@ -1294,8 +1435,8 @@
         {
           "window": "middle",
           "windowSourceSha256": "a6bcff50a9626b1c10a27abafbd7473b70802cdd82baea7b17dcee1ff9477640",
-          "sourceOffsetSeconds": 47,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 47.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 11988,
             "numerator": 1
@@ -1334,8 +1475,8 @@
         {
           "window": "ending",
           "windowSourceSha256": "20eed464e2a68269109cf35a633768a0a1963f8e10d0aa9b4f8c8758c7fee890",
-          "sourceOffsetSeconds": 93,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 93.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 11988,
             "numerator": 1
@@ -1359,7 +1500,7 @@
             {
               "sourceVideoPts": 30000,
               "localSeconds": 2.502503,
-              "nearestAudioAttackDeltaMs": 2490,
+              "nearestAudioAttackDeltaMs": 2490.0,
               "audioAttackWithin250Ms": false
             }
           ],
@@ -1384,8 +1525,8 @@
         {
           "window": "opening",
           "windowSourceSha256": "d80396433e9bb5d9329b979c7bca610736a54ee804152a1b99295b03ec35952f",
-          "sourceOffsetSeconds": 0,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 0.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 11988,
             "numerator": 1
@@ -1424,8 +1565,8 @@
         {
           "window": "middle",
           "windowSourceSha256": "15d25a4fcd30006b3c8388e68a2b717288326e05cb5090e02ed21444e9ce685d",
-          "sourceOffsetSeconds": 62,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 62.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 11988,
             "numerator": 1
@@ -1506,8 +1647,8 @@
         {
           "window": "ending",
           "windowSourceSha256": "2a73d84754e43f6aeb0604c175a4947694f832b04268c6863aa040fe9ff97d06",
-          "sourceOffsetSeconds": 124,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 124.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 11988,
             "numerator": 1
@@ -1556,8 +1697,8 @@
         {
           "window": "opening",
           "windowSourceSha256": "ce09522b50ccb39bb85e50f8b66381e44cf97d3722ad47cc3b8efae8b069fad8",
-          "sourceOffsetSeconds": 0,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 0.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 11988,
             "numerator": 1
@@ -1581,103 +1722,103 @@
             {
               "sourceVideoPts": 25000,
               "localSeconds": 2.085419,
-              "nearestAudioAttackDeltaMs": 13077,
+              "nearestAudioAttackDeltaMs": 13077.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 26500,
               "localSeconds": 2.210544,
-              "nearestAudioAttackDeltaMs": 12952,
+              "nearestAudioAttackDeltaMs": 12952.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 27000,
               "localSeconds": 2.252252,
-              "nearestAudioAttackDeltaMs": 12910,
+              "nearestAudioAttackDeltaMs": 12910.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 47000,
               "localSeconds": 3.920587,
-              "nearestAudioAttackDeltaMs": 11242,
+              "nearestAudioAttackDeltaMs": 11242.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 57000,
               "localSeconds": 4.754755,
-              "nearestAudioAttackDeltaMs": 10408,
+              "nearestAudioAttackDeltaMs": 10408.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 67000,
               "localSeconds": 5.588922,
-              "nearestAudioAttackDeltaMs": 9574,
+              "nearestAudioAttackDeltaMs": 9574.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 82000,
               "localSeconds": 6.840174,
-              "nearestAudioAttackDeltaMs": 8322,
+              "nearestAudioAttackDeltaMs": 8322.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 109000,
               "localSeconds": 9.092426,
-              "nearestAudioAttackDeltaMs": 6070,
+              "nearestAudioAttackDeltaMs": 6070.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 116000,
               "localSeconds": 9.676343,
-              "nearestAudioAttackDeltaMs": 5486,
+              "nearestAudioAttackDeltaMs": 5486.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 123000,
               "localSeconds": 10.26026,
-              "nearestAudioAttackDeltaMs": 4902,
+              "nearestAudioAttackDeltaMs": 4902.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 135500,
               "localSeconds": 11.30297,
-              "nearestAudioAttackDeltaMs": 3860,
+              "nearestAudioAttackDeltaMs": 3860.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 156500,
               "localSeconds": 13.054721,
-              "nearestAudioAttackDeltaMs": 2108,
+              "nearestAudioAttackDeltaMs": 2108.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 166500,
               "localSeconds": 13.888889,
-              "nearestAudioAttackDeltaMs": 1274,
+              "nearestAudioAttackDeltaMs": 1274.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 191000,
               "localSeconds": 15.932599,
-              "nearestAudioAttackDeltaMs": 298,
+              "nearestAudioAttackDeltaMs": 298.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 203000,
               "localSeconds": 16.9336,
-              "nearestAudioAttackDeltaMs": 365,
+              "nearestAudioAttackDeltaMs": 365.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 217500,
               "localSeconds": 18.143143,
-              "nearestAudioAttackDeltaMs": -844,
+              "nearestAudioAttackDeltaMs": -844.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 228000,
               "localSeconds": 19.019019,
-              "nearestAudioAttackDeltaMs": -1720,
+              "nearestAudioAttackDeltaMs": -1720.0,
               "audioAttackWithin250Ms": false
             }
           ],
@@ -1702,8 +1843,8 @@
         {
           "window": "middle",
           "windowSourceSha256": "fe319caf3a9640a1a30dbd36eb95538706b8ae4e5b1ebe4e5d44c2a2889dd292",
-          "sourceOffsetSeconds": 62,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 62.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 11988,
             "numerator": 1
@@ -1727,73 +1868,73 @@
             {
               "sourceVideoPts": 45500,
               "localSeconds": 3.795462,
-              "nearestAudioAttackDeltaMs": -1497,
+              "nearestAudioAttackDeltaMs": -1497.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 59500,
               "localSeconds": 4.963297,
-              "nearestAudioAttackDeltaMs": -2665,
+              "nearestAudioAttackDeltaMs": -2665.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 69500,
               "localSeconds": 5.797464,
-              "nearestAudioAttackDeltaMs": -3499,
+              "nearestAudioAttackDeltaMs": -3499.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 87500,
               "localSeconds": 7.298966,
-              "nearestAudioAttackDeltaMs": -5000,
+              "nearestAudioAttackDeltaMs": -5000.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 101000,
               "localSeconds": 8.425092,
-              "nearestAudioAttackDeltaMs": 6111,
+              "nearestAudioAttackDeltaMs": 6111.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 112000,
               "localSeconds": 9.342676,
-              "nearestAudioAttackDeltaMs": 5193,
+              "nearestAudioAttackDeltaMs": 5193.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 130000,
               "localSeconds": 10.844178,
-              "nearestAudioAttackDeltaMs": 3692,
+              "nearestAudioAttackDeltaMs": 3692.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 152500,
               "localSeconds": 12.721054,
-              "nearestAudioAttackDeltaMs": 1815,
+              "nearestAudioAttackDeltaMs": 1815.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 167500,
               "localSeconds": 13.972306,
-              "nearestAudioAttackDeltaMs": 563,
+              "nearestAudioAttackDeltaMs": 563.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 207500,
               "localSeconds": 17.308976,
-              "nearestAudioAttackDeltaMs": -1473,
+              "nearestAudioAttackDeltaMs": -1473.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 221500,
               "localSeconds": 18.47681,
-              "nearestAudioAttackDeltaMs": 1353,
+              "nearestAudioAttackDeltaMs": 1353.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 231000,
               "localSeconds": 19.269269,
-              "nearestAudioAttackDeltaMs": 561,
+              "nearestAudioAttackDeltaMs": 561.0,
               "audioAttackWithin250Ms": false
             }
           ],
@@ -1833,8 +1974,8 @@
         {
           "window": "ending",
           "windowSourceSha256": "2fbc37a225bdd91994dd774f9f4ecf74bd0894314cb9116dc5e4196e9702ad64",
-          "sourceOffsetSeconds": 124,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 124.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 11988,
             "numerator": 1
@@ -1858,61 +1999,61 @@
             {
               "sourceVideoPts": 1992,
               "localSeconds": 0.166166,
-              "nearestAudioAttackDeltaMs": 1506,
+              "nearestAudioAttackDeltaMs": 1506.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 36992,
               "localSeconds": 3.085752,
-              "nearestAudioAttackDeltaMs": 560,
+              "nearestAudioAttackDeltaMs": 560.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 56992,
               "localSeconds": 4.754087,
-              "nearestAudioAttackDeltaMs": -226,
+              "nearestAudioAttackDeltaMs": -226.0,
               "audioAttackWithin250Ms": true
             },
             {
               "sourceVideoPts": 93492,
               "localSeconds": 7.798799,
-              "nearestAudioAttackDeltaMs": -43,
+              "nearestAudioAttackDeltaMs": -43.0,
               "audioAttackWithin250Ms": true
             },
             {
               "sourceVideoPts": 140492,
               "localSeconds": 11.719386,
-              "nearestAudioAttackDeltaMs": -3964,
+              "nearestAudioAttackDeltaMs": -3964.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 199492,
               "localSeconds": 16.640974,
-              "nearestAudioAttackDeltaMs": 77,
+              "nearestAudioAttackDeltaMs": 77.0,
               "audioAttackWithin250Ms": true
             },
             {
               "sourceVideoPts": 209992,
               "localSeconds": 17.51685,
-              "nearestAudioAttackDeltaMs": -798,
+              "nearestAudioAttackDeltaMs": -798.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 210992,
               "localSeconds": 17.600267,
-              "nearestAudioAttackDeltaMs": -882,
+              "nearestAudioAttackDeltaMs": -882.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 212992,
               "localSeconds": 17.7671,
-              "nearestAudioAttackDeltaMs": -1049,
+              "nearestAudioAttackDeltaMs": -1049.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 227492,
               "localSeconds": 18.976643,
-              "nearestAudioAttackDeltaMs": -2258,
+              "nearestAudioAttackDeltaMs": -2258.0,
               "audioAttackWithin250Ms": false
             }
           ],
@@ -1972,8 +2113,8 @@
         {
           "window": "opening",
           "windowSourceSha256": "99fa5ecf395748c7e1626831669a47c948473f839d303b7f4212d6efbc893e96",
-          "sourceOffsetSeconds": 0,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 0.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 11988,
             "numerator": 1
@@ -1997,67 +2138,67 @@
             {
               "sourceVideoPts": 60500,
               "localSeconds": 5.046713,
-              "nearestAudioAttackDeltaMs": 6424,
+              "nearestAudioAttackDeltaMs": 6424.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 76000,
               "localSeconds": 6.339673,
-              "nearestAudioAttackDeltaMs": 5131,
+              "nearestAudioAttackDeltaMs": 5131.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 85000,
               "localSeconds": 7.090424,
-              "nearestAudioAttackDeltaMs": 4380,
+              "nearestAudioAttackDeltaMs": 4380.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 96500,
               "localSeconds": 8.049716,
-              "nearestAudioAttackDeltaMs": 3421,
+              "nearestAudioAttackDeltaMs": 3421.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 131000,
               "localSeconds": 10.927594,
-              "nearestAudioAttackDeltaMs": 543,
+              "nearestAudioAttackDeltaMs": 543.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 148500,
               "localSeconds": 12.387387,
-              "nearestAudioAttackDeltaMs": -917,
+              "nearestAudioAttackDeltaMs": -917.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 159000,
               "localSeconds": 13.263263,
-              "nearestAudioAttackDeltaMs": -1793,
+              "nearestAudioAttackDeltaMs": -1793.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 196000,
               "localSeconds": 16.349683,
-              "nearestAudioAttackDeltaMs": -4879,
+              "nearestAudioAttackDeltaMs": -4879.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 209000,
               "localSeconds": 17.434101,
-              "nearestAudioAttackDeltaMs": -5963,
+              "nearestAudioAttackDeltaMs": -5963.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 217500,
               "localSeconds": 18.143143,
-              "nearestAudioAttackDeltaMs": -6672,
+              "nearestAudioAttackDeltaMs": -6672.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 228500,
               "localSeconds": 19.060727,
-              "nearestAudioAttackDeltaMs": -7590,
+              "nearestAudioAttackDeltaMs": -7590.0,
               "audioAttackWithin250Ms": false
             }
           ],
@@ -2072,8 +2213,8 @@
         {
           "window": "middle",
           "windowSourceSha256": "d6464e555ab77abdce9553a7ceb0d1bdd2bbd857996d3cbafe6a7f1ee8cecb6f",
-          "sourceOffsetSeconds": 55,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 55.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 11988,
             "numerator": 1
@@ -2097,55 +2238,55 @@
             {
               "sourceVideoPts": 22000,
               "localSeconds": 1.835169,
-              "nearestAudioAttackDeltaMs": 4388,
+              "nearestAudioAttackDeltaMs": 4388.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 81000,
               "localSeconds": 6.756757,
-              "nearestAudioAttackDeltaMs": -534,
+              "nearestAudioAttackDeltaMs": -534.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 100000,
               "localSeconds": 8.341675,
-              "nearestAudioAttackDeltaMs": -2119,
+              "nearestAudioAttackDeltaMs": -2119.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 124000,
               "localSeconds": 10.343677,
-              "nearestAudioAttackDeltaMs": -4121,
+              "nearestAudioAttackDeltaMs": -4121.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 136500,
               "localSeconds": 11.386386,
-              "nearestAudioAttackDeltaMs": -5163,
+              "nearestAudioAttackDeltaMs": -5163.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 149500,
               "localSeconds": 12.470804,
-              "nearestAudioAttackDeltaMs": -6248,
+              "nearestAudioAttackDeltaMs": -6248.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 175000,
               "localSeconds": 14.597931,
-              "nearestAudioAttackDeltaMs": 4419,
+              "nearestAudioAttackDeltaMs": 4419.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 186000,
               "localSeconds": 15.515516,
-              "nearestAudioAttackDeltaMs": 3502,
+              "nearestAudioAttackDeltaMs": 3502.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 218500,
               "localSeconds": 18.22656,
-              "nearestAudioAttackDeltaMs": 791,
+              "nearestAudioAttackDeltaMs": 791.0,
               "audioAttackWithin250Ms": false
             }
           ],
@@ -2170,8 +2311,8 @@
         {
           "window": "ending",
           "windowSourceSha256": "7db5dab9e8fa6e9ada21078e584265670560024376b50d7bbf10876c27ebf26b",
-          "sourceOffsetSeconds": 110,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 110.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 11988,
             "numerator": 1
@@ -2195,31 +2336,31 @@
             {
               "sourceVideoPts": 992,
               "localSeconds": 0.082749,
-              "nearestAudioAttackDeltaMs": 7951,
+              "nearestAudioAttackDeltaMs": 7951.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 10992,
               "localSeconds": 0.916917,
-              "nearestAudioAttackDeltaMs": 7117,
+              "nearestAudioAttackDeltaMs": 7117.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 19492,
               "localSeconds": 1.625959,
-              "nearestAudioAttackDeltaMs": 6408,
+              "nearestAudioAttackDeltaMs": 6408.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 46492,
               "localSeconds": 3.878212,
-              "nearestAudioAttackDeltaMs": 4156,
+              "nearestAudioAttackDeltaMs": 4156.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 129492,
               "localSeconds": 10.801802,
-              "nearestAudioAttackDeltaMs": -2628,
+              "nearestAudioAttackDeltaMs": -2628.0,
               "audioAttackWithin250Ms": false
             }
           ],
@@ -2249,8 +2390,8 @@
         {
           "window": "opening",
           "windowSourceSha256": "ca67b4d91a4ed5fd95725bff2110758c42344bbfa102ec8425af355d1d16a4c5",
-          "sourceOffsetSeconds": 0,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 0.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 24000,
             "numerator": 1
@@ -2274,67 +2415,67 @@
             {
               "sourceVideoPts": 25025,
               "localSeconds": 1.042708,
-              "nearestAudioAttackDeltaMs": 1,
+              "nearestAudioAttackDeltaMs": 1.0,
               "audioAttackWithin250Ms": true
             },
             {
               "sourceVideoPts": 32032,
               "localSeconds": 1.334667,
-              "nearestAudioAttackDeltaMs": -291,
+              "nearestAudioAttackDeltaMs": -291.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 123123,
               "localSeconds": 5.130125,
-              "nearestAudioAttackDeltaMs": -23,
+              "nearestAudioAttackDeltaMs": -23.0,
               "audioAttackWithin250Ms": true
             },
             {
               "sourceVideoPts": 244244,
               "localSeconds": 10.176833,
-              "nearestAudioAttackDeltaMs": -5070,
+              "nearestAudioAttackDeltaMs": -5070.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 267267,
               "localSeconds": 11.136125,
-              "nearestAudioAttackDeltaMs": 5720,
+              "nearestAudioAttackDeltaMs": 5720.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 322322,
               "localSeconds": 13.430083,
-              "nearestAudioAttackDeltaMs": 3426,
+              "nearestAudioAttackDeltaMs": 3426.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 393393,
               "localSeconds": 16.391375,
-              "nearestAudioAttackDeltaMs": 465,
+              "nearestAudioAttackDeltaMs": 465.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 403403,
               "localSeconds": 16.808458,
-              "nearestAudioAttackDeltaMs": 48,
+              "nearestAudioAttackDeltaMs": 48.0,
               "audioAttackWithin250Ms": true
             },
             {
               "sourceVideoPts": 404404,
               "localSeconds": 16.850167,
-              "nearestAudioAttackDeltaMs": 6,
+              "nearestAudioAttackDeltaMs": 6.0,
               "audioAttackWithin250Ms": true
             },
             {
               "sourceVideoPts": 426426,
               "localSeconds": 17.76775,
-              "nearestAudioAttackDeltaMs": -238,
+              "nearestAudioAttackDeltaMs": -238.0,
               "audioAttackWithin250Ms": true
             },
             {
               "sourceVideoPts": 430430,
               "localSeconds": 17.934583,
-              "nearestAudioAttackDeltaMs": -405,
+              "nearestAudioAttackDeltaMs": -405.0,
               "audioAttackWithin250Ms": false
             }
           ],
@@ -2369,8 +2510,8 @@
         {
           "window": "middle",
           "windowSourceSha256": "1b63f59bdab45cb39e9bc4989ebecc88d6fd98ac604881dccc5149a69a58f6c3",
-          "sourceOffsetSeconds": 82,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 82.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 24000,
             "numerator": 1
@@ -2445,8 +2586,8 @@
         {
           "window": "ending",
           "windowSourceSha256": "eddeebe7f966702bc4987d8b93e13cbe94e568e3d210c7f50fc40619788bcd1b",
-          "sourceOffsetSeconds": 163,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 163.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 24000,
             "numerator": 1
@@ -2531,8 +2672,8 @@
         {
           "window": "opening",
           "windowSourceSha256": "0c49e856a034e8de9695c96d86a048a34aa7f60286c0414069a1bcf35dab8f91",
-          "sourceOffsetSeconds": 0,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 0.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 12288,
             "numerator": 1
@@ -2571,8 +2712,8 @@
         {
           "window": "middle",
           "windowSourceSha256": "04b503131cbea967a515646ac3f5aa0e0bb7450f33405ea316cb5a737e36c5d3",
-          "sourceOffsetSeconds": 30,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 30.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 12288,
             "numerator": 1
@@ -2641,8 +2782,8 @@
         {
           "window": "ending",
           "windowSourceSha256": "0e44b61dcbd675660b832c06b562f11facf7a846a36fbc9b073c1dcb5c8de869",
-          "sourceOffsetSeconds": 60,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 60.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 12288,
             "numerator": 1
@@ -2666,13 +2807,13 @@
             {
               "sourceVideoPts": 73216,
               "localSeconds": 5.958333,
-              "nearestAudioAttackDeltaMs": -476,
+              "nearestAudioAttackDeltaMs": -476.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 91136,
               "localSeconds": 7.416667,
-              "nearestAudioAttackDeltaMs": -1934,
+              "nearestAudioAttackDeltaMs": -1934.0,
               "audioAttackWithin250Ms": false
             }
           ],
@@ -2697,8 +2838,8 @@
         {
           "window": "opening",
           "windowSourceSha256": "299a9c1caa2a0b2c21473b414a718e1bbb859dda5ef91c938aaf7c1f89ed1e89",
-          "sourceOffsetSeconds": 0,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 0.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 24000,
             "numerator": 1
@@ -2722,61 +2863,61 @@
             {
               "sourceVideoPts": 24024,
               "localSeconds": 1.001,
-              "nearestAudioAttackDeltaMs": -4,
+              "nearestAudioAttackDeltaMs": -4.0,
               "audioAttackWithin250Ms": true
             },
             {
               "sourceVideoPts": 79079,
               "localSeconds": 3.294958,
-              "nearestAudioAttackDeltaMs": -2298,
+              "nearestAudioAttackDeltaMs": -2298.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 123123,
               "localSeconds": 5.130125,
-              "nearestAudioAttackDeltaMs": -4133,
+              "nearestAudioAttackDeltaMs": -4133.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 153153,
               "localSeconds": 6.381375,
-              "nearestAudioAttackDeltaMs": -5384,
+              "nearestAudioAttackDeltaMs": -5384.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 193193,
               "localSeconds": 8.049708,
-              "nearestAudioAttackDeltaMs": 5486,
+              "nearestAudioAttackDeltaMs": 5486.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 245245,
               "localSeconds": 10.218542,
-              "nearestAudioAttackDeltaMs": 3317,
+              "nearestAudioAttackDeltaMs": 3317.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 377377,
               "localSeconds": 15.724042,
-              "nearestAudioAttackDeltaMs": -1376,
+              "nearestAudioAttackDeltaMs": -1376.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 406406,
               "localSeconds": 16.933583,
-              "nearestAudioAttackDeltaMs": 1571,
+              "nearestAudioAttackDeltaMs": 1571.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 432432,
               "localSeconds": 18.018,
-              "nearestAudioAttackDeltaMs": 487,
+              "nearestAudioAttackDeltaMs": 487.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 466466,
               "localSeconds": 19.436083,
-              "nearestAudioAttackDeltaMs": -931,
+              "nearestAudioAttackDeltaMs": -931.0,
               "audioAttackWithin250Ms": false
             }
           ],
@@ -2806,8 +2947,8 @@
         {
           "window": "middle",
           "windowSourceSha256": "578d8cec66abd71a149a3d7bb34f62663b0bd61a037a9bacf180a65dea9f0eb5",
-          "sourceOffsetSeconds": 41,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 41.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 24000,
             "numerator": 1
@@ -2906,8 +3047,8 @@
         {
           "window": "ending",
           "windowSourceSha256": "5c2da752ffd8edeff08a699a5bd0192374560b848f115b5c1008846bd8cc0dce",
-          "sourceOffsetSeconds": 81,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 81.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 24000,
             "numerator": 1
@@ -2931,73 +3072,73 @@
             {
               "sourceVideoPts": 23006,
               "localSeconds": 0.958583,
-              "nearestAudioAttackDeltaMs": 9769,
+              "nearestAudioAttackDeltaMs": 9769.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 63046,
               "localSeconds": 2.626917,
-              "nearestAudioAttackDeltaMs": 8101,
+              "nearestAudioAttackDeltaMs": 8101.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 94077,
               "localSeconds": 3.919875,
-              "nearestAudioAttackDeltaMs": 6808,
+              "nearestAudioAttackDeltaMs": 6808.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 111094,
               "localSeconds": 4.628917,
-              "nearestAudioAttackDeltaMs": 6099,
+              "nearestAudioAttackDeltaMs": 6099.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 117100,
               "localSeconds": 4.879167,
-              "nearestAudioAttackDeltaMs": 5848,
+              "nearestAudioAttackDeltaMs": 5848.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 120103,
               "localSeconds": 5.004292,
-              "nearestAudioAttackDeltaMs": 5723,
+              "nearestAudioAttackDeltaMs": 5723.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 167150,
               "localSeconds": 6.964583,
-              "nearestAudioAttackDeltaMs": 3763,
+              "nearestAudioAttackDeltaMs": 3763.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 182165,
               "localSeconds": 7.590208,
-              "nearestAudioAttackDeltaMs": 3137,
+              "nearestAudioAttackDeltaMs": 3137.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 193176,
               "localSeconds": 8.049,
-              "nearestAudioAttackDeltaMs": 2679,
+              "nearestAudioAttackDeltaMs": 2679.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 211194,
               "localSeconds": 8.79975,
-              "nearestAudioAttackDeltaMs": 1928,
+              "nearestAudioAttackDeltaMs": 1928.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 297280,
               "localSeconds": 12.386667,
-              "nearestAudioAttackDeltaMs": -1659,
+              "nearestAudioAttackDeltaMs": -1659.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 338321,
               "localSeconds": 14.096708,
-              "nearestAudioAttackDeltaMs": -3369,
+              "nearestAudioAttackDeltaMs": -3369.0,
               "audioAttackWithin250Ms": false
             }
           ],
@@ -3022,8 +3163,8 @@
         {
           "window": "opening",
           "windowSourceSha256": "3060ca0c8ca3e5b6cc764b846cb81711ed9517200bd0f76ea37df8cfc13d411f",
-          "sourceOffsetSeconds": 0,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 0.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 24000,
             "numerator": 1
@@ -3062,8 +3203,8 @@
         {
           "window": "middle",
           "windowSourceSha256": "516eef0799d23be3ddd131de49b204f60184db4265f70ef993ed1879c15d602f",
-          "sourceOffsetSeconds": 36,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 36.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 24000,
             "numerator": 1
@@ -3174,8 +3315,8 @@
         {
           "window": "ending",
           "windowSourceSha256": "7f8932913b3bf3a7a83dc6747c4ef1c71c42aa6dd392050adadf6941f3d60a7e",
-          "sourceOffsetSeconds": 72,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 72.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 24000,
             "numerator": 1
@@ -3224,8 +3365,8 @@
         {
           "window": "opening",
           "windowSourceSha256": "13b574710d6a9afa561647223c2e4e61ddfdf1cea2d3ce06e0297a2a19458259",
-          "sourceOffsetSeconds": 0,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 0.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 11988,
             "numerator": 1
@@ -3249,55 +3390,55 @@
             {
               "sourceVideoPts": 14000,
               "localSeconds": 1.167835,
-              "nearestAudioAttackDeltaMs": -1121,
+              "nearestAudioAttackDeltaMs": -1121.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 36000,
               "localSeconds": 3.003003,
-              "nearestAudioAttackDeltaMs": -193,
+              "nearestAudioAttackDeltaMs": -193.0,
               "audioAttackWithin250Ms": true
             },
             {
               "sourceVideoPts": 63500,
               "localSeconds": 5.296964,
-              "nearestAudioAttackDeltaMs": -699,
+              "nearestAudioAttackDeltaMs": -699.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 77500,
               "localSeconds": 6.464798,
-              "nearestAudioAttackDeltaMs": -312,
+              "nearestAudioAttackDeltaMs": -312.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 135500,
               "localSeconds": 11.30297,
-              "nearestAudioAttackDeltaMs": 5,
+              "nearestAudioAttackDeltaMs": 5.0,
               "audioAttackWithin250Ms": true
             },
             {
               "sourceVideoPts": 184000,
               "localSeconds": 15.348682,
-              "nearestAudioAttackDeltaMs": 348,
+              "nearestAudioAttackDeltaMs": 348.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 207000,
               "localSeconds": 17.267267,
-              "nearestAudioAttackDeltaMs": -201,
+              "nearestAudioAttackDeltaMs": -201.0,
               "audioAttackWithin250Ms": true
             },
             {
               "sourceVideoPts": 220000,
               "localSeconds": 18.351685,
-              "nearestAudioAttackDeltaMs": 456,
+              "nearestAudioAttackDeltaMs": 456.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 234000,
               "localSeconds": 19.51952,
-              "nearestAudioAttackDeltaMs": 171,
+              "nearestAudioAttackDeltaMs": 171.0,
               "audioAttackWithin250Ms": true
             }
           ],
@@ -3402,8 +3543,8 @@
         {
           "window": "middle",
           "windowSourceSha256": "689c4c87db29d0f53c16d1025b5353df57313cbc37912d64135a05e7fce03cfc",
-          "sourceOffsetSeconds": 61,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 61.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 11988,
             "numerator": 1
@@ -3427,61 +3568,61 @@
             {
               "sourceVideoPts": 11500,
               "localSeconds": 0.959293,
-              "nearestAudioAttackDeltaMs": 1804,
+              "nearestAudioAttackDeltaMs": 1804.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 53500,
               "localSeconds": 4.462796,
-              "nearestAudioAttackDeltaMs": 228,
+              "nearestAudioAttackDeltaMs": 228.0,
               "audioAttackWithin250Ms": true
             },
             {
               "sourceVideoPts": 99000,
               "localSeconds": 8.258258,
-              "nearestAudioAttackDeltaMs": 3212,
+              "nearestAudioAttackDeltaMs": 3212.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 113000,
               "localSeconds": 9.426093,
-              "nearestAudioAttackDeltaMs": 2045,
+              "nearestAudioAttackDeltaMs": 2045.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 129500,
               "localSeconds": 10.802469,
-              "nearestAudioAttackDeltaMs": 668,
+              "nearestAudioAttackDeltaMs": 668.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 138000,
               "localSeconds": 11.511512,
-              "nearestAudioAttackDeltaMs": -41,
+              "nearestAudioAttackDeltaMs": -41.0,
               "audioAttackWithin250Ms": true
             },
             {
               "sourceVideoPts": 166000,
               "localSeconds": 13.847181,
-              "nearestAudioAttackDeltaMs": 1919,
+              "nearestAudioAttackDeltaMs": 1919.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 180000,
               "localSeconds": 15.015015,
-              "nearestAudioAttackDeltaMs": 751,
+              "nearestAudioAttackDeltaMs": 751.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 211500,
               "localSeconds": 17.642643,
-              "nearestAudioAttackDeltaMs": -1876,
+              "nearestAudioAttackDeltaMs": -1876.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 231500,
               "localSeconds": 19.310978,
-              "nearestAudioAttackDeltaMs": -3545,
+              "nearestAudioAttackDeltaMs": -3545.0,
               "audioAttackWithin250Ms": false
             }
           ],
@@ -3516,8 +3657,8 @@
         {
           "window": "ending",
           "windowSourceSha256": "8225a4d6fd428e4f815eb38bcf991f4402e25b0d22fd3c27626149b1af07c89c",
-          "sourceOffsetSeconds": 121,
-          "scanSeconds": 20,
+          "sourceOffsetSeconds": 121.0,
+          "scanSeconds": 20.0,
           "sourceVideoTimebase": {
             "denominator": 11988,
             "numerator": 1
@@ -3541,19 +3682,19 @@
             {
               "sourceVideoPts": 30992,
               "localSeconds": 2.585252,
-              "nearestAudioAttackDeltaMs": 7841,
+              "nearestAudioAttackDeltaMs": 7841.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 91492,
               "localSeconds": 7.631965,
-              "nearestAudioAttackDeltaMs": 2794,
+              "nearestAudioAttackDeltaMs": 2794.0,
               "audioAttackWithin250Ms": false
             },
             {
               "sourceVideoPts": 175992,
               "localSeconds": 14.680681,
-              "nearestAudioAttackDeltaMs": -2351,
+              "nearestAudioAttackDeltaMs": -2351.0,
               "audioAttackWithin250Ms": false
             }
           ],
