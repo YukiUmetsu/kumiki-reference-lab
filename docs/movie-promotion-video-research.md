@@ -1,8 +1,8 @@
 # Movie-promotion reference study: Disney, Marvel, and other major studios
 
-**Research checked:** November 10, 2026  
+**Research checked:** November 11, 2026
 **Machine-readable cohort:** [`research/popular-movie-videos.v1.json`](../research/popular-movie-videos.v1.json)  
-**Evidence level:** 13 official YouTube uploads with attributable popularity observations; **7 Disney-hosted trailers actually processed from temporary MP4 files** in 21 non-overlapping 20-second windows (420 seconds total), plus separate limited manual visual observations of the original five. Extracted numerical evidence is committed; video, audio and image files are not.
+**Evidence level:** 13 official YouTube uploads with attributable popularity observations; **13 corresponding film-promotion sources actually processed** (seven Disney-hosted trailers and six Apple iTunes Store movie previews) in 39 non-overlapping 20-second windows (780 seconds total), plus separate limited manual visual observations of the original five. Apple retail previews are **not verified identical** to the catalog's YouTube uploads. Extracted numerical evidence is committed; video, audio and image files are not.
 
 **Measured data:** the canonical [`research/analysis/movie-promotions/`](../research/analysis/movie-promotions/) folder holds [`index.json`](../research/analysis/movie-promotions/index.json) and one granular JSON file per analyzed trailer. It retains per-window source PTS, cut-candidate positions, two-dimensional motion results, sampled image appearance, decoded audio RMS/peak trajectories, onset candidates, edit rhythms and AV-cut comparisons. No source videos, frame images, signed CDN URLs or dialogue transcripts are committed.
 
@@ -102,7 +102,7 @@ Player duration observed: approximately 2:26.
 
 ## Source-hashed machine measurements
 
-I downloaded publicly delivered H.264/AAC versions from each corresponding official Disney player solely for bounded research, processed them through `study-reference`, exported numeric reports, and removed the media after extraction. The 400–480p sources were ~113–146 seconds long. Three 20-second windows per trailer sampled the opening, approximate middle and ending; middle/ending excerpts were re-encoded temporarily and retain explicit offsets and their own hashes. The additional *Zootopia 2* and *Force Awakens* players were processed in the same way, without claiming their Disney player encodes are byte-identical to the linked YouTube uploads.
+Seven public Disney-player H.264/AAC sources (400–480p, ~113–146 seconds) and six publicly offered Apple iTunes Store movie previews (640-pixel video width, ~92–184 seconds) were downloaded solely for bounded analysis through `study-reference`; the temporary media was deleted after numerical export. Three 20-second windows sampled the opening, approximate middle and ending; middle/ending excerpts were re-encoded temporarily and retain explicit offsets and their own hashes. The Apple records include retail track IDs, source edition labels and `catalogUploadIdentityMatch: not-verified`. In particular, the Sony Store preview is associated with the film's **Extended Version**. No Disney or Apple preview encode is asserted byte-identical to any linked YouTube upload.
 
 | Trailer | Sampled coverage | Cut candidates at default threshold 0.25 | Candidates at sensitivity threshold 0.15 | Audio-level attack candidates | Average sampled display-luma proxy |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -113,10 +113,16 @@ I downloaded publicly delivered H.264/AAC versions from each corresponding offic
 | *Avengers: Endgame* | 60 / 146 sec | 11 | 14 | 3 | 0.169 |
 | *Zootopia 2* | 60 / 141 sec | 22 | 26 | 27 | 0.334 |
 | *Star Wars: The Force Awakens* | 60 / 138 sec | 10 | 23 | 5 | 0.176 |
+| *Barbie* (Apple preview) | 60 / 161 sec | 30 | 31 | 25 | 0.311 |
+| *Oppenheimer* (Apple preview) | 60 / 184 sec | 27 | 40 | 5 | 0.166 |
+| *Spider-Man: No Way Home* (Apple Extended Version preview) | 60 / 102 sec | 34 | 45 | 5 | 0.219 |
+| *Dune: Part Two* (Apple preview) | 60 / 183 sec | 25 | 30 | 3 | 0.237 |
+| *The Super Mario Bros. Movie* (Apple preview) | 60 / 92 sec | 18 | 36 | 0 | 0.287 |
+| *Deadpool & Wolverine* (Apple preview) | 60 / 144 sec | 6 | 16 | 12 | 0.193 |
 
-**Interpretation:** At both sensitivity settings, the *Inside Out 2* sample produced more possible hard edits than *Frozen 2*, which favors longer visually continuous stretches in these windows. *Moana 2* fell between them. *Endgame*'s sampled imagery was less saturated than *Infinity War*'s in this particular dataset, compatible with but not proof of a more restrained visual treatment. *Zootopia 2* showed more cut candidates and onset candidates than *Force Awakens* at the default threshold, though the large 0.15-threshold increase for *Force Awakens* shows sensitivity to detector tuning. These are **screen-image differences**, not director intent or audience-performance explanations.
+**Interpretation:** At both sensitivity settings, the *Inside Out 2* sample produced more possible hard edits than *Frozen 2*, while *Moana 2* fell between them. *Zootopia 2* showed more cut candidates and onset candidates than *Force Awakens* at the default threshold, though the threshold-sensitive increase for *Force Awakens* demonstrates detector uncertainty. Among Apple preview editions, *Barbie* had a higher sampled luma proxy than *Oppenheimer* (0.311 vs 0.166), and the sampled *Barbie* and *Dune: Part Two* previews each yielded roughly 25–30 default-threshold cut candidates despite contrasting creative directions. These are **screen-image comparisons of selected windows and specific source editions**, not proven director intent or audience-performance explanations.
 
-**Do not treat the table as film-wide cuts/minute.** The FFmpeg scene-difference detector can undercount subtle/dark edits or overcount flashes/rapid action. Its marked events are not human-confirmed cuts. Counts reflect only 60 selected seconds per trailer and vary with threshold. Audio attacks are strict 12 dB RMS-rise candidates, not counts of dialogue, music beats or SFX. Display luma is measured on encoded sampled frames, including letterboxing and color grading; it cannot infer real lighting intensity or rig changes. No automatic speaker/character traits or actions were certified.
+**Do not treat the table as film-wide cuts/minute.** The FFmpeg scene-difference detector can undercount subtle/dark edits or overcount flashes/rapid action. Its marked events are not human-confirmed cuts. Counts reflect only 60 selected seconds per promotional source and vary with threshold. Audio attacks are strict 12 dB RMS-rise candidates, not counts of dialogue, music beats or SFX. Display luma is measured on encoded sampled frames, including letterboxing and color grading; it cannot infer real lighting intensity or rig changes. Source encodes and trailer cuts differ across Disney and Apple, so even their candidate counts are not rigorously controlled studio comparisons. No automatic speaker/character traits or actions were certified.
 
 ### What remains in Git
 
@@ -136,11 +142,11 @@ I downloaded publicly delivered H.264/AAC versions from each corresponding offic
 | *Moana 2* vs. *The Super Mario Bros. Movie* | How is character attention preserved through fast-moving environments and effects? | Subject-aware composition, motion budgets and scale changes |
 | *Star Wars: The Force Awakens* vs. *Spider-Man: No Way Home* | When are recognizable characters, antagonists or franchise props revealed relative to the title? | Evidence-based reveal-timing recipes |
 
-The *Inside Out 2* / *Zootopia 2* pair now has **partial, machine-generated cut/appearance/audio measures** in the tracked dataset, but not reviewed character, camera or scene-label comparisons. Other pairs still lack comparable measured video. No comparison here establishes character traits, camera frequency or lighting frequency. The tags in the catalog are hypothesis/search labels only.
+All listed comparison films now have **partial, machine-generated cut/appearance/audio measurements**, but no paired human-reviewed character, camera or scene-label analysis. Apple previews may differ from the linked YouTube videos, so these are exploratory cross-edition comparisons, not controlled matched-trailer experiments. No comparison here establishes character traits, camera frequency or lighting frequency. The tags in the catalog are hypothesis/search labels only.
 
 ## Rigorous follow-up with authorized local media
 
-1. **Record provenance and authorization for each additional source.** The first five official Disney-player versions have hashed numeric records but remain `review-required` for any new use. For new videos, keep source files private and external to git. Log exact upload ID, trailer version, release date, SHA-256, codec, FPS/timebase and duration. Never assume a teaser and full trailer are interchangeable.
+1. **Record provenance and authorization for each additional source.** The 13 processed promotional editions have hashed numeric records but remain `review-required` for any new use. For new videos, keep source files private and external to git. Log exact upload/retail-preview ID, trailer edition, release date, SHA-256, codec, FPS/timebase and duration. Never assume a teaser, retail preview and full trailer are interchangeable.
 2. **Run actual `study-reference`** on a bounded representative 20-second window per trailer, and use `analyze --start-seconds` for additional windows. The `study-reference` command only accepts `--max-seconds` up to 20; do not present its default 10 seconds as an analysis of a two-minute movie trailer.
 3. **Collect shot, motion, appearance and audio reports** using the repository's existing `review-timeline`, `edit-rhythm`, `shot-evidence`, `audio-onsets`, `visual-cadence` and `visual-style-review` contracts. Report cut candidates separately from confirmed edits, 2D image motion separately from camera motion, and display luminance separately from actual lights.
 4. **Annotate characters and interactions.** Use the optional `character-study-local` / `character-scene` pipeline for reviewer-confirmed appearances, actions and dialogue. Its model hypotheses cannot certify age, gender, ethnicity, speaker identity, a particular character's continuity across cuts, or lip synchronization.
@@ -154,4 +160,4 @@ Start with **three full 20-second windows per video** (opening, middle, final se
 
 ## Copyright and review status
 
-The catalog contains source links and independently written questions. The technical evidence contains numeric derivatives, not media files, extracted copyrighted frames, music, transcripts, meshes, character designs or thumbnails, and does not assert redistribution or training rights. All 13 catalog records deliberately retain the strict `editorial-candidate-not-frame-reviewed` status: seven now have separately verified *machine measurement provenance*, but none has full-runtime human-certified visual/semantic interpretation. The other six remain metadata-only.
+The catalog contains source links and independently written questions. The technical evidence contains numeric derivatives, not media files, extracted copyrighted frames, music, transcripts, meshes, character designs or thumbnails, and does not assert redistribution or training rights. All 13 catalog records deliberately retain the strict `editorial-candidate-not-frame-reviewed` status: all 13 films now have separately verified *machine measurement provenance* for a public promotional edition, but none has full-runtime human-certified visual/semantic interpretation. Apple retail previews should not be conflated with the exact catalog YouTube uploads.
