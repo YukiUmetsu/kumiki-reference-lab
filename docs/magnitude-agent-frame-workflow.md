@@ -94,6 +94,14 @@ composition, visual-style, transition, material and other. One call asks
 one short visual question; motion tasks pair only adjacent frames and do not
 compare across candidate cuts. --no-save returns an uncommitted preview.
 
+## Shot-aware review and original Kumiki technique proposals
+
+The `--mode shots` option uses deterministic provisional shot grouping to
+select representative frames rather than spending the whole model budget
+on opening frames. The `kumiki-insights` and `kumiki-catalog` commands
+combine evidence with draft animation recipes and cross-video search.
+See [temporal cinematic intelligence](temporal-cinematic-intelligence.md).
+
 ## Automatically run a bounded scan
 
     kumiki-frames scan \

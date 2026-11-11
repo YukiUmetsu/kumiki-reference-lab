@@ -16,6 +16,21 @@ The aim is **not** to copy a film, recover an inaccessible source project, or au
 
 Run `kumiki-watch` to acquire an authorized public video ephemerally through a provider-neutral extractor, measure **every decoded frame within time/frame budgets**, and optionally use a local Ollama vision model to propose timecoded animation, typography, character, cinematography and style cues. It saves only source-hashed reference JSON under `research/analysis/online-videos/` and deletes the source video before writing results. There is no website allowlist. Host support depends on whether a public, extractable stream exists; unauthenticated extraction is not permission to copy. See [agent online video study documentation](docs/agent-online-video-study.md) for setup, limits and safety. For low-compute local models, use [Magnitude agent frame review](docs/magnitude-agent-frame-workflow.md): optional low-resolution, locally ignored previews of every decoded frame; interactive one-frame tools; scoped Magnitude vision requests; bounded resumable scans and JSON-only annotation export.
 
+## Temporal cinematic intelligence and reusable Kumiki recipe proposals
+
+Use `kumiki-watch --review-frames --audio-cues` to retain source-hashed
+frame and bounded audio cues; then `kumiki-frames scan --mode shots` can
+give a small Magnitude model a distributed set of one-category image tasks.
+`kumiki-insights --workspace workspace/frame-review/<source-id>` measures
+provisional shots, optional short optical-flow feature tracklets (install
+`.[dense]`), and optional local OCR (`--ocr`). It produces evidence-linked
+**unverified** animation hypotheses and design-time Kumiki recipe suggestions.
+`kumiki-catalog build` / `search` supports cross-video comparisons by
+source SHA-256 without storing footage or asserting viewer popularity.
+See [Temporal cinematic intelligence](docs/temporal-cinematic-intelligence.md).
+These are proposal/data pipelines, not complete automatic character identity
+tracking, physically verified camera recovery or executable Kumiki components.
+
 ## Why this exists
 
 Professional motion graphics depend on more than shaders and easing presets:
