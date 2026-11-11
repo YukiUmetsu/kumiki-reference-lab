@@ -106,7 +106,7 @@ if(e.key==='ArrowRight')render(index+1)};render(0)
 
 def finalize_frame_workspace(
     staging: Path, *, study_id: str, watch_url: str,
-    numeric: dict[str, Any],
+    numeric: dict[str, Any], preview_width: int, preview_height: int,
 ) -> None:
     if not _ID.fullmatch(study_id) or not staging.is_dir() or staging.is_symlink():
         raise ValueError("invalid frame workspace destination")
@@ -125,8 +125,8 @@ def finalize_frame_workspace(
         "sourceSha256": numeric["sourceSha256"],
         "referenceFilename": study_id + ".json",
         "frameCount": frame_count,
-        "width": numeric["video"]["width"],
-        "height": numeric["video"]["height"],
+        "width": preview_width,
+        "height": preview_height,
         "previewFormat": "PNG",
         "previewRetention": "local-gitignored-until-cleanup",
         "reviewStatus": "unreviewed",
