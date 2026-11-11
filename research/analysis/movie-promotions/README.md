@@ -21,6 +21,37 @@ After running `study-reference` on a freshly acquired, temporary media set, [`sc
 
 All entries retain `review-required` rights status, and the source MP4s, extracted audio, JPEG/HTML galleries, transcripts and CDN access tokens are excluded. The Apple preview records explicitly preserve `sourceEdition`, `sourceTrackId` and `catalogUploadIdentityMatch: not-verified`: they are **not claimed to be the exact YouTube upload versions** in the popularity catalog, and one Sony preview is for the *Extended Version* of the film. A scene-difference candidate is **not a confirmed editorial cut**; image motion is **not a proven camera movement**; brightness is **not a physical lighting rig**; audio-level changes are **not identified words or sound effects**. Middle/end clips were re-encoded and have an approximate original position via their declared offset. Any partial AAC frame trimmed at a scan boundary is excluded from RMS/peak evidence and counted explicitly.
 
+## Expansion queue: new studio and movie types
+
+[study-queue.v1.json](study-queue.v1.json) now holds **13 additional official
+YouTube trailer uploads** selected from Warner Bros., Sony Pictures Animation,
+Universal/DreamWorks, Paramount, Lionsgate, Marvel, 20th Century and A24.
+They are **not yet analyzed footage** and do **not** appear in `index.json`
+or the derived measured comparison. Each entry preserves a specific YouTube
+upload ID, publisher, publication date, an attributed view-count observation,
+a candidate research question, and rights/measurement status.
+
+The cohort deliberately spans action geography (*John Wick: Chapter 4*,
+*Mission: Impossible – Fallout*), stylized animation (*Spider-Verse*,
+*The Wild Robot*, *Puss in Boots*), epic environmental scale (*Avatar*,
+*Jurassic World*), stylized genre changes (*Everything Everywhere All at
+Once*), musical storytelling (*Wicked*) and blockbuster/game worlds
+(*A Minecraft Movie*, *Guardians of the Galaxy Vol. 3*). These are
+**investigation topics**, not claims about unviewed frames.
+
+```bash
+python scripts/audit_movie_promo_study_queue.py
+PYTHONPATH=. python -m unittest tests.test_movie_promo_study_queue -v
+jq -r '.entries[] | [.proposedAcquisitionPriority, .filmStudio, .title, .youtubeId] | @tsv' research/analysis/movie-promotions/study-queue.v1.json
+```
+
+When authorized access to a specific public publisher video is possible,
+download it temporarily, capture an original SHA-256 and edition identity,
+run a source-PTS-verified study, export numeric-only evidence, verify the
+index/detail cross-checks, and remove the downloaded media before publishing
+a measurement PR. If access is unavailable, keep the entry metadata-only
+rather than inventing cuts, color, character actions, audio, or timestamps.
+
 ## Reproducible comparisons
 
 The [derived comparison](derived/comparison.v1.json) is computed solely from the
