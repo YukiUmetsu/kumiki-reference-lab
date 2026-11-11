@@ -702,6 +702,11 @@ def build_parser() -> argparse.ArgumentParser:
                         help="optional private verified character study index (requires bindings)")
     browse.add_argument("--visual-index", type=Path,
                         help="optional private verified RGB/cut index (requires analysis index)")
+    browse.add_argument("--repository-analysis", type=Path,
+                        default=Path("research/analysis/whatships"),
+                        help="Git-tracked per-video evidence records (default canonical research corpus)")
+    browse.add_argument("--no-repository-analysis", action="store_true",
+                        help="show only catalog/private local analysis, without committed research notes")
 
     analysis_export = full_actions.add_parser(
         "export-analysis",
@@ -1191,7 +1196,8 @@ def main(argv: list[str] | None = None) -> int:
             elif args.whatships_action == "browse":
                 print(write_whatships_browser(
                     args.snapshot, args.out, bindings_path=args.bindings,
-                    analysis_path=args.analysis_index, numeric_path=args.visual_index))
+                    analysis_path=args.analysis_index, numeric_path=args.visual_index,
+                    repository_root=(None if args.no_repository_analysis else args.repository_analysis)))
             elif args.whatships_action == "enrich":
                 print(enrich_whatships_details(
                     args.previous, args.out, max_details=args.max_details,
