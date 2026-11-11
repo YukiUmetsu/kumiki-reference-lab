@@ -22,7 +22,7 @@ from kumiki_reference_lab.backends.ffmpeg.frames import read_frame_pts
 from kumiki_reference_lab.backends.ffmpeg.raw_frames import read_rgb_frames
 from kumiki_reference_lab.core.provenance import file_signature, require_unchanged
 from kumiki_reference_lab.pipeline.ollama_character_perception import (
-    SCHEMA_VERSION as LOCAL_VISION_VERSION, _crop_rgb,
+    SCHEMA_VERSION as LOCAL_VISION_VERSION, _crop_rgb, _parse_model_response,
 )
 from kumiki_reference_lab.pipeline.subject_tracklet_review import _validate_report
 from kumiki_reference_lab.reviews.character_scene import load_character_scene
@@ -83,6 +83,9 @@ def _bound_proposals(
     scene_appearances = {
         (item["startPts"], item["characterId"]): item for item in scene["appearances"]
     }
+    roster = {x["id"]: x for x in scene["characters"]}
+    if len(roster) != len(scene["characters"]):
+        raise ValueError("duplicate character IDs in vision scene")
     if len(scene_appearances) != len(scene["appearances"]):
         raise ValueError("duplicate character appearance at a source PTS")
     actions = {
@@ -92,6 +95,7 @@ def _bound_proposals(
         raise ValueError("duplicate character motion action at a source PTS")
     bound = []
     claimed = set()
+    first_seen = set()
     last_pts = None
     for i, observation in enumerate(observations):
         required = {"trackletId", "sourcePts", "comparisonStartPts", "appearance",
@@ -101,14 +105,18 @@ def _bound_proposals(
         tid, pts = observation["trackletId"], observation["sourcePts"]
         if type(tid) is not str or type(pts) is not int:
             raise ValueError("vision observation requires a string tracklet ID and integer PTS")
-        if (type(observation["appearance"]) is not str or
-                not 1 <= len(observation["appearance"]) <= 800 or
-                type(observation["motionEvidence"]) is not str or
-                len(observation["motionEvidence"]) > 400 or
-                not isinstance(observation["visibleTraits"], list) or
-                any(type(t) is not str or len(t) > 100
-                    for t in observation["visibleTraits"])):
-            raise ValueError("unbounded or malformed model observation text")
+        _parse_model_response({
+            "appearance": observation["appearance"],
+            "visibleTraits": observation["visibleTraits"],
+            "observedAction": observation["action"],
+            "motionEvidence": observation["motionEvidence"],
+        }, allow_action=observation["comparisonStartPts"] is not None)
+        if tid not in roster:
+            raise ValueError("vision observation references a missing character")
+        if tid not in first_seen:
+            if roster[tid]["visualDescription"] != observation["appearance"]:
+                raise ValueError("first model appearance disagrees with character roster")
+            first_seen.add(tid)
         key = (pts, tid)
         if key in claimed or key not in proposals or key not in scene_appearances:
             raise ValueError("vision observation lacks unique source tracklet/appearance evidence")
