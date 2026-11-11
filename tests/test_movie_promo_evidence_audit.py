@@ -19,7 +19,7 @@ class MoviePromoAuditTests(unittest.TestCase):
             "sourceSha256": HASH, "sourceDurationSeconds": 100,
             "windows": [{
                 "window": "opening", "windowSourceSha256": HASH,
-                "sourceOffsetSeconds": 0, "cutCandidateCount": 1,
+                "sourceOffsetSeconds": 0, "scanSeconds": 20, "cutCandidateCount": 1,
                 "appearanceFrameSamples": 1, "cutCandidateCountAtThreshold015": 2,
             }],
         }
@@ -30,7 +30,7 @@ class MoviePromoAuditTests(unittest.TestCase):
             "originalSourceSha256": HASH, "originalDurationSeconds": 100,
             "windows": [{
                 "window": "opening", "windowSourceSha256": HASH,
-                "sourceOffsetSeconds": 0, "shotCutCandidates": [{}],
+                "sourceOffsetSeconds": 0, "scanWindowSeconds": 20, "shotCutCandidates": [{}],
                 "appearanceSamples": [{}], "sensitivityCutCandidateCount": 2,
             }],
         }
@@ -55,6 +55,28 @@ class MoviePromoAuditTests(unittest.TestCase):
         self.summary["windows"][0]["cutCandidateCount"] = 3
         self.write()
         self.assertTrue(any("cut candidate count mismatch" in x for x in audit(self.root)))
+
+    def test_detects_window_outside_source(self):
+        self.summary["windows"][0]["sourceOffsetSeconds"] = 90
+        self.detail["windows"][0]["sourceOffsetSeconds"] = 90
+        self.write()
+        self.assertTrue(any("window exceeds source duration" in x for x in audit(self.root)))
+
+    def test_detects_invalid_scan_duration(self):
+        self.summary["windows"][0]["scanSeconds"] = -1
+        self.write()
+        self.assertTrue(any("invalid window bounds" in x for x in audit(self.root)))
+
+    def test_detects_nonfinite_source_duration(self):
+        self.summary["sourceDurationSeconds"] = float("nan")
+        self.detail["originalDurationSeconds"] = float("nan")
+        self.write()
+        self.assertTrue(any("invalid source duration" in x for x in audit(self.root)))
+
+    def test_detects_scan_duration_mismatch(self):
+        self.detail["windows"][0]["scanWindowSeconds"] = 19
+        self.write()
+        self.assertTrue(any("scan duration mismatch" in x for x in audit(self.root)))
 
     def test_detects_unindexed_file(self):
         (self.root / "orphan.json").write_text("{}")
