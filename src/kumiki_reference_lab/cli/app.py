@@ -52,6 +52,7 @@ from kumiki_reference_lab.catalog.whatships_media_bindings import (
 )
 from kumiki_reference_lab.catalog.whatships_data_dashboard import write_whatships_browser
 from kumiki_reference_lab.catalog.whatships_direct_measure import measure_whatships_to_repository
+from kumiki_reference_lab.catalog.whatships_audio_measure import measure_whatships_audio_to_repository
 from kumiki_reference_lab.catalog.whatships_ephemeral_acquire import acquire_and_measure_x_video
 from kumiki_reference_lab.catalog.whatships_direct_measure_batch import measure_whatships_batch
 from kumiki_reference_lab.catalog.whatships_research_summary import summarize_tracked_whatships_observations
@@ -643,6 +644,21 @@ def build_parser() -> argparse.ArgumentParser:
     acquire_ws.add_argument("--max-samples", type=int, default=12)
     acquire_ws.add_argument("--ffmpeg", default="ffmpeg")
     acquire_ws.add_argument("--ffprobe", default="ffprobe")
+
+    audio_ws = commands.add_parser(
+        "whatships-audio-measure",
+        help="measure bounded local video PCM energy/silence and save numeric evidence in Git")
+    audio_ws.add_argument("bindings", type=Path, help="PRIVATE authorized media binding ledger")
+    audio_ws.add_argument("source_id", help="exact whatships:slug")
+    audio_ws.add_argument("--snapshot", type=Path,
+        default=Path("research/whatships-index-2026-11-10.json"))
+    audio_ws.add_argument("--repository-root", type=Path,
+        default=Path("research/analysis/whatships"))
+    audio_ws.add_argument("--window-seconds", type=int, default=10)
+    audio_ws.add_argument("--window-count", type=int, default=4)
+    audio_ws.add_argument("--replace-existing", action="store_true")
+    audio_ws.add_argument("--ffmpeg", default="ffmpeg")
+    audio_ws.add_argument("--ffprobe", default="ffprobe")
 
     measure_ws = commands.add_parser(
         "whatships-measure",
@@ -1251,6 +1267,15 @@ def main(argv: list[str] | None = None) -> int:
                 window_count=args.window_count,max_samples=args.max_samples,
                 ffmpeg=args.ffmpeg,ffprobe=args.ffprobe),
                 indent=2,sort_keys=True,ensure_ascii=False))
+            return 0
+        if args.command == "whatships-audio-measure":
+            print(json.dumps(measure_whatships_audio_to_repository(
+                args.snapshot, args.bindings, args.source_id,
+                args.repository_root, window_seconds=args.window_seconds,
+                window_count=args.window_count,
+                replace_existing=args.replace_existing,
+                ffmpeg=args.ffmpeg, ffprobe=args.ffprobe),
+                indent=2, sort_keys=True, ensure_ascii=False))
             return 0
         if args.command == "whatships-measure":
             print(json.dumps(measure_whatships_to_repository(
