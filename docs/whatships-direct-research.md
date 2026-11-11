@@ -60,3 +60,7 @@ The planner uses the already saved `[startSeconds,endSeconds)` intervals, select
 When all supported whole-second intervals have been assigned a sampled window, the command reports `no-remaining-whole-second-gaps-within-supported-timeline` without altering the Git worktree. **This does not imply that all frames within those intervals were decoded, or that the film was human reviewed.** Source-PTS inventory counts still distinguish sampled frames from available frames within each interval.
 
 For previous batch exports, `whatships-all sync-analysis --append-numeric-windows --incoming ...` offers the same nonoverlapping merge policy. Do not combine it with `--replace-existing`. Subsequent `git add` and `git commit` remain explicit.
+
+## Optional original-PTS apparent image-plane movement
+
+Use [`whatships-measure --image-translation`](whatships-source-pts-image-translation.md) (or the bounded batch/ephemeral public-source workflow) to append source-PTS paired **FFT phase-correlation global image translation hypotheses** to committed `numericVisual` observations. The optional NumPy motion extra is required. Cut candidates force abstention; missing/ambiguous results are not zero camera movement. These displacement metrics are **not** verified camera pan, tilt, zoom, dolly, independent subject motion or production style. Existing records without this probe remain valid.
