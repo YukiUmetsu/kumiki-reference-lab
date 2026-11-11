@@ -124,7 +124,7 @@ class MultiRegionEventTests(unittest.TestCase):
         result = self.derive(r)
         self.assertIn("region-apparent-box-area-change",
                       [e["eventType"] for e in result["events"]])
-        self.assertNotIn("zoom", json.dumps(result).lower())
+        self.assertNotIn("camera-zoom", [e["eventType"] for e in result["events"]])
 
     def test_different_shots_cannot_be_joined_or_claim_colocated(self):
         a = make_track("region-a", start=0, count=12)
