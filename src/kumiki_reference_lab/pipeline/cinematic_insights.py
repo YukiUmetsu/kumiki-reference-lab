@@ -160,7 +160,10 @@ def derive_technique_hypotheses(
         target = next((shot for shot in shots["shots"]
                        if shot["startFrameIndex"] <= annotation["startFrameIndex"]
                        < shot["endFrameIndexExclusive"]), None)
-        if target is None:
+        # A single observation spanning a candidate shot boundary cannot
+        # establish a continuous visual effect; request separate review.
+        if (target is None or annotation["endFrameIndex"] >=
+                target["endFrameIndexExclusive"]):
             continue
         emitted: set[str] = set()
         for phrase, (technique, family) in _VISUAL_FAMILIES.items():
