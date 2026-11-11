@@ -324,7 +324,13 @@ def analyze_cinematic_workspace(
     if reference.stat().st_size > 90_000_000:
         raise ValueError("reference too large")
     source_report = json.loads(reference.read_text(encoding="utf-8"))
+    source_meta = source_report.get("source", {})
+    if source_meta and source_meta.get("sourceSha256") != manifest["sourceSha256"]:
+        raise ValueError("source metadata and numeric frame evidence disagree")
     audio = source_report.get("audioEvidence")
+    if (audio is not None and audio.get("sourceSha256") is not None and
+            audio.get("sourceSha256") != manifest["sourceSha256"]):
+        raise ValueError("audio and video source identity mismatch")
     if audio is not None and audio.get("schemaVersion") != "kumiki.online-audio-cues.v1":
         raise ValueError("unknown audio evidence version")
     cues = derive_technique_hypotheses(shots, movement, text, notes)
