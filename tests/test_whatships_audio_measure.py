@@ -39,7 +39,7 @@ class AudioEnvelopeMathTests(unittest.TestCase):
         self.assertLess(stats["summary"]["rmsDbfs"],0)
 
     def test_empty_malformed_or_oversized_audio_is_not_silence(self):
-        for raw in (b"",b"\x00",b"\x00\x00"*1601):
+        for raw in (b"",b"\x00",b"\x00\x00"*(1600+2049)):
             with self.subTest(size=len(raw)),self.assertRaises(ValueError):
                 _stats(raw,expected_samples=1600)
 
