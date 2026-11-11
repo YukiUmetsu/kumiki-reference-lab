@@ -14,9 +14,13 @@ adapter is `scripts/research_motiondesignawards.py`
 
 Enforced once, for every caller:
 
-- HTTPS only, exact-host allowlist passed by the caller. No credentials, custom
-  ports, query strings, fragments, IP literals, or implicit subdomains; every
-  redirect is re-validated against the same allowlist.
+- HTTPS only, host allowlist passed by the caller. Entries are exact hosts
+  (`media.example`), explicit subdomain suffixes (`.cdn.example`), or the
+  wildcard `"*"`, which admits any public DNS name. The wildcard is the current
+  project-wide policy for research adapters. It relaxes only the host check. No
+  credentials, custom ports, query strings, fragments, IP literals, loopback or
+  single-label names, or implicit subdomains; every redirect is re-validated
+  against the same allowlist.
 - Byte- and duration-capped retrieval. Media lands only in a directory the
   caller owns.
 - No cookies, logins, tokens, DRM circumvention, or access-control bypass.

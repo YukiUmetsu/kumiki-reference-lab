@@ -55,22 +55,35 @@ def _freeze_hosts(allowed_hosts: Iterable[str]) -> Iterable[str]:
     return tuple(allowed_hosts)
 
 
-def _split_allowlist(allowed_hosts: Iterable[str]) -> tuple[frozenset[str], tuple[str, ...]]:
-    """Return (exact hosts, subdomain suffixes) from caller-supplied entries.
+ANY_PUBLIC_HOST = "*"
+
+
+def _split_allowlist(
+    allowed_hosts: Iterable[str],
+) -> tuple[frozenset[str], tuple[str, ...], bool]:
+    """Return (exact hosts, subdomain suffixes, any-public-host flag).
 
     An entry without a leading dot matches that host exactly. An entry with a
     leading dot (``".cdn.example"``) matches subdomains of that host only; it
     never matches the bare host itself, so subdomain access is always an
     explicit, documented opt-in rather than an implicit wildcard.
+
+    The entry ``"*"`` admits any public DNS name. It relaxes only the host
+    check: HTTPS, no credentials, default port, no query or fragment, no IP
+    literal, and no loopback name still apply to every URL.
     """
     if isinstance(allowed_hosts, (str, bytes)):
         raise ValueError("allowed hosts must be an iterable of host names, not a single string")
     exact: set[str] = set()
     suffixes: set[str] = set()
+    any_host = False
     for entry in allowed_hosts:
         if not isinstance(entry, str) or not entry.strip():
             raise ValueError("allowlist entries must be non-empty host names")
         value = entry.strip().lower()
+        if value == ANY_PUBLIC_HOST:
+            any_host = True
+            continue
         if value.startswith("."):
             value = value[1:]
             if not _HOST_NAME.match(value):
@@ -80,9 +93,9 @@ def _split_allowlist(allowed_hosts: Iterable[str]) -> tuple[frozenset[str], tupl
             if not _HOST_NAME.match(value):
                 raise ValueError("allowlist entry is not a valid host name")
             exact.add(value)
-    if not exact and not suffixes:
+    if not exact and not suffixes and not any_host:
         raise ValueError("allowlist must contain at least one host")
-    return frozenset(exact), tuple(sorted(suffixes))
+    return frozenset(exact), tuple(sorted(suffixes)), any_host
 
 
 def _checked_host(host: str, *, label: str) -> str:
@@ -131,8 +144,8 @@ def allowlisted_url(
     if parsed.query:
         raise ValueError(f"{label} must not carry a query string")
     host = _checked_host((parsed.hostname or "").lower(), label=label)
-    exact, suffixes = _split_allowlist(allowed_hosts)
-    if host in exact:
+    exact, suffixes, any_host = _split_allowlist(allowed_hosts)
+    if any_host or host in exact:
         return url
     for suffix in suffixes:
         if host.endswith("." + suffix):

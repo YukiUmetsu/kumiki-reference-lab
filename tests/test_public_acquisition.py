@@ -140,6 +140,33 @@ class AllowlistTests(unittest.TestCase):
                 acq.allowlisted_url(
                     "https://media.example/clip.mp4", allowed_hosts=hosts)
 
+    def test_any_public_host_wildcard_admits_every_public_dns_name(self) -> None:
+        for url in ("https://media.example/clip.mp4",
+                    "https://cdn.other-site.test/a/b.mp4",
+                    "https://vimeo.com/123456"):
+            with self.subTest(url=url):
+                self.assertEqual(
+                    acq.allowlisted_url(url, allowed_hosts=("*",)), url)
+
+    def test_any_public_host_wildcard_keeps_every_other_guard(self) -> None:
+        for url in ("http://media.example/clip.mp4",
+                    "https://user:pw@media.example/clip.mp4",
+                    "https://media.example:8443/clip.mp4",
+                    "https://media.example/clip.mp4?token=1",
+                    "https://media.example/clip.mp4#frag",
+                    "https://192.0.2.10/clip.mp4",
+                    "https://[2001:db8::1]/clip.mp4",
+                    "https://localhost/clip.mp4",
+                    "https://intranet/clip.mp4"):
+            with self.subTest(url=url), self.assertRaises(ValueError):
+                acq.allowlisted_url(url, allowed_hosts=("*",))
+
+    def test_wildcard_mixes_with_explicit_entries(self) -> None:
+        self.assertEqual(
+            acq.allowlisted_url("https://a.test/x.mp4",
+                                allowed_hosts=("media.example", "*")),
+            "https://a.test/x.mp4")
+
 
 class BoundedFetchTests(unittest.TestCase):
     def setUp(self) -> None:
