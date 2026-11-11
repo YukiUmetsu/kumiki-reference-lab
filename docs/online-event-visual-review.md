@@ -78,6 +78,16 @@ may remain ambiguous between just two frames. Model output cannot promote
 an anonymous seed to a recognized character or create an executable
 `kumiki-ui` choreography. Such conclusions require further visual QA.
 
+## Three-anchor phase review
+
+A further optional `--sequence-model LOCAL_VISION_MODEL_ID` mode
+compares start/middle and middle/end frames in **two** locally bounded
+vision calls per sequence. It groups duplicate geometry event tasks,
+and records `threeAnchorSequenceReview` with source timestamps,
+visual-change phases, abstentions and uncertain agreement. Unlike a
+video model, it never claims to have seen every intermediate moment.
+See [three-anchor sequence review](three-anchor-sequence-review.md).
+
 ## Tests
 
     PYTHONPATH=src python -m unittest tests.test_online_event_review -q
