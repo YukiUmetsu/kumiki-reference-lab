@@ -1,0 +1,57 @@
+name: One-shot official Disney trailer measurement
+
+on:
+  pull_request:
+    paths:
+      - scripts/research_movie_promo_disney_once.py
+      - .github/workflows/measure-disney-trailer-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  elemental-research:
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.head_ref == 'research/ephemeral-elemental-trailer-measurement'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Research-only ephemeral measurement
+        env:
+          PYTHONPATH: .:src
+          PIP_DISABLE_PIP_VERSION_CHECK: '1'
+        run: |
+          set -euo pipefail
+          command -v ffmpeg
+          command -v ffprobe
+          python -m pip install -q -e '.[motion]' yt-dlp
+          python scripts/research_movie_promo_disney_once.py
+          python scripts/audit_movie_promo_evidence.py
+          python scripts/summarize_movie_promo_evidence.py --verify
+          python -m unittest tests.test_movie_promo_evidence_audit tests.test_movie_promo_comparison -q
+          git diff --check
+      - name: Stage only numeric evidence and push to the PR branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- \
+            research/analysis/movie-promotions/index.json \
+            research/analysis/movie-promotions/elemental-official-trailer.json \
+            research/analysis/movie-promotions/derived/comparison.v1.json
+          test "$(git diff --cached --name-only | wc -l)" -eq 3
+          if git diff --cached --name-only | grep -E '\.(mp4|m4v|wav|mp3|aac|jpg|jpeg|png|webm|mkv)$'; then
+            echo 'Refusing to stage media' >&2; exit 1
+          fi
+          git diff --cached --check
+          git commit -m 'data: source-hashed Elemental promotional video measurements'
+          git push origin "HEAD:${GITHUB_HEAD_REF}"
