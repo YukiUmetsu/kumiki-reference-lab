@@ -1,8 +1,8 @@
 {
   "schemaVersion": "kumiki.movie-promotion-measurements.v1",
-  "retrievedOn": "2026-11-10",
-  "analyzedOn": "2026-11-10",
-  "method": "Official Disney public-player MP4 sources (H.264/AAC, 400-480p); three selected 20-second windows per trailer analyzed with kumiki-ref study-reference. Middle and ending windows were temporarily decoded and re-encoded with FFmpeg, each linked to its original source offset. Opening windows used source MP4s directly.",
+  "retrievedOn": "2026-11-10 through 2026-11-11",
+  "analyzedOn": "2026-11-10 through 2026-11-11",
+  "method": "Seven official Disney public-player MP4s (H.264/AAC, 400-480p) plus six Apple iTunes Store feature-movie preview MP4/M4V editions (H.264, 426p or similar). Three selected 20-second windows per video analyzed with kumiki-ref study-reference. Middle and ending windows were temporarily decoded and re-encoded with FFmpeg and linked to original source offsets. Opening windows used source media directly. Apple preview cuts are not assumed identical to studio YouTube uploads.",
   "rightsStatus": "review-required",
   "videos": [
     {
@@ -548,19 +548,505 @@
       "catalogId": "star-wars-force-awakens-trailer",
       "sampledCoverageSeconds": 60,
       "sampledCoverageFraction": 0.4341
+    },
+    {
+      "id": "barbie",
+      "officialPlayerUrl": "https://trailers.apple.com/trailers/wb/barbie/",
+      "sourceEdition": "Apple iTunes Store promotional movie preview (not verified identical to catalog YouTube upload)",
+      "sourceTrackId": "1692915162",
+      "catalogUploadIdentityMatch": "not-verified",
+      "sourceSha256": "e947627b15eef96baf9a7273d679bd88a95345480a50bb38c4b6ec7f169eb2e9",
+      "sourceDurationSeconds": 161.151667,
+      "sourceResolution": [
+        640,
+        426
+      ],
+      "windows": [
+        {
+          "window": "opening",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "windowSourceSha256": "e947627b15eef96baf9a7273d679bd88a95345480a50bb38c4b6ec7f169eb2e9",
+          "cutCandidateCount": 7,
+          "observedInterCutIntervalCount": 6,
+          "medianInterCandidateGapSeconds": 2.69,
+          "audioLevelAttackCandidateCount": 7,
+          "meanSampledLumaProxy": 0.3746,
+          "meanSampledSaturation": 0.4512,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 13,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "cut-boundary": 5,
+            "insufficient-consensus": 3,
+            "single-image-translation-candidate": 2,
+            "multiple-image-translations": 1
+          },
+          "cutCandidateCountAtThreshold015": 7
+        },
+        {
+          "window": "middle",
+          "sourceOffsetSeconds": 71,
+          "scanSeconds": 20,
+          "windowSourceSha256": "9a79ad3351b3e92b7b699ab62cf24140e216af0646a451092ac23ca748e25230",
+          "cutCandidateCount": 10,
+          "observedInterCutIntervalCount": 9,
+          "medianInterCandidateGapSeconds": 1.21,
+          "audioLevelAttackCandidateCount": 9,
+          "meanSampledLumaProxy": 0.3818,
+          "meanSampledSaturation": 0.4652,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 14,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "single-image-translation-candidate": 3,
+            "cut-boundary": 6,
+            "multiple-image-translations": 1,
+            "insufficient-consensus": 1
+          },
+          "cutCandidateCountAtThreshold015": 10
+        },
+        {
+          "window": "ending",
+          "sourceOffsetSeconds": 141,
+          "scanSeconds": 20,
+          "windowSourceSha256": "787469667a23a2dc9767c61dd75a903aa82cdbec2cf48f2b025f202ac95e7bfc",
+          "cutCandidateCount": 13,
+          "observedInterCutIntervalCount": 12,
+          "medianInterCandidateGapSeconds": 0.98,
+          "audioLevelAttackCandidateCount": 9,
+          "meanSampledLumaProxy": 0.1765,
+          "meanSampledSaturation": 0.5207,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 7,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "ambiguous-dominant-group": 1,
+            "cut-boundary": 7,
+            "insufficient-consensus": 2,
+            "single-image-translation-candidate": 1
+          },
+          "cutCandidateCountAtThreshold015": 14
+        }
+      ],
+      "catalogId": "warner-barbie-main-trailer",
+      "sampledCoverageSeconds": 60,
+      "sampledCoverageFraction": 0.3723
+    },
+    {
+      "id": "oppenheimer",
+      "officialPlayerUrl": "https://tv.apple.com/us/movie/oppenheimer/umc.cmc.5gylew9icuhfiifdv3oxwxen8",
+      "sourceEdition": "Apple iTunes Store promotional movie preview (not verified identical to catalog YouTube upload)",
+      "sourceTrackId": "1710495188",
+      "catalogUploadIdentityMatch": "not-verified",
+      "sourceSha256": "ca67b4d91a4ed5fd95725bff2110758c42344bbfa102ec8425af355d1d16a4c5",
+      "sourceDurationSeconds": 183.551667,
+      "sourceResolution": [
+        640,
+        386
+      ],
+      "windows": [
+        {
+          "window": "opening",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "windowSourceSha256": "ca67b4d91a4ed5fd95725bff2110758c42344bbfa102ec8425af355d1d16a4c5",
+          "cutCandidateCount": 11,
+          "observedInterCutIntervalCount": 10,
+          "medianInterCandidateGapSeconds": 0.938,
+          "audioLevelAttackCandidateCount": 5,
+          "meanSampledLumaProxy": 0.0888,
+          "meanSampledSaturation": 0.5999,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 9,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "cut-boundary": 6,
+            "insufficient-consensus": 5
+          },
+          "cutCandidateCountAtThreshold015": 19
+        },
+        {
+          "window": "middle",
+          "sourceOffsetSeconds": 82,
+          "scanSeconds": 20,
+          "windowSourceSha256": "1b63f59bdab45cb39e9bc4989ebecc88d6fd98ac604881dccc5149a69a58f6c3",
+          "cutCandidateCount": 8,
+          "observedInterCutIntervalCount": 7,
+          "medianInterCandidateGapSeconds": 1.043,
+          "audioLevelAttackCandidateCount": 0,
+          "meanSampledLumaProxy": 0.242,
+          "meanSampledSaturation": 0.5364,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 14,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "cut-boundary": 5,
+            "insufficient-consensus": 5,
+            "multiple-image-translations": 1
+          },
+          "cutCandidateCountAtThreshold015": 13
+        },
+        {
+          "window": "ending",
+          "sourceOffsetSeconds": 163,
+          "scanSeconds": 20,
+          "windowSourceSha256": "eddeebe7f966702bc4987d8b93e13cbe94e568e3d210c7f50fc40619788bcd1b",
+          "cutCandidateCount": 8,
+          "observedInterCutIntervalCount": 7,
+          "medianInterCandidateGapSeconds": 0.876,
+          "audioLevelAttackCandidateCount": 0,
+          "meanSampledLumaProxy": 0.1661,
+          "meanSampledSaturation": 0.5234,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 15,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "single-image-translation-candidate": 4,
+            "insufficient-consensus": 3,
+            "cut-boundary": 4
+          },
+          "cutCandidateCountAtThreshold015": 8
+        }
+      ],
+      "catalogId": "universal-oppenheimer-trailer",
+      "sampledCoverageSeconds": 60,
+      "sampledCoverageFraction": 0.3269
+    },
+    {
+      "id": "spider-man-no-way-home",
+      "officialPlayerUrl": "https://tv.apple.com/us/movie/spider-man-no-way-home/umc.cmc.2qf7xc5hds0m5jgx4roago580",
+      "sourceEdition": "Apple iTunes Store promotional movie preview (not verified identical to catalog YouTube upload)",
+      "sourceTrackId": "1648448746",
+      "catalogUploadIdentityMatch": "not-verified",
+      "sourceSha256": "299a9c1caa2a0b2c21473b414a718e1bbb859dda5ef91c938aaf7c1f89ed1e89",
+      "sourceDurationSeconds": 101.855,
+      "sourceResolution": [
+        640,
+        354
+      ],
+      "windows": [
+        {
+          "window": "opening",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "windowSourceSha256": "299a9c1caa2a0b2c21473b414a718e1bbb859dda5ef91c938aaf7c1f89ed1e89",
+          "cutCandidateCount": 10,
+          "observedInterCutIntervalCount": 9,
+          "medianInterCandidateGapSeconds": 1.668,
+          "audioLevelAttackCandidateCount": 4,
+          "meanSampledLumaProxy": 0.2495,
+          "meanSampledSaturation": 0.2858,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 12,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "cut-boundary": 9,
+            "insufficient-consensus": 2
+          },
+          "cutCandidateCountAtThreshold015": 15
+        },
+        {
+          "window": "middle",
+          "sourceOffsetSeconds": 41,
+          "scanSeconds": 20,
+          "windowSourceSha256": "578d8cec66abd71a149a3d7bb34f62663b0bd61a037a9bacf180a65dea9f0eb5",
+          "cutCandidateCount": 12,
+          "observedInterCutIntervalCount": 11,
+          "medianInterCandidateGapSeconds": 1.126,
+          "audioLevelAttackCandidateCount": 0,
+          "meanSampledLumaProxy": 0.1717,
+          "meanSampledSaturation": 0.3158,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 9,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "cut-boundary": 8,
+            "insufficient-consensus": 3
+          },
+          "cutCandidateCountAtThreshold015": 14
+        },
+        {
+          "window": "ending",
+          "sourceOffsetSeconds": 81,
+          "scanSeconds": 20,
+          "windowSourceSha256": "5c2da752ffd8edeff08a699a5bd0192374560b848f115b5c1008846bd8cc0dce",
+          "cutCandidateCount": 12,
+          "observedInterCutIntervalCount": 11,
+          "medianInterCandidateGapSeconds": 0.751,
+          "audioLevelAttackCandidateCount": 1,
+          "meanSampledLumaProxy": 0.2344,
+          "meanSampledSaturation": 0.1247,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 10,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "cut-boundary": 7,
+            "insufficient-consensus": 3,
+            "single-image-translation-candidate": 1
+          },
+          "cutCandidateCountAtThreshold015": 16
+        }
+      ],
+      "catalogId": "sony-spider-man-no-way-home-trailer",
+      "sampledCoverageSeconds": 60,
+      "sampledCoverageFraction": 0.5891
+    },
+    {
+      "id": "dune-part-two",
+      "officialPlayerUrl": "https://tv.apple.com/us/movie/dune-part-two/umc.cmc.363aycnv6vy9qgekvew6fveb9",
+      "sourceEdition": "Apple iTunes Store promotional movie preview (not verified identical to catalog YouTube upload)",
+      "sourceTrackId": "1725365997",
+      "catalogUploadIdentityMatch": "not-verified",
+      "sourceSha256": "9c8fc42cd7b8aa08c8e17b4c13156bea52ae577fb6db13ba21558554c1f91934",
+      "sourceDurationSeconds": 183.414422,
+      "sourceResolution": [
+        640,
+        450
+      ],
+      "windows": [
+        {
+          "window": "opening",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "windowSourceSha256": "9c8fc42cd7b8aa08c8e17b4c13156bea52ae577fb6db13ba21558554c1f91934",
+          "cutCandidateCount": 11,
+          "observedInterCutIntervalCount": 10,
+          "medianInterCandidateGapSeconds": 1.439,
+          "audioLevelAttackCandidateCount": 1,
+          "meanSampledLumaProxy": 0.2566,
+          "meanSampledSaturation": 0.2075,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 7,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "cut-boundary": 7,
+            "insufficient-consensus": 4
+          },
+          "cutCandidateCountAtThreshold015": 13
+        },
+        {
+          "window": "middle",
+          "sourceOffsetSeconds": 82,
+          "scanSeconds": 20,
+          "windowSourceSha256": "7b5c48b084cb09e791f6b88b6f1d60a3c761b5ea29e31de30f4c016366bff214",
+          "cutCandidateCount": 8,
+          "observedInterCutIntervalCount": 7,
+          "medianInterCandidateGapSeconds": 1.71,
+          "audioLevelAttackCandidateCount": 0,
+          "meanSampledLumaProxy": 0.1952,
+          "meanSampledSaturation": 0.3562,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 9,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "insufficient-consensus": 5,
+            "cut-boundary": 6
+          },
+          "cutCandidateCountAtThreshold015": 10
+        },
+        {
+          "window": "ending",
+          "sourceOffsetSeconds": 163,
+          "scanSeconds": 20,
+          "windowSourceSha256": "293858a934b5a5e791d8be44882c6d519f559c5d0e1ada79c697c7aa546b175d",
+          "cutCandidateCount": 6,
+          "observedInterCutIntervalCount": 5,
+          "medianInterCandidateGapSeconds": 1.877,
+          "audioLevelAttackCandidateCount": 2,
+          "meanSampledLumaProxy": 0.2593,
+          "meanSampledSaturation": 0.3838,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 12,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "cut-boundary": 5,
+            "single-image-translation-candidate": 2,
+            "insufficient-consensus": 4
+          },
+          "cutCandidateCountAtThreshold015": 7
+        }
+      ],
+      "catalogId": "warner-dune-part-two-trailer",
+      "sampledCoverageSeconds": 60,
+      "sampledCoverageFraction": 0.3271
+    },
+    {
+      "id": "super-mario-bros",
+      "officialPlayerUrl": "https://tv.apple.com/us/movie/the-super-mario-bros-movie/umc.cmc.lnitkepcr7q85n755kia38uc",
+      "sourceEdition": "Apple iTunes Store promotional movie preview (not verified identical to catalog YouTube upload)",
+      "sourceTrackId": "1678843626",
+      "catalogUploadIdentityMatch": "not-verified",
+      "sourceSha256": "3060ca0c8ca3e5b6cc764b846cb81711ed9517200bd0f76ea37df8cfc13d411f",
+      "sourceDurationSeconds": 92.091678,
+      "sourceResolution": [
+        640,
+        354
+      ],
+      "windows": [
+        {
+          "window": "opening",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "windowSourceSha256": "3060ca0c8ca3e5b6cc764b846cb81711ed9517200bd0f76ea37df8cfc13d411f",
+          "cutCandidateCount": 2,
+          "observedInterCutIntervalCount": 1,
+          "medianInterCandidateGapSeconds": 4.505,
+          "audioLevelAttackCandidateCount": 0,
+          "meanSampledLumaProxy": 0.2027,
+          "meanSampledSaturation": 0.5581,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 18,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "insufficient-consensus": 7,
+            "cut-boundary": 2,
+            "single-image-translation-candidate": 2
+          },
+          "cutCandidateCountAtThreshold015": 10
+        },
+        {
+          "window": "middle",
+          "sourceOffsetSeconds": 36,
+          "scanSeconds": 20,
+          "windowSourceSha256": "516eef0799d23be3ddd131de49b204f60184db4265f70ef993ed1879c15d602f",
+          "cutCandidateCount": 14,
+          "observedInterCutIntervalCount": 13,
+          "medianInterCandidateGapSeconds": 0.667,
+          "audioLevelAttackCandidateCount": 0,
+          "meanSampledLumaProxy": 0.4127,
+          "meanSampledSaturation": 0.5282,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 8,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "cut-boundary": 7,
+            "single-image-translation-candidate": 1,
+            "insufficient-consensus": 3
+          },
+          "cutCandidateCountAtThreshold015": 20
+        },
+        {
+          "window": "ending",
+          "sourceOffsetSeconds": 72,
+          "scanSeconds": 20,
+          "windowSourceSha256": "7f8932913b3bf3a7a83dc6747c4ef1c71c42aa6dd392050adadf6941f3d60a7e",
+          "cutCandidateCount": 2,
+          "observedInterCutIntervalCount": 1,
+          "medianInterCandidateGapSeconds": 0.626,
+          "audioLevelAttackCandidateCount": 0,
+          "meanSampledLumaProxy": 0.2442,
+          "meanSampledSaturation": 0.6269,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 17,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "insufficient-consensus": 8,
+            "cut-boundary": 1,
+            "single-image-translation-candidate": 2
+          },
+          "cutCandidateCountAtThreshold015": 6
+        }
+      ],
+      "catalogId": "illumination-super-mario-trailer",
+      "sampledCoverageSeconds": 60,
+      "sampledCoverageFraction": 0.6515
+    },
+    {
+      "id": "deadpool-wolverine",
+      "officialPlayerUrl": "https://tv.apple.com/us/movie/deadpool--wolverine/umc.cmc.4yuxbneekp3cxnpahxz05qdjz",
+      "sourceEdition": "Apple iTunes Store promotional movie preview (not verified identical to catalog YouTube upload)",
+      "sourceTrackId": "1766637757",
+      "catalogUploadIdentityMatch": "not-verified",
+      "sourceSha256": "ef8a72653e014ecbda21d3415fb39ec2dd680e0a6f741c8de6fd903e0a2ff787",
+      "sourceDurationSeconds": 144.312018,
+      "sourceResolution": [
+        640,
+        356
+      ],
+      "windows": [
+        {
+          "window": "opening",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "windowSourceSha256": "ef8a72653e014ecbda21d3415fb39ec2dd680e0a6f741c8de6fd903e0a2ff787",
+          "cutCandidateCount": 3,
+          "observedInterCutIntervalCount": 2,
+          "medianInterCandidateGapSeconds": 3.271,
+          "audioLevelAttackCandidateCount": 4,
+          "meanSampledLumaProxy": 0.0934,
+          "meanSampledSaturation": 0.4538,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 14,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "insufficient-consensus": 9,
+            "cut-boundary": 2
+          },
+          "cutCandidateCountAtThreshold015": 9
+        },
+        {
+          "window": "middle",
+          "sourceOffsetSeconds": 62,
+          "scanSeconds": 20,
+          "windowSourceSha256": "47d52590532339a7b3cb8e1adff200639e132912effec68a5888325a7ce2705e",
+          "cutCandidateCount": 2,
+          "observedInterCutIntervalCount": 1,
+          "medianInterCandidateGapSeconds": 1.792,
+          "audioLevelAttackCandidateCount": 1,
+          "meanSampledLumaProxy": 0.1828,
+          "meanSampledSaturation": 0.3561,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 17,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "insufficient-consensus": 8,
+            "cut-boundary": 2,
+            "single-image-translation-candidate": 1
+          },
+          "cutCandidateCountAtThreshold015": 5
+        },
+        {
+          "window": "ending",
+          "sourceOffsetSeconds": 124,
+          "scanSeconds": 20,
+          "windowSourceSha256": "aae99d8219ec40a58514380832b72b5629675ddaf4b6da4723f122f499976837",
+          "cutCandidateCount": 1,
+          "observedInterCutIntervalCount": 0,
+          "medianInterCandidateGapSeconds": null,
+          "audioLevelAttackCandidateCount": 7,
+          "meanSampledLumaProxy": 0.3039,
+          "meanSampledSaturation": 0.1452,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 18,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "ambiguous-dominant-group": 2,
+            "multiple-image-translations": 2,
+            "single-image-translation-candidate": 4,
+            "cut-boundary": 1,
+            "insufficient-consensus": 2
+          },
+          "cutCandidateCountAtThreshold015": 2
+        }
+      ],
+      "catalogId": "marvel-deadpool-wolverine-trailer",
+      "sampledCoverageSeconds": 60,
+      "sampledCoverageFraction": 0.4158
     }
   ],
   "detectorThresholds": [
     0.25,
     0.15
   ],
-  "scope": "21 non-overlapping 20-second windows across seven trailers; sampled coverage only, not complete trailer. No manual verification of automated cut or audio-onset candidates.",
+  "scope": "39 non-overlapping 20-second windows across 13 movie promotional videos; sampled coverage only, not complete trailers. No manual verification of automated cut or audio-onset candidates.",
   "caveats": [
     "FFmpeg scene-difference candidates are not confirmed edits and can react to motion, effects and flashes; threshold sensitivity is reported.",
     "Display luma and saturation are sampled, encoded-frame proxies rather than light-rig measurements or footage-wide statistics.",
     "Image translation and sparse optical-flow output represent 2D image-plane evidence, not physical camera motion.",
     "Audio level attacks use conservative thresholds and do not classify dialogue, music, sound effects, speaker identities or rhythm.",
     "Middle and ending windows are FFmpeg re-encodes; their color, audio and scene-difference measurements can deviate slightly from the original files.",
+    "Apple iTunes Store movie previews are separately hashed promotional editions; identity with the YouTube videos in the popularity catalog is not verified and some preview editions may differ materially.",
     "Unobserved portions of each trailer must not be represented by these sampled-window metrics.",
     "The official videos and their extracted frames remain inspiration-only; copyright reuse, redistribution and training rights are not asserted."
   ],

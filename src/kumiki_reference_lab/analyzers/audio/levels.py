@@ -102,11 +102,12 @@ def analyze_audio_levels(source: Path, *, seconds: int = 10,
         "maxFrameBudget": max_frames,
         "levelUnits": "dBFS-relative-to-decoded-audio-full-scale",
         "coverage": "bounded-first-audio-stream-not-necessarily-full-video",
-        "limits": "FFmpeg decoded-frame RMS and peak levels, not music beats, speech, objective silence, original production mix, quality, semantic SFX or verified A/V sync. Up to four extra strictly later FFmpeg frames at the FFprobe read-interval boundary are excluded after timestamp checks.",
+        "limits": "FFmpeg decoded-frame RMS and peak levels, not music beats, speech, objective silence, original production mix, quality, semantic SFX or verified A/V sync. Up to four extra strictly later FFmpeg frames at the FFprobe read-interval boundary are excluded after timestamp checks. A final source frame that crosses the scan boundary may be excluded if FFmpeg trims its decoded sample count.",
     }
     if timeline["status"] == "no-audio-stream":
         require_unchanged(source, signature)
-        return {**base, "status": "no-audio-stream", "frames": []}
+        return {**base, "status": "no-audio-stream", "frames": [],
+                "excludedPartialBoundaryFrames": 0}
     if timeline["status"] != "source-timing-candidate":
         raise ValueError("audio levels require complete, monotonic original audio frame PTS")
     measured = _read_levels(source, timeline["audioStreamIndex"], seconds,
@@ -130,7 +131,9 @@ def analyze_audio_levels(source: Path, *, seconds: int = 10,
                 raise ValueError("FFmpeg extra audio frames are not a valid trailing interval")
             previous = timestamp
     rows: list[dict[str, Any]] = []
-    for original, measured_frame in zip(originals, measured[:len(originals)], strict=True):
+    excluded_partial_boundary = 0
+    for index, (original, measured_frame) in enumerate(
+            zip(originals, measured[:len(originals)], strict=True)):
         # A filter is free to change its timebase. Compare presentation seconds
         # using the *original* stream clock with <= 1 decoded sample tolerance.
         try:
@@ -145,8 +148,23 @@ def analyze_audio_levels(source: Path, *, seconds: int = 10,
             count = float(metrics[_SAMPLES_KEY])
         except ValueError as exc:
             raise ProbeError("invalid FFmpeg audio decoded sample count") from exc
-        if (not math.isfinite(count) or not count.is_integer() or
-                int(count) != original["decodedSampleCount"]):
+        if not math.isfinite(count) or not count.is_integer():
+            raise ValueError("FFmpeg audio-level sample count differs from original decode")
+        if int(count) != original["decodedSampleCount"]:
+            # FFprobe reports the *whole* decoded frame crossing a requested
+            # read boundary. FFmpeg -t can instead output only its interior
+            # samples. Never attach an RMS/peak computed on that shorter
+            # sample span to the full source frame.
+            original_end = source_seconds + Fraction(
+                original["decodedSampleCount"], timeline["sampleRateHz"])
+            expected_trimmed_count = round(
+                (Fraction(seconds) - source_seconds) * timeline["sampleRateHz"])
+            if (index == len(originals) - 1
+                    and 0 < count < original["decodedSampleCount"]
+                    and source_seconds < seconds < original_end
+                    and abs(count - expected_trimmed_count) <= 1):
+                excluded_partial_boundary += 1
+                continue
             raise ValueError("FFmpeg audio-level sample count differs from original decode")
         rms, peak = _level(metrics[_RMS_KEY]), _level(metrics[_PEAK_KEY])
         rows.append({
@@ -159,4 +177,6 @@ def analyze_audio_levels(source: Path, *, seconds: int = 10,
             "quietFrameCandidate": rms is None or rms <= -45.0,
         })
     require_unchanged(source, signature)
-    return {**base, "status": "source-pts-aligned-level-observations", "frames": rows}
+    return {**base, "status": "source-pts-aligned-level-observations",
+            "excludedPartialBoundaryFrames": excluded_partial_boundary,
+            "frames": rows}

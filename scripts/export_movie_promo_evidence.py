@@ -68,6 +68,8 @@ def build_evidence(video: dict, *, media_root: Path, runs_root: Path) -> dict:
             "sparseFlow": _read(analysis / "sparse-flow.json"),
             "audioLevels": {
                 "status": levels["status"],
+                "excludedPartialBoundaryFrames": levels.get(
+                    "excludedPartialBoundaryFrames", 0),
                 "columns": ["sourcePts", "decodedSampleCount", "rmsDbFs", "peakDbFs"],
                 "rows": [[row.get("sourcePts"), row.get("decodedSampleCount"),
                           row.get("rmsDbFs"), row.get("peakDbFs")]
@@ -78,7 +80,7 @@ def build_evidence(video: dict, *, media_root: Path, runs_root: Path) -> dict:
             "editRhythm": _read(study / "edit-rhythm.json"),
             "techniqueProposals": _read(study / "technique-proposals.json"),
         })
-    return {
+    result = {
         "schemaVersion": "kumiki.movie-promotion-window-evidence.v1",
         "catalogId": video["catalogId"],
         "id": video["id"],
@@ -92,6 +94,13 @@ def build_evidence(video: dict, *, media_root: Path, runs_root: Path) -> dict:
         "limits": "Numerical evidence and conservative candidates, not verified cuts, camera movement, physical lighting, words, speaker identities or semantic actions. Video, audio, extracted frames and temporary signed CDN URLs are intentionally omitted.",
         "windows": windows,
     }
+    # A distributor's retail preview can differ from a studio's YouTube upload.
+    # Preserve explicit edition identity alongside the source hash, without
+    # embedding expiring media URLs or implying upload equivalence.
+    for field in ("sourceEdition", "sourceTrackId", "catalogUploadIdentityMatch"):
+        if field in video:
+            result[field] = video[field]
+    return result
 
 
 def main() -> None:
