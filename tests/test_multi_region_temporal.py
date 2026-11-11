@@ -77,7 +77,7 @@ class MultiRegionEventTests(unittest.TestCase):
 
     def test_independent_motion_and_approach_with_box_overlap(self):
         a = make_track("hero-a", dx=.025)
-        b = make_track("hero-b", x0=.70, dx=-.032)
+        b = make_track("hero-b", x0=.70, dx=-.0375)
         result = self.derive(a, b)
         self.assertEqual(result["schemaVersion"], SCHEMA_VERSION)
         self.assertEqual(result["sourceSha256"], HASH)
