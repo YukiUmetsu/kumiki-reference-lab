@@ -154,10 +154,12 @@ def _read_verified_visual_data(
                 })
             pair_rows = []
             for i,pair in enumerate(pairs):
-                if (not isinstance(pair,dict) or set(pair) != {
+                base_pair_fields={
                     "startPts","endPts","sourceDeltaSeconds","status",
                     "meanAbsoluteDisplayRgbDelta",
-                    "meanAbsoluteDisplayRgbDeltaPerSecond"} or
+                    "meanAbsoluteDisplayRgbDeltaPerSecond"}
+                if (not isinstance(pair,dict) or
+                    set(pair) not in (base_pair_fields,base_pair_fields|{"imageTranslation"}) or
                     type(pair["startPts"]) is not int or
                     type(pair["endPts"]) is not int or
                     pair["startPts"] != frame_rows[i]["sourcePts"] or
@@ -176,10 +178,18 @@ def _read_verified_visual_data(
                     fraction(rate,"meanAbsoluteDisplayRgbDeltaPerSecond",ceiling=100000)
                 else:
                     raise ValueError("unapproved RGB pair interpretation")
-                pair_rows.append({k:pair[k] for k in (
-                    "startPts","endPts","sourceDeltaSeconds","status",
-                    "meanAbsoluteDisplayRgbDelta",
-                    "meanAbsoluteDisplayRgbDeltaPerSecond")})
+                if "imageTranslation" in pair:
+                    _validate_image_translation(
+                        pair["imageTranslation"],pair_status=status,
+                        width=scan["frameWidth"],height=scan["frameHeight"])
+                pair_rows.append({
+                    **{k:pair[k] for k in (
+                        "startPts","endPts","sourceDeltaSeconds","status",
+                        "meanAbsoluteDisplayRgbDelta",
+                        "meanAbsoluteDisplayRgbDeltaPerSecond")},
+                    **({"imageTranslation":dict(pair["imageTranslation"])}
+                       if "imageTranslation" in pair else {}),
+                })
             if (len(cuts) != summary["cutCandidateCountBetweenFirstAndLastSample"] or
                     any(type(p) is not int for p in cuts) or
                     any(p < frame_rows[0]["sourcePts"] or
@@ -441,6 +451,37 @@ def _validate_audio_energy_layer(layer: Any, expected_source_sha: Any) -> None:
             raise ValueError("audio silence fraction inconsistent with energy frames")
 
 
+def _validate_image_translation(
+    transform: Any, *, pair_status: str, width: int, height: int,
+) -> None:
+    """Global FFT image shift, not camera motion or a calibrated probability."""
+    if (not isinstance(transform,dict) or set(transform) != {
+            "status","dxPixels","dyPixels","peakToSidelobeRatio"}):
+        raise ValueError("image translation report includes unsupported source fields")
+    status=transform["status"]
+    if status not in (
+            "cut-boundary","measured-image-translation",
+            "unobservable-low-texture","ambiguous-correlation"):
+        raise ValueError("image translation label not in known numeric proxy vocabulary")
+    if (pair_status=="cut-candidate-between-samples") != (status=="cut-boundary"):
+        raise ValueError("image translation must abstain when a cut candidate intervenes")
+    dx,dy,psr=(transform[k] for k in (
+        "dxPixels","dyPixels","peakToSidelobeRatio"))
+    if status=="measured-image-translation":
+        for number,limit in ((dx,width/4),(dy,height/4)):
+            if (type(number) not in (int,float) or not math.isfinite(number) or
+                    abs(number)>limit):
+                raise ValueError("image translation displacement must be finite and bounded")
+        if type(psr) not in (float,int) or not math.isfinite(psr) or not 6<=psr<=1_000_000:
+            raise ValueError("global translation signal ratio is unverified")
+    else:
+        if dx is not None or dy is not None:
+            raise ValueError("unmeasured image translation cannot assert a displacement")
+        if (psr is not None and (type(psr) not in (float,int) or
+                                not math.isfinite(psr) or not -100<=psr<=1_000_000)):
+            raise ValueError("ambiguous image signal ratio is malformed")
+
+
 def _validate_record(record: Any, sid: str, snapshot_sha: str) -> None:
     """Validate strict public JSON whitelist, source PTS and evidence semantics."""
     if (not isinstance(record,dict) or set(record) != {
@@ -601,10 +642,12 @@ def _validate_record(record: Any, sid: str, snapshot_sha: str) -> None:
                 any(type(p) is not int or not pts[0]<=p<=pts[-1] for p in cuts)):
             raise ValueError("numeric cut candidate source PTS invalid")
         for i,pair in enumerate(pairs):
-            if (not isinstance(pair,dict) or set(pair) != {
-                    "startPts","endPts","sourceDeltaSeconds","status",
-                    "meanAbsoluteDisplayRgbDelta",
-                    "meanAbsoluteDisplayRgbDeltaPerSecond"} or
+            base_pair_fields={
+                "startPts","endPts","sourceDeltaSeconds","status",
+                "meanAbsoluteDisplayRgbDelta",
+                "meanAbsoluteDisplayRgbDeltaPerSecond"}
+            if (not isinstance(pair,dict) or
+                    set(pair) not in (base_pair_fields,base_pair_fields|{"imageTranslation"}) or
                     pair["startPts"] != pts[i] or pair["endPts"] != pts[i+1] or
                     rational(pair["sourceDeltaSeconds"]) != (pts[i+1]-pts[i])*timebase):
                 raise ValueError("numeric frame pair is not bound to original source PTS")
@@ -617,6 +660,10 @@ def _validate_record(record: Any, sid: str, snapshot_sha: str) -> None:
                 exact_number(pair["meanAbsoluteDisplayRgbDeltaPerSecond"],"rate",100000)
             else:
                 raise ValueError("unapproved camera/motion interpretation")
+            if "imageTranslation" in pair:
+                _validate_image_translation(
+                    pair["imageTranslation"],pair_status=pair["status"],
+                    width=scan["frameWidth"],height=scan["frameHeight"])
         summary=window["sampledWindowSummary"]
         expected={"cutCandidateCountBetweenFirstAndLastSample",
                   "cutCandidateRatePerRequestedMinute",

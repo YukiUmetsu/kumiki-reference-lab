@@ -46,5 +46,7 @@
   "sampledFrameFractionOfInventoriedWindowFrames": null,
   "audioEnergyMeasuredVideoCount": 0,
   "audioEnergyWindowCount": 0,
-  "audioEnergyFrameBuckets": 0
+  "audioEnergyFrameBuckets": 0,
+  "windowsWithApparentGlobalTranslationProbe": 0,
+  "apparentGlobalTranslationMeasuredFramePairs": 0
 }

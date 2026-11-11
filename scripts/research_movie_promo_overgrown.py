@@ -22,7 +22,7 @@ from urllib.request import Request, urlopen
 
 from scripts.audit_movie_promo_evidence import audit
 from scripts.export_movie_promo_evidence import build_evidence
-from scripts.summarize_movie_promo_evidence import build_comparison
+from scripts.rebuild_movie_promo_derived import write_reports
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -283,13 +283,7 @@ def generate() -> None:
               f"duration={duration:.3f}, windows=3", flush=True)
 
     # TemporaryDirectory has been removed before any file can be git-staged.
-    comparison_path = DATA / "derived/comparison.v1.json"
-    index_bytes = INDEX.read_bytes()
-    git_blob = hashlib.sha1(
-        b"blob " + str(len(index_bytes)).encode("ascii") + b"\0" + index_bytes).hexdigest()
-    comparison = build_comparison(json.loads(index_bytes), git_blob)
-    comparison_path.write_text(
-        json.dumps(comparison, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    # Source footage is gone; regenerate every dependent report atomically.\n    write_reports(DATA)
     assert not list(DATA.glob("*.mp4"))
     print("all temporary audio/video/frame media deleted; numeric-only evidence ready")
 

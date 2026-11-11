@@ -114,3 +114,7 @@ If you have permission to study the original public X video associated with a Wh
 ## Soundtrack energy observations
 
 [`whatships-audio-measure`](../../../docs/whatships-audio-energy-research.md) writes a separate `evidence.numericAudio.windows[]` layer of 100 ms decoded PCM RMS/peak digital amplitude and near-silence heuristics, using an authorized local video file. Source media SHA is verified, and only numeric data reach Git. **Audio bucket positions are decoder offsets, not independently verified original video PTS.** This is not beat detection, narrated text, audio-visual synchronization, LUFS, or human-reviewed sound design. The browser and research report show these data separately.
+
+## Optional original-PTS apparent image-plane movement
+
+Use [`whatships-measure --image-translation`](../../../docs/whatships-source-pts-image-translation.md) (or the bounded batch/ephemeral public-source workflow) to append source-PTS paired **FFT phase-correlation global image translation hypotheses** to committed `numericVisual` observations. The optional NumPy motion extra is required. Cut candidates force abstention; missing/ambiguous results are not zero camera movement. These displacement metrics are **not** verified camera pan, tilt, zoom, dolly, independent subject motion or production style. Existing records without this probe remain valid.
