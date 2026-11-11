@@ -46,6 +46,7 @@ from kumiki_reference_lab.catalog.browser_observations import (
 from kumiki_reference_lab.catalog.popular_videos import load_popular_videos, search_popular_videos
 from kumiki_reference_lab.catalog.whatships_detail_enrich import enrich_whatships_details
 from kumiki_reference_lab.pipeline.whatships_local_worker import run_whatships_local_analysis
+from kumiki_reference_lab.pipeline.whatships_visual_backfill import backfill_whatships_visual_probes
 from kumiki_reference_lab.catalog.whatships_media_bindings import (
     register_local_media, media_coverage, eligible_bound_media,
 )
@@ -553,6 +554,26 @@ def build_parser() -> argparse.ArgumentParser:
             sub.add_argument("--limit", type=int, default=20)
         if action == "search":
             sub.add_argument("query", help="technique, story goal, title or creator")
+    backfill_ws = commands.add_parser(
+        "whatships-visual-backfill",
+        help="checkpoint real source-PTS RGB/cut probes for completed private What Ships character studies")
+    backfill_ws.add_argument("bindings", type=Path, help="PRIVATE media-bindings.json")
+    backfill_ws.add_argument("analysis_index", type=Path, help="PRIVATE prior character analysis-index.json")
+    backfill_ws.add_argument("--snapshot", type=Path,
+                             default=Path("research/whatships-index-2026-11-10.json"))
+    backfill_ws.add_argument("--out", type=Path, required=True,
+                             help="new private visual probe run directory")
+    backfill_ws.add_argument("--previous-index", type=Path,
+                             help="prior PRIVATE visual-index.json for resuming")
+    backfill_ws.add_argument("--max-videos", type=int, default=1)
+    backfill_ws.add_argument("--start-offset", type=int, default=0)
+    backfill_ws.add_argument("--max-samples", type=int, default=12)
+    backfill_ws.add_argument("--width", type=int, default=160)
+    backfill_ws.add_argument("--height", type=int, default=90)
+    backfill_ws.add_argument("--cut-threshold", type=float, default=0.25)
+    backfill_ws.add_argument("--ffmpeg", default="ffmpeg")
+    backfill_ws.add_argument("--ffprobe", default="ffprobe")
+
     visual_probe = commands.add_parser(
         "source-visual-probe",
         help="measure source-PTS cut, display brightness/color and frame-change proxies on local video")
@@ -1054,6 +1075,15 @@ def main(argv: list[str] | None = None) -> int:
                                                 limit=args.limit)
                 print(json.dumps({"query": query, "results": results, "count": len(results),
                                   "retrievedOn": collection["retrievedOn"]}, indent=2, sort_keys=True))
+            return 0
+        if args.command == "whatships-visual-backfill":
+            print(backfill_whatships_visual_probes(
+                args.snapshot, args.bindings, args.analysis_index, args.out,
+                previous_index=args.previous_index, max_videos=args.max_videos,
+                start_offset=args.start_offset, max_samples=args.max_samples,
+                width=args.width, height=args.height,
+                cut_threshold=args.cut_threshold,
+                ffmpeg=args.ffmpeg, ffprobe=args.ffprobe))
             return 0
         if args.command == "source-visual-probe":
             print(write_source_visual_probe(
