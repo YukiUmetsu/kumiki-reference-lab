@@ -43,6 +43,7 @@ from kumiki_reference_lab.catalog.browser_observations import (
     load_browser_observations, search_browser_observations,
 )
 from kumiki_reference_lab.catalog.popular_videos import load_popular_videos, search_popular_videos
+from kumiki_reference_lab.catalog.whatships_detail_enrich import enrich_whatships_details
 from kumiki_reference_lab.catalog.whatships_full_coverage import (
     refresh_full_whatships_catalog, summarize_full_snapshot, plan_full_snapshot,
 )
@@ -561,6 +562,19 @@ def build_parser() -> argparse.ArgumentParser:
     refresh.add_argument("--timeout", type=int, default=25)
     refresh.add_argument("--retrieved-on", help="explicit ISO snapshot date (for deterministic offline runs)")
 
+    enrich = full_actions.add_parser(
+        "enrich", help="resumable bounded missing-detail enrichment using official read-only MCP")
+    enrich.add_argument("--previous", type=Path,
+                        default=Path("research/whatships-index-2026-11-10.json"))
+    enrich.add_argument("--out", type=Path, required=True, help="new immutable output directory")
+    enrich.add_argument("--max-details", type=int, default=25)
+    enrich.add_argument("--start-offset", type=int, default=0,
+                        help="skip failed metadata queue entries without dropping them")
+    enrich.add_argument("--delay-seconds", type=float, default=1.5,
+                        help="minimum delay between live metadata calls")
+    enrich.add_argument("--timeout", type=int, default=25)
+    enrich.add_argument("--offline-responses", type=Path,
+                        help="optional offline exact slug-to-MCP-response fixture JSON")
     report = full_actions.add_parser("report", help="count all indexed videos and evidence gaps")
     report.add_argument("--snapshot", type=Path,
                         default=Path("research/whatships-index-2026-11-10.json"))
@@ -952,7 +966,13 @@ def main(argv: list[str] | None = None) -> int:
                                   "retrievedOn": collection["retrievedOn"]}, indent=2, sort_keys=True))
             return 0
         if args.command == "whatships-all":
-            if args.whatships_action == "refresh":
+            if args.whatships_action == "enrich":
+                print(enrich_whatships_details(
+                    args.previous, args.out, max_details=args.max_details,
+                    delay_seconds=args.delay_seconds, timeout=args.timeout,
+                    start_offset=args.start_offset,
+                    offline_responses=args.offline_responses))
+            elif args.whatships_action == "refresh":
                 print(refresh_full_whatships_catalog(
                     args.previous, args.out, index_file=args.index_file,
                     timeout=args.timeout, retrieved_on=args.retrieved_on))
