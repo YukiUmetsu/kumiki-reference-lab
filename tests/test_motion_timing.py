@@ -17,7 +17,8 @@ SHA = "b" * 64
 
 
 def seeded_track(shape: str = "linear", *, count: int = 21,
-                 displacement: float = .4, seconds_step: float = .05) -> dict:
+                 displacement: float = .4, seconds_step: float = .05,
+                 start_index: int = 50, start_seconds: float = 5.0) -> dict:
     def curve(t: float) -> float:
         if shape == "linear":
             return t
@@ -37,8 +38,8 @@ def seeded_track(shape: str = "linear", *, count: int = 21,
         t = i / (count - 1)
         x = .1 + displacement * curve(t)
         observations.append({
-            "frameIndex": 50 + i,
-            "decodedSeconds": round(5 + i * seconds_step, 7),
+            "frameIndex": start_index + i,
+            "decodedSeconds": round(start_seconds + i * seconds_step, 7),
             "boxNormalized": [x, .2, .16, .2],
             "screenRotationDegreesFromSeed": 0.,
             "screenScaleRatioFromSeed": 1.,
@@ -50,7 +51,8 @@ def seeded_track(shape: str = "linear", *, count: int = 21,
     return {
         "id": "seeded-product", "label": "Original product",
         "kind": "product", "shotId": "shot-0002",
-        "startFrameIndex": 50, "lastObservedFrameIndex": 50 + count - 1,
+        "startFrameIndex": start_index,
+        "lastObservedFrameIndex": start_index + count - 1,
         "observationCount": count, "observations": observations,
         "endStatus": "shot-boundary-or-end",
         "identityProvenance": "operator-seeded-not-model-recognized",
@@ -175,7 +177,10 @@ class CinematicTimingIntegrationTests(unittest.TestCase):
             workspace = fixture(Path(folder))
             # No local vision service, CV2 or new footage is needed:
             # reuse a deterministic operator-seeded observation fixture.
-            fake = seeded_report(seeded_track())
+            fake = seeded_report(seeded_track(
+                count=10, seconds_step=.1, start_index=0, start_seconds=0))
+            fake["sourceSha256"] = "a" * 64
+            fake["tracks"][0]["shotId"] = "shot-0001"
             with patch(
                 "kumiki_reference_lab.pipeline.cinematic_insights.build_seeded_region_tracks",
                 return_value=fake,
@@ -189,8 +194,8 @@ class CinematicTimingIntegrationTests(unittest.TestCase):
             self.assertEqual(len(data["kumikiTimingProposals"]), 1)
             self.assertEqual(data["kumikiTimingProposals"][0][
                 "timingFamilyHypothesis"], "linear")
-            self.assertEqual(data["seededMotionTiming"]["sourceSha256"], SHA if
-                             False else "a" * 64)
+            self.assertEqual(data["seededMotionTiming"]["sourceSha256"],
+                             "a" * 64)
 
     def test_cinematic_insights_no_roi_is_explicitly_not_measured(self):
         from tests.test_cinematic_intelligence import fixture
