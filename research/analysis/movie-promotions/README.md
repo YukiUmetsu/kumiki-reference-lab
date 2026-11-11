@@ -21,4 +21,29 @@ After running `study-reference` on a freshly acquired, temporary media set, [`sc
 
 All entries retain `review-required` rights status, and the source MP4s, extracted audio, JPEG/HTML galleries, transcripts and CDN access tokens are excluded. The Apple preview records explicitly preserve `sourceEdition`, `sourceTrackId` and `catalogUploadIdentityMatch: not-verified`: they are **not claimed to be the exact YouTube upload versions** in the popularity catalog, and one Sony preview is for the *Extended Version* of the film. A scene-difference candidate is **not a confirmed editorial cut**; image motion is **not a proven camera movement**; brightness is **not a physical lighting rig**; audio-level changes are **not identified words or sound effects**. Middle/end clips were re-encoded and have an approximate original position via their declared offset. Any partial AAC frame trimmed at a scan boundary is excluded from RMS/peak evidence and counted explicitly.
 
+## Reproducible comparisons
+
+The [derived comparison](derived/comparison.v1.json) is computed solely from the
+source-hashed numeric index. It reports **per-sampled-minute** edit-candidate
+rates at thresholds 0.25 and 0.15, exact sampled-window coverage, phase-level
+counts, audio-level attack candidates, and frame-sample-weighted display-luma
+and saturation proxies. These descriptive values **do not estimate the unseen
+portions of any trailer** and do not measure human-confirmed cuts, real camera
+moves, lighting rigs, or marketing performance.
+
+It also preserves the distinction between Disney public-player files and
+Apple iTunes Store retail preview editions. **Do not** interpret different
+edition cuts as studio-specific cinematography or as identical YouTube uploads.
+
+```bash
+python scripts/summarize_movie_promo_evidence.py --verify
+# Regenerate only after changing the canonical index:
+python scripts/summarize_movie_promo_evidence.py
+PYTHONPATH=. python -m unittest tests.test_movie_promo_comparison -v
+```
+
+The generated report contains the source index's *Git blob SHA-1*. Verification
+fails if the committed comparison becomes stale or source values change. The
+original per-window measurements remain authoritative.
+
 See the [study and interpretation notes](../../../docs/movie-promotion-video-research.md) for the comparison and its limitations.

@@ -131,6 +131,40 @@ Seven public Disney-player H.264/AAC sources (400–480p, ~113–146 seconds) an
 - The exporter [`scripts/export_movie_promo_evidence.py`](../scripts/export_movie_promo_evidence.py) rebuilds the numeric files from temporary studies, requiring `--summary`, `--media-root`, `--runs-root`, and `--out` on a fresh empty destination. It refuses to silently overwrite reports and verifies video/audio SHA consistency.
 - Copyrighted MP4s, encoded audio and extracted JPEG/HTML review galleries are **not** part of the repository. The original source URLs and hashes allow provenance checks, but hashes do not make footage reproducible once deleted.
 
+## Reproducible comparisons from the measured windows
+
+The [derived comparison JSON](../research/analysis/movie-promotions/derived/comparison.v1.json)
+is generated from the immutable numerical index with
+[`scripts/summarize_movie_promo_evidence.py`](../scripts/summarize_movie_promo_evidence.py).
+It retains source identities and differences between **Disney public-player
+uploads** and **Apple iTunes Store movie preview editions**. All rows below
+represent **only three selected 20-second windows**, totaling 60 seconds per
+film; they are not full-film edit rates or marketing outcomes.
+
+| Source edition | Candidate edits at 0.25 (sampled 60 s) | Candidates at 0.15 | Opening → ending window candidates (0.25) |
+| --- | ---: | ---: | ---: |
+| *Inside Out 2* (Disney player) | 39 | 48 | 17 → 10 |
+| *Frozen 2* (Disney player) | 8 | 16 | 5 → 1 |
+| *Zootopia 2* (Disney player) | 22 | 26 | 9 → 3 |
+| *Barbie* (Apple preview) | 30 | See JSON | 7 → 13 |
+| *Spider-Man: No Way Home* (Apple preview) | 34 | See JSON | 10 → 12 |
+| *Dune: Part Two* (Apple preview) | 25 | See JSON | 11 → 6 |
+| *The Force Awakens* (Disney player) | 10 | 23 | 4 → 0 |
+
+The unusually large detection-threshold change for *The Force Awakens*
+illustrates that scene-difference thresholds affect comparisons. The selected
+*Barbie* and *Spider-Man* Apple preview endings show more candidate events than
+their beginnings, while several Disney-player samples show the opposite. This
+is a **sampling observation**, not proof of a universal editing formula or
+a difference in the studios' creativity. Source editions, source quality,
+letterboxing, flashes, cuts and changing screen content can confound counts.
+
+For future Kumiki research, the next statistically useful step is to acquire
+and verify **more full-runtime official trailer editions**, then manually
+review ambiguous cuts and timecode character-action/lighting hypotheses.
+Do not generalize the current selected-window averages to a trailer's unseen
+sections or infer viewer retention and conversion from them.
+
 ## Cross-studio comparison questions
 
 | Pair | Controlled question for future source-verified analysis | Why this matters to Kumiki |
