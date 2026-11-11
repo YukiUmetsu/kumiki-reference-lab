@@ -184,6 +184,43 @@ def evaluate_subject_boxes(predictions: dict[str, Any],
     }
 
 
+
+def create_subject_box_label_template(detection_path: Path, out: Path) -> Path:
+    """Create a deliberately UNAPPROVED human label skeleton for each sampled PTS.
+
+    Empty boxes mean labels are not yet supplied, never that the frame is empty.
+    """
+    if out.exists() or out.is_symlink():
+        raise ValueError("human label template destination must be a new file")
+    signature = file_signature(detection_path)
+    predictions = load_subject_detections(detection_path)
+    template = {
+        "schemaVersion": GROUND_TRUTH_VERSION,
+        "sourceSha256": predictions["sourceSha256"],
+        "sourceStreamIndex": predictions["sourceStreamIndex"],
+        "sourceTimebase": predictions["sourceTimebase"],
+        "reviewer": {"kind": "human", "id": "unassigned"},
+        "coverageDeclaration": "pending-review",
+        "frames": [
+            {"sourcePts": item["sourcePts"], "subjects": []}
+            for item in predictions["frames"]
+        ],
+    }
+    require_unchanged(detection_path, signature)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=".kumiki-box-labels-", dir=out.parent) as temp:
+        staging = Path(temp) / "subject-box-labels.json"
+        staging.write_text(
+            json.dumps(template, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
+            encoding="utf-8")
+        require_unchanged(detection_path, signature)
+        if out.exists() or out.is_symlink():
+            raise ValueError("human label template output became occupied")
+        os.replace(staging, out)
+    return out
+
+
+
 def run_subject_box_benchmark(source: Path, detection_path: Path,
                               ground_truth_path: Path, out: Path, *,
                               min_iou: float = 0.5,
