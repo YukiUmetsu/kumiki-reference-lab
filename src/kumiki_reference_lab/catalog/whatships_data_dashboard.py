@@ -64,9 +64,15 @@ def _project_numeric(artifacts: list[dict[str, Any]], expected_sha: str) -> dict
                 or cuts != sorted(set(cuts))
                 or any(type(p) is not int for p in cuts)):
             raise ValueError("invalid measured cut timestamps or pair counts")
+        inventory = scan.get("sourcePtsFramesSeenInInventory")
+        if inventory is not None:
+            inventory = _count(inventory, "source PTS frame inventory", 1000000)
+            if inventory < frame_count:
+                raise ValueError("source inventory cannot be smaller than decoded samples")
         windows.append({
             "startSeconds": item["startSeconds"], "endSeconds": item["endSeconds"],
-            "sampledFrames": frame_count, "cutCandidates": len(cuts),
+            "sampledFrames": frame_count, "inventoriedFrames":inventory,
+            "cutCandidates": len(cuts),
             "cutCandidatePts": cuts,
             "meanDisplayLuma": _fraction(
                 summary.get("meanSampledDisplayLumaProxy"), "display luma"),
@@ -149,6 +155,7 @@ def build_whatships_browser(
                         "startSeconds":w["startSeconds"],
                         "endSeconds":w["endSeconds"],
                         "sampledFrames":len(w["sampledFrames"]),
+                        "inventoriedFrames":w["scan"].get("sourcePtsFramesSeenInInventory"),
                         "cutCandidates":len(w["cutCandidatePts"]),
                         "meanDisplayLuma":w["sampledWindowSummary"]["meanSampledDisplayLumaProxy"],
                         "meanSaturation":w["sampledWindowSummary"]["meanSampledSaturationProxy"],
@@ -301,8 +308,10 @@ if(x.visibleMoments.length){
  }
 }
 if(x.numeric){out.append(el("h3","Sampled original-source video windows"));
-const t=el("table"),head=el("tr");for(const name of ["Time (seconds)","Frames","Cut candidates","Display luma","Saturation","Within-shot RGB change"])head.append(el("th",name));t.append(head);
-for(const w of x.numeric.windows){const row=el("tr");for(const val of [w.startSeconds+"–"+w.endSeconds,w.sampledFrames,w.cutCandidates,fmt(w.meanDisplayLuma),fmt(w.meanSaturation),fmt(w.withinShotRgbChange)])row.append(el("td",val));t.append(row);}out.append(t);
+const t=el("table"),head=el("tr");for(const name of ["Time (seconds)","Sampled frames","PTS inventory","Cut candidates","Display luma","Saturation","Within-shot RGB change"])head.append(el("th",name));t.append(head);
+for(const w of x.numeric.windows){const row=el("tr");for(const val of [w.startSeconds+"–"+w.endSeconds,w.sampledFrames,
+w.inventoriedFrames===null?"not recorded":w.inventoriedFrames,
+w.cutCandidates,fmt(w.meanDisplayLuma),fmt(w.meanSaturation),fmt(w.withinShotRgbChange)])row.append(el("td",val));t.append(row);}out.append(t);
 }else out.append(el("p","No original-frame numeric measurements were supplied for this video."));
 byId("modal").showModal();}
 function render(){

@@ -39,5 +39,9 @@
     "The observed cohort is not random; style-frequency figures are not population estimates.",
     "Original-PTS sampled RGB and cut data do not prove camera work, physical lighting or film quality.",
     "A completed character model or numeric probe does not constitute full human review."
-  ]
+  ],
+  "windowsWithVerifiedPtsInventoryCount": 0,
+  "sourcePtsInventoriedFrameCountInThoseWindows": 0,
+  "sourcePtsSampledFrameCountInThoseWindows": 0,
+  "sampledFrameFractionOfInventoriedWindowFrames": null
 }

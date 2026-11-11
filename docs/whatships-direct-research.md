@@ -39,3 +39,7 @@ PYTHONPATH=src python -m unittest tests.test_whatships_direct_measure -v
 ```
 
 The added tests use synthetic source fingerprints, mocked frame decoding and actual repository JSON validation; separate tests exercise the underlying source-PTS FFmpeg integration. The command has not itself measured third-party footage from What Ships without a lawfully available local source.
+
+## Source-PTS frame inventory denominators
+
+Newly measured records store `scan.sourcePtsFramesSeenInInventory` for each sampled window, in addition to every frame's original source PTS. The validated research report aggregates **sampled frames / inventoried frames in those same requested windows**; it does *not* divide by estimated full-video FPS, nor claim continuous footage was examined. Legacy research records without an independently verified inventory omit this denominator, and their fractions remain unknown. Every sample's rational PTS must fall within its declared source window. The catalog-wide number of analyzed videos remains evidence-based, not imputed from metadata.
