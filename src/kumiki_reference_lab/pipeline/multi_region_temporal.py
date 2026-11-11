@@ -90,6 +90,9 @@ def _validate_tracks(data: dict[str, Any], numeric: dict[str, Any],
                     or i >= len(frames)):
                 raise ValueError("multi-region sample crosses a shot or frame boundary")
             seconds = _number(observation.get("decodedSeconds"), "decoded time")
+            if n and (i != samples[-1]["frame"] + 1 or
+                      seconds <= samples[-1]["time"]):
+                raise ValueError("multi-region observations cannot bridge a frame gap")
             if (frames[i].get("frameIndex") != i or
                     abs(seconds - _number(frames[i].get("decodedSeconds"),
                                           "source decoded time")) > .00001):
@@ -100,9 +103,6 @@ def _validate_tracks(data: dict[str, Any], numeric: dict[str, Any],
                         i != track.get("startFrameIndex")):
                     raise ValueError("multi-region seed origin and first frame disagree")
             else:
-                previous = samples[-1]
-                if i != previous["frame"] + 1 or seconds <= previous["time"]:
-                    raise ValueError("multi-region observations cannot bridge a frame gap")
                 if (observation.get("status") != "tracked-screen-region-candidate"
                         or type(observation.get("supportFeatureCount")) is not int
                         or observation["supportFeatureCount"] < 4
