@@ -83,3 +83,7 @@ By default `browse` reads the committed evidence corpus, shows observed video mo
 ## Committed cross-video technique summary
 
 The dated [source-observation technique rollup](../research/analysis/whatships-observed-techniques-2026-11-10.json) reports per-tag frequencies for the nine partially observed videos, per-category counts, and the total 2,861-video catalog denominator. These counts describe **only explicitly recorded visual observations**, not all the indexed films, and cannot support claims about causal virality, lighting frequencies or camera movements. The lightweight GitHub CI recomputes the report from the canonical source records, so editing/adding research observations requires updating this summary in the same commit.
+
+## Soundtrack energy observations
+
+[`whatships-audio-measure`](whatships-audio-energy-research.md) writes a separate `evidence.numericAudio.windows[]` layer of 100 ms decoded PCM RMS/peak digital amplitude and near-silence heuristics, using an authorized local video file. Source media SHA is verified, and only numeric data reach Git. **Audio bucket positions are decoder offsets, not independently verified original video PTS.** This is not beat detection, narrated text, audio-visual synchronization, LUFS, or human-reviewed sound design. The browser and research report show these data separately.
