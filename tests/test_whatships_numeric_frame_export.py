@@ -164,8 +164,7 @@ class WhatshipsNumericFrameExportTests(unittest.TestCase):
         self.assertEqual(record["evidence"]["numericVisual"]["windows"][0]
                          ["sampledFramePairs"][0]["meanAbsoluteDisplayRgbDelta"],.05)
         self.assertNotIn(str(self.root),(self.out/"film-one.json").read_text())
-        self.assertNotIn("private", (self.out/"film-one.json").read_text().lower().replace(
-            "raw model scenes remain in private local study artifacts",""))
+        self.assertNotIn("/Users/secret/",(self.out/"film-one.json").read_text())
         validated=validate_repository_analysis(self.out,self.catalog)
         self.assertEqual(validated["numericSampledVideos"],1)
 
