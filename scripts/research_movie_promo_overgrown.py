@@ -7,6 +7,7 @@ the resulting numeric JSON is staged. Never circumvent DRM or authorization.
 
 from __future__ import annotations
 
+import argparse
 import collections
 import hashlib
 import json
@@ -17,7 +18,7 @@ import subprocess
 import tempfile
 from fractions import Fraction
 from pathlib import Path
-from urllib.parse import urlencode, urlparse
+from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 from scripts.audit_movie_promo_evidence import audit
@@ -31,6 +32,23 @@ INDEX = DATA / "index.json"
 DETAIL = DATA / "overgrown-blender-teaser.json"
 VIDEO_ID = "overgrown-blender-teaser"
 PEERTUBE_ROOT = "https://video.blender.org"
+
+TARGETS = {
+    "overgrown": {
+        "id": "overgrown-blender-teaser",
+        "catalogId": "uncataloged-blender-overgrown-official-teaser",
+        "uuid": "7ad3cbee-fe5f-41c2-93ea-b108986939f4",
+        "title": "OVERGROWN - Blender Feature Film (Teaser)",
+        "sourceEdition": "Blender Studio official PeerTube OVERGROWN feature-film teaser (not a verified YouTube edition)",
+    },
+    "agent327": {
+        "id": "agent-327-barbershop-teaser",
+        "catalogId": "uncataloged-blender-agent327-feature-teaser",
+        "uuid": "264ff760-803e-430e-8d81-15648e904183",
+        "title": "Agent 327: Operation Barbershop",
+        "sourceEdition": "Blender Studio official PeerTube Agent 327: Operation Barbershop feature-film teaser (not a verified YouTube edition)",
+    },
+}
 
 
 def run(*command: str, output: bool = False) -> str:
@@ -117,28 +135,22 @@ def _json_public_publisher(url: str) -> dict:
     return json.loads(payload)
 
 
-def acquire_public_source(directory: Path) -> tuple[Path, dict]:
-    # PeerTube's public, unauthenticated official Blender Open Movies account.
-    # Do not use YouTube downloaders, private accounts, geo circumvention,
-    # DRM workarounds or mirrors.
-    search = PEERTUBE_ROOT + "/api/v1/search/videos?" + urlencode({
-        "search": "OVERGROWN", "count": 20,
-    })
-    results = _json_public_publisher(search).get("data", [])
-    matched = [
-        item for item in results
-        if item.get("name", "").strip().casefold() == "overgrown - blender feature film (teaser)"
-        and (item.get("channel", {}).get("name") == "blender_open_movies"
-             or item.get("channel", {}).get("displayName") == "Blender Open Movies")
-        and isinstance(item.get("uuid"), str)
-    ]
-    if len(matched) != 1:
-        raise ValueError("no unique official Blender Open Movies feature teaser found")
-    uuid = matched[0]["uuid"]
-    source_page = PEERTUBE_ROOT + "/videos/watch/" + uuid
+def acquire_public_source(directory: Path, target: dict) -> tuple[Path, dict]:
+    """Read a known official, public Blender Open Movies PeerTube identity.
+
+    No YouTube downloader, arbitrary host, user cookies or access workaround.
+    """
+    uuid = target["uuid"]
     metadata = _json_public_publisher(PEERTUBE_ROOT + "/api/v1/videos/" + uuid)
-    if metadata.get("uuid") != uuid:
-        raise ValueError("mismatched PeerTube video identity")
+    channel = metadata.get("channel") or {}
+    privacy = metadata.get("privacy") or {}
+    if (metadata.get("uuid") != uuid
+            or metadata.get("name", "").strip().casefold() != target["title"].casefold()
+            or (channel.get("name") != "blender_open_movies"
+                and channel.get("displayName") != "Blender Open Movies")
+            or privacy.get("id") != 1):
+        raise ValueError("public Blender Open Movies publisher identity mismatch")
+    source_page = PEERTUBE_ROOT + "/videos/watch/" + uuid
     files = list(metadata.get("files", []))
     for playlist in metadata.get("streamingPlaylists", []):
         files.extend(playlist.get("files", []))
@@ -156,35 +168,38 @@ def acquire_public_source(directory: Path) -> tuple[Path, dict]:
             continue
         eligible.append((abs(res_id - 480), source_url))
     if not eligible:
-        raise ValueError("official PeerTube film teaser offers no bounded public file")
+        raise ValueError("official Blender PeerTube source has no bounded public file")
     eligible.sort(key=lambda row: row[0])
-    target = directory / (VIDEO_ID + ".mp4")
+    original = directory / (target["id"] + ".mp4")
     request = Request(eligible[0][1], headers={"Accept": "video/*"})
     total = 0
     with urlopen(request, timeout=90) as response:
         if not _publisher_host(response.geturl()):
-            raise ValueError("publisher video redirected to unapproved host")
-        with target.open("wb") as outfile:
+            raise ValueError("publisher media redirected outside the approved domain")
+        with original.open("wb") as outfile:
             while chunk := response.read(1024 * 1024):
                 total += len(chunk)
                 if total > 200 * 1024 * 1024:
-                    raise ValueError("public teaser exceeds 200 MiB safety budget")
+                    raise ValueError("publisher media exceeds 200 MiB safety budget")
                 outfile.write(chunk)
     if total < 100_000:
         raise ValueError("publisher returned no usable promotional media")
-    return target, {
+    return original, {
         "sourceTrackId": uuid,
         "officialPlayerUrl": source_page,
-        "sourceEdition": "Blender Studio official PeerTube OVERGROWN feature-film teaser (not a verified YouTube edition)",
+        "sourceEdition": target["sourceEdition"],
     }
 
 
-def generate() -> None:
-    if DETAIL.exists():
+def generate(target_key: str = "overgrown") -> None:
+    target = TARGETS[target_key]
+    video_id = target["id"]
+    detail_path = DATA / (video_id + ".json")
+    if detail_path.exists():
         raise FileExistsError("refusing to overwrite previously measured film")
     index = json.loads(INDEX.read_text(encoding="utf-8"))
-    if any(v.get("id") == VIDEO_ID for v in index["videos"]):
-        raise ValueError("already indexed: " + VIDEO_ID)
+    if any(v.get("id") == video_id for v in index["videos"]):
+        raise ValueError("already indexed: " + video_id)
 
     with tempfile.TemporaryDirectory(prefix="kumiki-movie-research-") as temporary:
         temp = Path(temporary)
@@ -192,7 +207,7 @@ def generate() -> None:
         runs_root = temp / "runs"
         media.mkdir()
         runs_root.mkdir()
-        original, edition = acquire_public_source(media)
+        original, edition = acquire_public_source(media, target)
         duration, resolution = media_info(original)
         original_sha = sha256_file(original)
         offsets = {
@@ -203,8 +218,8 @@ def generate() -> None:
         if offsets["middle"] < 20 or offsets["ending"] - offsets["middle"] < 20:
             raise ValueError("sample windows overlap or exceed the original")
         plan = {
-            "id": VIDEO_ID,
-            "catalogId": "uncataloged-blender-overgrown-official-teaser",
+            "id": video_id,
+            "catalogId": target["catalogId"],
             "officialPlayerUrl": edition["officialPlayerUrl"],
             "sourceTrackId": edition["sourceTrackId"],
             "sourceEdition": edition["sourceEdition"],
@@ -215,7 +230,7 @@ def generate() -> None:
             "windows": [],
         }
         for name, offset in offsets.items():
-            slug = VIDEO_ID + ("" if name == "opening" else "-" + name)
+            slug = video_id + ("" if name == "opening" else "-" + name)
             clip = media / (slug + ".mp4")
             if name != "opening":
                 run("ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
@@ -260,10 +275,10 @@ def generate() -> None:
             "source-hashed movie promotions; not whole-trailer coverage."
         )
         index["method"] += (
-            " Additional OVERGROWN official Blender Studio public PeerTube feature "
-            "film teaser was downloaded, source-hashed, measured in three "
-            "bounded windows, then deleted after export. This is distinct "
-            "from Blender Studio YouTube editions."
+            f" Additional {target['title']} official Blender Open Movies public "
+            "PeerTube teaser was downloaded, source-hashed, measured in three "
+            "bounded windows, and deleted after numeric export. PeerTube edition "
+            "identity is not assumed identical to alternate YouTube uploads."
         )
         index["mediaCleanupStatus"] = "verified-deleted-after-export"
         # Fail closed while the temporary footage still exists: nothing is
@@ -274,19 +289,23 @@ def generate() -> None:
                                 encoding="utf-8")
         staged_detail.write_text(json.dumps(detail, indent=2, ensure_ascii=False) + "\n",
                                  encoding="utf-8")
-        DETAIL.write_bytes(staged_detail.read_bytes())
+        detail_path.write_bytes(staged_detail.read_bytes())
         INDEX.write_bytes(staged_index.read_bytes())
         issues = audit(DATA)
         if issues:
             raise ValueError("evidence integrity audit failed: " + "; ".join(issues))
-        print(f"analyzed {VIDEO_ID}: sourceSHA256={original_sha}, "
+        print(f"analyzed {video_id}: sourceSHA256={original_sha}, "
               f"duration={duration:.3f}, windows=3", flush=True)
 
     # TemporaryDirectory has been removed before any file can be git-staged.
-    # Source footage is gone; regenerate every dependent report atomically.\n    write_reports(DATA)
+    # Media has been deleted; regenerate and verify all dependent numeric reports.
+    write_reports(DATA)
     assert not list(DATA.glob("*.mp4"))
     print("all temporary audio/video/frame media deleted; numeric-only evidence ready")
 
 
 if __name__ == "__main__":
-    generate()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--target", choices=sorted(TARGETS), required=True,
+                        help="explicit, source-identified Blender publisher film")
+    generate(parser.parse_args().target)
