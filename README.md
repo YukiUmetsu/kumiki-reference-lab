@@ -72,6 +72,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Subject detection accuracy evaluation (new):** [`character-labels-template` and `evaluate-character-detections`](docs/subject-box-ground-truth-benchmark.md) support explicit human labels on every sampled original-PTS frame, with source-verified per-category precision, recall, F1 and matched IoU. This reveals missed characters, not just incorrect model boxes. Empty pending labels cannot silently count as ground truth; metrics are limited to the reviewed sample and do not certify model generalization.
 
+**Real-media character pipeline smoke:** [two-second synthetic FFmpeg end-to-end test](docs/real-media-character-smoke.md) verifies that local source-PTS media decoding, detector-to-tracklet handoff, character descriptions, interaction abstention, all QA galleries, and atomic rollback work against actual FFmpeg frames. Only the local vision model responses are mocked; this does **not** establish native Mac model accuracy.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
