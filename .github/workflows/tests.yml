@@ -28,6 +28,7 @@ jobs:
           python -m unittest tests.test_online_video_study -q
           python -m unittest tests.test_agent_frame_review -q
           python -m unittest tests.test_online_temporal -q
+          python -m unittest tests.test_motion_timing -q
           python -m unittest tests.test_cinematic_intelligence -q
           python -m unittest tests.test_movie_promo_evidence -q
           python -m unittest tests.test_blender_publisher_promo -q
