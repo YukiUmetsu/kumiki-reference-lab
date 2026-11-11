@@ -1,0 +1,413 @@
+{
+  "schemaVersion": "kumiki.movie-promotion-measurements.v1",
+  "retrievedOn": "2026-11-10",
+  "analyzedOn": "2026-11-10",
+  "method": "Official Disney public-player MP4 sources (H.264/AAC, 400-480p); three selected 20-second windows per trailer analyzed with kumiki-ref study-reference. Middle and ending windows were temporarily decoded and re-encoded with FFmpeg, each linked to its original source offset. Opening windows used source MP4s directly.",
+  "rightsStatus": "review-required",
+  "videos": [
+    {
+      "id": "inside-out-2",
+      "officialPlayerUrl": "https://video.disney.com/watch/inside-out-2-official-trailer-61315e19985f9ebd6b4f2a72",
+      "sourceSha256": "ce09522b50ccb39bb85e50f8b66381e44cf97d3722ad47cc3b8efae8b069fad8",
+      "sourceDurationSeconds": 144.644645,
+      "sourceResolution": [
+        956,
+        400
+      ],
+      "windows": [
+        {
+          "window": "opening",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "windowSourceSha256": "ce09522b50ccb39bb85e50f8b66381e44cf97d3722ad47cc3b8efae8b069fad8",
+          "cutCandidateCount": 17,
+          "observedInterCutIntervalCount": 16,
+          "medianInterCandidateGapSeconds": 0.938,
+          "audioLevelAttackCandidateCount": 3,
+          "meanSampledLumaProxy": 0.2914,
+          "meanSampledSaturation": 0.5319,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 9,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "insufficient-consensus": 1,
+            "cut-boundary": 10
+          },
+          "cutCandidateCountAtThreshold015": 22
+        },
+        {
+          "window": "middle",
+          "sourceOffsetSeconds": 62,
+          "scanSeconds": 20,
+          "windowSourceSha256": "fe319caf3a9640a1a30dbd36eb95538706b8ae4e5b1ebe4e5d44c2a2889dd292",
+          "cutCandidateCount": 12,
+          "observedInterCutIntervalCount": 11,
+          "medianInterCandidateGapSeconds": 1.168,
+          "audioLevelAttackCandidateCount": 6,
+          "meanSampledLumaProxy": 0.3531,
+          "meanSampledSaturation": 0.5463,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 11,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "single-image-translation-candidate": 3,
+            "cut-boundary": 8
+          },
+          "cutCandidateCountAtThreshold015": 13
+        },
+        {
+          "window": "ending",
+          "sourceOffsetSeconds": 124,
+          "scanSeconds": 20,
+          "windowSourceSha256": "2fbc37a225bdd91994dd774f9f4ecf74bd0894314cb9116dc5e4196e9702ad64",
+          "cutCandidateCount": 10,
+          "observedInterCutIntervalCount": 9,
+          "medianInterCandidateGapSeconds": 1.668,
+          "audioLevelAttackCandidateCount": 8,
+          "meanSampledLumaProxy": 0.2665,
+          "meanSampledSaturation": 0.6236,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 15,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "cut-boundary": 7,
+            "single-image-translation-candidate": 3,
+            "insufficient-consensus": 1
+          },
+          "cutCandidateCountAtThreshold015": 13
+        }
+      ],
+      "catalogId": "pixar-inside-out-2-trailer",
+      "sampledCoverageSeconds": 60,
+      "sampledCoverageFraction": 0.4148
+    },
+    {
+      "id": "frozen-2",
+      "officialPlayerUrl": "https://video.disney.com/watch/frozen-2-official-trailer-58b0e63cfe2f4ebd6b4f2a72",
+      "sourceSha256": "dca093bbb0e1b9afb28885d3a092083afa2ee2b7afcaca617f8efa484046cdaa",
+      "sourceDurationSeconds": 113.029696,
+      "sourceResolution": [
+        956,
+        400
+      ],
+      "windows": [
+        {
+          "window": "opening",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "windowSourceSha256": "dca093bbb0e1b9afb28885d3a092083afa2ee2b7afcaca617f8efa484046cdaa",
+          "cutCandidateCount": 5,
+          "observedInterCutIntervalCount": 4,
+          "medianInterCandidateGapSeconds": 1.752,
+          "audioLevelAttackCandidateCount": 0,
+          "meanSampledLumaProxy": 0.0362,
+          "meanSampledSaturation": 0.1153,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 5,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "insufficient-consensus": 7,
+            "cut-boundary": 4
+          },
+          "cutCandidateCountAtThreshold015": 8
+        },
+        {
+          "window": "middle",
+          "sourceOffsetSeconds": 47,
+          "scanSeconds": 20,
+          "windowSourceSha256": "a6bcff50a9626b1c10a27abafbd7473b70802cdd82baea7b17dcee1ff9477640",
+          "cutCandidateCount": 2,
+          "observedInterCutIntervalCount": 1,
+          "medianInterCandidateGapSeconds": 2.586,
+          "audioLevelAttackCandidateCount": 0,
+          "meanSampledLumaProxy": 0.0997,
+          "meanSampledSaturation": 0.5678,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 19,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "insufficient-consensus": 9,
+            "cut-boundary": 2
+          },
+          "cutCandidateCountAtThreshold015": 5
+        },
+        {
+          "window": "ending",
+          "sourceOffsetSeconds": 93,
+          "scanSeconds": 20,
+          "windowSourceSha256": "20eed464e2a68269109cf35a633768a0a1963f8e10d0aa9b4f8c8758c7fee890",
+          "cutCandidateCount": 1,
+          "observedInterCutIntervalCount": 0,
+          "medianInterCandidateGapSeconds": null,
+          "audioLevelAttackCandidateCount": 1,
+          "meanSampledLumaProxy": 0.1189,
+          "meanSampledSaturation": 0.3196,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 18,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "insufficient-consensus": 6,
+            "cut-boundary": 1,
+            "single-image-translation-candidate": 2,
+            "ambiguous-dominant-group": 2
+          },
+          "cutCandidateCountAtThreshold015": 3
+        }
+      ],
+      "catalogId": "disney-frozen-2-trailer",
+      "sampledCoverageSeconds": 60,
+      "sampledCoverageFraction": 0.5308
+    },
+    {
+      "id": "moana-2",
+      "officialPlayerUrl": "https://video.disney.com/watch/moana-2-official-trailer-61f4bc35ea7c5dea2c651fcc",
+      "sourceSha256": "99fa5ecf395748c7e1626831669a47c948473f839d303b7f4212d6efbc893e96",
+      "sourceDurationSeconds": 130.255255,
+      "sourceResolution": [
+        960,
+        480
+      ],
+      "windows": [
+        {
+          "window": "opening",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "windowSourceSha256": "99fa5ecf395748c7e1626831669a47c948473f839d303b7f4212d6efbc893e96",
+          "cutCandidateCount": 11,
+          "observedInterCutIntervalCount": 10,
+          "medianInterCandidateGapSeconds": 1.022,
+          "audioLevelAttackCandidateCount": 1,
+          "meanSampledLumaProxy": 0.3433,
+          "meanSampledSaturation": 0.3807,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 13,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "insufficient-consensus": 3,
+            "cut-boundary": 8
+          },
+          "cutCandidateCountAtThreshold015": 16
+        },
+        {
+          "window": "middle",
+          "sourceOffsetSeconds": 55,
+          "scanSeconds": 20,
+          "windowSourceSha256": "d6464e555ab77abdce9553a7ceb0d1bdd2bbd857996d3cbafe6a7f1ee8cecb6f",
+          "cutCandidateCount": 9,
+          "observedInterCutIntervalCount": 8,
+          "medianInterCandidateGapSeconds": 1.793,
+          "audioLevelAttackCandidateCount": 3,
+          "meanSampledLumaProxy": 0.2677,
+          "meanSampledSaturation": 0.4828,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 14,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "cut-boundary": 7,
+            "single-image-translation-candidate": 3,
+            "insufficient-consensus": 1
+          },
+          "cutCandidateCountAtThreshold015": 10
+        },
+        {
+          "window": "ending",
+          "sourceOffsetSeconds": 110,
+          "scanSeconds": 20,
+          "windowSourceSha256": "7db5dab9e8fa6e9ada21078e584265670560024376b50d7bbf10876c27ebf26b",
+          "cutCandidateCount": 5,
+          "observedInterCutIntervalCount": 4,
+          "medianInterCandidateGapSeconds": 1.543,
+          "audioLevelAttackCandidateCount": 2,
+          "meanSampledLumaProxy": 0.236,
+          "meanSampledSaturation": 0.2921,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 17,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "cut-boundary": 3,
+            "single-image-translation-candidate": 4,
+            "insufficient-consensus": 3,
+            "multiple-image-translations": 1
+          },
+          "cutCandidateCountAtThreshold015": 7
+        }
+      ],
+      "catalogId": "disney-moana-2-trailer",
+      "sampledCoverageSeconds": 60,
+      "sampledCoverageFraction": 0.4606
+    },
+    {
+      "id": "infinity-war",
+      "officialPlayerUrl": "https://video.disney.com/watch/marvel-studios-avengers-infinity-war-official-trailer-55f1f6dd0285c80766ffcd1e",
+      "sourceSha256": "d80396433e9bb5d9329b979c7bca610736a54ee804152a1b99295b03ec35952f",
+      "sourceDurationSeconds": 144.144144,
+      "sourceResolution": [
+        960,
+        400
+      ],
+      "windows": [
+        {
+          "window": "opening",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "windowSourceSha256": "d80396433e9bb5d9329b979c7bca610736a54ee804152a1b99295b03ec35952f",
+          "cutCandidateCount": 2,
+          "observedInterCutIntervalCount": 1,
+          "medianInterCandidateGapSeconds": 1.919,
+          "audioLevelAttackCandidateCount": 0,
+          "meanSampledLumaProxy": 0.124,
+          "meanSampledSaturation": 0.3729,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 16,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "insufficient-consensus": 7,
+            "single-image-translation-candidate": 2,
+            "cut-boundary": 2
+          },
+          "cutCandidateCountAtThreshold015": 5
+        },
+        {
+          "window": "middle",
+          "sourceOffsetSeconds": 62,
+          "scanSeconds": 20,
+          "windowSourceSha256": "15d25a4fcd30006b3c8388e68a2b717288326e05cb5090e02ed21444e9ce685d",
+          "cutCandidateCount": 9,
+          "observedInterCutIntervalCount": 8,
+          "medianInterCandidateGapSeconds": 1.272,
+          "audioLevelAttackCandidateCount": 0,
+          "meanSampledLumaProxy": 0.1918,
+          "meanSampledSaturation": 0.3042,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 12,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "cut-boundary": 5,
+            "insufficient-consensus": 4,
+            "multiple-image-translations": 1,
+            "ambiguous-dominant-group": 1
+          },
+          "cutCandidateCountAtThreshold015": 11
+        },
+        {
+          "window": "ending",
+          "sourceOffsetSeconds": 124,
+          "scanSeconds": 20,
+          "windowSourceSha256": "2a73d84754e43f6aeb0604c175a4947694f832b04268c6863aa040fe9ff97d06",
+          "cutCandidateCount": 2,
+          "observedInterCutIntervalCount": 1,
+          "medianInterCandidateGapSeconds": 2.211,
+          "audioLevelAttackCandidateCount": 0,
+          "meanSampledLumaProxy": 0.044,
+          "meanSampledSaturation": 0.3229,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 17,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "insufficient-consensus": 6,
+            "single-image-translation-candidate": 3,
+            "cut-boundary": 2
+          },
+          "cutCandidateCountAtThreshold015": 3
+        }
+      ],
+      "catalogId": "marvel-infinity-war-first-trailer",
+      "sampledCoverageSeconds": 60,
+      "sampledCoverageFraction": 0.4163
+    },
+    {
+      "id": "endgame",
+      "officialPlayerUrl": "https://video.disney.com/watch/marvel-studios-avengers-endgame-official-trailer-5840cf6e5b0ccebd6b4f2a72",
+      "sourceSha256": "1073b09a9aaf09619c0b8585f753f60f3398f52934b0aa29d2db8f34d562f46d",
+      "sourceDurationSeconds": 146.146146,
+      "sourceResolution": [
+        960,
+        400
+      ],
+      "windows": [
+        {
+          "window": "opening",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "windowSourceSha256": "1073b09a9aaf09619c0b8585f753f60f3398f52934b0aa29d2db8f34d562f46d",
+          "cutCandidateCount": 4,
+          "observedInterCutIntervalCount": 3,
+          "medianInterCandidateGapSeconds": 3.378,
+          "audioLevelAttackCandidateCount": 2,
+          "meanSampledLumaProxy": 0.2089,
+          "meanSampledSaturation": 0.1974,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 13,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "single-image-translation-candidate": 3,
+            "insufficient-consensus": 4,
+            "cut-boundary": 4
+          },
+          "cutCandidateCountAtThreshold015": 4
+        },
+        {
+          "window": "middle",
+          "sourceOffsetSeconds": 63,
+          "scanSeconds": 20,
+          "windowSourceSha256": "4a4447b40052d3c495a38220fcb54c5dad07cdf127f7be15cd9c2936af689a23",
+          "cutCandidateCount": 2,
+          "observedInterCutIntervalCount": 1,
+          "medianInterCandidateGapSeconds": 1.543,
+          "audioLevelAttackCandidateCount": 0,
+          "meanSampledLumaProxy": 0.1903,
+          "meanSampledSaturation": 0.2122,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 18,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "insufficient-consensus": 7,
+            "cut-boundary": 1,
+            "single-image-translation-candidate": 2,
+            "multiple-image-translations": 1
+          },
+          "cutCandidateCountAtThreshold015": 3
+        },
+        {
+          "window": "ending",
+          "sourceOffsetSeconds": 126,
+          "scanSeconds": 20,
+          "windowSourceSha256": "25bc5a57a9b36f33ed855310a61d9bc2550cd309599e1ba901d26248739b76f4",
+          "cutCandidateCount": 5,
+          "observedInterCutIntervalCount": 4,
+          "medianInterCandidateGapSeconds": 1.71,
+          "audioLevelAttackCandidateCount": 1,
+          "meanSampledLumaProxy": 0.1068,
+          "meanSampledSaturation": 0.3453,
+          "appearanceFrameSamples": 12,
+          "motionMeasuredPairs": 15,
+          "motionSampledPairs": 23,
+          "sparsePairStatuses": {
+            "single-image-translation-candidate": 2,
+            "insufficient-consensus": 4,
+            "cut-boundary": 5
+          },
+          "cutCandidateCountAtThreshold015": 7
+        }
+      ],
+      "catalogId": "marvel-endgame-trailer",
+      "sampledCoverageSeconds": 60,
+      "sampledCoverageFraction": 0.4105
+    }
+  ],
+  "detectorThresholds": [
+    0.25,
+    0.15
+  ],
+  "scope": "15 non-overlapping 20-second windows; sampled coverage only, not complete trailer. No manual verification of automated cut or audio-onset candidates.",
+  "caveats": [
+    "FFmpeg scene-difference candidates are not confirmed edits and can react to motion, effects and flashes; threshold sensitivity is reported.",
+    "Display luma and saturation are sampled, encoded-frame proxies rather than light-rig measurements or footage-wide statistics.",
+    "Image translation and sparse optical-flow output represent 2D image-plane evidence, not physical camera motion.",
+    "Audio level attacks use conservative thresholds and do not classify dialogue, music, sound effects, speaker identities or rhythm.",
+    "Middle and ending windows are FFmpeg re-encodes; their color, audio and scene-difference measurements can deviate slightly from the original files.",
+    "Unobserved portions of each trailer must not be represented by these sampled-window metrics.",
+    "The official videos and their extracted frames remain inspiration-only; copyright reuse, redistribution and training rights are not asserted."
+  ],
+  "mediaCleanupStatus": "verified-deleted-after-export"
+}

@@ -102,7 +102,7 @@ def analyze_audio_levels(source: Path, *, seconds: int = 10,
         "maxFrameBudget": max_frames,
         "levelUnits": "dBFS-relative-to-decoded-audio-full-scale",
         "coverage": "bounded-first-audio-stream-not-necessarily-full-video",
-        "limits": "FFmpeg decoded-frame RMS and peak levels, not music beats, speech, objective silence, original production mix, quality, semantic SFX or verified A/V sync.",
+        "limits": "FFmpeg decoded-frame RMS and peak levels, not music beats, speech, objective silence, original production mix, quality, semantic SFX or verified A/V sync. Up to four extra strictly later FFmpeg frames at the FFprobe read-interval boundary are excluded after timestamp checks.",
     }
     if timeline["status"] == "no-audio-stream":
         require_unchanged(source, signature)
@@ -112,10 +112,25 @@ def analyze_audio_levels(source: Path, *, seconds: int = 10,
     measured = _read_levels(source, timeline["audioStreamIndex"], seconds,
                             ffmpeg=ffmpeg, max_frames=max_frames)
     originals = timeline["frames"]
-    if len(measured) != len(originals):
+    # FFprobe's -read_intervals ends on a packet boundary, whereas FFmpeg's
+    # -t filters decoded audio through the requested duration. AAC can yield
+    # one or two additional *trailing* decoded frames in the latter. Preserve
+    # strict 1:1 checks for every original frame; never extrapolate missing
+    # frames, and only discard a small, timestamp-verified tail.
+    if not len(originals) <= len(measured) <= len(originals) + 4:
         raise ValueError("FFmpeg audio levels cannot be aligned 1:1 with source frames")
+    if len(measured) > len(originals):
+        previous = Fraction(**originals[-1]["sourceSeconds"])
+        for extra in measured[len(originals):]:
+            try:
+                timestamp = Fraction(Decimal(extra["filterPtsTime"]))
+            except (InvalidOperation, ValueError, ZeroDivisionError) as exc:
+                raise ProbeError("FFmpeg audio filter reported invalid PTS time") from exc
+            if timestamp <= previous or timestamp >= Fraction(seconds) + Fraction(1, timeline["sampleRateHz"]):
+                raise ValueError("FFmpeg extra audio frames are not a valid trailing interval")
+            previous = timestamp
     rows: list[dict[str, Any]] = []
-    for original, measured_frame in zip(originals, measured, strict=True):
+    for original, measured_frame in zip(originals, measured[:len(originals)], strict=True):
         # A filter is free to change its timebase. Compare presentation seconds
         # using the *original* stream clock with <= 1 decoded sample tolerance.
         try:
