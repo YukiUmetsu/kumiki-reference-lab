@@ -52,7 +52,7 @@ def _plan_windows(duration: Any, *, window_seconds: int,
         raise ValueError("source duration could not be interpreted") from None
     if not length.is_finite() or length <= 0:
         raise ValueError("source reported invalid/nonpositive video duration")
-    max_end = min(3600, max(1, int(length)))
+    max_end = max(1, int(min(length, Decimal(3600))))
     span = min(window_seconds, max_end)
     count = min(window_count, max(1, max_end // span))
     stride = span if count == 1 else (max_end-span)//(count-1)
