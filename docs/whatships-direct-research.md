@@ -43,3 +43,20 @@ The added tests use synthetic source fingerprints, mocked frame decoding and act
 ## Source-PTS frame inventory denominators
 
 Newly measured records store `scan.sourcePtsFramesSeenInInventory` for each sampled window, in addition to every frame's original source PTS. The validated research report aggregates **sampled frames / inventoried frames in those same requested windows**; it does *not* divide by estimated full-video FPS, nor claim continuous footage was examined. Legacy research records without an independently verified inventory omit this denominator, and their fractions remain unknown. Every sample's rational PTS must fall within its declared source window. The catalog-wide number of analyzed videos remains evidence-based, not imputed from metadata.
+
+## Incrementally fill the remaining timeline gaps
+
+A film's first analysis contains sparse windows, not continuous coverage. Repeat the original-source-PTS measurement with `--fill-gaps` to add disjoint intervals to the **same** versioned source record:
+
+```bash
+PYTHONPATH=src python -m kumiki_reference_lab whatships-measure \
+  "$HOME/whatships-private/bindings-002/media-bindings.json" \
+  whatships:paper-mono-code --fill-gaps \
+  --window-seconds 10 --window-count 6 --max-samples 12
+```
+
+The planner uses the already saved `[startSeconds,endSeconds)` intervals, selects the largest uncovered gaps, and processes up to six new windows per invocation. It permits short final windows and does not repeat existing windows. Additions must be source-SHA-identical and **strictly nonoverlapping**. Any conflicting or overlapping measurements fail rather than replacing prior evidence. Source records can currently contain up to 64 measured windows; source-relative video time after one hour remains unsupported by the decoder.
+
+When all supported whole-second intervals have been assigned a sampled window, the command reports `no-remaining-whole-second-gaps-within-supported-timeline` without altering the Git worktree. **This does not imply that all frames within those intervals were decoded, or that the film was human reviewed.** Source-PTS inventory counts still distinguish sampled frames from available frames within each interval.
+
+For previous batch exports, `whatships-all sync-analysis --append-numeric-windows --incoming ...` offers the same nonoverlapping merge policy. Do not combine it with `--replace-existing`. Subsequent `git add` and `git commit` remain explicit.
