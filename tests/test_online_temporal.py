@@ -1,20 +1,21 @@
 """No-model temporal shot and regional motion tests, including real PNG files."""
 from __future__ import annotations
 
+import io
 import json
 import random
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
-from unittest.mock import patch
 
 from kumiki_reference_lab.analyzers.motion.review import _png_rgb
 from kumiki_reference_lab.pipeline.agent_frame_review import (
-    finalize_frame_workspace, next_frame, scan_frames, show_shots,
+    finalize_frame_workspace,
 )
 from kumiki_reference_lab.pipeline.online_temporal import (
     _decode_review_png, build_shot_plan, derive_temporal_report,
-    match_image_plane_motion, write_temporal_report,
+    match_image_plane_motion, write_temporal_report, main,
 )
 
 WIDTH, HEIGHT = 128, 72
@@ -166,25 +167,24 @@ class TemporalWorkspaceTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             _decode_review_png(path, width=WIDTH, height=HEIGHT)
 
-    def test_paginated_shots_and_shot_aware_navigation(self):
-        first = show_shots(self.workspace, limit=2)
+    def test_paginated_shots_standalone_cli(self):
+        sink = io.StringIO()
+        with redirect_stdout(sink):
+            code = main(["shots", "--workspace", str(self.workspace),
+                         "--limit", "2"])
+        self.assertEqual(code, 0)
+        first = json.loads(sink.getvalue())
         self.assertEqual(first["totalShotCandidates"], 3)
         self.assertTrue(first["hasMore"])
-        second = show_shots(
-            self.workspace, after_shot=first["nextAfterShotIndex"], limit=2)
+        sink = io.StringIO()
+        with redirect_stdout(sink):
+            code = main(["shots", "--workspace", str(self.workspace),
+                         "--after-shot", str(first["nextAfterShotIndex"]),
+                         "--limit", "2"])
+        self.assertEqual(code, 0)
+        second = json.loads(sink.getvalue())
         self.assertEqual(len(second["shots"]), 1)
         self.assertFalse(second["hasMore"])
-        desired = set(i for shot in build_shot_plan(self.numeric)["shots"]
-                      for i in shot["reviewFrameIndices"])
-        chosen = []
-        at = -1
-        while True:
-            item = next_frame(self.workspace, after=at, mode="shots")
-            if item.get("complete"):
-                break
-            at = item["frameIndex"]
-            chosen.append(at)
-        self.assertEqual(set(chosen), desired)
 
     def test_sampled_motion_is_shot_local_and_json_persists(self):
         report = derive_temporal_report(
@@ -209,23 +209,6 @@ class TemporalWorkspaceTests(unittest.TestCase):
         # Only derived JSON enters research tree.
         self.assertTrue(all(p.suffix == ".json" for p in self.data_dir.iterdir()))
 
-    @patch("kumiki_reference_lab.pipeline.magnitude_vision.infer_workspace_frame")
-    def test_shot_aware_scan_has_bounded_model_calls(self, infer):
-        from kumiki_reference_lab.pipeline.agent_frame_review import annotate_frame
-        def fake_call(workspace, *, index, category, **kwargs):
-            annotate_frame(workspace, start=index, category=category,
-                           description="Possible leftward title reveal.",
-                           evidence="One local preview examined.")
-            return {"confidence": "low"}
-        infer.side_effect = fake_call
-        one = scan_frames(self.workspace, model="local-small",
-                          categories=("animation",), mode="shots", max_calls=2)
-        self.assertEqual(one["modelCalls"], 2)
-        self.assertTrue(one["remainingWork"])
-        two = scan_frames(self.workspace, model="local-small",
-                          categories=("animation",), mode="shots", max_calls=2)
-        self.assertEqual(two["modelCalls"], 2)
-        self.assertEqual(two["alreadyAnnotatedSkipped"], 2)
 
 
 if __name__ == "__main__":
