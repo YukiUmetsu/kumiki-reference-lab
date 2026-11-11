@@ -213,9 +213,15 @@ def measure_whatships_to_repository(
                 if numeric["sourceSha256"] != binding["mediaSha256"]:
                     raise ValueError("cannot fill gaps using a different source video fingerprint")
                 previous_windows = numeric["windows"]
+        # This record has a bounded total number of stored source windows.
+        # Check capacity *before* paying to decode frames that could not persist.
+        from kumiki_reference_lab.catalog.whatships_analysis_store import _MAX_WINDOWS
+        slots = _MAX_WINDOWS - len(previous_windows)
+        if slots <= 0:
+            raise ValueError("per-film source-window evidence limit reached; cannot append")
         windows, requested_fraction = _remaining_windows(
             inspected["video"]["durationSecondsReported"],previous_windows,
-            window_seconds=window_seconds,window_count=window_count)
+            window_seconds=window_seconds,window_count=min(window_count,slots))
     else:
         windows, requested_fraction = _duration_windows(
             inspected["video"]["durationSecondsReported"],

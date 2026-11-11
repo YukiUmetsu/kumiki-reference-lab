@@ -312,6 +312,18 @@ class DirectWhatshipsNumericMeasurementTests(unittest.TestCase):
         self.assertEqual(report["existingMeasuredWindowCount"],2)
         self.assertEqual(report["measuredWindowsAfterRun"],4)
 
+    def test_exhausted_window_capacity_rejects_before_decoding_any_new_frames(self):
+        self.mock_duration="20.0"
+        self.run_mock()
+        before=(self.repository/"film-one.json").read_bytes()
+        self.samples.clear()
+        from kumiki_reference_lab.catalog import whatships_analysis_store
+        with patch.object(whatships_analysis_store,"_MAX_WINDOWS",2):
+            with self.assertRaisesRegex(ValueError,"evidence limit reached"):
+                self.run_mock(fill_gaps=True)
+        self.assertEqual(self.samples,[])
+        self.assertEqual((self.repository/"film-one.json").read_bytes(),before)
+
     def test_append_and_replace_cannot_both_be_enabled(self):
         with self.assertRaisesRegex(ValueError,"invalid local media"):
             self.run_mock(fill_gaps=True,replace_existing=True)
