@@ -1,5 +1,8 @@
 """Unit tests for derived comparisons: only observed, non-overlapping windows."""
 import unittest
+import hashlib
+import json
+from pathlib import Path
 
 from scripts.summarize_movie_promo_evidence import build_comparison
 
@@ -19,6 +22,17 @@ class ComparisonTests(unittest.TestCase):
 
     def build(self):
         return build_comparison(self.index, "a" * 40)
+
+    def test_committed_comparison_matches_index(self):
+        root = Path(__file__).resolve().parents[1]
+        source = root / "research/analysis/movie-promotions/index.json"
+        output = root / "research/analysis/movie-promotions/derived/comparison.v1.json"
+        if not source.exists() or not output.exists():
+            self.skipTest("run against complete repository tree")
+        data = source.read_bytes()
+        sha = hashlib.sha1(b"blob " + str(len(data)).encode("ascii") + b"\\0" + data).hexdigest()
+        expected = build_comparison(json.loads(data), sha)
+        self.assertEqual(json.loads(output.read_text(encoding="utf-8")), expected)
 
     def test_normalized_sample_rates_and_provenance(self):
         row = self.build()["videos"][0]
