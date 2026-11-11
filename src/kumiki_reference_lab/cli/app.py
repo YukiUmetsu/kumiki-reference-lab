@@ -71,6 +71,9 @@ from kumiki_reference_lab.pipeline.subject_detections import run_subject_detecti
 from kumiki_reference_lab.pipeline.subject_tracklet_review import build_subject_tracklet_review
 from kumiki_reference_lab.pipeline.ollama_character_perception import describe_local_characters
 from kumiki_reference_lab.pipeline.local_character_interactions import analyze_local_interactions
+from kumiki_reference_lab.pipeline.interaction_review import (
+    build_interaction_review, summarize_interaction_feedback,
+)
 from kumiki_reference_lab.pipeline.character_vision_review import (
     build_character_vision_review, summarize_character_vision_feedback,
 )
@@ -670,6 +673,22 @@ def build_parser() -> argparse.ArgumentParser:
         help="report human support/rejection verdicts on a source-bound VLM review")
     character_feedback.add_argument("feedback", type=Path, help="filled review-feedback.json")
     character_feedback.add_argument("vision_manifest", type=Path, help="original character-vision.json")
+    interaction_qa = commands.add_parser(
+        "review-character-interactions",
+        help="replay original source PTS frames and red/cyan pair boxes for human interaction review")
+    interaction_qa.add_argument("source", type=Path)
+    interaction_qa.add_argument("report", type=Path, help="subject-tracklets.json")
+    interaction_qa.add_argument("vision_run", type=Path, help="local-character-vision output")
+    interaction_qa.add_argument("interaction_run", type=Path, help="local-character-interactions output")
+    interaction_qa.add_argument("--out", type=Path, required=True, help="new offline gallery")
+    interaction_qa.add_argument("--ffprobe", default="ffprobe")
+    interaction_qa.add_argument("--ffmpeg", default="ffmpeg")
+
+    interaction_feedback = commands.add_parser(
+        "character-interaction-feedback",
+        help="summarize explicit human verdicts on local model pairwise interactions")
+    interaction_feedback.add_argument("feedback", type=Path, help="interaction-feedback.json")
+    interaction_feedback.add_argument("interaction_manifest", type=Path, help="character-interactions.json")
     interactions = commands.add_parser(
         "local-character-interactions",
         help="propose uncertain actor-target motion from two source-PTS-verified frames with local Ollama")
@@ -943,6 +962,16 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "character-vision-feedback":
             print(json.dumps(summarize_character_vision_feedback(
                 args.feedback, args.vision_manifest), ensure_ascii=False,
+                indent=2, sort_keys=True))
+            return 0
+        if args.command == "review-character-interactions":
+            print(build_interaction_review(
+                args.source, args.report, args.vision_run, args.interaction_run,
+                args.out, ffprobe=args.ffprobe, ffmpeg=args.ffmpeg))
+            return 0
+        if args.command == "character-interaction-feedback":
+            print(json.dumps(summarize_interaction_feedback(
+                args.feedback, args.interaction_manifest), ensure_ascii=False,
                 indent=2, sort_keys=True))
             return 0
         if args.command == "local-character-interactions":
