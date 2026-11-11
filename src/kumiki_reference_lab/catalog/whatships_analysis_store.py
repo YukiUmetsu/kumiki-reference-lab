@@ -342,6 +342,188 @@ def export_repository_analysis(
     return out/"index.json"
 
 
+
+def _validate_record(record: Any, sid: str, snapshot_sha: str) -> None:
+    """Validate strict public JSON whitelist, source PTS and evidence semantics."""
+    if (not isinstance(record,dict) or set(record) != {
+            "schemaVersion","sourceId","watchUrl","catalogSnapshotOn",
+            "catalogSnapshotSha256","sourceMediaSha256","coverage",
+            "evidence","limits"} or
+            record["schemaVersion"] != SCHEMA_VERSION or
+            record["sourceId"] != sid or
+            record["catalogSnapshotSha256"] != snapshot_sha or
+            record["watchUrl"] != "https://whatships.com/videos/"+
+                                  sid.removeprefix("whatships:")+"/"):
+        raise ValueError("repository record source identity or approved fields mismatch")
+    if (not isinstance(record["limits"],list) or
+            len(record["limits"]) != 5 or
+            not all(type(s) is str and 15 <= len(s) <= 180
+                    for s in record["limits"])):
+        raise ValueError("analysis record limitations must be explicit and bounded")
+    evidence = record["evidence"]
+    if (not isinstance(evidence,dict) or not evidence or
+            not set(evidence) <= {
+                "browserSpotCheck","numericVisual","characterStudyStatus"}):
+        raise ValueError("unsupported analysis evidence types")
+    coverage = record["coverage"]
+    if (not isinstance(coverage,dict) or
+            coverage != {
+                "hasBrowserSpotCheck":"browserSpotCheck" in evidence,
+                "hasSampledNumericSourceFrames":"numericVisual" in evidence,
+                "hasUnreviewedCharacterJob":"characterStudyStatus" in evidence,
+                "fullFilmReviewed":False,
+            }):
+        raise ValueError("analysis review coverage claims not supported by evidence")
+    if "browserSpotCheck" in evidence:
+        spot = evidence["browserSpotCheck"]
+        if (not isinstance(spot,dict) or set(spot) != {
+                "observedOn","method","coverage","visualTags","visibleMoments",
+                "techniqueHypotheses","sourcePts","evidenceStatus"} or
+                spot["method"] != "browser-player" or
+                spot["coverage"] != "selected-moments-only" or
+                spot["sourcePts"] is not None or
+                spot["evidenceStatus"] !=
+                "browser-moments-observed-no-timestamp-or-complete-film-review" or
+                type(spot["observedOn"]) is not str):
+            raise ValueError("browser observation falsely claims original PTS or full review")
+        for key,limit in (("visualTags",40),("visibleMoments",30),
+                          ("techniqueHypotheses",30)):
+            values = spot[key]
+            if (not isinstance(values,list) or len(values)>limit or
+                    any(type(s) is not str or not 1 <= len(s) <= 1000 for s in values)):
+                raise ValueError("unapproved browser observation text")
+    if "characterStudyStatus" in evidence:
+        item = evidence["characterStudyStatus"]
+        if (not isinstance(item,dict) or set(item) != {"status","detail"} or
+                item["status"] != "completed-unreviewed-model-proposals" or
+                item["detail"] !=
+                "Raw model scenes remain in private local study artifacts; not imported or human certified."):
+            raise ValueError("character status must not embed identities, transcripts, or private models")
+    numeric = evidence.get("numericVisual")
+    if numeric is None:
+        if record["sourceMediaSha256"] is not None:
+            raise ValueError("non-numeric research record cannot assert video bytes were observed")
+        return
+    sha = numeric.get("sourceSha256") if isinstance(numeric,dict) else None
+    if (not isinstance(sha,str) or not re.fullmatch("[0-9a-f]{64}",sha) or
+            sha != record["sourceMediaSha256"] or
+            set(numeric) != {"sourceSha256","windows","evidenceStatus"} or
+            numeric["evidenceStatus"] !=
+            "sampled-original-source-pts-metrics-not-expert-reviewed"):
+        raise ValueError("numeric video evidence is not bound to an actual source fingerprint")
+    windows = numeric["windows"]
+    if not isinstance(windows,list) or not 1 <= len(windows) <= _MAX_WINDOWS:
+        raise ValueError("invalid count of source-PTS numeric windows")
+    def exact_number(value: Any, name: str, limit: float=1.0) -> None:
+        if (type(value) not in (int,float) or not math.isfinite(value) or
+                not 0 <= value <= limit):
+            raise ValueError("unapproved numeric video metric: "+name)
+    def rational(item: Any) -> Fraction:
+        if (not isinstance(item,dict) or set(item) != {"numerator","denominator"}
+                or type(item["numerator"]) is not int or
+                type(item["denominator"]) is not int or item["denominator"] <= 0):
+            raise ValueError("source-PTS rational malformed")
+        return Fraction(item["numerator"],item["denominator"])
+    previous_end = -1
+    for window in windows:
+        if (not isinstance(window,dict) or set(window) != {
+                "startSeconds","endSeconds","scan","cutCandidatePts",
+                "sampledFrames","sampledFramePairs","sampledWindowSummary",
+                "evidenceStatus"} or
+                window["evidenceStatus"] != "source-PTS-RGB-metrics-unreviewed"):
+            raise ValueError("numeric window has unsupported contents")
+        start,end = window["startSeconds"],window["endSeconds"]
+        if (type(start) is not int or type(end) is not int or
+                not 0 <= start < end <= 3600 or not 1 <= end-start <= 30 or
+                start < previous_end):
+            raise ValueError("numeric original source window not ordered/bounded")
+        previous_end=end
+        scan = window["scan"]
+        if (not isinstance(scan,dict) or set(scan) != {
+                "sourceStreamIndex","sourceTimebase","sampledSourcePtsCount",
+                "decoder","cutThreshold","frameWidth","frameHeight"} or
+                type(scan["sourceStreamIndex"]) is not int or
+                not 0 <= scan["sourceStreamIndex"] <= 64 or
+                scan["decoder"] not in (
+                    "verified-seek-original-pts-v1","source-prefix-ordinal-pts-v1")):
+            raise ValueError("numeric decoder/source metadata invalid")
+        timebase = rational(scan["sourceTimebase"])
+        exact_number(scan["cutThreshold"],"cutThreshold")
+        for key,minval,maxval in (("frameWidth",64,320),("frameHeight",36,180)):
+            if type(scan[key]) is not int or not minval<=scan[key]<=maxval:
+                raise ValueError("measured video frame size outside accepted bounds")
+        frames = window["sampledFrames"]
+        pairs = window["sampledFramePairs"]
+        if (not isinstance(frames,list) or not 2 <= len(frames) <= _MAX_SAMPLES or
+                scan["sampledSourcePtsCount"] != len(frames) or
+                not isinstance(pairs,list) or len(pairs) != len(frames)-1):
+            raise ValueError("numeric sampled original-PTS frames/pairs invalid")
+        pts=[]
+        for frame in frames:
+            if (not isinstance(frame,dict) or set(frame) != {
+                    "sourcePts","sourceSeconds","appearance"} or
+                    type(frame["sourcePts"]) is not int or
+                    abs(frame["sourcePts"]) > 2**53 or
+                    rational(frame["sourceSeconds"]) != frame["sourcePts"]*timebase):
+                raise ValueError("numeric frame source PTS/timing unsupported")
+            pts.append(frame["sourcePts"])
+            appearance=frame["appearance"]
+            fields={"meanRgb","meanDisplayLumaProxy","displayLumaStdDev",
+                    "meanSaturationProxy","shadowPixelFraction","brightPixelFraction"}
+            if (not isinstance(appearance,dict) or set(appearance) != fields or
+                    not isinstance(appearance["meanRgb"],list) or
+                    len(appearance["meanRgb"]) != 3):
+                raise ValueError("numeric display appearance schema changed")
+            for key in fields-{"meanRgb"}:
+                exact_number(appearance[key],key)
+            for val in appearance["meanRgb"]:
+                exact_number(val,"meanRgb")
+        if pts != sorted(set(pts)):
+            raise ValueError("numeric original-source-PTS order invalid")
+        cuts=window["cutCandidatePts"]
+        if (not isinstance(cuts,list) or cuts!=sorted(set(cuts)) or
+                any(type(p) is not int or not pts[0]<=p<=pts[-1] for p in cuts)):
+            raise ValueError("numeric cut candidate source PTS invalid")
+        for i,pair in enumerate(pairs):
+            if (not isinstance(pair,dict) or set(pair) != {
+                    "startPts","endPts","sourceDeltaSeconds","status",
+                    "meanAbsoluteDisplayRgbDelta",
+                    "meanAbsoluteDisplayRgbDeltaPerSecond"} or
+                    pair["startPts"] != pts[i] or pair["endPts"] != pts[i+1] or
+                    rational(pair["sourceDeltaSeconds"]) != (pts[i+1]-pts[i])*timebase):
+                raise ValueError("numeric frame pair is not bound to original source PTS")
+            if pair["status"] == "cut-candidate-between-samples":
+                if (pair["meanAbsoluteDisplayRgbDelta"] is not None or
+                        pair["meanAbsoluteDisplayRgbDeltaPerSecond"] is not None):
+                    raise ValueError("cut-spanning pair must abstain")
+            elif pair["status"] == "rgb-image-difference-proxy":
+                exact_number(pair["meanAbsoluteDisplayRgbDelta"],"image delta")
+                exact_number(pair["meanAbsoluteDisplayRgbDeltaPerSecond"],"rate",100000)
+            else:
+                raise ValueError("unapproved camera/motion interpretation")
+        summary=window["sampledWindowSummary"]
+        expected={"cutCandidateCountBetweenFirstAndLastSample",
+                  "cutCandidateRatePerRequestedMinute",
+                  "meanSampledDisplayLumaProxy","meanSampledSaturationProxy",
+                  "meanWithinShotDisplayRgbDelta","withinShotComparedPairs",
+                  "cutSeparatedPairs"}
+        if not isinstance(summary,dict) or set(summary)!=expected:
+            raise ValueError("numeric sampled-window summary unsupported")
+        for key,high in (("cutCandidateCountBetweenFirstAndLastSample",10000),
+                         ("withinShotComparedPairs",24),("cutSeparatedPairs",24)):
+            v=summary[key]
+            if type(v) is not int or not 0<=v<=high:
+                raise ValueError("sampled-window count invalid")
+        if (summary["cutCandidateCountBetweenFirstAndLastSample"]!=len(cuts) or
+                summary["withinShotComparedPairs"]+summary["cutSeparatedPairs"] !=len(pairs)):
+            raise ValueError("numeric summary does not match frame evidence")
+        exact_number(summary["cutCandidateRatePerRequestedMinute"],"cut rate",100000)
+        exact_number(summary["meanSampledDisplayLumaProxy"],"mean luma")
+        exact_number(summary["meanSampledSaturationProxy"],"mean saturation")
+        if summary["meanWithinShotDisplayRgbDelta"] is not None:
+            exact_number(summary["meanWithinShotDisplayRgbDelta"],"RGB delta")
+
+
 def validate_repository_analysis(path: Path, snapshot_path: Path) -> dict[str,Any]:
     """Validate Git-tracked analysis index and source keyed per-video files."""
     if path.is_symlink() or not path.is_dir():
@@ -356,7 +538,7 @@ def validate_repository_analysis(path: Path, snapshot_path: Path) -> dict[str,An
             index.get("sourceLinkedAnalysisCount") != len(index["entries"])):
         raise ValueError("repository analysis index version/count/source mismatch")
     seen = set()
-    browser_count = numeric_count = 0
+    browser_count = numeric_count = character_count = 0
     for item in index["entries"]:
         if (not isinstance(item,dict) or set(item) != {
                 "sourceId","recordPath","evidenceKinds"}):
@@ -374,8 +556,10 @@ def validate_repository_analysis(path: Path, snapshot_path: Path) -> dict[str,An
                 not isinstance(record.get("evidence"),dict) or
                 sorted(record["evidence"]) != item["evidenceKinds"]):
             raise ValueError("analysis record schema/source provenance mismatch")
+        _validate_record(record,sid,index["catalogSnapshotSha256"])
         browser_count += "browserSpotCheck" in record["evidence"]
         numeric_count += "numericVisual" in record["evidence"]
+        character_count += "characterStudyStatus" in record["evidence"]
         numeric = record["evidence"].get("numericVisual")
         if numeric is not None:
             if (numeric.get("sourceSha256") != record["sourceMediaSha256"] or
@@ -386,6 +570,7 @@ def validate_repository_analysis(path: Path, snapshot_path: Path) -> dict[str,An
         raise ValueError("repository catalog snapshot SHA does not match source file")
     if (index.get("browserSpotCheckCount") != browser_count or
             index.get("sampledNumericVideoCount") != numeric_count or
+            index.get("unreviewedCharacterJobCount") != character_count or
             index.get("fullFilmReviewedCount") != 0):
         raise ValueError("repository index misstates observation coverage")
     # Exporter never writes image/media or absolute file paths.
@@ -400,4 +585,142 @@ def validate_repository_analysis(path: Path, snapshot_path: Path) -> dict[str,An
         "browserSpotChecks":browser_count,
         "numericSampledVideos":numeric_count,
         "humanReviewedFullVideos":0,
+    }
+
+
+def _atomic_write_bytes(path: Path, content: bytes) -> None:
+    """Atomically replace one tracked JSON file without a partial text write."""
+    with tempfile.NamedTemporaryFile(
+        prefix=".kumiki-merge-",suffix=".json",dir=path.parent,delete=False
+    ) as handle:
+        temporary = Path(handle.name)
+        try:
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        finally:
+            pass
+    try:
+        os.replace(temporary,path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def sync_repository_analysis(
+    snapshot_path: Path, incoming: Path, root: Path, *,
+    replace_existing: bool = False,
+) -> dict[str,Any]:
+    """Merge an analyzed export into the Git-tracked canonical corpus.
+
+    Missing new layers are appended; existing evidence is never silently
+    replaced/downgraded. Explicit replace is still under Git version control.
+    Prevalidates every input before writing; on errors, restores old bytes.
+    """
+    if type(replace_existing) is not bool or root.resolve() == incoming.resolve():
+        raise ValueError("sync requires a distinct incoming directory and explicit replacement policy")
+    existing_stats = validate_repository_analysis(root,snapshot_path)
+    incoming_stats = validate_repository_analysis(incoming,snapshot_path)
+    original_index = _read_json(root/"index.json")
+    next_index = _read_json(incoming/"index.json")
+    if (original_index["catalogSnapshotSha256"] != next_index["catalogSnapshotSha256"]
+            or original_index["catalogSnapshotOn"] != next_index["catalogSnapshotOn"]
+            or original_index["catalogVideoCount"] != next_index["catalogVideoCount"]):
+        raise ValueError("cannot merge analyses from different catalog snapshots")
+    old = {x["sourceId"]:_read_json(root/x["recordPath"])
+           for x in original_index["entries"]}
+    newer = {x["sourceId"]:_read_json(incoming/x["recordPath"])
+             for x in next_index["entries"]}
+    merged = dict(old)
+    changes = 0
+    for sid,new in newer.items():
+        if sid not in merged:
+            merged[sid] = new
+            changes += 1
+            continue
+        prior = merged[sid]
+        if (new["watchUrl"] != prior["watchUrl"]
+                or new["catalogSnapshotSha256"] != prior["catalogSnapshotSha256"]):
+            raise ValueError("source or catalog identity conflict during analysis sync")
+        combined = dict(prior["evidence"])
+        for kind,layer in new["evidence"].items():
+            if kind in combined and combined[kind] != layer and not replace_existing:
+                raise ValueError("existing source analysis evidence differs; explicit --replace-existing required")
+            combined[kind] = layer
+        numeric = combined.get("numericVisual")
+        media_sha = numeric.get("sourceSha256") if numeric is not None else None
+        if (prior.get("sourceMediaSha256") is not None and
+                media_sha is not None and media_sha != prior["sourceMediaSha256"]
+                and not replace_existing):
+            raise ValueError("numeric evidence switched to different video bytes")
+        new_record = {
+            **prior,
+            "sourceMediaSha256":media_sha,
+            "evidence":combined,
+            "coverage":{
+                "hasBrowserSpotCheck":"browserSpotCheck" in combined,
+                "hasSampledNumericSourceFrames":"numericVisual" in combined,
+                "hasUnreviewedCharacterJob":"characterStudyStatus" in combined,
+                "fullFilmReviewed":False,
+            },
+        }
+        if new_record != prior:
+            merged[sid] = new_record
+            changes += 1
+    new_index = {
+        **original_index,
+        "sourceLinkedAnalysisCount":len(merged),
+        "browserSpotCheckCount":sum("browserSpotCheck" in r["evidence"] for r in merged.values()),
+        "sampledNumericVideoCount":sum("numericVisual" in r["evidence"] for r in merged.values()),
+        "unreviewedCharacterJobCount":sum("characterStudyStatus" in r["evidence"] for r in merged.values()),
+        "fullFilmReviewedCount":0,
+        "entries":[{
+            "sourceId":sid,
+            "recordPath":sid.removeprefix("whatships:")+".json",
+            "evidenceKinds":sorted(merged[sid]["evidence"]),
+        } for sid in sorted(merged)],
+    }
+    # Validate new in-memory records against the same source contracts as
+    # standalone export, before touching the tracked working tree.
+    for sid,rec in merged.items():
+        _validate_record(rec,sid,original_index["catalogSnapshotSha256"])
+    source_signature=file_signature(snapshot_path)
+    index_signature=file_signature(root/"index.json")
+    originals = {
+        root/(sid.removeprefix("whatships:")+".json"):
+            (root/(sid.removeprefix("whatships:")+".json")).read_bytes()
+        for sid in old
+    }
+    originals[root/"index.json"]=(root/"index.json").read_bytes()
+    changed_files=[]
+    try:
+        for sid,rec in merged.items():
+            destination=root/(sid.removeprefix("whatships:")+".json")
+            data=_json_bytes(rec)
+            if destination.exists() and (
+                    destination.is_symlink() or destination.read_bytes()!=originals.get(destination)):
+                raise ValueError("analysis source was edited concurrently before sync")
+            if originals.get(destination)!=data:
+                _atomic_write_bytes(destination,data)
+                changed_files.append(destination)
+        require_unchanged(snapshot_path,source_signature)
+        require_unchanged(root/"index.json",index_signature)
+        _atomic_write_bytes(root/"index.json",_json_bytes(new_index))
+        changed_files.append(root/"index.json")
+        validate_repository_analysis(root,snapshot_path)
+    except Exception:
+        for file in reversed(changed_files):
+            if file in originals:
+                _atomic_write_bytes(file,originals[file])
+            else:
+                file.unlink(missing_ok=True)
+        raise
+    return {
+        "schemaVersion":INDEX_VERSION,
+        "previousVideoEvidenceRecords":len(old),
+        "incomingVideoEvidenceRecords":len(newer),
+        "mergedVideoEvidenceRecords":len(merged),
+        "recordsChangedOrAdded":changes,
+        "sourceSnapshotSha256":original_index["catalogSnapshotSha256"],
+        "humanReviewedFullVideos":0,
+        "note":"Working-tree JSON updated; git add/commit is still required to persist changes.",
     }
