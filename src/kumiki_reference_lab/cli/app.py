@@ -67,6 +67,10 @@ from kumiki_reference_lab.catalog.video_sources import (
     get_source_reference, load_source_references, search_source_references,
     summarize_source_references,
 )
+from kumiki_reference_lab.catalog.directors_library import (
+    collect_latest as collect_directors_library, fetch_public_page,
+    load_snapshot as load_directors_snapshot, summarize_snapshot as summarize_directors_snapshot,
+)
 from kumiki_reference_lab.catalog.visual_styles import (
     load_visual_styles, search_visual_styles, style_family_counts,
 )
@@ -859,6 +863,20 @@ def build_parser() -> argparse.ArgumentParser:
                        choices=("ai", "developer-tools", "design", "motion",
                                 "productivity", "consumer", "hardware", "other"))
     queue.add_argument("--missing-detail-only", action="store_true")
+    directors = commands.add_parser(
+        "directors-library", help="index Directors' Library film-page metadata without downloading media")
+    directors_actions = directors.add_subparsers(dest="directors_action", required=True)
+    directors_snapshot = directors_actions.add_parser("snapshot")
+    directors_snapshot.add_argument("--pages", type=int, default=2,
+                                    help="bounded number of latest-archive pages, 1–5")
+    directors_snapshot.add_argument("--retrieved-on", default=None,
+                                    help="explicit ISO snapshot date, default today (UTC)")
+    directors_snapshot.add_argument("--out", type=Path, required=True,
+                                    help="new immutable .json file under research/analysis/")
+    for action in ("validate", "report"):
+        sub = directors_actions.add_parser(action)
+        sub.add_argument("--snapshot", type=Path,
+                         default=Path("research/analysis/directors-library/index-2026-11-11.json"))
     sources = commands.add_parser(
         "video-sources", help="browse normalized YouTube and What Ships references without media downloads")
     source_actions = sources.add_subparsers(dest="source_action", required=True)
@@ -1194,6 +1212,20 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
+        if args.command == "directors-library":
+            if args.directors_action == "snapshot":
+                from datetime import datetime, timezone
+
+                retrieved_on = args.retrieved_on or datetime.now(timezone.utc).date().isoformat()
+                snapshot = collect_directors_library(
+                    fetch_public_page, pages=args.pages, retrieved_on=retrieved_on)
+                destination = write_json_artifact(args.out.parent, args.out.name, snapshot)
+                print(json.dumps({"snapshot": str(destination), **summarize_directors_snapshot(snapshot)},
+                                 indent=2, sort_keys=True))
+            else:
+                snapshot = load_directors_snapshot(args.snapshot)
+                print(json.dumps(summarize_directors_snapshot(snapshot), indent=2, sort_keys=True))
+            return 0
         if args.command == "film-feedback":
             if args.feedback_action == "init":
                 print(init_film_feedback(
