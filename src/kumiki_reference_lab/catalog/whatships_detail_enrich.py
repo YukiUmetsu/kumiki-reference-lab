@@ -173,6 +173,7 @@ def _call_mcp_get_video(slug: str, *, timeout: int) -> dict[str, Any]:
 def enrich_whatships_details(
     previous_path: Path, out: Path, *, max_details: int = 25,
     delay_seconds: float = 1.5, timeout: int = 25,
+    start_offset: int = 0,
     offline_responses: Path | None = None,
 ) -> Path:
     """Enrich a bounded batch and atomically retain previous + successful detail.
@@ -180,7 +181,8 @@ def enrich_whatships_details(
     Use the resulting new snapshot as --previous on the next invocation.
     Individual failed details remain missing, with their reason in the report.
     """
-    if (type(max_details) is not int or not 1 <= max_details <= 100 or
+    if (type(start_offset) is not int or start_offset < 0 or
+            type(max_details) is not int or not 1 <= max_details <= 100 or
             type(delay_seconds) not in (int, float) or not 1 <= delay_seconds <= 30 or
             type(timeout) is not int or not 5 <= timeout <= 60):
         raise ValueError("enrichment rate/request budgets invalid")
@@ -203,7 +205,9 @@ def enrich_whatships_details(
     # all categories rather than the fastest-growing AI catalog alone.
     outstanding = plan_full_snapshot(
         previous_path, limit=None, missing_detail_only=True)["entries"]
-    todo = outstanding[:max_details]
+    if start_offset > len(outstanding):
+        raise ValueError("detail enrichment start offset exceeds missing-detail queue")
+    todo = outstanding[start_offset:start_offset+max_details]
     by_slug = {row["slug"]: row for row in snapshot["videos"]}
     succeeded, failed = [], []
     for index, entry in enumerate(todo):
@@ -261,6 +265,8 @@ def enrich_whatships_details(
         "remainingIndexOnly": coverage["detailMissingEntries"],
         "liveNetworkUsed": responses is None,
         "requestedLimit": max_details, "minimumDelaySeconds": delay_seconds,
+        "startOffset": start_offset,
+        "nextSuggestedOffset": start_offset+len(failed),
         "methodLimits": [
             "Read-only metadata enrichment, not footage acquisition or visual analysis.",
             "What Ships may modify its MCP protocol; unavailable/mismatched details remain index-only.",
