@@ -144,13 +144,21 @@ def _ollama_chat(images: list[bytes], *, model: str, port: int,
         raise ValueError("local Ollama request failed or timed out") from exc
     finally:
         connection.close()
+    def unique_fields(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("duplicate Ollama response property")
+            result[key] = value
+        return result
     try:
         decoded = json.loads(payload.decode("utf-8"),
+                             object_pairs_hook=unique_fields,
                              parse_constant=lambda value: (_ for _ in ()).throw(ValueError("nonfinite JSON")))
         message = decoded["message"]["content"]
         if type(message) is not str or len(message) > 16384:
             raise ValueError("Ollama returned missing or excessive model text")
-        proposed = json.loads(message,
+        proposed = json.loads(message, object_pairs_hook=unique_fields,
                               parse_constant=lambda value: (_ for _ in ()).throw(ValueError("nonfinite JSON")))
     except (UnicodeError, json.JSONDecodeError, KeyError, TypeError) as exc:
         raise ValueError("Ollama did not return a valid JSON observation") from exc
@@ -230,7 +238,10 @@ def describe_local_characters(
             crop, cw, ch = _crop_rgb(pixels, width, height, detection["box"])
             current_image = _png_rgb(crop, cw, ch)
             prior = previous_by_id.get(tid)
-            paired = bool(prior and 0 < (pts-prior[0])*video_tb <= max_pair_gap_seconds)
+            crosses_cut = bool(prior and any(
+                prior[0] < cut <= pts for cut in report["cutCandidatePts"]))
+            paired = bool(prior and not crosses_cut and
+                          0 < (pts-prior[0])*video_tb <= max_pair_gap_seconds)
             images = [prior[1], current_image] if paired else [current_image]
             prediction = _ollama_chat(images, model=model, port=port,
                                       timeout_seconds=timeout_seconds, previous=paired)
