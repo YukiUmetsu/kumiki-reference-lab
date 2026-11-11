@@ -401,3 +401,141 @@ def validate_repository_analysis(path: Path, snapshot_path: Path) -> dict[str,An
         "numericSampledVideos":numeric_count,
         "humanReviewedFullVideos":0,
     }
+
+
+def _atomic_write_bytes(path: Path, content: bytes) -> None:
+    """Atomically replace one tracked JSON file without a partial text write."""
+    with tempfile.NamedTemporaryFile(
+        prefix=".kumiki-merge-",suffix=".json",dir=path.parent,delete=False
+    ) as handle:
+        temporary = Path(handle.name)
+        try:
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        finally:
+            pass
+    try:
+        os.replace(temporary,path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def sync_repository_analysis(
+    snapshot_path: Path, incoming: Path, root: Path, *,
+    replace_existing: bool = False,
+) -> dict[str,Any]:
+    """Merge an analyzed export into the Git-tracked canonical corpus.
+
+    Missing new layers are appended; existing evidence is never silently
+    replaced/downgraded. Explicit replace is still under Git version control.
+    Prevalidates every input before writing; on errors, restores old bytes.
+    """
+    if type(replace_existing) is not bool or root.resolve() == incoming.resolve():
+        raise ValueError("sync requires a distinct incoming directory and explicit replacement policy")
+    existing_stats = validate_repository_analysis(root,snapshot_path)
+    incoming_stats = validate_repository_analysis(incoming,snapshot_path)
+    original_index = _read_json(root/"index.json")
+    next_index = _read_json(incoming/"index.json")
+    if (original_index["catalogSnapshotSha256"] != next_index["catalogSnapshotSha256"]
+            or original_index["catalogSnapshotOn"] != next_index["catalogSnapshotOn"]
+            or original_index["catalogVideoCount"] != next_index["catalogVideoCount"]):
+        raise ValueError("cannot merge analyses from different catalog snapshots")
+    old = {x["sourceId"]:_read_json(root/x["recordPath"])
+           for x in original_index["entries"]}
+    newer = {x["sourceId"]:_read_json(incoming/x["recordPath"])
+             for x in next_index["entries"]}
+    merged = dict(old)
+    changes = 0
+    for sid,new in newer.items():
+        if sid not in merged:
+            merged[sid] = new
+            changes += 1
+            continue
+        prior = merged[sid]
+        if (new["watchUrl"] != prior["watchUrl"]
+                or new["catalogSnapshotSha256"] != prior["catalogSnapshotSha256"]):
+            raise ValueError("source or catalog identity conflict during analysis sync")
+        combined = dict(prior["evidence"])
+        for kind,layer in new["evidence"].items():
+            if kind in combined and combined[kind] != layer and not replace_existing:
+                raise ValueError("existing source analysis evidence differs; explicit --replace-existing required")
+            combined[kind] = layer
+        numeric = combined.get("numericVisual")
+        media_sha = numeric.get("sourceSha256") if numeric is not None else None
+        if (prior.get("sourceMediaSha256") is not None and
+                media_sha is not None and media_sha != prior["sourceMediaSha256"]
+                and not replace_existing):
+            raise ValueError("numeric evidence switched to different video bytes")
+        new_record = {
+            **prior,
+            "sourceMediaSha256":media_sha,
+            "evidence":combined,
+            "coverage":{
+                "hasBrowserSpotCheck":"browserSpotCheck" in combined,
+                "hasSampledNumericSourceFrames":"numericVisual" in combined,
+                "hasUnreviewedCharacterJob":"characterStudyStatus" in combined,
+                "fullFilmReviewed":False,
+            },
+        }
+        if new_record != prior:
+            merged[sid] = new_record
+            changes += 1
+    new_index = {
+        **original_index,
+        "sourceLinkedAnalysisCount":len(merged),
+        "browserSpotCheckCount":sum("browserSpotCheck" in r["evidence"] for r in merged.values()),
+        "sampledNumericVideoCount":sum("numericVisual" in r["evidence"] for r in merged.values()),
+        "unreviewedCharacterJobCount":sum("characterStudyStatus" in r["evidence"] for r in merged.values()),
+        "fullFilmReviewedCount":0,
+        "entries":[{
+            "sourceId":sid,
+            "recordPath":sid.removeprefix("whatships:")+".json",
+            "evidenceKinds":sorted(merged[sid]["evidence"]),
+        } for sid in sorted(merged)],
+    }
+    # Validate new in-memory records against the same source contracts as
+    # standalone export, before touching the tracked working tree.
+    for sid,rec in merged.items():
+        _validate_record(rec,sid,original_index["catalogSnapshotSha256"])
+    source_signature=file_signature(snapshot_path)
+    index_signature=file_signature(root/"index.json")
+    originals = {
+        root/(sid.removeprefix("whatships:")+".json"):
+            (root/(sid.removeprefix("whatships:")+".json")).read_bytes()
+        for sid in old
+    }
+    originals[root/"index.json"]=(root/"index.json").read_bytes()
+    changed_files=[]
+    try:
+        for sid,rec in merged.items():
+            destination=root/(sid.removeprefix("whatships:")+".json")
+            data=_json_bytes(rec)
+            if destination.exists() and (
+                    destination.is_symlink() or destination.read_bytes()!=originals.get(destination)):
+                raise ValueError("analysis source was edited concurrently before sync")
+            if originals.get(destination)!=data:
+                _atomic_write_bytes(destination,data)
+                changed_files.append(destination)
+        require_unchanged(snapshot_path,source_signature)
+        require_unchanged(root/"index.json",index_signature)
+        _atomic_write_bytes(root/"index.json",_json_bytes(new_index))
+        changed_files.append(root/"index.json")
+        validate_repository_analysis(root,snapshot_path)
+    except Exception:
+        for file in reversed(changed_files):
+            if file in originals:
+                _atomic_write_bytes(file,originals[file])
+            else:
+                file.unlink(missing_ok=True)
+        raise
+    return {
+        "schemaVersion":INDEX_VERSION,
+        "previousVideoEvidenceRecords":len(old),
+        "incomingVideoEvidenceRecords":len(newer),
+        "mergedVideoEvidenceRecords":len(merged),
+        "recordsChangedOrAdded":changes,
+        "sourceSnapshotSha256":original_index["catalogSnapshotSha256"],
+        "humanReviewedFullVideos":0,
+        "note":"Working-tree JSON updated; git add/commit is still required to persist changes.",
+    }
