@@ -21,6 +21,15 @@ PROXIMITY_SECONDS = 0.25
 BIN_SECONDS = 5
 
 
+def _rounded(value: float, digits: int) -> float:
+    """Round consistently with the deterministic JS importer used for this corpus.
+
+    Explicit half-up-at-positive, half-toward-zero-at-negative quantization
+    avoids Python's platform-dependent tie-to-even behavior at decimal ties.
+    """
+    return math.floor((value + 2.220446049250313e-16) * (10 ** digits) + 0.5) / (10 ** digits)
+
+
 def _git_blob_sha(data: bytes) -> str:
     return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
 
@@ -130,12 +139,12 @@ def derive_timed_events(index: dict, details: dict[str, tuple[dict, str]],
                 cut_bins[min(3, int(second // BIN_SECONDS))] += 1
                 nearest = (min(attacks, key=lambda row: (abs(row[1] - second), row[1]))
                            if attacks else None)
-                signed_ms = round((nearest[1] - second) * 1000) if nearest else None
+                signed_ms = _rounded((nearest[1] - second) * 1000, 0) if nearest else None
                 near = nearest is not None and abs(nearest[1] - second) <= PROXIMITY_SECONDS
                 near_count += int(near)
                 cut_events.append({
                     "sourceVideoPts": pts,
-                    "localSeconds": round(second, 6),
+                    "localSeconds": _rounded(second, 6),
                     "nearestAudioAttackDeltaMs": signed_ms,
                     "audioAttackWithin250Ms": near,
                 })
@@ -146,7 +155,7 @@ def derive_timed_events(index: dict, details: dict[str, tuple[dict, str]],
                 rise_events.append({
                     "sourceAudioPts": pts,
                     "localSeconds": round(second, 6),
-                    "measuredRmsRiseDb": round(rise, 4),
+                    "measuredRmsRiseDb": _rounded(rise, 4),
                 })
             intervals = [right[1] - left[1] for left, right in zip(cuts, cuts[1:])]
             windows.append({
@@ -161,7 +170,7 @@ def derive_timed_events(index: dict, details: dict[str, tuple[dict, str]],
                 "audioLevelAttackCandidateCount": len(attacks),
                 "cutCandidatesWithin250MsOfAudioAttack": near_count,
                 "cutCandidateCountsByFiveSecondBin": cut_bins,
-                "medianInteriorCandidateGapSeconds": round(statistics.median(intervals), 6)
+                "medianInteriorCandidateGapSeconds": _rounded(statistics.median(intervals), 6)
                     if intervals else None,
                 "cutEvents": cut_events,
                 "audioAttackEvents": rise_events,
