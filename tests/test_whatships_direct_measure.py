@@ -17,6 +17,7 @@ from kumiki_reference_lab.catalog.whatships_direct_measure import (
     _duration_windows, measure_whatships_to_repository,
 )
 from kumiki_reference_lab.cli.app import main
+from kumiki_reference_lab.catalog.whatships_research_summary import summarize_tracked_whatships_observations
 from tests.test_video_sources import whatships_fixture
 
 
@@ -225,6 +226,19 @@ class DirectWhatshipsNumericMeasurementTests(unittest.TestCase):
                     window_seconds=3,window_count=2,max_samples=5)
         self.assertNotIn("numericVisual",json.loads(
             (self.repository/"film-one.json").read_text())["evidence"])
+
+    def test_source_frame_coverage_rollup_uses_only_measured_window_inventory(self):
+        self.run_mock()
+        report=summarize_tracked_whatships_observations(
+            self.catalog,self.repository)
+        self.assertEqual(report["catalogVideoCount"],2)
+        self.assertEqual(report["sourcePtsSampledFrameCount"],10)
+        self.assertEqual(report["windowsWithVerifiedPtsInventoryCount"],2)
+        self.assertEqual(report["sourcePtsInventoriedFrameCountInThoseWindows"],30)
+        self.assertEqual(report["sourcePtsSampledFrameCountInThoseWindows"],10)
+        self.assertEqual(report["sampledFrameFractionOfInventoriedWindowFrames"],
+                         round(10/30,6))
+        self.assertEqual(report["fullyHumanReviewedVideoCount"],0)
 
     def test_unmodified_second_run_does_not_duplicate_data(self):
         self.run_mock()
