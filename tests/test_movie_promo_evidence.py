@@ -24,6 +24,7 @@ class MoviePromoEvidenceTests(unittest.TestCase):
             "endgame", "zootopia-2", "force-awakens", "barbie",
             "oppenheimer", "spider-man-no-way-home", "dune-part-two",
             "super-mario-bros", "deadpool-wolverine", "overgrown-blender-teaser",
+            "agent-327-barbershop-teaser",
         }
         ids = [video["id"] for video in summary["videos"]]
         self.assertEqual(len(ids), len(set(ids)), "duplicate trailer IDs")

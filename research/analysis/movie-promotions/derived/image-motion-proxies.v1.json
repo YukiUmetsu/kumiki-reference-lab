@@ -1,32 +1,107 @@
 {
   "schemaVersion": "kumiki.movie-promotion-image-motion-proxies.v1",
-  "sourceIndexGitBlobSha": "23692403b40a9fe39068d2ae0faf3e25c80a30fc",
+  "sourceIndexGitBlobSha": "698773a1325044c0551e6caf0e946426f7cdc154",
   "method": "Window-level status counts from the prior 160x90 sampled-frame phase-correlation image-motion analyzer and sparse corner-flow review. Exploratory shift threshold: Euclidean norm of dxNormalized and dyNormalized / measured pair duration >= 0.01 frame fraction per second.",
   "limits": "Not camera-motion frequency, optical flow ground truth, subject activity, shot scale or visual style. Measured pairs are algorithmic correlation candidates on sparse time samples; low-texture/cut-boundary/ambiguous pairs abstain. Not all 20 seconds were observed continuously. Windows are selected, not whole-film coverage. Preview editions may differ.",
   "thresholdFractionPerSecond": 0.01,
   "coverage": {
-    "sourceCount": 14,
-    "windowCount": 42,
-    "sourceWindowSeconds": 840,
-    "imageMotionPairCount": 966,
+    "sourceCount": 15,
+    "windowCount": 45,
+    "sourceWindowSeconds": 900,
+    "imageMotionPairCount": 1035,
     "imageMotionPairStatuses": {
-      "ambiguous-correlation": 24,
-      "cut-boundary": 257,
-      "measured-image-translation": 576,
-      "unobservable-low-texture": 109
+      "ambiguous-correlation": 28,
+      "cut-boundary": 264,
+      "measured-image-translation": 628,
+      "unobservable-low-texture": 115
     },
-    "sparseFlowPairCount": 462,
+    "sparseFlowPairCount": 495,
     "sparseFlowPairStatuses": {
       "ambiguous-dominant-group": 7,
-      "cut-boundary": 197,
-      "insufficient-consensus": 166,
-      "multiple-image-translations": 16,
-      "single-image-translation-candidate": 76
+      "cut-boundary": 204,
+      "insufficient-consensus": 184,
+      "multiple-image-translations": 19,
+      "single-image-translation-candidate": 81
     },
-    "measuredImageTranslationPairs": 576,
-    "measuredPairsAboveExploratoryMagnitudeThreshold": 325
+    "measuredImageTranslationPairs": 628,
+    "measuredPairsAboveExploratoryMagnitudeThreshold": 360
   },
   "videos": [
+    {
+      "id": "agent-327-barbershop-teaser",
+      "catalogId": "uncataloged-blender-agent327-feature-teaser",
+      "originalSourceSha256": "4aab7b1120dbdcd36ddd8d32dce2e9053b9d97d239edecf75a4d59a202384010",
+      "detailGitBlobSha": "9b532842e6f0995b7b9441bd6df2a0c8f2bcbb13",
+      "sourceEdition": "Blender Studio official PeerTube Agent 327: Operation Barbershop feature-film teaser (not a verified YouTube edition)",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "4aab7b1120dbdcd36ddd8d32dce2e9053b9d97d239edecf75a4d59a202384010",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "ambiguous-correlation": 1,
+            "cut-boundary": 3,
+            "measured-image-translation": 19
+          },
+          "measuredImageTranslationPairs": 19,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 10,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.01063,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 3,
+            "insufficient-consensus": 4,
+            "multiple-image-translations": 2,
+            "single-image-translation-candidate": 2
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "8ee949e9c0d3cf6f1a10d3c8bbae4acf3c43dfc7f0609b4fdbfc2ef330056970",
+          "sourceOffsetSeconds": 105,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "ambiguous-correlation": 2,
+            "cut-boundary": 4,
+            "measured-image-translation": 17
+          },
+          "measuredImageTranslationPairs": 17,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 17,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.131848,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 4,
+            "insufficient-consensus": 7
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "864aa64d6a741639b45dff4de74c4dcf05e48696f6a139dcdb3656be73731519",
+          "sourceOffsetSeconds": 211,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "ambiguous-correlation": 1,
+            "measured-image-translation": 16,
+            "unobservable-low-texture": 6
+          },
+          "measuredImageTranslationPairs": 16,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 8,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.015401,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "insufficient-consensus": 7,
+            "multiple-image-translations": 1,
+            "single-image-translation-candidate": 3
+          },
+          "calibratedPhysicalCameraConfidence": false
+        }
+      ]
+    },
     {
       "id": "barbie",
       "catalogId": "warner-barbie-main-trailer",

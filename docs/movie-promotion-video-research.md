@@ -2,7 +2,7 @@
 
 **Research checked:** November 11, 2026
 **Machine-readable cohort:** [`research/popular-movie-videos.v1.json`](../research/popular-movie-videos.v1.json)  
-**Evidence level:** 13 cataloged official YouTube uploads with attributable popularity observations; **14 film-promotion editions actually processed** (seven Disney-hosted trailers, six Apple iTunes Store movie previews, and one independently published Blender Studio *OVERGROWN* PeerTube teaser) in 42 non-overlapping 20-second windows (840 seconds total), plus separate limited manual visual observations of the original five. Apple retail previews are **not verified identical** to the catalog's YouTube uploads. Extracted numerical evidence is committed; video, audio and image files are not.
+**Evidence level:** 13 cataloged official YouTube uploads with attributable popularity observations; **15 film-promotion editions actually processed** (seven Disney-hosted trailers, six Apple iTunes Store movie previews, and two independently published Blender Studio *OVERGROWN* and *Agent 327: Operation Barbershop* PeerTube teasers) in 45 non-overlapping 20-second windows (900 seconds total), plus separate limited manual visual observations of the original five. Apple retail previews are **not verified identical** to the catalog's YouTube uploads. Extracted numerical evidence is committed; video, audio and image files are not.
 
 **Measured data:** the canonical [`research/analysis/movie-promotions/`](../research/analysis/movie-promotions/) folder holds [`index.json`](../research/analysis/movie-promotions/index.json) and one granular JSON file per analyzed trailer. It retains per-window source PTS, cut-candidate positions, two-dimensional motion results, sampled image appearance, decoded audio RMS/peak trajectories, onset candidates, edit rhythms and AV-cut comparisons. No source videos, frame images, signed CDN URLs or dialogue transcripts are committed.
 
@@ -252,6 +252,40 @@ scene-level validation or independent reconstructed geometry.
 The middle segment has **more detected scene-change candidates**, and the ending sample is darker *on average across its 12 sampled frames* than the middle sample. These findings do not prove physical camera or lighting behavior, verified cuts, editing intent, or whole-teaser averages. The publisher clip provides 60 seconds of sampled coverage (approximately 74% of its runtime), not a complete frame review. Audio RMS/peak rows, source-PTS cut candidates, sparse-flow abstentions, and image-plane measurements are preserved in the numerical detail. Such distinctively short films should not be directly compared with feature-length movie advertising campaigns without matching runtime, source-edition and content context.
 
 After adding a measured title, run `python -m scripts.rebuild_movie_promo_derived` and `python -m scripts.rebuild_movie_promo_derived --verify`; all three derived comparison/timeline/motion reports must share the updated index Git-blob SHA. The source-hashed data is intended to help implement independently authored animation and pacing techniques in `kumiki-ui`, not to reproduce this film's copyrighted assets.
+
+## Newly measured animated-feature teaser: *Agent 327: Operation Barbershop*
+
+[Blender's official film page](https://video.blender.org/videos/watch/264ff760-803e-430e-8d81-15648e904183) ·
+[timecoded numeric evidence](../research/analysis/movie-promotions/agent-327-barbershop-teaser.json) ·
+[production background](https://www.blender.org/press/teaser-for-agent-327-operation-barbershop/)
+
+The official public publisher version is **231.55 seconds, 1146×480**. A
+bounded hosted run retrieved and SHA-256-hashed the source, studied three
+20-second windows at offsets 0, 105 and 211 seconds, and removed temporary
+film/audio/frame files before committing measurements. The source SHA-256 is
+`4aab7b1120dbdcd36ddd8d32dce2e9053b9d97d239edecf75a4d59a202384010`.
+The **3 / 4 / 0** default threshold 0.25 scene-change candidates across
+the selected windows become **4 / 11 / 1** at threshold 0.15. This
+sensitivity difference is a warning about detector behavior, not a
+verified change in editorial pacing.
+
+Blender's own [production report](https://www.blender.org/press/teaser-for-agent-327-operation-barbershop/)
+describes translating a distinctive comic character into stylized 3D
+and using storyboards, live action and 3D previs to resolve action and
+exposition. These are **publisher-reported production facts**, not
+automated recognition of actors, story function or camera motion in
+our sampled footage. To transfer the principles into original Kumiki
+animations, investigate character silhouette contrast, readable
+multi-character staging, antagonist reveal sequencing, and transitions
+between quiet setup and action. Such implementation candidates require
+human verification and must not reproduce the film's designs or
+protected animation.
+
+This adds a second independent Blender Studio promotional edition, expanding
+the **measured** corpus to 15 sources / 45 windows / 900 sampled seconds.
+It is not the same source as a CGMeetup or other third-party YouTube
+copy of the film, and their audience counts cannot be assigned to
+the publisher PeerTube edition.
 
 ## Cross-studio comparison questions
 
