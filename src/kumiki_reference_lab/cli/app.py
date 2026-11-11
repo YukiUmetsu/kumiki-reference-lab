@@ -72,6 +72,7 @@ from kumiki_reference_lab.pipeline.subject_tracklet_review import build_subject_
 from kumiki_reference_lab.pipeline.ollama_character_perception import describe_local_characters
 from kumiki_reference_lab.pipeline.ollama_subject_detection import detect_local_ollama_subjects
 from kumiki_reference_lab.pipeline.local_character_study import run_local_character_study
+from kumiki_reference_lab.pipeline.character_study_batch import run_character_study_batch
 from kumiki_reference_lab.pipeline.subject_detection_benchmark import (
     run_subject_box_benchmark, create_subject_box_label_template,
 )
@@ -725,6 +726,31 @@ def build_parser() -> argparse.ArgumentParser:
     box_benchmark.add_argument("--out", type=Path, required=True)
     box_benchmark.add_argument("--min-iou", type=float, default=0.5)
     box_benchmark.add_argument("--ffprobe", default="ffprobe")
+    study_batch = commands.add_parser(
+        "character-study-batch",
+        help="independently analyze 1–6 original-PTS video windows in an atomic local batch")
+    study_batch.add_argument("source", type=Path, help="authorized local reference video")
+    study_batch.add_argument("--out", type=Path, required=True, help="new immutable batch directory")
+    study_batch.add_argument("--model", required=True, help="installed local Ollama vision model")
+    study_batch.add_argument("--detector", choices=("ollama", "apple-vision"), default="ollama")
+    study_batch.add_argument("--start-seconds", type=int, default=0)
+    study_batch.add_argument("--window-seconds", type=int, default=10)
+    study_batch.add_argument("--stride-seconds", type=int,
+                             help="interval between window starts, at least window duration")
+    study_batch.add_argument("--window-count", type=int, default=3)
+    study_batch.add_argument("--max-samples", type=int, default=8)
+    study_batch.add_argument("--max-calls", type=int, default=8)
+    study_batch.add_argument("--max-pairs", type=int, default=3)
+    study_batch.add_argument("--port", type=int, default=11434)
+    study_batch.add_argument("--timeout-seconds", type=int, default=180)
+    study_batch.add_argument("--width", type=int, default=320)
+    study_batch.add_argument("--height", type=int, default=180)
+    study_batch.add_argument("--skip-qa", action="store_true")
+    study_batch.add_argument("--skip-interactions", action="store_true")
+    study_batch.add_argument("--ffmpeg", default="ffmpeg")
+    study_batch.add_argument("--ffprobe", default="ffprobe")
+    study_batch.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
+
     study_local = commands.add_parser(
         "character-study-local",
         help="one-command bounded local character detection, tracking, VLM observations and QA")
@@ -1050,6 +1076,18 @@ def main(argv: list[str] | None = None) -> int:
             print(run_subject_box_benchmark(
                 args.source, args.detections, args.ground_truth, args.out,
                 min_iou=args.min_iou, ffprobe=args.ffprobe))
+            return 0
+        if args.command == "character-study-batch":
+            print(run_character_study_batch(
+                args.source, args.out, model=args.model, detector=args.detector,
+                start_seconds=args.start_seconds, window_seconds=args.window_seconds,
+                stride_seconds=args.stride_seconds, window_count=args.window_count,
+                max_samples=args.max_samples, max_calls=args.max_calls,
+                max_pairs=args.max_pairs, width=args.width, height=args.height,
+                port=args.port, timeout_seconds=args.timeout_seconds,
+                review=not args.skip_qa, interactions=not args.skip_interactions,
+                ffmpeg=args.ffmpeg, ffprobe=args.ffprobe,
+                rights_status=args.rights_status))
             return 0
         if args.command == "character-study-local":
             print(run_local_character_study(
