@@ -18,7 +18,7 @@ from kumiki_reference_lab.analyzers.techniques.propose import _json_file
 from kumiki_reference_lab.backends.ffmpeg.frames import read_frame_pts
 from kumiki_reference_lab.backends.ffmpeg.raw_frames import read_rgb_frames
 from kumiki_reference_lab.core.provenance import file_signature, require_unchanged
-from kumiki_reference_lab.pipeline.character_vision_review import _load_json
+from kumiki_reference_lab.pipeline.character_vision_review import _load_json, _bound_proposals
 from kumiki_reference_lab.pipeline.local_character_interactions import (
     SCHEMA_VERSION as INTERACTION_VERSION, _outline, _parse_response,
 )
@@ -42,6 +42,10 @@ def _check_inputs(
 ) -> list[dict[str, Any]]:
     """Reject any source, clock, cast, action, or pair attribution inconsistency."""
     frames = _validate_report(tracklets)
+    # Validate that the underlying character scene itself was constructed
+    # from the exact tracklet boxes and corresponding VLM output, not just
+    # an arbitrary compatible-looking source hash.
+    _bound_proposals(tracklets, vision, base)
     source_sha = tracklets["sourceSha256"]
     timebase = tracklets["sourceTimebase"]
     stream = tracklets["sourceStreamIndex"]
