@@ -15,6 +15,7 @@ from kumiki_reference_lab.acquisition.online_video import (
 from kumiki_reference_lab.pipeline.online_frames import analyze_all_frames
 from kumiki_reference_lab.pipeline.online_semantics import analyze_visual_samples
 from kumiki_reference_lab.pipeline.agent_frame_review import make_frame_sink, finalize_frame_workspace
+from kumiki_reference_lab.pipeline.online_audio_cues import build_online_audio_cues
 
 SCHEMA_VERSION = "kumiki.online-video-reference.v1"
 
@@ -28,6 +29,7 @@ def study_online_video(
     max_download_bytes: int = 200 * 1024 * 1024,
     port: int = 11434, overwrite: bool = False,
     review_frames: bool = False, max_review_bytes: int = 256 * 1024 * 1024,
+    audio_cues: bool = False,
     yt_dlp: str = "yt-dlp", ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
 ) -> Path:
     """Retain source-hashed JSON, never media or frame snapshots.
@@ -39,8 +41,8 @@ def study_online_video(
     require_rights(rights_basis, rights_note, acknowledged=acknowledge_rights)
     if type(model) not in (str, type(None)) or (model is not None and not model):
         raise ValueError("model must be a local Ollama model tag or omitted")
-    if type(review_frames) is not bool:
-        raise ValueError("review_frames must be boolean")
+    if type(review_frames) is not bool or type(audio_cues) is not bool:
+        raise ValueError("review_frames/audio_cues must be boolean")
     if not repository_root.is_dir() or not (repository_root / "pyproject.toml").is_file():
         raise ValueError("repository_root must be the project root")
     destination = repository_root / "research" / "analysis" / "online-videos"
@@ -79,6 +81,9 @@ def study_online_video(
                 width=width, height=height, ffmpeg=ffmpeg, ffprobe=ffprobe,
                 frame_sink=sink,
             )
+            audio = (build_online_audio_cues(
+                media, max_seconds=max_seconds, ffmpeg=ffmpeg, ffprobe=ffprobe,
+            ) if audio_cues else None)
             semantics = (analyze_visual_samples(
                 samples, model=model, port=port,
                 cut_candidate_indices=tuple(numeric["cutCandidateFrameIndices"]),
@@ -95,6 +100,7 @@ def study_online_video(
                     "mediaRetained": False,
                 },
                 "numericEvidence": numeric,
+                "audioEvidence": audio,
                 "semanticObservations": semantics,
                 "semanticModel": model,
                 "semanticStatus": ("unreviewed-local-vision-hypotheses"
@@ -188,6 +194,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--height", type=int, default=108)
     parser.add_argument("--max-download-bytes", type=int, default=200 * 1024 * 1024)
     parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument("--audio-cues", action="store_true",
+                        help="measure bounded PCM energy/transients before source cleanup")
     parser.add_argument("--review-frames", action="store_true",
                         help="save all low-resolution frame previews only in ignored workspace/")
     parser.add_argument("--max-review-bytes", type=int, default=256 * 1024 * 1024)
@@ -209,6 +217,7 @@ def main(argv: list[str] | None = None) -> int:
             width=args.width, height=args.height,
             max_download_bytes=args.max_download_bytes, overwrite=args.overwrite,
             review_frames=args.review_frames, max_review_bytes=args.max_review_bytes,
+            audio_cues=args.audio_cues,
             yt_dlp=args.yt_dlp, ffmpeg=args.ffmpeg, ffprobe=args.ffprobe,
         )
     except (ValueError, OSError) as exc:
