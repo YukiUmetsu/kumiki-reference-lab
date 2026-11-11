@@ -69,3 +69,7 @@ The exporter does **not** automatically publish detailed character identities, e
 **A catalog entry is not a viewed video.** The index counts source-linked analysis records only where evidence exists. A few frames, two ten-second windows, or an unverified model output are **not a complete film review**. An image-difference metric does not prove a camera move; average pixel brightness does not establish physical lighting design. Historical view counts do not establish causality between film style and popularity.
 
 The store is intended for future category-level statistics, engineering regressions, cross-video motion/style research and prototype design decisions, with evidence type and uncertainty preserved rather than silently filled in.
+
+## Analyze the saved cohort without private footage
+
+Use `whatships-all research-report` to count and group *actual committed observations*, visual tags and later original-PTS measurements. `whatships-all browse --out runs/whatships-catalog` builds an offline HTML table from the full dated catalog and overlays this verified `research/analysis/whatships/` dataset by default. Select **Saved visual observations** to see films with observed moments; open Details to read the observations and explicitly labeled technique hypotheses. This does not turn metadata-only entries into analyzed videos.
