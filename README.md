@@ -16,6 +16,22 @@ The aim is **not** to copy a film, recover an inaccessible source project, or au
 
 Run `kumiki-watch` to acquire an authorized public video ephemerally through a provider-neutral extractor, measure **every decoded frame within time/frame budgets**, and optionally use a local Ollama vision model to propose timecoded animation, typography, character, cinematography and style cues. It saves only source-hashed reference JSON under `research/analysis/online-videos/` and deletes the source video before writing results. There is no website allowlist. Host support depends on whether a public, extractable stream exists; unauthenticated extraction is not permission to copy. See [agent online video study documentation](docs/agent-online-video-study.md) for setup, limits and safety. For low-compute local models, use [Magnitude agent frame review](docs/magnitude-agent-frame-workflow.md): optional low-resolution, locally ignored previews of every decoded frame; interactive one-frame tools; scoped Magnitude vision requests; bounded resumable scans and JSON-only annotation export.
 
+## Shot-aware and sparse temporal motion review (no AI dependency)
+
+After `kumiki-watch --review-frames`, use `kumiki-frames shots --workspace PATH`
+to group candidate cuts into timecoded, nonoverlapping shot windows and return
+bounded pages of stable and high-change frames. Use
+`kumiki-frames motion --workspace PATH --max-motion-pairs 96` for cheap
+CPU-only, sampled regional block matching (image-plane translation, coherence
+and residual vectors) based on the local PNGs. All derived numerical evidence
+is saved under `research/analysis/online-videos/<id>.temporal.json`; no
+footage or preview images enter Git. `kumiki-frames scan --mode shots` lets a
+small Magnitude vision model examine suggested frames one category per request.
+**Shot grouping is heuristic; image-plane displacement is not verified
+camera movement or character/object tracking.** See
+[temporal shot analysis](docs/temporal-shot-analysis.md) for implementation
+details, validation and limitations.
+
 ## Why this exists
 
 Professional motion graphics depend on more than shaders and easing presets:
