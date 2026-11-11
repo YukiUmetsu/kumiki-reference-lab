@@ -319,7 +319,7 @@ def analyze_cinematic_workspace(
             "status": "not-requested", "tracks": [],
             "screenRelationshipProxies": [],
         })
-    timing = build_seeded_motion_timing(subjects)
+    timing = build_seeded_motion_timing(subjects, numeric=numeric, shot_plan=shots)
     notes = _read_optional_notes(
         reference.with_suffix(".frame-notes.json"),
         source_sha=manifest["sourceSha256"],
