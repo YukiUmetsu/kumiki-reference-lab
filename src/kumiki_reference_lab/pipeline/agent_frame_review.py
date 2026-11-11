@@ -303,9 +303,87 @@ def cleanup_workspace(workspace: Path) -> None:
     shutil.rmtree(workspace)
 
 
+
+def scan_frames(
+    workspace: Path, *, model: str, categories: tuple[str, ...] = (
+        "animation", "typography", "visual-style",
+    ), mode: str = "changed", after: int = -1,
+    max_calls: int = 24, max_failures: int = 3,
+    min_change: float = .08, interval: int = 24,
+    port: int = 10100, timeout_seconds: int = 120,
+) -> dict[str, Any]:
+    """Bounded, resumable low-model inference, one short task at a time.
+
+    Skip already annotated frame/category pairs. Failures are reported, not
+    published as observations. Stop once the failure budget is exhausted.
+    """
+    if (type(max_calls) is not int or not 1 <= max_calls <= 500
+            or type(max_failures) is not int or not 1 <= max_failures <= 50
+            or not categories or len(categories) > 10
+            or any(cat not in _CATEGORIES for cat in categories)
+            or len(set(categories)) != len(categories)):
+        raise ValueError("invalid low-resource scan budget or categories")
+    manifest, _, _ = load_workspace(workspace)
+    from kumiki_reference_lab.pipeline.magnitude_vision import infer_workspace_frame
+    prior = _load_annotations(workspace)
+    visited = {(x["endFrameIndex"], x["category"]) for x in prior}
+    targets = [0] if after < 0 else []
+    index = after
+    while True:
+        item = next_frame(workspace, after=index, mode=mode,
+                          interval=interval, min_change=min_change)
+        if item.get("complete"):
+            break
+        index = item["frameIndex"]
+        if index not in targets:
+            targets.append(index)
+    attempts = successes = failures = skipped = 0
+    errors: list[dict[str, Any]] = []
+    exhausted = False
+    last_index = after
+    for idx in targets:
+        for category in categories:
+            if (idx, category) in visited:
+                skipped += 1
+                continue
+            if attempts >= max_calls or failures >= max_failures:
+                exhausted = True
+                break
+            attempts += 1
+            try:
+                infer_workspace_frame(
+                    workspace, index=idx, category=category, model=model,
+                    port=port, timeout_seconds=timeout_seconds, save=True,
+                )
+            except (ValueError, OSError) as exc:
+                failures += 1
+                # Never echo server exception bodies or sensitive media URLs.
+                errors.append({"frameIndex": idx, "category": category,
+                               "errorClass": type(exc).__name__})
+            else:
+                successes += 1
+                visited.add((idx, category))
+            last_index = idx
+        if exhausted:
+            break
+    notes_path = export_annotations(workspace)
+    return {
+        "schemaVersion": "kumiki.low-compute-frame-scan.v1",
+        "sourceSha256": manifest["sourceSha256"],
+        "frameCount": manifest["frameCount"],
+        "mode": mode, "categories": list(categories),
+        "modelTag": model, "modelCalls": attempts, "successful": successes,
+        "failed": failures, "alreadyAnnotatedSkipped": skipped,
+        "lastAttemptedFrameIndex": last_index,
+        "remainingWork": exhausted, "errors": errors,
+        "savedTo": str(notes_path),
+        "status": "unreviewed-machine-hypotheses",
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Agent-friendly frame-by-frame review")
-    parser.add_argument("command", choices=["show", "next", "annotate", "infer", "export", "cleanup"])
+    parser.add_argument("command", choices=["show", "next", "annotate", "infer", "scan", "export", "cleanup"])
     parser.add_argument("--workspace", type=Path, required=True)
     parser.add_argument("--index", type=int, default=0)
     parser.add_argument("--after", type=int, default=-1)
@@ -320,6 +398,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--model", help="local Magnitude vision model for infer")
     parser.add_argument("--port", type=int, default=10100)
     parser.add_argument("--timeout", type=int, default=120)
+    parser.add_argument("--categories", default="animation,typography,visual-style")
+    parser.add_argument("--max-calls", type=int, default=24)
+    parser.add_argument("--max-failures", type=int, default=3)
     parser.add_argument("--no-save", action="store_true", help="infer without saving an annotation")
     args = parser.parse_args(argv)
     try:
@@ -341,6 +422,15 @@ def main(argv: list[str] | None = None) -> int:
                 args.workspace, index=args.index, category=args.category,
                 model=args.model, port=args.port, timeout_seconds=args.timeout,
                 save=not args.no_save,
+            )
+        elif args.command == "scan":
+            result = scan_frames(
+                args.workspace, model=args.model,
+                categories=tuple(s.strip() for s in args.categories.split(",")),
+                mode=args.mode, after=args.after, max_calls=args.max_calls,
+                max_failures=args.max_failures, interval=args.interval,
+                min_change=args.min_change, port=args.port,
+                timeout_seconds=args.timeout,
             )
         elif args.command == "export":
             result = {"savedTo": str(export_annotations(args.workspace))}
