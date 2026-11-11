@@ -23,6 +23,7 @@ from kumiki_reference_lab.backends.ffmpeg.raw_frames import read_rgb_frames
 from kumiki_reference_lab.core.provenance import file_signature, require_unchanged
 from kumiki_reference_lab.pipeline.ollama_character_perception import (
     _ollama_json, _DISALLOWED, _MODEL, _VIDEO_EXTENSIONS,
+    SCHEMA_VERSION as LOCAL_VISION_VERSION,
 )
 from kumiki_reference_lab.pipeline.subject_detections import _check_box, _iou
 from kumiki_reference_lab.pipeline.subject_tracklet_review import _validate_report
@@ -150,9 +151,11 @@ def analyze_local_interactions(
     if (tracklets["sourceSha256"] != base_scene["sourceSha256"] or
             tracklets["sourceStreamIndex"] != base_scene["sourceStreamIndex"] or
             tracklets["sourceTimebase"] != base_scene["sourceTimebase"] or
+            vision.get("schemaVersion") != LOCAL_VISION_VERSION or
             vision.get("sourceSha256") != base_scene["sourceSha256"] or
             vision.get("trackletReportSha256") != sha256_file(report_path) or
-            vision.get("modelDigestVerified") is True):
+            vision.get("sourceTimebase") != base_scene["sourceTimebase"] or
+            vision.get("modelDigestVerified") is not False):
         raise ValueError("interaction source/model provenance does not match input scene")
     roster = {x["id"]: x for x in base_scene["characters"] if x["kind"] != "voice-only"}
     if any(item["targetId"] is not None for item in base_scene["actions"]):
