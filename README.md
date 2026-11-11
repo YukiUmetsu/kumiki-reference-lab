@@ -119,6 +119,18 @@ real-video performance remains unmeasured. See
 [human-reviewed sequence benchmarking](docs/three-anchor-human-benchmark.md)
 and [dataset validation status](research/analysis/validation/README.md).
 
+### Offline human review of real video sequences
+
+`kumiki-sequence-benchmark review-pack --workspace workspace/frame-review/ID
+--insights research/analysis/online-videos/ID.insights.json` generates a
+**Git-ignored, offline browser workbench** showing the original three-frame
+sequence previews with source-verified ROI overlays. A human can label both
+visible-change phases, export a pending draft, import it later, and explicitly
+export reviewed labels. The page hides model predictions to reduce bias and
+never copies media or uploads anything. Human-reviewed labels can then be
+scored with `kumiki-sequence-benchmark evaluate`. See
+[offline sequence labeling](docs/offline-sequence-labeling.md).
+
 ## Why this exists
 
 Professional motion graphics depend on more than shaders and easing presets:
