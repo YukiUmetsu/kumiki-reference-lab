@@ -85,3 +85,7 @@ The dated [source-observation technique rollup](../whatships-observed-techniques
 ## Source-PTS frame inventory denominators
 
 Newly measured records store `scan.sourcePtsFramesSeenInInventory` for each sampled window, in addition to every frame's original source PTS. The validated research report aggregates **sampled frames / inventoried frames in those same requested windows**; it does *not* divide by estimated full-video FPS, nor claim continuous footage was examined. Legacy research records without an independently verified inventory omit this denominator, and their fractions remain unknown. Every sample's rational PTS must fall within its declared source window. The catalog-wide number of analyzed videos remains evidence-based, not imputed from metadata.
+
+## Run a bounded category-balanced analysis batch
+
+Use [`whatships-measure-batch`](../../../docs/whatships-direct-batch.md) with the private authorized media-binding ledger to analyze up to four unmeasured source videos, automatically skipping completed SHA-identical records and preserving each successful per-video JSON in this Git directory. One failed video does not discard earlier measured results. Inspect the resulting `git diff` before committing; no raw video or private path is stored here.
