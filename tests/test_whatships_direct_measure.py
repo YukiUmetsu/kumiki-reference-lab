@@ -173,6 +173,59 @@ class DirectWhatshipsNumericMeasurementTests(unittest.TestCase):
         self.assertEqual(validate_repository_analysis(self.repository,self.catalog)
                          ["numericSampledVideos"],1)
 
+    def test_source_pts_inventory_is_versioned_in_each_video_window(self):
+        self.run_mock()
+        record=json.loads((self.repository/"film-one.json").read_text())
+        windows=record["evidence"]["numericVisual"]["windows"]
+        self.assertEqual([w["scan"]["sourcePtsFramesSeenInInventory"]
+                          for w in windows],[15,15])
+        self.assertEqual([w["scan"]["sampledSourcePtsCount"]
+                          for w in windows],[5,5])
+
+    def test_cannot_commit_samples_outside_original_time_window(self):
+        original=self.mock_probe
+        def off_window(*args,**kwargs):
+            report=original(*args,**kwargs)
+            if kwargs["start_seconds"]==0:
+                last=report["sampledFrames"][-1]
+                last["sourcePts"]=3000
+                last["sourceSeconds"]={"numerator":3,"denominator":1}
+                pair=report["sampledFramePairs"][-1]
+                pair["endPts"]=3000
+                pair["sourceDeltaSeconds"]={"numerator":3,"denominator":2}
+            return report
+        before=(self.repository/"film-one.json").read_bytes()
+        with (
+            patch("kumiki_reference_lab.catalog.whatships_direct_measure.inspect_source",
+                  side_effect=self.mock_inspect),
+            patch("kumiki_reference_lab.catalog.whatships_direct_measure.analyze_source_visual_window",
+                  side_effect=off_window),
+        ):
+            with self.assertRaisesRegex(ValueError,"outside claimed sample window"):
+                measure_whatships_to_repository(
+                    self.catalog,self.ledger,"whatships:film-one",self.repository,
+                    window_seconds=3,window_count=2,max_samples=5)
+        self.assertEqual((self.repository/"film-one.json").read_bytes(),before)
+
+    def test_inventory_cannot_claim_fewer_frames_than_samples(self):
+        original=self.mock_probe
+        def broken_inventory(*args,**kwargs):
+            report=original(*args,**kwargs)
+            report["scan"]["sourcePtsFramesSeenInInventory"]=1
+            return report
+        with (
+            patch("kumiki_reference_lab.catalog.whatships_direct_measure.inspect_source",
+                  side_effect=self.mock_inspect),
+            patch("kumiki_reference_lab.catalog.whatships_direct_measure.analyze_source_visual_window",
+                  side_effect=broken_inventory),
+        ):
+            with self.assertRaisesRegex(ValueError,"inventory must include"):
+                measure_whatships_to_repository(
+                    self.catalog,self.ledger,"whatships:film-one",self.repository,
+                    window_seconds=3,window_count=2,max_samples=5)
+        self.assertNotIn("numericVisual",json.loads(
+            (self.repository/"film-one.json").read_text())["evidence"])
+
     def test_unmodified_second_run_does_not_duplicate_data(self):
         self.run_mock()
         before=(self.repository/"film-one.json").read_bytes()
