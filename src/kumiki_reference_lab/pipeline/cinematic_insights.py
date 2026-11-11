@@ -23,6 +23,7 @@ from kumiki_reference_lab.pipeline.shot_intelligence import (
 from kumiki_reference_lab.pipeline.temporal_motion import build_temporal_motion
 from kumiki_reference_lab.pipeline.screen_text import build_screen_text
 from kumiki_reference_lab.pipeline.seeded_subjects import build_seeded_region_tracks
+from kumiki_reference_lab.pipeline.auto_region_discovery import discover_motion_regions
 from kumiki_reference_lab.pipeline.motion_timing import (
     build_seeded_motion_timing, propose_original_timing_recipes,
 )
@@ -293,10 +294,14 @@ def analyze_cinematic_workspace(
     max_motion_pairs: int = 120, max_ocr_frames: int = 48,
     max_plan_frames: int = 48, overwrite: bool = False,
     roi_seeds: Path | None = None, max_roi_frames: int = 240,
+    auto_regions: bool = False, max_auto_pairs: int = 36,
+    max_auto_regions: int = 6,
 ) -> Path:
     manifest, numeric, reference = load_workspace(workspace)
-    if any(type(v) is not bool for v in (motion, ocr, overwrite)):
+    if any(type(v) is not bool for v in (motion, ocr, overwrite, auto_regions)):
         raise ValueError("insights options must be booleans")
+    if auto_regions and roi_seeds is not None:
+        raise ValueError("use either --auto-regions or --roi-seeds, not both")
     result = reference.with_suffix(".insights.json")
     if (result.exists() or result.is_symlink()) and not overwrite:
         raise ValueError("cinematic insights already exist; pass --overwrite")
@@ -313,12 +318,27 @@ def analyze_cinematic_workspace(
             "status": "not-requested", "observedFrames": [],
             "textMotionCandidates": [],
         })
-    subjects = (build_seeded_region_tracks(
-        workspace, shots, roi_seeds, max_frames_per_subject=max_roi_frames)
-        if roi_seeds is not None else {
-            "status": "not-requested", "tracks": [],
-            "screenRelationshipProxies": [],
+    auto_proposals = (discover_motion_regions(
+        workspace, shots, max_pairs=max_auto_pairs,
+        max_regions=max_auto_regions)
+        if auto_regions else {
+            "status": "not-requested", "sourceSha256": manifest["sourceSha256"],
+            "proposals": [], "autoTrackSeedCount": 0,
         })
+    if roi_seeds is not None:
+        subjects = build_seeded_region_tracks(
+            workspace, shots, roi_seeds, max_frames_per_subject=max_roi_frames)
+    elif auto_regions and auto_proposals["autoTrackSeedCount"]:
+        subjects = build_seeded_region_tracks(
+            workspace, shots, seeds_document=auto_proposals["autoTrackSeeds"],
+            max_frames_per_subject=max_roi_frames)
+    else:
+        subjects = {
+            "status": ("not-measured-no-auto-regions" if auto_regions
+                       else "not-requested"),
+            "sourceSha256": manifest["sourceSha256"],
+            "tracks": [], "screenRelationshipProxies": [],
+        }
     timing = build_seeded_motion_timing(subjects, numeric=numeric, shot_plan=shots)
     notes = _read_optional_notes(
         reference.with_suffix(".frame-notes.json"),
@@ -354,6 +374,7 @@ def analyze_cinematic_workspace(
         "shotAwareAgentPlan": plan,
         "temporalMotion": movement,
         "screenText": text,
+        "autoRegionProposals": auto_proposals,
         "seededSubjectTracks": subjects,
         "seededMotionTiming": timing,
         "kumikiTimingProposals": propose_original_timing_recipes(timing),
@@ -394,6 +415,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--roi-seeds", type=Path,
                         help="optional small local ROI seed JSON for known subject regions")
     parser.add_argument("--max-roi-frames", type=int, default=240)
+    parser.add_argument("--auto-regions", action="store_true",
+                        help="propose and optionally track anonymous moving regions without AI")
+    parser.add_argument("--max-auto-pairs", type=int, default=36)
+    parser.add_argument("--max-auto-regions", type=int, default=6)
     parser.add_argument("--overwrite", action="store_true")
     opts = parser.parse_args(argv)
     try:
@@ -403,6 +428,8 @@ def main(argv: list[str] | None = None) -> int:
             max_ocr_frames=opts.max_ocr_frames,
             max_plan_frames=opts.max_plan_frames, overwrite=opts.overwrite,
             roi_seeds=opts.roi_seeds, max_roi_frames=opts.max_roi_frames,
+            auto_regions=opts.auto_regions, max_auto_pairs=opts.max_auto_pairs,
+            max_auto_regions=opts.max_auto_regions,
         )
     except (ValueError, OSError, KeyError, TypeError, json.JSONDecodeError) as exc:
         parser.exit(2, f"cinematic intelligence failed: {exc}\n")
