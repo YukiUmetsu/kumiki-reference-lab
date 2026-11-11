@@ -62,6 +62,17 @@ YouTube embeds are third-party media. Do not download a player stream just
 because it is publicly playable, use login/cookie bypass, or assume
 permission from the site to copy a contributor's work.
 
+An exploratory November 11, 2026 check of the public Vimeo video metadata
+for all **40** Vimeo references in the five-page cohort found **no affirmative
+Creative Commons license**. Some lookups were unavailable and the others did
+not specify a CC license; neither result proves a video's download setting.
+Vimeo's [official guidance](https://help.vimeo.com/hc/en-us/articles/12426502581265-How-to-download-a-video-on-Vimeo)
+explains that a video's owner controls downloads and that the download
+option, when enabled, is on the original video page, not the embedded player.
+One sampled original Vimeo page showed no download control in an unauthenticated
+view. Consequently, this collection records permission as unknown/required,
+not silently granted or denied.
+
 For a film with rights-holder authorization or an independently licensed
 source file, verify that the local file is the exact edition represented
 by the catalog page. Existing source-hashed analyzers can then run:
