@@ -77,6 +77,21 @@ To study more motion detail, raise --max-motion-pairs, lower --motion-stride,
 and increase preview resolution in the initial capture. This increases CPU and
 I/O. The default budget is just 96 pairs.
 
+## Integrated automatic fallback
+
+The higher-quality `kumiki-insights --workspace "$REVIEW"` command uses
+sampled OpenCV optical flow when the optional dense dependencies are present.
+When NumPy or OpenCV is unavailable, it automatically runs this CPU-only
+bounded patch-matching estimator on the **same shot-local pair plan**.
+The insights report marks `measured-sampled-stdlib-block-motion-proxies`
+and preserves the sampled vectors, coherence and regional residuals, while
+keeping `featureTracklets` empty and distinguishing the results from
+verified global affine/camera motion.
+
+The standalone `python -m kumiki_reference_lab.pipeline.online_temporal`
+command remains available for a versioned, separately searchable
+`<source-id>.temporal.json` report with shot intensity measurements.
+
 ## 4. Focus small Magnitude models on the suggested frames
 
 The shot report returns stable and high-change frame indices for each
@@ -87,9 +102,9 @@ full-video prompt:
     kumiki-frames infer --workspace "$REVIEW"       --index 120 --category animation       --model 'MAGNITUDE_VISION_MODEL_ID'
 
 Use existing --mode changed or --mode interval scans for additional coverage.
-The standalone temporal fallback deliberately does not modify the original
-agent command surface, avoiding conflict with the larger, separately reviewed
-cinematic intelligence integration.
+The original `kumiki-frames scan --mode shots` is now available through
+the cinematic intelligence integration. Its narrow Magnitude prompts are still
+optional: all shot and fallback motion measurements are computed without AI.
 
 ## 5. Save descriptions and remove previews
 
