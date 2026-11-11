@@ -1,4 +1,4 @@
-name: One-shot official Disney trailer measurement
+name: One-shot Apple movie preview measurement
 
 on:
   pull_request:
@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 jobs:
-  elemental-research:
+  wild-robot-research:
     if: >-
       github.event.pull_request.head.repo.full_name == github.repository &&
       github.head_ref == 'research/ephemeral-elemental-trailer-measurement'
@@ -48,12 +48,12 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -- \
             research/analysis/movie-promotions/index.json \
-            research/analysis/movie-promotions/elemental-official-trailer.json \
+            research/analysis/movie-promotions/wild-robot-apple-preview.json \
             research/analysis/movie-promotions/derived/comparison.v1.json
           test "$(git diff --cached --name-only | wc -l)" -eq 3
           if git diff --cached --name-only | grep -E '\.(mp4|m4v|wav|mp3|aac|jpg|jpeg|png|webm|mkv)$'; then
             echo 'Refusing to stage media' >&2; exit 1
           fi
           git diff --cached --check
-          git commit -m 'data: source-hashed Elemental promotional video measurements'
+          git commit -m 'data: source-hashed Wild Robot Apple movie preview measurements'
           git push origin "HEAD:${GITHUB_HEAD_REF}"
