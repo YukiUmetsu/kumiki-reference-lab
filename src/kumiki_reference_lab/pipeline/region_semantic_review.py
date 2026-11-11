@@ -36,8 +36,12 @@ _PROMPT = (
 
 
 def _crop_png(path: Path, *, width: int, height: int,
-              box: list[float]) -> bytes:
-    """Bounded standards-only RGB crop in memory, without Pillow or OpenCV."""
+              box: list[float], with_context: bool = False,
+              ) -> bytes | tuple[bytes, bytes]:
+    """Decode once, then encode a crop and optionally its validated context.
+
+    The original path is never reopened between validation and inference.
+    """
     if (not isinstance(box, list) or len(box) != 4
             or any(type(v) not in (int, float) or not math.isfinite(v)
                    for v in box)):
@@ -57,7 +61,8 @@ def _crop_png(path: Path, *, width: int, height: int,
     for row in range(top, bottom):
         at = (row * width + left) * 3
         crop.extend(rgb[at:at + (right - left) * 3])
-    return _png_rgb(bytes(crop), right - left, bottom - top)
+    cropped = _png_rgb(bytes(crop), right - left, bottom - top)
+    return (_png_rgb(rgb, width, height), cropped) if with_context else cropped
 
 
 def _magnitude_region_category(images: list[bytes], *, model: str,
@@ -174,10 +179,9 @@ def review_region_proposals(
             if calls >= max_calls:
                 break
             path = _frame_path(workspace.absolute(), index)
-            cropped = _crop_png(path, width=width, height=height, box=box)
-            if path.stat().st_size > 1_000_000:
-                raise ValueError("region frame exceeds preview budget")
-            original = path.read_bytes()
+            original, cropped = _crop_png(
+                path, width=width, height=height,
+                box=box, with_context=True)
             calls += 1
             try:
                 result = _magnitude_region_category(
