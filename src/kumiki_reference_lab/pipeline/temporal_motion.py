@@ -140,6 +140,98 @@ def _local_motion_candidates(a: Any, b: Any, m: Any,
     return result
 
 
+
+def _cpu_motion_fallback(
+    workspace: Path, *, plan: list[tuple[str, int, int]],
+    manifest: dict[str, Any], numeric: dict[str, Any],
+    base: dict[str, Any],
+) -> dict[str, Any]:
+    """Measure conservative image-plane movement when OpenCV is unavailable.
+
+    Uses the SAME prevalidated shot-local pairs as the optional optical-flow
+    implementation. No model inference, OpenCV, NumPy, extra source download,
+    or persistent feature-track/physical-camera claim.
+    """
+    from kumiki_reference_lab.pipeline.agent_frame_review import _frame_path
+    from kumiki_reference_lab.pipeline.online_temporal import (
+        _decode_review_png, match_image_plane_motion,
+    )
+
+    width, height = manifest["width"], manifest["height"]
+    if (type(width) is not int or type(height) is not int
+            or not 64 <= width <= 320 or not 36 <= height <= 180):
+        raise ValueError("invalid local frame preview resolution")
+    cached: dict[int, bytes] = {}
+    def local_frame(index: int) -> bytes:
+        if index not in cached:
+            path = _frame_path(workspace.absolute(), index)
+            cached[index] = _decode_review_png(
+                path, width=width, height=height)
+        while len(cached) > 3:
+            cached.pop(next(iter(cached)))
+        return cached[index]
+
+    output: list[dict[str, Any]] = []
+    for shot_id, before, after in plan:
+        if after != before + 1:
+            raise ValueError("CPU block motion needs adjacent frame pairs")
+        earlier = numeric["frames"][before]
+        later = numeric["frames"][after]
+        interval = later["decodedSeconds"] - earlier["decodedSeconds"]
+        if type(interval) not in (int, float) or not math.isfinite(interval) or interval <= 0:
+            raise ValueError("frame motion requires increasing decoded PTS")
+        evidence = match_image_plane_motion(
+            local_frame(before), local_frame(after),
+            width=width, height=height)
+        vector = evidence["dominantVectorPixels"]
+        reliable = evidence["status"] == "coherent-image-plane-proxy"
+        output.append({
+            "shotId": shot_id, "startFrameIndex": before,
+            "endFrameIndex": after,
+            "startSeconds": earlier["decodedSeconds"],
+            "endSeconds": later["decodedSeconds"],
+            "trackedFeatureCount": 0,
+            "meanImageFeatureSpeedPixelsPerSecond": None,
+            "globalImageMotion": {
+                "status": ("sampled-stdlib-image-plane-translation-proxy"
+                           if reliable else "insufficient-block-motion-evidence"),
+                "translationPixels": [vector["dx"], vector["dy"]]
+                                     if reliable and vector else None,
+                "coherenceFraction": evidence["coherenceFraction"],
+                "matchedRegionCount": evidence["matchedRegions"],
+                "interpretation": "not-optical-flow-not-verified-physical-camera",
+            },
+            "localMotionCandidates": [
+                {
+                    "tile": [r["gridColumn"], r["gridRow"]],
+                    "residualDxPixels": r["residualDxPixels"],
+                    "residualDyPixels": r["residualDyPixels"],
+                    "kind": "screen-region-residual-not-a-tracked-object",
+                }
+                for r in evidence["relativeMotionRegions"]
+            ],
+            "blockMatchMeasurement": {
+                "method": "fixed-grid-textured-RGB-match-v1",
+                "deltaSeconds": round(float(interval), 6),
+                "spatialSamplingStepPixels": evidence["spatialSamplingStepPixels"],
+                "searchRadiusPixels": evidence["searchRadiusPixels"],
+                "modelConfidence": "not-calibrated",
+            },
+        })
+    return {
+        **base,
+        "pairs": output,
+        "reportedPairCount": len(output),
+        "status": "measured-sampled-stdlib-block-motion-proxies",
+        "featureTracklets": [],
+        "limitations": base["limitations"] + [
+            "The fallback estimates only local RGB patch displacement, not optical flow.",
+            "No persisted feature tracks, camera trajectory, object identities or easing.",
+            "Coherent shifts may reflect animation, editing or camera movement.",
+        ],
+    }
+
+
 def build_temporal_motion(
     workspace: Path, shots: dict[str, Any], *,
     max_pairs: int = 120, max_features: int = 80,
@@ -173,7 +265,9 @@ def build_temporal_motion(
         import cv2
         import numpy as np
     except ImportError:
-        return {**base, "status": "not-run-install-pip-extra-dense"}
+        return _cpu_motion_fallback(
+            workspace, plan=plan, manifest=manifest,
+            numeric=numeric, base=base)
     width, height = manifest["width"], manifest["height"]
     if not 64 <= width <= 320 or not 36 <= height <= 180:
         raise ValueError("frame preview resolution outside analysis limit")
