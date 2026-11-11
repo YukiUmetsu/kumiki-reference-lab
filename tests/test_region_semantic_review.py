@@ -196,6 +196,17 @@ class RegionReviewTests(unittest.TestCase):
             self.workspace, self.discovery, model="mini", max_calls=2)
         self.assertEqual(failed["reviews"][0]["proposedCategory"], "unknown")
 
+    @patch("kumiki_reference_lab.pipeline.region_semantic_review._magnitude_region_category")
+    def test_model_outage_stops_after_one_request(self, model):
+        model.side_effect = ValueError("local Magnitude region request unavailable")
+        result = review_region_proposals(
+            self.workspace, self.discovery, model="mini", max_calls=16)
+        self.assertEqual(result["modelCalls"], 1)
+        self.assertEqual(result["status"], "local-model-unavailable-partial-review")
+        self.assertEqual(result["reviews"][0]["status"], "local-model-unavailable")
+        self.assertEqual(result["reviews"][0]["proposedCategory"], "unknown")
+        self.assertEqual(model.call_count, 1)
+
     def test_rejects_source_mismatch_and_invalid_model(self):
         report = {**self.discovery, "sourceSha256": "b" * 64}
         with self.assertRaisesRegex(ValueError, "source evidence"):
