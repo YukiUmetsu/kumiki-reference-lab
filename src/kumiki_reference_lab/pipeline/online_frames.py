@@ -12,7 +12,7 @@ import subprocess
 import tempfile
 from fractions import Fraction
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from kumiki_reference_lab.analyzers.media.inspect import inspect_source
 from kumiki_reference_lab.analyzers.motion.review import _png_rgb
@@ -88,6 +88,7 @@ def analyze_all_frames(
     width: int = 192, height: int = 108, semantic_stride: int = 24,
     max_semantic_frames: int = 24, cut_threshold: float = .28,
     ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
+    frame_sink: Callable[[int, bytes], None] | None = None,
 ) -> tuple[dict[str, Any], list[tuple[int, bytes]]]:
     """Stream source frames and return numeric evidence plus bounded PNG proposals.
 
@@ -147,17 +148,24 @@ def analyze_all_frames(
                 # Deterministic reservoir of eligible keyframes across the
                 # ENTIRE decoded duration; do not exhaust the budget in the
                 # first seconds. First and last frames are always represented.
+                sample_png: bytes | None = None
+                if frame_sink is not None:
+                    sample_png = _png_rgb(frame, width, height)
+                    frame_sink(position, sample_png)
                 if max_semantic_frames and position == 0:
-                    visual_samples.append((position, _png_rgb(frame, width, height)))
+                    visual_samples.append((position, sample_png if sample_png is not None
+                                           else _png_rgb(frame, width, height)))
                 elif candidate_capacity and (position % semantic_stride == 0 or cut):
                     eligible_seen += 1
                     if len(visual_samples) - 1 < candidate_capacity:
-                        visual_samples.append((position, _png_rgb(frame, width, height)))
+                        visual_samples.append((position, sample_png if sample_png is not None
+                                               else _png_rgb(frame, width, height)))
                     else:
                         slot = selector.randrange(eligible_seen)
                         if slot < candidate_capacity:
                             visual_samples[1 + slot] = (
-                                position, _png_rgb(frame, width, height))
+                                position, sample_png if sample_png is not None
+                                else _png_rgb(frame, width, height))
                 last = frame
             process.stdout.close()
             try:
