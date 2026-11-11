@@ -80,23 +80,27 @@ def validate_visual_observation(value: Any) -> dict[str, Any]:
 
 def analyze_visual_samples(
     samples: list[tuple[int, bytes]], *, model: str, port: int = 11434,
-    timeout_seconds: int = 120,
+    timeout_seconds: int = 120, cut_candidate_indices: tuple[int, ...] = (),
 ) -> list[dict[str, Any]]:
     """Use localhost Ollama for sparse visual description of sampled frames."""
     results: list[dict[str, Any]] = []
     previous: bytes | None = None
+    previous_index: int | None = None
     for frame_index, png in samples:
-        # Pair with previous sample so agent can inspect movement, not only stills.
-        images = [previous, png] if previous is not None else [png]
+        # Never infer motion across a potential cut or unrelated shots.
+        crosses_cut = (previous_index is not None and any(
+            previous_index < cut <= frame_index for cut in cut_candidate_indices))
+        paired = previous is not None and not crosses_cut
+        images = [previous, png] if paired else [png]
         proposal = _ollama_json(
             images, model=model, port=port, timeout_seconds=timeout_seconds,
             instruction=_PROMPT,
         )
         results.append({
             "frameIndex": frame_index,
-            "comparisonFrameIndex": results[-1]["frameIndex"] if results else None,
+            "comparisonFrameIndex": previous_index if paired else None,
             "observations": validate_visual_observation(proposal),
             "interpretationStatus": "unreviewed-local-vision-hypothesis",
         })
-        previous = png
+        previous, previous_index = png, frame_index
     return results
