@@ -49,8 +49,6 @@ def _download_one_public_x_post(
             or not 30 <= timeout_seconds <= 300 or
             destination.is_symlink() or not destination.is_dir()):
         raise ValueError("unsafe local source acquisition parameters")
-    if destination.iterdir().__next__ if False else False:
-        raise ValueError("download directory must be empty")
     if any(destination.iterdir()):
         raise ValueError("download directory must be empty")
     args = [
