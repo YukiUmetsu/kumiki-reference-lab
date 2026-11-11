@@ -253,7 +253,7 @@ dialog::backdrop{background:#192f4d99}dl{display:grid;grid-template-columns:150p
 <label>Title, creator, description or tag<input type="search" id="search" placeholder="e.g. motion, paper cut"></label>
 <label>Category<select id="category"><option value="">All categories</option></select></label>
 <label>Metadata<select id="metadata"><option value="">Any</option><option value="detail-snapshot">Detailed</option><option value="index-only">Index only</option></select></label>
-<label>Evidence<select id="evidence"><option value="">All</option><option value="bound">Authorized file linked</option><option value="characters">Unreviewed character study</option><option value="numeric">Numerical visual samples</option></select></label>
+<label>Evidence<select id="evidence"><option value="">All</option><option value="bound">Authorized file linked</option><option value="observed">Saved visual observations</option><option value="characters">Unreviewed character study</option><option value="numeric">Numerical visual samples</option></select></label>
 <label>Sort<select id="sort"><option value="title">Title</option><option value="views">Known views, descending</option><option value="recent">Known publication date, descending</option></select></label>
 </section><p id="found" aria-live="polite"></p>
 <div class="wrap"><table><thead><tr><th>Video</th><th>Creator</th><th>Category</th><th>Views</th><th>Duration</th><th>Evidence</th><th>Inspect</th></tr></thead><tbody id="rows"></tbody></table></div>
@@ -272,6 +272,7 @@ function fmt(x){return x===null?"unknown":Number(x).toFixed(3);}
 function stat(name,value){const x=el("div");x.className="stat";x.append(el("b",value),el("span",name));return x;}
 function status(x){if(x.numericStatus==="sampled-numeric-unreviewed")return "Pixel measurements (unreviewed)";
 if(x.characterStatus==="completed-unreviewed")return "Character model (unreviewed)";
+if(x.visualObservationTags.length)return "Saved partial visual spotcheck";
 if(x.mediaStatus==="operator-attested")return "Local source linked";return "Metadata only";}
 let page=0,filtered=[];
 function details(x){
@@ -281,10 +282,24 @@ const pairs=[["ID",x.sourceId],["Creator",x.creator],["Category",x.category],
 ["Published",x.publishedOn||"Unknown"],["Duration",x.durationSeconds===null?"Unknown":x.durationSeconds+" seconds"],
 ["Historical views",count(x.views)+" captured "+(x.viewsCapturedAt||"unknown")],
 ["Metadata",x.metadataStatus],["Media",x.mediaStatus],["Character",x.characterStatus],
-["Numeric image evidence",x.numericStatus],["Human reviewed","No"],
+["Numeric image evidence",x.numericStatus],["Source-linked research",x.repositoryAnalysisStatus],
+["Spot-check coverage",x.spotCheckCoverage||"Not observed"],
+["Observed on",x.browserObservedOn||"Unknown"],["Human full-video reviewed","No"],
 ["Tags",(x.tags||[]).join(", ")||"Not captured"],["Description",x.description||"Not captured"]];
 for(const [name,value]of pairs){facts.append(el("dt",name));const v=el("dd");v.append(value instanceof Node?value:document.createTextNode(String(value)));facts.append(v);}
 const out=byId("measurements");out.replaceChildren();
+if(x.visibleMoments.length){
+ out.append(el("h3","Observed moments (selected samples only, no source timestamps)"));
+ const ul=el("ul");for(const moment of x.visibleMoments)ul.append(el("li",moment));
+ out.append(ul);
+ out.append(el("h3","Technique tags"));
+ out.append(el("p",(x.visualObservationTags||[]).join(", ")));
+ if(x.techniqueHypotheses.length){
+  out.append(el("h3","Unverified technique hypotheses"));
+  const hy=el("ul");for(const text of x.techniqueHypotheses)hy.append(el("li",text));
+  out.append(hy);
+ }
+}
 if(x.numeric){out.append(el("h3","Sampled original-source video windows"));
 const t=el("table"),head=el("tr");for(const name of ["Time (seconds)","Frames","Cut candidates","Display luma","Saturation","Within-shot RGB change"])head.append(el("th",name));t.append(head);
 for(const w of x.numeric.windows){const row=el("tr");for(const val of [w.startSeconds+"–"+w.endSeconds,w.sampledFrames,w.cutCandidates,fmt(w.meanDisplayLuma),fmt(w.meanSaturation),fmt(w.withinShotRgbChange)])row.append(el("td",val));t.append(row);}out.append(t);
@@ -293,8 +308,12 @@ byId("modal").showModal();}
 function render(){
 const search=byId("search").value.toLowerCase().trim(),cat=byId("category").value,meta=byId("metadata").value,ev=byId("evidence").value;
 filtered=data.entries.filter(x=>(!cat||x.category===cat)&&(!meta||x.metadataStatus===meta)
-&&(!search||[x.title,x.creator,x.category,x.description,x.sourceId,(x.tags||[]).join(" ")].join(" ").toLowerCase().includes(search))
+&&(!search||[x.title,x.creator,x.category,x.description,x.sourceId,
+    (x.tags||[]).join(" "),(x.visualObservationTags||[]).join(" "),
+    (x.visibleMoments||[]).join(" "), (x.techniqueHypotheses||[]).join(" ")]
+    .join(" ").toLowerCase().includes(search))
 &&(!ev||(ev==="bound"&&x.mediaStatus==="operator-attested")
+||(ev==="observed"&&x.repositoryAnalysisStatus==="tracked-partial-evidence")
 ||(ev==="characters"&&x.characterStatus==="completed-unreviewed")
 ||(ev==="numeric"&&x.numericStatus==="sampled-numeric-unreviewed")));
 const normal=(a,b)=>a.title.localeCompare(b.title)||a.sourceId.localeCompare(b.sourceId);
@@ -317,6 +336,7 @@ const c=data.counts;
 byId("stats").append(stat("Indexed",count(data.totalVideos)),
 stat("Detailed",count(c["metadataStatus:detail-snapshot"]||0)),
 stat("Locally bound",count(c["mediaStatus:operator-attested"]||0)),
+stat("Git-linked observations",count(c["repositoryEvidenceRecords"]||0)),
 stat("Character studied",count(c["characterStatus:completed-unreviewed"]||0)),
 stat("Numeric visual sampled",count(c["numericStatus:sampled-numeric-unreviewed"]||0)));
 byId("date").textContent="Snapshot: "+data.retrievedOn+" | catalog SHA-256: "+data.snapshotSha256;
