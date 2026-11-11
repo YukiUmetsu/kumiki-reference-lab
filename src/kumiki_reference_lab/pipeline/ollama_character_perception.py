@@ -22,6 +22,7 @@ from kumiki_reference_lab.analyzers.motion.review import _png_rgb
 from kumiki_reference_lab.analyzers.techniques.propose import _json_file
 from kumiki_reference_lab.backends.ffmpeg.frames import read_frame_pts
 from kumiki_reference_lab.backends.ffmpeg.raw_frames import read_rgb_frames
+from kumiki_reference_lab.backends.ffmpeg.source_seek import decode_verified_later_source_frames
 from kumiki_reference_lab.core.provenance import file_signature, require_unchanged
 from kumiki_reference_lab.pipeline.subject_tracklet_review import _validate_report, _select_indices
 from kumiki_reference_lab.pipeline.subject_detections import _CLASS_TO_KIND, _check_box
@@ -183,6 +184,7 @@ def describe_local_characters(
     source: Path, report_path: Path, out: Path, *, model: str,
     port: int = 11434, max_frames: int = 6, max_calls: int = 12,
     scan_seconds: int = 20, max_pair_gap_seconds: int = 3,
+    seek_start_seconds: int | None = None,
     width: int = 320, height: int = 180, timeout_seconds: int = 180,
     ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
 ) -> Path:
@@ -197,6 +199,10 @@ def describe_local_characters(
             type(width) is not int or not 64 <= width <= 320 or
             type(height) is not int or not 36 <= height <= 180):
         raise ValueError("vision sampling budgets outside supported bounds")
+    if seek_start_seconds is not None and (
+            type(seek_start_seconds) is not int or seek_start_seconds < 0 or
+            scan_seconds > 30 or seek_start_seconds+scan_seconds > 3600):
+        raise ValueError("character vision seek window invalid")
     if type(model) is not str or not _MODEL.fullmatch(model):
         raise ValueError("provide an installed local Ollama vision model tag")
     if type(port) is not int or not 1 <= port <= 65535:
@@ -218,24 +224,31 @@ def describe_local_characters(
     indices = _select_indices(len(frames), max_frames)
     selected = [frames[i] for i in indices]
     video_tb = Fraction(**report["sourceTimebase"])
-    source_frames = read_frame_pts(source, report["sourceStreamIndex"],
-                                   seconds=scan_seconds, ffprobe=ffprobe)
-    by_pts: dict[int, list[int]] = {}
-    for frame in source_frames:
-        if frame.pts is not None:
-            by_pts.setdefault(frame.pts, []).append(frame.ordinal)
-    ordinals = []
-    for frame in selected:
-        possible = by_pts.get(frame["sourcePts"], [])
-        if len(possible) != 1:
-            raise ValueError("selected video PTS is missing or ambiguous in source")
-        ordinals.append(possible[0])
-    if ordinals != sorted(set(ordinals)):
-        raise ValueError("selected source ordinals must be distinct and chronological")
-    rgb = read_rgb_frames(
-        source, report["sourceStreamIndex"], ordinals,
-        [x["sourcePts"] for x in selected], timebase=video_tb,
-        seconds=scan_seconds, width=width, height=height, ffmpeg=ffmpeg)
+    if seek_start_seconds is not None:
+        rgb = decode_verified_later_source_frames(
+            source, report["sourceStreamIndex"],
+            [row["sourcePts"] for row in selected], timebase=video_tb,
+            start_seconds=seek_start_seconds, seconds=scan_seconds,
+            width=width, height=height, ffprobe=ffprobe, ffmpeg=ffmpeg)
+    else:
+        source_frames = read_frame_pts(source, report["sourceStreamIndex"],
+                                       seconds=scan_seconds, ffprobe=ffprobe)
+        by_pts: dict[int, list[int]] = {}
+        for frame in source_frames:
+            if frame.pts is not None:
+                by_pts.setdefault(frame.pts, []).append(frame.ordinal)
+        ordinals = []
+        for frame in selected:
+            possible = by_pts.get(frame["sourcePts"], [])
+            if len(possible) != 1:
+                raise ValueError("selected video PTS is missing or ambiguous in source")
+            ordinals.append(possible[0])
+        if ordinals != sorted(set(ordinals)):
+            raise ValueError("selected source ordinals must be distinct and chronological")
+        rgb = read_rgb_frames(
+            source, report["sourceStreamIndex"], ordinals,
+            [x["sourcePts"] for x in selected], timebase=video_tb,
+            seconds=scan_seconds, width=width, height=height, ffmpeg=ffmpeg)
     require_unchanged(source, source_signature)
     require_unchanged(report_path, report_signature)
 
