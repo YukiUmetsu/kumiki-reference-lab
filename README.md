@@ -60,6 +60,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Local vision-language character observations (opt-in):** [`local-character-vision`](docs/local-character-vision.md) sends source-PTS-verified cropped subject frames to an *already installed, locally served* Ollama vision model on 127.0.0.1. It writes provisional, low-confidence descriptions and two-frame gesture/motion hypotheses to the existing `character-scene` contract. It does **not** recognize individual identities, infer demographic traits, attribute speech, or verify semantic action accuracy. No paid API or automatic model download is required.
 
+**Character VLM evidence quality QA:** [`review-character-vision` and `character-vision-feedback`](docs/character-vision-quality-review.md) regenerate actual source-PTS frames and subject crops beside model-proposed descriptions/motions, then report explicitly human-reviewed supported/unsupported/unclear verdicts. An empty or pending review is **not** treated as verified model accuracy. Source media and cropped people images remain local.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |

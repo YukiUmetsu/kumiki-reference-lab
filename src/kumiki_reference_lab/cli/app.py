@@ -70,6 +70,9 @@ from kumiki_reference_lab.pipeline.character_motion import run_character_motion
 from kumiki_reference_lab.pipeline.subject_detections import run_subject_detections
 from kumiki_reference_lab.pipeline.subject_tracklet_review import build_subject_tracklet_review
 from kumiki_reference_lab.pipeline.ollama_character_perception import describe_local_characters
+from kumiki_reference_lab.pipeline.character_vision_review import (
+    build_character_vision_review, summarize_character_vision_feedback,
+)
 from kumiki_reference_lab.pipeline.mac_vision_detection import detect_mac_vision_people
 from kumiki_reference_lab.pipeline.speaker_association import associate_speakers
 from kumiki_reference_lab.pipeline.character_speech_link import link_characters_to_speech
@@ -648,6 +651,24 @@ def build_parser() -> argparse.ArgumentParser:
     asr.add_argument("--retain-audio", action="store_true",
                      help="retain hashed decoded WAV so an offline diarizer can use identical audio")
     asr.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
+    character_qa = commands.add_parser(
+        "review-character-vision",
+        help="render actual frames and subject crops for human QA of local VLM proposals")
+    character_qa.add_argument("source", type=Path)
+    character_qa.add_argument("report", type=Path, help="subject-tracklets.json")
+    character_qa.add_argument("vision_run", type=Path, help="local-character-vision output directory")
+    character_qa.add_argument("--out", type=Path, required=True, help="new review gallery directory")
+    character_qa.add_argument("--scan-seconds", type=int, default=20)
+    character_qa.add_argument("--width", type=int, default=320)
+    character_qa.add_argument("--height", type=int, default=180)
+    character_qa.add_argument("--ffmpeg", default="ffmpeg")
+    character_qa.add_argument("--ffprobe", default="ffprobe")
+
+    character_feedback = commands.add_parser(
+        "character-vision-feedback",
+        help="report human support/rejection verdicts on a source-bound VLM review")
+    character_feedback.add_argument("feedback", type=Path, help="filled review-feedback.json")
+    character_feedback.add_argument("vision_manifest", type=Path, help="original character-vision.json")
     local_vision = commands.add_parser(
         "local-character-vision",
         help="describe visual subject crops and two-frame motion using a local Ollama vision model")
@@ -894,6 +915,17 @@ def main(argv: list[str] | None = None) -> int:
                 max_seconds=args.max_seconds, timeout_seconds=args.timeout_seconds,
                 language=args.language, rights_status=args.rights_status,
                 retain_audio=args.retain_audio))
+            return 0
+        if args.command == "review-character-vision":
+            print(build_character_vision_review(
+                args.source, args.report, args.vision_run, args.out,
+                scan_seconds=args.scan_seconds, width=args.width, height=args.height,
+                ffmpeg=args.ffmpeg, ffprobe=args.ffprobe))
+            return 0
+        if args.command == "character-vision-feedback":
+            print(json.dumps(summarize_character_vision_feedback(
+                args.feedback, args.vision_manifest), ensure_ascii=False,
+                indent=2, sort_keys=True))
             return 0
         if args.command == "local-character-vision":
             print(describe_local_characters(
