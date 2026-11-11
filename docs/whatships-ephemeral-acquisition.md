@@ -40,3 +40,7 @@ PYTHONPATH=src python -m unittest tests.test_whatships_ephemeral_acquire -v
 Tests use an original locally generated red-to-blue clip and the real FFprobe/FFmpeg source-frame analyzer. The network-downloader step is mocked to verify its public-URL allowlist, security flags, exact-source handoff, failure handling and cleanup. **The tests do not claim to have analyzed any actual third-party What Ships video**, nor do they establish that a specific X post can currently be downloaded without authentication.
 
 Measured frames inside time windows remain sparse. Numeric color and image changes do not establish scene lighting rigs, actual camera/lens trajectories, animation methods, identities, or full-film human review. You can run full analysis only on lawfully accessible originals; avoid unsupported video formats and original posts that have multiple or ambiguous attachments.
+
+## Optional original-PTS apparent image-plane movement
+
+Use [`whatships-measure --image-translation`](whatships-source-pts-image-translation.md) (or the bounded batch/ephemeral public-source workflow) to append source-PTS paired **FFT phase-correlation global image translation hypotheses** to committed `numericVisual` observations. The optional NumPy motion extra is required. Cut candidates force abstention; missing/ambiguous results are not zero camera movement. These displacement metrics are **not** verified camera pan, tilt, zoom, dolly, independent subject motion or production style. Existing records without this probe remain valid.
