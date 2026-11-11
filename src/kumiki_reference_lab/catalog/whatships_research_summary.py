@@ -23,6 +23,9 @@ def summarize_tracked_whatships_observations(
     measured_frames = sum(sum(window["sampledFrames"] for window in row["numeric"]["windows"])
                           for row in numeric)
     measured_windows = sum(row["numeric"]["windowsMeasured"] for row in numeric)
+    probed_motion_windows = [
+        w for row in numeric for w in row["numeric"]["windows"]
+        if w.get("apparentGlobalTranslationPairs") is not None]
     windows_with_inventory = [
         w for row in numeric for w in row["numeric"]["windows"]
         if w["inventoriedFrames"] is not None]
@@ -37,6 +40,9 @@ def summarize_tracked_whatships_observations(
         "sourcePtsNumericVideoCount":len(numeric),
         "sourcePtsMeasuredWindowCount":measured_windows,
         "sourcePtsSampledFrameCount":measured_frames,
+        "windowsWithApparentGlobalTranslationProbe":len(probed_motion_windows),
+        "apparentGlobalTranslationMeasuredFramePairs":sum(
+            w["apparentGlobalTranslationPairs"] for w in probed_motion_windows),
         "audioEnergyMeasuredVideoCount":len(audio),
         "audioEnergyWindowCount":sum(row["audioEnergy"]["windowsMeasured"] for row in audio),
         "audioEnergyFrameBuckets":sum(
