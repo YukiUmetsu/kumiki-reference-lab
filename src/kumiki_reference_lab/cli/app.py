@@ -9,6 +9,7 @@ from pathlib import Path
 
 from kumiki_reference_lab.analyzers.media.inspect import inspect_source
 from kumiki_reference_lab.analyzers.appearance.analyze import analyze_appearance
+from kumiki_reference_lab.analyzers.appearance.source_visual_probe import write_source_visual_probe
 from kumiki_reference_lab.analyzers.audio.timeline import analyze_audio_timeline
 from kumiki_reference_lab.analyzers.audio.levels import analyze_audio_levels
 from kumiki_reference_lab.analyzers.audio.onsets import analyze_audio_onsets
@@ -552,6 +553,22 @@ def build_parser() -> argparse.ArgumentParser:
             sub.add_argument("--limit", type=int, default=20)
         if action == "search":
             sub.add_argument("query", help="technique, story goal, title or creator")
+    visual_probe = commands.add_parser(
+        "source-visual-probe",
+        help="measure source-PTS cut, display brightness/color and frame-change proxies on local video")
+    visual_probe.add_argument("source", type=Path, help="authorized local video")
+    visual_probe.add_argument("--out", type=Path, required=True)
+    visual_probe.add_argument("--start-seconds", type=int, default=0)
+    visual_probe.add_argument("--max-seconds", type=int, default=10)
+    visual_probe.add_argument("--max-samples", type=int, default=12)
+    visual_probe.add_argument("--width", type=int, default=160)
+    visual_probe.add_argument("--height", type=int, default=90)
+    visual_probe.add_argument("--cut-threshold", type=float, default=0.25)
+    visual_probe.add_argument("--ffmpeg", default="ffmpeg")
+    visual_probe.add_argument("--ffprobe", default="ffprobe")
+    visual_probe.add_argument("--rights-status", choices=RIGHTS_STATUSES,
+                              default="review-required")
+
     analyze_ws = commands.add_parser(
         "whatships-analyze",
         help="checkpoint a bounded, source-SHA-verified local analysis batch for bound What Ships videos")
@@ -1037,6 +1054,14 @@ def main(argv: list[str] | None = None) -> int:
                                                 limit=args.limit)
                 print(json.dumps({"query": query, "results": results, "count": len(results),
                                   "retrievedOn": collection["retrievedOn"]}, indent=2, sort_keys=True))
+            return 0
+        if args.command == "source-visual-probe":
+            print(write_source_visual_probe(
+                args.source, args.out, start_seconds=args.start_seconds,
+                seconds=args.max_seconds, max_samples=args.max_samples,
+                width=args.width, height=args.height,
+                cut_threshold=args.cut_threshold, ffmpeg=args.ffmpeg,
+                ffprobe=args.ffprobe, rights_status=args.rights_status))
             return 0
         if args.command == "whatships-analyze":
             print(run_whatships_local_analysis(
