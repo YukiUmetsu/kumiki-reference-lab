@@ -56,7 +56,7 @@ def _checked_window(probe: dict[str, Any], *, expected_sha: str,
         raise ValueError("visual probe window dimensions or original source PTS mismatched")
     keep_scan = (
         "sampledSourcePtsCount", "decoder", "cutThreshold",
-        "frameWidth", "frameHeight",
+        "frameWidth", "frameHeight", "sourcePtsFramesSeenInInventory",
     )
     for name in keep_scan:
         if name not in scan:
