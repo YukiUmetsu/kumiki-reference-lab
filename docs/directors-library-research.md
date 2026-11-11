@@ -5,7 +5,7 @@ shorts, and film/TV projects. This adapter reads **public page metadata**
 from [the latest archive](https://directorslibrary.com/videos/latest/) and
 its individual video pages, without fetching Vimeo/YouTube playback media.
 
-The canonical snapshot lives in
+The latest verified 75-film snapshot lives in
 [`research/analysis/directors-library/`](../research/analysis/directors-library/).
 Every record retains a stable site-derived ID, film page, title, director
 credits, category, optional subcategory, site publication date, and a sanitized
@@ -19,14 +19,19 @@ From the repository root:
 
 ```bash
 PYTHONPATH=src python -m kumiki_reference_lab directors-library snapshot \
-  --pages 2 --retrieved-on 2026-11-11 \
-  --out research/analysis/directors-library/index-2026-11-11.json
+  --pages 5 --retrieved-on 2026-11-11 \
+  --out research/analysis/directors-library/index-2026-11-11-pages5.json
 
 PYTHONPATH=src python -m kumiki_reference_lab directors-library validate \
-  --snapshot research/analysis/directors-library/index-2026-11-11.json
+  --snapshot research/analysis/directors-library/index-2026-11-11-pages5.json
 
 PYTHONPATH=src python -m kumiki_reference_lab directors-library report \
-  --snapshot research/analysis/directors-library/index-2026-11-11.json
+  --snapshot research/analysis/directors-library/index-2026-11-11-pages5.json
+
+# Search the same source alongside the provider-neutral catalogs:
+PYTHONPATH=src python -m kumiki_reference_lab video-sources search "asics" \
+  --provider directors-library \
+  --directors-library research/analysis/directors-library/index-2026-11-11-pages5.json
 ```
 
 One archive page contains up to 15 entries. The importer is explicitly
@@ -35,6 +40,11 @@ requests to Vimeo/YouTube or direct media endpoints, rejects foreign hosts
 and redirects, and caps page payloads. The snapshot is immutable: choose a
 new dated filename if the contents change. Page ordering and credits are
 those observed on the retrieval date, not guaranteed exhaustive coverage.
+
+The first 30-film snapshot is preserved as `index-2026-11-11.json`; the
+75-film edition includes those same first 30 page identities plus three
+additional latest-archive pages. These are dated archive **samples**, not
+an exhaustive crawl of the entire website.
 
 `sitePublishedOn` is the Directors' Library page date, which may be different
 from the video's actual first release. `videoAnalysisStatus: not-performed`, `rightsStatus: permission-required`,

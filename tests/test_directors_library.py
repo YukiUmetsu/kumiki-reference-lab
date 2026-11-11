@@ -16,6 +16,10 @@ from kumiki_reference_lab.catalog.directors_library import (
     validate_snapshot,
 )
 from kumiki_reference_lab.cli.app import main
+from kumiki_reference_lab.catalog.video_sources import (
+    load_source_references, search_source_references, get_source_reference,
+)
+from tests.test_video_sources import whatships_fixture
 
 
 ARCHIVE = "https://directorslibrary.com/videos/latest/"
@@ -159,6 +163,43 @@ class DirectorsLibraryTests(unittest.TestCase):
                     self.assertEqual(main(["directors-library", "snapshot", "--pages", "1",
                                            "--retrieved-on", "2026-11-12",
                                            "--out", str(destination)]), 2)
+
+    def test_optional_provider_neutral_search_keeps_directors_metadata_unmeasured(self):
+        snapshot = collect_latest(lambda url: {
+            ARCHIVE: listing(ARCHIVE, [(FIRST, "Distance x Asics")]),
+            FIRST: film(FIRST, "Distance x Asics", "https://player.vimeo.com/video/1236008415"),
+        }[url], pages=1, retrieved_on="2026-11-11")
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            directors = directory / "directors.json"
+            whatships = directory / "whatships.json"
+            directors.write_text(json.dumps(snapshot), encoding="utf-8")
+            whatships.write_text(json.dumps(whatships_fixture()), encoding="utf-8")
+            library = load_source_references(Path("research"), whatships, directors)
+            item = get_source_reference(library, "directors-library:2026:campaigns:distance-x-asics")
+            self.assertEqual(item["provider"], "directors-library")
+            self.assertEqual(item["creator"], "Evan Ravo")
+            self.assertEqual(item["watchUrl"], FIRST)
+            self.assertEqual(item["originalUrl"], "https://player.vimeo.com/video/1236008415")
+            self.assertIsNone(item["durationSeconds"])
+            self.assertIsNone(item["views"])
+            self.assertEqual(item["reviewStatus"], "metadata-only-not-frame-reviewed")
+            self.assertEqual(len(search_source_references(library, "distance", provider="directors-library")), 1)
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                result = main(["video-sources", "list", "--provider", "directors-library",
+                               "--directors-library", str(directors),
+                               "--whatships", str(whatships), "--limit", "10"])
+            self.assertEqual(result, 0)
+            self.assertEqual(json.loads(output.getvalue())["count"], 1)
+
+    def test_default_directors_report_uses_largest_verified_snapshot(self):
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            self.assertEqual(main(["directors-library", "report"]), 0)
+        report = json.loads(output.getvalue())
+        self.assertEqual(report["listedVideos"], 75)
+        self.assertEqual(report["analyzedVideos"], 0)
 
 
 if __name__ == "__main__":

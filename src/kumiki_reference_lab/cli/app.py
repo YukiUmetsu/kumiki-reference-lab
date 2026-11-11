@@ -876,17 +876,19 @@ def build_parser() -> argparse.ArgumentParser:
     for action in ("validate", "report"):
         sub = directors_actions.add_parser(action)
         sub.add_argument("--snapshot", type=Path,
-                         default=Path("research/analysis/directors-library/index-2026-11-11.json"))
+                         default=Path("research/analysis/directors-library/index-2026-11-11-pages5.json"))
     sources = commands.add_parser(
-        "video-sources", help="browse normalized YouTube and What Ships references without media downloads")
+        "video-sources", help="browse normalized YouTube, What Ships and optional Directors' Library references")
     source_actions = sources.add_subparsers(dest="source_action", required=True)
     for action in ("validate", "list", "search", "show", "report", "observations"):
         sub = source_actions.add_parser(action)
         sub.add_argument("--youtube-root", type=Path, default=Path("research"))
         sub.add_argument("--whatships", type=Path,
                          default=Path("research/whatships-index-2026-11-10.json"))
+        sub.add_argument("--directors-library", type=Path,
+                         help="optional Directors' Library metadata snapshot, not media")
         if action in ("list", "search"):
-            sub.add_argument("--provider", choices=("all", "youtube", "whatships"), default="all")
+            sub.add_argument("--provider", choices=("all", "youtube", "whatships", "directors-library"), default="all")
             sub.add_argument("--min-views", type=int, default=0)
             sub.add_argument("--limit", type=int, default=20)
         if action == "search":
@@ -1405,10 +1407,11 @@ def main(argv: list[str] | None = None) -> int:
                     indent=2, sort_keys=True, ensure_ascii=False))
             return 0
         if args.command == "video-sources":
-            collection = load_source_references(args.youtube_root, args.whatships)
+            collection = load_source_references(args.youtube_root, args.whatships, args.directors_library)
             if args.source_action == "validate":
                 by_provider = {provider: sum(item["provider"] == provider for item in collection["entries"])
-                               for provider in ("youtube", "whatships")}
+                               for provider in (("youtube", "whatships", "directors-library")
+                                                if args.directors_library else ("youtube", "whatships"))}
                 response = {"valid": True, "entryCount": len(collection["entries"]),
                             "byProvider": by_provider, "retrievedOn": collection["retrievedOn"]}
             elif args.source_action == "show":
