@@ -71,6 +71,7 @@ from kumiki_reference_lab.pipeline.subject_detections import run_subject_detecti
 from kumiki_reference_lab.pipeline.subject_tracklet_review import build_subject_tracklet_review
 from kumiki_reference_lab.pipeline.ollama_character_perception import describe_local_characters
 from kumiki_reference_lab.pipeline.ollama_subject_detection import detect_local_ollama_subjects
+from kumiki_reference_lab.pipeline.local_character_study import run_local_character_study
 from kumiki_reference_lab.pipeline.local_character_interactions import analyze_local_interactions
 from kumiki_reference_lab.pipeline.interaction_review import (
     build_interaction_review, summarize_interaction_feedback,
@@ -707,6 +708,26 @@ def build_parser() -> argparse.ArgumentParser:
     interactions.add_argument("--height", type=int, default=180)
     interactions.add_argument("--ffmpeg", default="ffmpeg")
     interactions.add_argument("--ffprobe", default="ffprobe")
+    study_local = commands.add_parser(
+        "character-study-local",
+        help="one-command bounded local character detection, tracking, VLM observations and QA")
+    study_local.add_argument("source", type=Path, help="authorized local video")
+    study_local.add_argument("--out", type=Path, required=True, help="new immutable study directory")
+    study_local.add_argument("--model", required=True, help="already installed local Ollama vision model")
+    study_local.add_argument("--detector", choices=("ollama", "apple-vision"), default="ollama")
+    study_local.add_argument("--port", type=int, default=11434)
+    study_local.add_argument("--max-seconds", type=int, default=10)
+    study_local.add_argument("--max-samples", type=int, default=8)
+    study_local.add_argument("--max-calls", type=int, default=12)
+    study_local.add_argument("--max-pairs", type=int, default=6)
+    study_local.add_argument("--timeout-seconds", type=int, default=180)
+    study_local.add_argument("--width", type=int, default=320)
+    study_local.add_argument("--height", type=int, default=180)
+    study_local.add_argument("--skip-qa", action="store_true")
+    study_local.add_argument("--skip-interactions", action="store_true")
+    study_local.add_argument("--ffmpeg", default="ffmpeg")
+    study_local.add_argument("--ffprobe", default="ffprobe")
+    study_local.add_argument("--rights-status", choices=RIGHTS_STATUSES, default="review-required")
     local_subjects = commands.add_parser(
         "local-character-detect",
         help="propose human, animated and animal subject boxes with already installed local Ollama vision model")
@@ -998,6 +1019,17 @@ def main(argv: list[str] | None = None) -> int:
                 port=args.port, max_pairs=args.max_pairs, gap_seconds=args.gap_seconds,
                 scan_seconds=args.scan_seconds, timeout_seconds=args.timeout_seconds,
                 width=args.width, height=args.height, ffmpeg=args.ffmpeg, ffprobe=args.ffprobe))
+            return 0
+        if args.command == "character-study-local":
+            print(run_local_character_study(
+                args.source, args.out, model=args.model, detector=args.detector,
+                max_seconds=args.max_seconds, max_samples=args.max_samples,
+                max_calls=args.max_calls, max_pairs=args.max_pairs,
+                width=args.width, height=args.height, port=args.port,
+                timeout_seconds=args.timeout_seconds,
+                ffmpeg=args.ffmpeg, ffprobe=args.ffprobe,
+                rights_status=args.rights_status,
+                review=not args.skip_qa, interactions=not args.skip_interactions))
             return 0
         if args.command == "local-character-detect":
             print(detect_local_ollama_subjects(

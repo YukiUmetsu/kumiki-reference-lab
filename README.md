@@ -68,6 +68,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **Automatic local subject localization, including animation:** [`local-character-detect`](docs/local-ollama-subject-detection.md) uses a previously installed localhost Ollama vision model to propose human, cartoon, animal and anthropomorphic bounding boxes from source-PTS-verified video frames. It emits the existing detector schema for provisional tracking and visual QA. Bounding boxes are **model hypotheses**, not accuracy-calibrated detections or verified identities. No remote model/API is required.
 
+**One-command local character study (new):** [`character-study-local`](docs/local-character-study.md) orchestrates locally proposed human/animated character boxes, conservative tracklets, visual descriptions, two-frame gesture/interaction hypotheses, and actual source-frame QA galleries in one atomic run. Requires an already installed local Ollama vision model; all labels remain provisional until human review. Supports `--detector ollama` or macOS `apple-vision`, with optional QA/interaction skipping.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
