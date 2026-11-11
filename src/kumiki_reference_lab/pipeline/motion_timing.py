@@ -287,3 +287,40 @@ def _limitations() -> list[str]:
         "Abstains on unsupported, short, reversing, outlying or discontinuous trajectories.",
         "No model inference or frame interpretation is involved.",
     ]
+
+
+
+def propose_original_timing_recipes(
+    timing: dict[str, Any], *, max_recipes: int = 8,
+) -> list[dict[str, Any]]:
+    """Reusable timing *families* without copying observed paths or assets.
+
+    These are non-executable neutral starting points for user-created Kumiki
+    components. No claim about the true source animation curve is made.
+    """
+    if type(max_recipes) is not int or not 1 <= max_recipes <= 8:
+        raise ValueError("timing recipe count must be bounded")
+    if timing.get("schemaVersion") != SCHEMA_VERSION:
+        raise ValueError("timing recipe source version invalid")
+    recipes = []
+    for track in timing.get("tracks", []):
+        candidate = track.get("easingCandidate")
+        if not isinstance(candidate, dict):
+            continue
+        recipes.append({
+            "purpose": "original-animation-timing-inspiration",
+            "sourceSubjectSeedId": track["subjectId"],
+            "sourceShotId": track["shotId"],
+            "sourceSha256": timing["sourceSha256"],
+            "timingFamilyHypothesis": candidate["family"],
+            "sourceDurationSecondsObserved": track["durationSeconds"],
+            "targetDurationSeconds": None,
+            "targetStartPosition": None,
+            "targetEndPosition": None,
+            "targetComponentApiVerified": False,
+            "originalArtworkRequired": True,
+            "reviewStatus": "non-executable-unverified-timing-proposal",
+        })
+        if len(recipes) >= max_recipes:
+            break
+    return recipes
