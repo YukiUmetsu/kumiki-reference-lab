@@ -135,8 +135,42 @@ _MECHANICS: dict[str, dict[str, Any]] = {
 
 def _bounded_measurements(source: dict[str, Any],
                           keys: list[str]) -> dict[str, Any]:
-    if not isinstance(source, dict):
-        raise ValueError("motion recipe evidence lacks source measurements")
+    if not isinstance(source, dict) or len(source) > 16:
+        raise ValueError("motion recipe evidence lacks bounded measurements")
+    # Validate the entire upstream source event, even fields not copied into
+    # this animation idea. Otherwise NaN or fabricated nested values could
+    # hide in unselected metrics and pass a seemingly source-verified report.
+    for field, value in source.items():
+        if type(field) is not str or not 1 <= len(field) <= 64:
+            raise ValueError("invalid source metric name")
+        if type(value) in (int, float):
+            if not math.isfinite(value):
+                raise ValueError("nonfinite source metric")
+        elif value is None:
+            if field != "straightnessProxy":
+                raise ValueError("unsupported empty source metric")
+        elif type(value) is str:
+            if not 1 <= len(value) <= 120:
+                raise ValueError("invalid source metric description")
+        elif isinstance(value, list):
+            if field == "possibleAlternatives":
+                if (len(value) > 8 or any(
+                        type(v) is not str or not 1 <= len(v) <= 120
+                        for v in value)):
+                    raise ValueError("invalid alternative explanation")
+            elif (len(value) != 2 or any(
+                    type(v) not in (int, float) or not math.isfinite(v)
+                    for v in value)):
+                raise ValueError("nonfinite or invalid source vector metric")
+        else:
+            raise ValueError("unsupported source metric value")
+    if ("direction" in source and source["direction"] not in {
+            "right-in-image", "left-in-image", "up-in-image",
+            "down-in-image", "diagonal-in-image"}):
+        raise ValueError("unsupported source direction evidence")
+    if ("appearance" in source and source["appearance"] not in {
+            "larger-in-image", "smaller-in-image"}):
+        raise ValueError("unsupported source appearance evidence")
     picked = {}
     for key in keys:
         if key not in source:
