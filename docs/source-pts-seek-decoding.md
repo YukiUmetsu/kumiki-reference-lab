@@ -1,6 +1,6 @@
 # Original-PTS verified random-access video seek
 
-**Implemented backend:** `backends.ffmpeg.source_seek` can inspect and decode a bounded interval **far beyond the first 120 seconds** without decoding the entire preceding video. This is a reusable lower-level decoder for future character analysis and video-reference coverage.
+**Implemented backend:** `backends.ffmpeg.source_seek` can inspect and decode a bounded interval **far beyond the first 120 seconds** without decoding the entire preceding video. It is now used by local character detection, tracking, VLM appearance/action analysis and source-frame QA when a study window ends after 120 seconds.
 
 ## API
 
@@ -39,7 +39,7 @@ The timebase and stream index in this example are **specific to one synthetic te
 
 ## Constraints
 
-- This is an **initial reusable backend**, not yet a change to `character-study-local` or `character-study-batch`. Those higher-level commands still use the verified source-prefix decoder and are currently capped at 120 seconds. Callers will migrate only after actual end-to-end tests pass.
+- **Integrated:** `local-character-detect`, `mac-vision-humans`, `character-study-local` and `character-study-batch` now select the exact-PTS seek path for windows ending after 120 seconds. Shorter windows retain the existing conservative prefix/ordinal decoder.
 - FFprobe's seek start depends on keyframe placement, and the bounded inventory may be incomplete on unusually long GOPs. The backend never claims exhaustive frame coverage. It fails if it cannot identify requested original timestamps.
 - Stream-relative PTS is anchored to the *actual first decoded source frame*; it is not assumed to begin at zero.
 - `-copyts` and decoded `showinfo` are essential to prevent timestamp renumbering. Input windows with nonmonotonic PTS, duplicate candidate timestamps or unrepresentable selected timestamps are refused.
@@ -53,4 +53,4 @@ PYTHONPATH=src python -m unittest tests.test_source_pts_seek -v
 
 The test generates an original tiny 150-second video via FFmpeg, accesses a **125–128-second window** without full-prefix decoding and verifies exact original PTS/timebase, decoded RGB buffers, absence of invented cuts, and failure on near-match timestamps. A later 141–143-second window is also inspected.
 
-Next: wire this seek backend into selected-window character detection and every QA stage, retaining the existing prefix path as the conservative fallback.
+The full `character-study-local` pipeline is covered by a real 125–128-second source-video test, including detections, tracklets, VLM mock responses, pair interaction abstentions and every original-frame QA gallery. Model accuracy remains unverified.
