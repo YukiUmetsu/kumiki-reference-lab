@@ -28,6 +28,7 @@ _BASENAME = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*\Z")
 _MAX_NOTES = 200
 _MAX_WINDOWS = 64  # Total source windows stored per film; each new decode batch still <=6
 _MAX_SAMPLES = 24
+_MAX_AUDIO_WINDOWS = 12
 
 
 def _load_spotchecks(path: Path, valid_ids: set[str]) -> dict[str, dict[str, Any]]:
@@ -345,6 +346,101 @@ def export_repository_analysis(
 
 
 
+
+def _validate_audio_energy_layer(layer: Any, expected_source_sha: Any) -> None:
+    """Verify strictly numeric PCM envelopes, with *no* source PTS assertions.
+
+    Audio decoding output-seek timing is not equivalent to independently
+    verified video-source presentation timestamps.
+    """
+    if (not isinstance(layer,dict) or set(layer) != {
+            "sourceSha256","windows","evidenceStatus"} or
+            layer["sourceSha256"] != expected_source_sha or
+            layer["evidenceStatus"] !=
+            "pcm-energy-audio-clock-approximate-not-human-reviewed"):
+        raise ValueError("audio analysis source SHA or evidence status invalid")
+    windows=layer["windows"]
+    if not isinstance(windows,list) or not 1 <= len(windows) <= _MAX_AUDIO_WINDOWS:
+        raise ValueError("audio energy window count invalid")
+    last_end=-1
+    for window in windows:
+        if (not isinstance(window,dict) or set(window) != {
+                "startSeconds","endSeconds","audioStreamIndex",
+                "audioSourceTimebase","audioStreamStartPts",
+                "decodedPcmSampleRate","decodedPcmSampleCount",
+                "decodedDurationSecondsApprox","decodedFrames","summary",
+                "audioClockStatus"} or
+                window["audioClockStatus"] !=
+                "ffmpeg-output-seek-not-original-source-pts-verified"):
+            raise ValueError("audio window includes unsupported or unverified fields")
+        lo,hi=window["startSeconds"],window["endSeconds"]
+        if (type(lo) is not int or type(hi) is not int or
+                not 0 <= lo < hi <= 3600 or hi-lo > 30 or lo < last_end):
+            raise ValueError("audio requested source-time window is invalid")
+        last_end=hi
+        tb=window["audioSourceTimebase"]
+        if (type(window["audioStreamIndex"]) is not int or
+                not 0 <= window["audioStreamIndex"] <= 64 or
+                type(window["audioStreamStartPts"]) is not int or
+                abs(window["audioStreamStartPts"]) > 2**53 or
+                not isinstance(tb,dict) or set(tb) != {"numerator","denominator"} or
+                type(tb["numerator"]) is not int or type(tb["denominator"]) is not int or
+                tb["numerator"] <= 0 or tb["denominator"] <= 0 or
+                window["decodedPcmSampleRate"] != 8000):
+            raise ValueError("audio stream original timebase/clock metadata invalid")
+        samples=window["decodedPcmSampleCount"]
+        duration=window["decodedDurationSecondsApprox"]
+        if (type(samples) is not int or
+                not 1 <= samples <= (hi-lo)*8000+2048 or
+                type(duration) not in (float,int) or not math.isfinite(duration) or
+                abs(duration-samples/8000) > .000001):
+            raise ValueError("audio PCM samples/duration are inconsistent")
+        frames=window["decodedFrames"]
+        if (not isinstance(frames,list) or
+                not 1 <= len(frames) <= 300 or
+                len(frames) != (samples+799)//800):
+            raise ValueError("decoded audio energy bucket count inconsistent")
+        consumed=0
+        silent_count=0
+        for frame in frames:
+            if (not isinstance(frame,dict) or set(frame) != {
+                    "decodedOffsetMs","sampleCount","rmsDbfs","peakDbfs","nearSilence"} or
+                    type(frame["decodedOffsetMs"]) is not int or
+                    frame["decodedOffsetMs"] != consumed//8 or
+                    type(frame["sampleCount"]) is not int or
+                    frame["sampleCount"] != min(800,samples-consumed) or
+                    type(frame["nearSilence"]) is not bool):
+                raise ValueError("audio energy frame duration/offset data invalid")
+            for name in ("rmsDbfs","peakDbfs"):
+                value=frame[name]
+                if (type(value) not in (int,float) or
+                        not math.isfinite(value) or not -120 <= value <= 0):
+                    raise ValueError("audio PCM dBFS measurement invalid")
+            if frame["peakDbfs"] + .0001 < frame["rmsDbfs"]:
+                raise ValueError("audio peak cannot be quieter than RMS")
+            if frame["nearSilence"] != (frame["rmsDbfs"] <= -48.0):
+                raise ValueError("audio silence flag not consistent with measured RMS")
+            consumed+=frame["sampleCount"]
+            silent_count+=frame["nearSilence"]
+        if consumed != samples:
+            raise ValueError("audio frame sample count does not equal decoded PCM")
+        summary=window["summary"]
+        if not isinstance(summary,dict) or set(summary) != {
+                "rmsDbfs","peakDbfs","nearSilenceFrameFraction"}:
+            raise ValueError("audio summary fields unsupported")
+        for name in ("rmsDbfs","peakDbfs"):
+            value=summary[name]
+            if (type(value) not in (int,float) or
+                    not math.isfinite(value) or not -120 <= value <= 0):
+                raise ValueError("audio energy summary dBFS value invalid")
+        if summary["peakDbfs"] + .0001 < summary["rmsDbfs"]:
+            raise ValueError("audio summary peak cannot be quieter than RMS")
+        fraction=summary["nearSilenceFrameFraction"]
+        if (type(fraction) not in (float,int) or not math.isfinite(fraction) or
+                abs(fraction - round(silent_count/len(frames),6)) > .000001):
+            raise ValueError("audio silence fraction inconsistent with energy frames")
+
+
 def _validate_record(record: Any, sid: str, snapshot_sha: str) -> None:
     """Validate strict public JSON whitelist, source PTS and evidence semantics."""
     if (not isinstance(record,dict) or set(record) != {
@@ -365,16 +461,18 @@ def _validate_record(record: Any, sid: str, snapshot_sha: str) -> None:
     evidence = record["evidence"]
     if (not isinstance(evidence,dict) or not evidence or
             not set(evidence) <= {
-                "browserSpotCheck","numericVisual","characterStudyStatus"}):
+                "browserSpotCheck","numericVisual","numericAudio","characterStudyStatus"}):
         raise ValueError("unsupported analysis evidence types")
     coverage = record["coverage"]
-    if (not isinstance(coverage,dict) or
-            coverage != {
-                "hasBrowserSpotCheck":"browserSpotCheck" in evidence,
-                "hasSampledNumericSourceFrames":"numericVisual" in evidence,
-                "hasUnreviewedCharacterJob":"characterStudyStatus" in evidence,
-                "fullFilmReviewed":False,
-            }):
+    expected_coverage = {
+        "hasBrowserSpotCheck":"browserSpotCheck" in evidence,
+        "hasSampledNumericSourceFrames":"numericVisual" in evidence,
+        "hasUnreviewedCharacterJob":"characterStudyStatus" in evidence,
+        "fullFilmReviewed":False,
+    }
+    if "numericAudio" in evidence:
+        expected_coverage["hasSampledAudioEnergy"] = True
+    if not isinstance(coverage,dict) or coverage != expected_coverage:
         raise ValueError("analysis review coverage claims not supported by evidence")
     if "browserSpotCheck" in evidence:
         spot = evidence["browserSpotCheck"]
@@ -401,11 +499,16 @@ def _validate_record(record: Any, sid: str, snapshot_sha: str) -> None:
                 item["detail"] !=
                 "Raw model scenes remain in private local study artifacts; not imported or human certified."):
             raise ValueError("character status must not embed identities, transcripts, or private models")
+    audio = evidence.get("numericAudio")
+    if audio is not None:
+        _validate_audio_energy_layer(audio, record["sourceMediaSha256"])
     numeric = evidence.get("numericVisual")
     if numeric is None:
-        if record["sourceMediaSha256"] is not None:
+        if audio is None and record["sourceMediaSha256"] is not None:
             raise ValueError("non-numeric research record cannot assert video bytes were observed")
         return
+    if audio is not None and audio["sourceSha256"] != numeric["sourceSha256"]:
+        raise ValueError("audio and visual evidence reference different source video bytes")
     sha = numeric.get("sourceSha256") if isinstance(numeric,dict) else None
     if (not isinstance(sha,str) or not re.fullmatch("[0-9a-f]{64}",sha) or
             sha != record["sourceMediaSha256"] or
@@ -551,7 +654,7 @@ def validate_repository_analysis(path: Path, snapshot_path: Path) -> dict[str,An
             index.get("sourceLinkedAnalysisCount") != len(index["entries"])):
         raise ValueError("repository analysis index version/count/source mismatch")
     seen = set()
-    browser_count = numeric_count = character_count = 0
+    browser_count = numeric_count = character_count = audio_count = 0
     for item in index["entries"]:
         if (not isinstance(item,dict) or set(item) != {
                 "sourceId","recordPath","evidenceKinds"}):
@@ -572,6 +675,7 @@ def validate_repository_analysis(path: Path, snapshot_path: Path) -> dict[str,An
         _validate_record(record,sid,index["catalogSnapshotSha256"])
         browser_count += "browserSpotCheck" in record["evidence"]
         numeric_count += "numericVisual" in record["evidence"]
+        audio_count += "numericAudio" in record["evidence"]
         character_count += "characterStudyStatus" in record["evidence"]
         numeric = record["evidence"].get("numericVisual")
         if numeric is not None:
@@ -583,6 +687,7 @@ def validate_repository_analysis(path: Path, snapshot_path: Path) -> dict[str,An
         raise ValueError("repository catalog snapshot SHA does not match source file")
     if (index.get("browserSpotCheckCount") != browser_count or
             index.get("sampledNumericVideoCount") != numeric_count or
+            index.get("sampledAudioVideoCount",0) != audio_count or
             index.get("unreviewedCharacterJobCount") != character_count or
             index.get("fullFilmReviewedCount") != 0):
         raise ValueError("repository index misstates observation coverage")
@@ -597,6 +702,7 @@ def validate_repository_analysis(path: Path, snapshot_path: Path) -> dict[str,An
         "sourceLinkedAnalysisRecords":len(seen),
         "browserSpotChecks":browser_count,
         "numericSampledVideos":numeric_count,
+        "numericAudioSampledVideos":audio_count,
         "humanReviewedFullVideos":0,
     }
 
@@ -698,7 +804,11 @@ def sync_repository_analysis(
                 raise ValueError("existing source analysis evidence differs; explicit --replace-existing required")
             combined[kind] = layer
         numeric = combined.get("numericVisual")
-        media_sha = numeric.get("sourceSha256") if numeric is not None else None
+        audio = combined.get("numericAudio")
+        media_sha = (numeric or audio).get("sourceSha256") if (numeric or audio) else None
+        if (numeric is not None and audio is not None and
+                numeric["sourceSha256"] != audio["sourceSha256"]):
+            raise ValueError("cannot combine two different source video fingerprints")
         if (prior.get("sourceMediaSha256") is not None and
                 media_sha is not None and media_sha != prior["sourceMediaSha256"]
                 and not replace_existing):
@@ -712,6 +822,7 @@ def sync_repository_analysis(
                 "hasSampledNumericSourceFrames":"numericVisual" in combined,
                 "hasUnreviewedCharacterJob":"characterStudyStatus" in combined,
                 "fullFilmReviewed":False,
+                **({"hasSampledAudioEnergy":True} if "numericAudio" in combined else {}),
             },
         }
         if new_record != prior:
@@ -722,6 +833,7 @@ def sync_repository_analysis(
         "sourceLinkedAnalysisCount":len(merged),
         "browserSpotCheckCount":sum("browserSpotCheck" in r["evidence"] for r in merged.values()),
         "sampledNumericVideoCount":sum("numericVisual" in r["evidence"] for r in merged.values()),
+        "sampledAudioVideoCount":sum("numericAudio" in r["evidence"] for r in merged.values()),
         "unreviewedCharacterJobCount":sum("characterStudyStatus" in r["evidence"] for r in merged.values()),
         "fullFilmReviewedCount":0,
         "entries":[{

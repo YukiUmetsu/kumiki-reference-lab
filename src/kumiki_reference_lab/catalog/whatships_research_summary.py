@@ -16,6 +16,7 @@ def summarize_tracked_whatships_observations(
                if x["repositoryAnalysisStatus"] == "tracked-partial-evidence"]
     observed = [x for x in tracked if x["spotCheckCoverage"] == "selected-moments-only"]
     numeric = [x for x in tracked if x["numericStatus"] == "sampled-numeric-unreviewed"]
+    audio = [x for x in tracked if x["audioStatus"] == "decoded-pcm-energy-unreviewed"]
     style_counts = Counter(tag for row in observed
                            for tag in set(row["visualObservationTags"]))
     category_counts = Counter(row["category"] for row in tracked)
@@ -36,6 +37,11 @@ def summarize_tracked_whatships_observations(
         "sourcePtsNumericVideoCount":len(numeric),
         "sourcePtsMeasuredWindowCount":measured_windows,
         "sourcePtsSampledFrameCount":measured_frames,
+        "audioEnergyMeasuredVideoCount":len(audio),
+        "audioEnergyWindowCount":sum(row["audioEnergy"]["windowsMeasured"] for row in audio),
+        "audioEnergyFrameBuckets":sum(
+            sum(w["decodedBuckets"] for w in row["audioEnergy"]["windows"])
+            for row in audio),
         "windowsWithVerifiedPtsInventoryCount":len(windows_with_inventory),
         "sourcePtsInventoriedFrameCountInThoseWindows":inventoried_frames,
         "sourcePtsSampledFrameCountInThoseWindows":sampled_with_inventory,

@@ -110,3 +110,7 @@ For previous batch exports, `whatships-all sync-analysis --append-numeric-window
 ## Optional ephemeral source acquisition
 
 If you have permission to study the original public X video associated with a What Ships record, [`whatships-acquire-measure`](../../../docs/whatships-ephemeral-acquisition.md) offers a single authorized acquisition → source-PTS numerical analysis → versioned JSON update workflow. Its public X downloader runs without authentication/cookies and deletes the downloaded media and private binding ledger on success or failure. Only actual frame-derived numeric evidence remains in the Git worktree; source identity and rights must be separately attested.
+
+## Soundtrack energy observations
+
+[`whatships-audio-measure`](../../../docs/whatships-audio-energy-research.md) writes a separate `evidence.numericAudio.windows[]` layer of 100 ms decoded PCM RMS/peak digital amplitude and near-silence heuristics, using an authorized local video file. Source media SHA is verified, and only numeric data reach Git. **Audio bucket positions are decoder offsets, not independently verified original video PTS.** This is not beat detection, narrated text, audio-visual synchronization, LUFS, or human-reviewed sound design. The browser and research report show these data separately.

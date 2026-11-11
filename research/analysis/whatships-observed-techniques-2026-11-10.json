@@ -43,5 +43,8 @@
   "windowsWithVerifiedPtsInventoryCount": 0,
   "sourcePtsInventoriedFrameCountInThoseWindows": 0,
   "sourcePtsSampledFrameCountInThoseWindows": 0,
-  "sampledFrameFractionOfInventoriedWindowFrames": null
+  "sampledFrameFractionOfInventoriedWindowFrames": null,
+  "audioEnergyMeasuredVideoCount": 0,
+  "audioEnergyWindowCount": 0,
+  "audioEnergyFrameBuckets": 0
 }
