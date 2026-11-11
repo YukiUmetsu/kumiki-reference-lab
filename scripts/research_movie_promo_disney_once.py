@@ -133,6 +133,11 @@ def acquire_public_source(directory: Path) -> tuple[Path, dict]:
         and _apple_host(item["trackViewUrl"])
     ]
     if not eligible:
+        print("Apple catalog candidates:", json.dumps([
+            {"title": item.get("trackName"), "year": str(item.get("releaseDate", ""))[:4],
+             "trackId": item.get("trackId"), "hasPreview": bool(item.get("previewUrl")),
+             "previewHost": urlparse(item.get("previewUrl", "")).hostname}
+            for item in options[:12]], ensure_ascii=False), flush=True)
         raise ValueError("Apple did not offer an exact 2024 Wild Robot movie preview")
     if len({item["trackId"] for item in eligible}) > 1:
         raise ValueError("Apple returned ambiguous multiple exact-title movie editions")
