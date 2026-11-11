@@ -96,7 +96,7 @@ def _binding_schema(value: Any, source_map: dict[str, dict[str, Any]]) -> None:
             type(tb["numerator"]) is not int or type(tb["denominator"]) is not int or
             tb["numerator"] <= 0 or tb["denominator"] <= 0):
         raise ValueError("media binding original source timebase invalid")
-    if value["rightsBasis"] not in _RIGHTS:
+    if type(value["rightsBasis"]) is not str or value["rightsBasis"] not in _RIGHTS:
         raise ValueError("unsupported media rights declaration")
     if not all(type(value[field]) is str and 12 <= len(value[field].strip()) <= 500
                for field in ("rightsNote", "identityNote")):
@@ -182,7 +182,7 @@ def register_local_media(
     """Record one explicitly attested source/media match in a PRIVATE ledger."""
     if acknowledge_rights is not True:
         raise ValueError("user must explicitly acknowledge lawful source rights and video identity")
-    if rights_basis not in _RIGHTS:
+    if type(rights_basis) is not str or rights_basis not in _RIGHTS:
         raise ValueError("rights basis must be an explicit supported declaration")
     if not all(type(note) is str and 12 <= len(note.strip()) <= 500
                for note in (rights_note, identity_note)):
