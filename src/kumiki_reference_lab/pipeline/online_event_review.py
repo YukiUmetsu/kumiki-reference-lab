@@ -132,8 +132,9 @@ def _call_local_event_model(images: list[bytes], *, model: str,
                 or type(data["evidence"]) is not str):
             raise ValueError("unsupported model action category")
         evidence = " ".join(data["evidence"].split())
-        if len(evidence) > 140 or len(evidence.split()) > 12:
-            raise ValueError("unbounded model event evidence")
+        if (len(evidence) > 140 or len(evidence.split()) > 12
+                or (data["category"] != "unknown" and not evidence)):
+            raise ValueError("unbounded or unsupported model event evidence")
     except (UnicodeError, IndexError, KeyError, TypeError, ValueError) as exc:
         raise ValueError("model event review lacks constrained JSON") from exc
     return {"category": data["category"], "evidence": evidence}
@@ -156,8 +157,21 @@ def review_multi_region_events(
             or temporal.get("frameCount") != manifest["frameCount"]
             or shots.get("sourceSha256") != manifest["sourceSha256"]
             or not isinstance(temporal.get("reviewTasks"), list)
-            or len(temporal["reviewTasks"]) > 48):
+            or len(temporal["reviewTasks"]) > 48
+            or not isinstance(temporal.get("events"), list)
+            or len(temporal["events"]) > 200):
         raise ValueError("event review source/shot provenance mismatch")
+    events = set()
+    for e in temporal["events"]:
+        if not isinstance(e, dict) or e.get("sourceSha256") is not None:
+            # Source identity is assigned at report level, not by untrusted
+            # per-event overrides.
+            raise ValueError("event review contains malformed event identity")
+        events.add((
+            e.get("eventType"), e.get("shotId"),
+            e.get("subjectA"), e.get("subjectB"),
+            e.get("startFrameIndex"), e.get("endFrameIndex"),
+        ))
     source_tracks = (_validate_tracks(seeded, numeric, shots)
                      if seeded.get("status") in
                      ("seeded-2d-region-motion-candidates",
@@ -180,8 +194,8 @@ def review_multi_region_events(
         shot = by_shot.get(shot_id)
         if (not isinstance(ids, list) or not 1 <= len(ids) <= 2
                 or len(set(ids)) != len(ids)
-                or any(i not in tracks or tracks[i]["shotId"] != shot_id
-                       for i in ids)
+                or any(type(i) is not str or i not in tracks
+                       or tracks[i]["shotId"] != shot_id for i in ids)
                 or not isinstance(anchors, list) or len(anchors) < 2
                 or len(anchors) > 3
                 or any(type(f) is not int for f in anchors)
@@ -190,6 +204,13 @@ def review_multi_region_events(
                     not shot["startFrameIndex"] <= f <
                     shot["endFrameIndexExclusive"] for f in anchors)):
             raise ValueError("event review task lacks same-shot tracked regions")
+        signature = (
+            task.get("eventType"), shot_id, ids[0],
+            ids[1] if len(ids) == 2 else None,
+            anchors[0], anchors[-1],
+        )
+        if signature not in events:
+            raise ValueError("event review task has no corresponding measured event")
         selected = anchors[0], anchors[-1]
         outlines = []
         for frame in selected:
