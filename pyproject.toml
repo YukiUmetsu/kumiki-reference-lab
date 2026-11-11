@@ -20,6 +20,7 @@ kumiki-watch = "kumiki_reference_lab.pipeline.online_study:main"
 kumiki-frames = "kumiki_reference_lab.pipeline.agent_frame_review:main"
 kumiki-insights = "kumiki_reference_lab.pipeline.cinematic_insights:main"
 kumiki-catalog = "kumiki_reference_lab.pipeline.cinematic_catalog:main"
+kumiki-sequence-benchmark = "kumiki_reference_lab.pipeline.sequence_benchmark:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
