@@ -106,6 +106,19 @@ actions, identities, dialogue or verified choreography. This is opt-in;
 the deterministic no-AI default remains available. See
 [three-anchor sequence review](docs/three-anchor-sequence-review.md).
 
+## Human-reviewed validation for local sequence models
+
+`kumiki-sequence-benchmark template/evaluate/aggregate` now provides a
+**source-hashed human review and error-measurement workflow** for the
+three-anchor motion hypotheses. It explicitly separates wrong category
+predictions, abstentions, insufficiently visible clips, model coverage,
+per-category confusion and full-sequence correctness. Unreviewed model
+agreement or catalog metadata is **not** recognition accuracy. No
+complete approved three-anchor human-label dataset is currently committed;
+real-video performance remains unmeasured. See
+[human-reviewed sequence benchmarking](docs/three-anchor-human-benchmark.md)
+and [dataset validation status](research/analysis/validation/README.md).
+
 ## Why this exists
 
 Professional motion graphics depend on more than shaders and easing presets:
