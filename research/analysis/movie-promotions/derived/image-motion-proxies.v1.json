@@ -1,0 +1,1008 @@
+{
+  "schemaVersion": "kumiki.movie-promotion-image-motion-proxies.v1",
+  "sourceIndexGitBlobSha": "6c51281975542635e3c8b6d0beef8486f359b0b7",
+  "method": "Window-level status counts from the prior 160x90 sampled-frame phase-correlation image-motion analyzer and sparse corner-flow review. Exploratory shift threshold: Euclidean norm of dxNormalized and dyNormalized / measured pair duration >= 0.01 frame fraction per second.",
+  "limits": "Not camera-motion frequency, optical flow ground truth, subject activity, shot scale or visual style. Measured pairs are algorithmic correlation candidates on sparse time samples; low-texture/cut-boundary/ambiguous pairs abstain. Not all 20 seconds were observed continuously. Windows are selected, not whole-film coverage. Preview editions may differ.",
+  "thresholdFractionPerSecond": 0.01,
+  "coverage": {
+    "sourceCount": 13,
+    "windowCount": 39,
+    "sourceWindowSeconds": 780,
+    "imageMotionPairCount": 897,
+    "imageMotionPairStatuses": {
+      "ambiguous-correlation": 24,
+      "cut-boundary": 246,
+      "measured-image-translation": 522,
+      "unobservable-low-texture": 105
+    },
+    "sparseFlowPairCount": 429,
+    "sparseFlowPairStatuses": {
+      "ambiguous-dominant-group": 7,
+      "cut-boundary": 187,
+      "insufficient-consensus": 159,
+      "multiple-image-translations": 12,
+      "single-image-translation-candidate": 64
+    },
+    "measuredImageTranslationPairs": 522,
+    "measuredPairsAboveExploratoryMagnitudeThreshold": 303
+  },
+  "videos": [
+    {
+      "id": "barbie",
+      "catalogId": "warner-barbie-main-trailer",
+      "originalSourceSha256": "e947627b15eef96baf9a7273d679bd88a95345480a50bb38c4b6ec7f169eb2e9",
+      "detailGitBlobSha": "24e42011a032ee7f2718b3232242a5af69c248e5",
+      "sourceEdition": "Apple iTunes Store promotional movie preview (not verified identical to catalog YouTube upload)",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "e947627b15eef96baf9a7273d679bd88a95345480a50bb38c4b6ec7f169eb2e9",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 7,
+            "measured-image-translation": 13,
+            "unobservable-low-texture": 3
+          },
+          "measuredImageTranslationPairs": 13,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 5,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.003183,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 5,
+            "insufficient-consensus": 3,
+            "multiple-image-translations": 1,
+            "single-image-translation-candidate": 2
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "9a79ad3351b3e92b7b699ab62cf24140e216af0646a451092ac23ca748e25230",
+          "sourceOffsetSeconds": 71,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 8,
+            "measured-image-translation": 14,
+            "unobservable-low-texture": 1
+          },
+          "measuredImageTranslationPairs": 14,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 8,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.012676,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 6,
+            "insufficient-consensus": 1,
+            "multiple-image-translations": 1,
+            "single-image-translation-candidate": 3
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "787469667a23a2dc9767c61dd75a903aa82cdbec2cf48f2b025f202ac95e7bfc",
+          "sourceOffsetSeconds": 141,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 12,
+            "measured-image-translation": 7,
+            "unobservable-low-texture": 4
+          },
+          "measuredImageTranslationPairs": 7,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 4,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.012278,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "ambiguous-dominant-group": 1,
+            "cut-boundary": 7,
+            "insufficient-consensus": 2,
+            "single-image-translation-candidate": 1
+          },
+          "calibratedPhysicalCameraConfidence": false
+        }
+      ]
+    },
+    {
+      "id": "deadpool-wolverine",
+      "catalogId": "marvel-deadpool-wolverine-trailer",
+      "originalSourceSha256": "ef8a72653e014ecbda21d3415fb39ec2dd680e0a6f741c8de6fd903e0a2ff787",
+      "detailGitBlobSha": "3682d481ac2f528a4aa5f8b0007180596390e53e",
+      "sourceEdition": "Apple iTunes Store promotional movie preview (not verified identical to catalog YouTube upload)",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "ef8a72653e014ecbda21d3415fb39ec2dd680e0a6f741c8de6fd903e0a2ff787",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "ambiguous-correlation": 1,
+            "cut-boundary": 3,
+            "measured-image-translation": 14,
+            "unobservable-low-texture": 5
+          },
+          "measuredImageTranslationPairs": 14,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 13,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.082795,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 2,
+            "insufficient-consensus": 9
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "47d52590532339a7b3cb8e1adff200639e132912effec68a5888325a7ce2705e",
+          "sourceOffsetSeconds": 62,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "ambiguous-correlation": 2,
+            "cut-boundary": 2,
+            "measured-image-translation": 17,
+            "unobservable-low-texture": 2
+          },
+          "measuredImageTranslationPairs": 17,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 16,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.15241,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 2,
+            "insufficient-consensus": 8,
+            "single-image-translation-candidate": 1
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "aae99d8219ec40a58514380832b72b5629675ddaf4b6da4723f122f499976837",
+          "sourceOffsetSeconds": 124,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 1,
+            "measured-image-translation": 18,
+            "unobservable-low-texture": 4
+          },
+          "measuredImageTranslationPairs": 18,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 8,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.005217,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "ambiguous-dominant-group": 2,
+            "cut-boundary": 1,
+            "insufficient-consensus": 2,
+            "multiple-image-translations": 2,
+            "single-image-translation-candidate": 4
+          },
+          "calibratedPhysicalCameraConfidence": false
+        }
+      ]
+    },
+    {
+      "id": "dune-part-two",
+      "catalogId": "warner-dune-part-two-trailer",
+      "originalSourceSha256": "9c8fc42cd7b8aa08c8e17b4c13156bea52ae577fb6db13ba21558554c1f91934",
+      "detailGitBlobSha": "4ee2a2497acea5d1b186c929a5db4fb26c7e8805",
+      "sourceEdition": "Apple iTunes Store promotional movie preview (not verified identical to catalog YouTube upload)",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "9c8fc42cd7b8aa08c8e17b4c13156bea52ae577fb6db13ba21558554c1f91934",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "ambiguous-correlation": 2,
+            "cut-boundary": 10,
+            "measured-image-translation": 7,
+            "unobservable-low-texture": 4
+          },
+          "measuredImageTranslationPairs": 7,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 4,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.04791,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 7,
+            "insufficient-consensus": 4
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "7b5c48b084cb09e791f6b88b6f1d60a3c761b5ea29e31de30f4c016366bff214",
+          "sourceOffsetSeconds": 82,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "ambiguous-correlation": 2,
+            "cut-boundary": 8,
+            "measured-image-translation": 9,
+            "unobservable-low-texture": 4
+          },
+          "measuredImageTranslationPairs": 9,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 5,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.017144,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 6,
+            "insufficient-consensus": 5
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "293858a934b5a5e791d8be44882c6d519f559c5d0e1ada79c697c7aa546b175d",
+          "sourceOffsetSeconds": 163,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "ambiguous-correlation": 1,
+            "cut-boundary": 6,
+            "measured-image-translation": 12,
+            "unobservable-low-texture": 4
+          },
+          "measuredImageTranslationPairs": 12,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 6,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.009907,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 5,
+            "insufficient-consensus": 4,
+            "single-image-translation-candidate": 2
+          },
+          "calibratedPhysicalCameraConfidence": false
+        }
+      ]
+    },
+    {
+      "id": "endgame",
+      "catalogId": "marvel-endgame-trailer",
+      "originalSourceSha256": "1073b09a9aaf09619c0b8585f753f60f3398f52934b0aa29d2db8f34d562f46d",
+      "detailGitBlobSha": "7aa00011bd7d362c14ceb81e512187c05ba05f07",
+      "sourceEdition": "Disney official public-player",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "1073b09a9aaf09619c0b8585f753f60f3398f52934b0aa29d2db8f34d562f46d",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 4,
+            "measured-image-translation": 13,
+            "unobservable-low-texture": 6
+          },
+          "measuredImageTranslationPairs": 13,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 6,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.008041,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 4,
+            "insufficient-consensus": 4,
+            "single-image-translation-candidate": 3
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "4a4447b40052d3c495a38220fcb54c5dad07cdf127f7be15cd9c2936af689a23",
+          "sourceOffsetSeconds": 63,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "ambiguous-correlation": 1,
+            "cut-boundary": 2,
+            "measured-image-translation": 18,
+            "unobservable-low-texture": 2
+          },
+          "measuredImageTranslationPairs": 18,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 14,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.043584,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 1,
+            "insufficient-consensus": 7,
+            "multiple-image-translations": 1,
+            "single-image-translation-candidate": 2
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "25bc5a57a9b36f33ed855310a61d9bc2550cd309599e1ba901d26248739b76f4",
+          "sourceOffsetSeconds": 126,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 5,
+            "measured-image-translation": 15,
+            "unobservable-low-texture": 3
+          },
+          "measuredImageTranslationPairs": 15,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 4,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.001168,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 5,
+            "insufficient-consensus": 4,
+            "single-image-translation-candidate": 2
+          },
+          "calibratedPhysicalCameraConfidence": false
+        }
+      ]
+    },
+    {
+      "id": "force-awakens",
+      "catalogId": "star-wars-force-awakens-trailer",
+      "originalSourceSha256": "daf98d39f3658931f476d9a9f1bf4faafe8488eb84b903f9488f4e96b4a5db2c",
+      "detailGitBlobSha": "285c9c9b376812230b8b4ff05ab26b8583673646",
+      "sourceEdition": "Disney official public-player",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "daf98d39f3658931f476d9a9f1bf4faafe8488eb84b903f9488f4e96b4a5db2c",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 4,
+            "measured-image-translation": 17,
+            "unobservable-low-texture": 2
+          },
+          "measuredImageTranslationPairs": 17,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 6,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.000295,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 4,
+            "insufficient-consensus": 2,
+            "single-image-translation-candidate": 5
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "d28c933373a359f1305cad67a417f73dfba7c98dc11debf5a26f4ae63f5db89d",
+          "sourceOffsetSeconds": 59,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "ambiguous-correlation": 3,
+            "cut-boundary": 5,
+            "measured-image-translation": 14,
+            "unobservable-low-texture": 1
+          },
+          "measuredImageTranslationPairs": 14,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 13,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.131242,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 4,
+            "insufficient-consensus": 7
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "35bfa4209171fb046eee78c32a484de96c937e0fb49d09f7edfacd7fee873008",
+          "sourceOffsetSeconds": 118,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "measured-image-translation": 16,
+            "unobservable-low-texture": 7
+          },
+          "measuredImageTranslationPairs": 16,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 3,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.000507,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "insufficient-consensus": 4,
+            "multiple-image-translations": 4,
+            "single-image-translation-candidate": 3
+          },
+          "calibratedPhysicalCameraConfidence": false
+        }
+      ]
+    },
+    {
+      "id": "frozen-2",
+      "catalogId": "disney-frozen-2-trailer",
+      "originalSourceSha256": "dca093bbb0e1b9afb28885d3a092083afa2ee2b7afcaca617f8efa484046cdaa",
+      "detailGitBlobSha": "176966f8d85e91c861fe1cfff75add8ad5b3f152",
+      "sourceEdition": "Disney official public-player",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "dca093bbb0e1b9afb28885d3a092083afa2ee2b7afcaca617f8efa484046cdaa",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 5,
+            "measured-image-translation": 5,
+            "unobservable-low-texture": 13
+          },
+          "measuredImageTranslationPairs": 5,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 4,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.026983,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 4,
+            "insufficient-consensus": 7
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "a6bcff50a9626b1c10a27abafbd7473b70802cdd82baea7b17dcee1ff9477640",
+          "sourceOffsetSeconds": 47,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "ambiguous-correlation": 2,
+            "cut-boundary": 2,
+            "measured-image-translation": 19
+          },
+          "measuredImageTranslationPairs": 19,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 16,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.12191,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 2,
+            "insufficient-consensus": 9
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "20eed464e2a68269109cf35a633768a0a1963f8e10d0aa9b4f8c8758c7fee890",
+          "sourceOffsetSeconds": 93,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 1,
+            "measured-image-translation": 18,
+            "unobservable-low-texture": 4
+          },
+          "measuredImageTranslationPairs": 18,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 13,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.06009,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "ambiguous-dominant-group": 2,
+            "cut-boundary": 1,
+            "insufficient-consensus": 6,
+            "single-image-translation-candidate": 2
+          },
+          "calibratedPhysicalCameraConfidence": false
+        }
+      ]
+    },
+    {
+      "id": "infinity-war",
+      "catalogId": "marvel-infinity-war-first-trailer",
+      "originalSourceSha256": "d80396433e9bb5d9329b979c7bca610736a54ee804152a1b99295b03ec35952f",
+      "detailGitBlobSha": "13e3d0a01ce2e6d782a573ff900caa5042fbacb6",
+      "sourceEdition": "Disney official public-player",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "d80396433e9bb5d9329b979c7bca610736a54ee804152a1b99295b03ec35952f",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 2,
+            "measured-image-translation": 16,
+            "unobservable-low-texture": 5
+          },
+          "measuredImageTranslationPairs": 16,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 15,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.062789,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 2,
+            "insufficient-consensus": 7,
+            "single-image-translation-candidate": 2
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "15d25a4fcd30006b3c8388e68a2b717288326e05cb5090e02ed21444e9ce685d",
+          "sourceOffsetSeconds": 62,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "ambiguous-correlation": 2,
+            "cut-boundary": 8,
+            "measured-image-translation": 12,
+            "unobservable-low-texture": 1
+          },
+          "measuredImageTranslationPairs": 12,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 11,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.09289,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "ambiguous-dominant-group": 1,
+            "cut-boundary": 5,
+            "insufficient-consensus": 4,
+            "multiple-image-translations": 1
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "2a73d84754e43f6aeb0604c175a4947694f832b04268c6863aa040fe9ff97d06",
+          "sourceOffsetSeconds": 124,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 2,
+            "measured-image-translation": 17,
+            "unobservable-low-texture": 4
+          },
+          "measuredImageTranslationPairs": 17,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 5,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.000904,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 2,
+            "insufficient-consensus": 6,
+            "single-image-translation-candidate": 3
+          },
+          "calibratedPhysicalCameraConfidence": false
+        }
+      ]
+    },
+    {
+      "id": "inside-out-2",
+      "catalogId": "pixar-inside-out-2-trailer",
+      "originalSourceSha256": "ce09522b50ccb39bb85e50f8b66381e44cf97d3722ad47cc3b8efae8b069fad8",
+      "detailGitBlobSha": "ed22a00abd17839290e4f36bff4aa47ab966ed53",
+      "sourceEdition": "Disney official public-player",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "ce09522b50ccb39bb85e50f8b66381e44cf97d3722ad47cc3b8efae8b069fad8",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "ambiguous-correlation": 1,
+            "cut-boundary": 13,
+            "measured-image-translation": 9
+          },
+          "measuredImageTranslationPairs": 9,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 2,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.000696,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 10,
+            "insufficient-consensus": 1
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "fe319caf3a9640a1a30dbd36eb95538706b8ae4e5b1ebe4e5d44c2a2889dd292",
+          "sourceOffsetSeconds": 62,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 12,
+            "measured-image-translation": 11
+          },
+          "measuredImageTranslationPairs": 11,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 4,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.000954,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 8,
+            "single-image-translation-candidate": 3
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "2fbc37a225bdd91994dd774f9f4ecf74bd0894314cb9116dc5e4196e9702ad64",
+          "sourceOffsetSeconds": 124,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 8,
+            "measured-image-translation": 15
+          },
+          "measuredImageTranslationPairs": 15,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 2,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.000532,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 7,
+            "insufficient-consensus": 1,
+            "single-image-translation-candidate": 3
+          },
+          "calibratedPhysicalCameraConfidence": false
+        }
+      ]
+    },
+    {
+      "id": "moana-2",
+      "catalogId": "disney-moana-2-trailer",
+      "originalSourceSha256": "99fa5ecf395748c7e1626831669a47c948473f839d303b7f4212d6efbc893e96",
+      "detailGitBlobSha": "c3f8d1146d7c58c9c0c5e9b86ab21598dd0595b9",
+      "sourceEdition": "Disney official public-player",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "99fa5ecf395748c7e1626831669a47c948473f839d303b7f4212d6efbc893e96",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 10,
+            "measured-image-translation": 13
+          },
+          "measuredImageTranslationPairs": 13,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 9,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.076836,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 8,
+            "insufficient-consensus": 3
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "d6464e555ab77abdce9553a7ceb0d1bdd2bbd857996d3cbafe6a7f1ee8cecb6f",
+          "sourceOffsetSeconds": 55,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 9,
+            "measured-image-translation": 14
+          },
+          "measuredImageTranslationPairs": 14,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 9,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.048989,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 7,
+            "insufficient-consensus": 1,
+            "single-image-translation-candidate": 3
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "7db5dab9e8fa6e9ada21078e584265670560024376b50d7bbf10876c27ebf26b",
+          "sourceOffsetSeconds": 110,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 4,
+            "measured-image-translation": 17,
+            "unobservable-low-texture": 2
+          },
+          "measuredImageTranslationPairs": 17,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 10,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.019191,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 3,
+            "insufficient-consensus": 3,
+            "multiple-image-translations": 1,
+            "single-image-translation-candidate": 4
+          },
+          "calibratedPhysicalCameraConfidence": false
+        }
+      ]
+    },
+    {
+      "id": "oppenheimer",
+      "catalogId": "universal-oppenheimer-trailer",
+      "originalSourceSha256": "ca67b4d91a4ed5fd95725bff2110758c42344bbfa102ec8425af355d1d16a4c5",
+      "detailGitBlobSha": "24aebc851f80cd5c4610bfee0c1fe5a764b12293",
+      "sourceEdition": "Apple iTunes Store promotional movie preview (not verified identical to catalog YouTube upload)",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "ca67b4d91a4ed5fd95725bff2110758c42344bbfa102ec8425af355d1d16a4c5",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 8,
+            "measured-image-translation": 9,
+            "unobservable-low-texture": 6
+          },
+          "measuredImageTranslationPairs": 9,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 8,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.030686,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 6,
+            "insufficient-consensus": 5
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "1b63f59bdab45cb39e9bc4989ebecc88d6fd98ac604881dccc5149a69a58f6c3",
+          "sourceOffsetSeconds": 82,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "ambiguous-correlation": 1,
+            "cut-boundary": 8,
+            "measured-image-translation": 14
+          },
+          "measuredImageTranslationPairs": 14,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 10,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.088577,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 5,
+            "insufficient-consensus": 5,
+            "multiple-image-translations": 1
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "eddeebe7f966702bc4987d8b93e13cbe94e568e3d210c7f50fc40619788bcd1b",
+          "sourceOffsetSeconds": 163,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 7,
+            "measured-image-translation": 15,
+            "unobservable-low-texture": 1
+          },
+          "measuredImageTranslationPairs": 15,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 4,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.003297,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 4,
+            "insufficient-consensus": 3,
+            "single-image-translation-candidate": 4
+          },
+          "calibratedPhysicalCameraConfidence": false
+        }
+      ]
+    },
+    {
+      "id": "spider-man-no-way-home",
+      "catalogId": "sony-spider-man-no-way-home-trailer",
+      "originalSourceSha256": "299a9c1caa2a0b2c21473b414a718e1bbb859dda5ef91c938aaf7c1f89ed1e89",
+      "detailGitBlobSha": "0f9eb7a7cd4e6342be84dc59cef665eedbf3531b",
+      "sourceEdition": "Apple iTunes Store promotional movie preview (not verified identical to catalog YouTube upload)",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "299a9c1caa2a0b2c21473b414a718e1bbb859dda5ef91c938aaf7c1f89ed1e89",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 10,
+            "measured-image-translation": 12,
+            "unobservable-low-texture": 1
+          },
+          "measuredImageTranslationPairs": 12,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 11,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.059257,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 9,
+            "insufficient-consensus": 2
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "578d8cec66abd71a149a3d7bb34f62663b0bd61a037a9bacf180a65dea9f0eb5",
+          "sourceOffsetSeconds": 41,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "ambiguous-correlation": 1,
+            "cut-boundary": 11,
+            "measured-image-translation": 9,
+            "unobservable-low-texture": 2
+          },
+          "measuredImageTranslationPairs": 9,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 7,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.033138,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 8,
+            "insufficient-consensus": 3
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "5c2da752ffd8edeff08a699a5bd0192374560b848f115b5c1008846bd8cc0dce",
+          "sourceOffsetSeconds": 81,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 10,
+            "measured-image-translation": 10,
+            "unobservable-low-texture": 3
+          },
+          "measuredImageTranslationPairs": 10,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 6,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.03816,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 7,
+            "insufficient-consensus": 3,
+            "single-image-translation-candidate": 1
+          },
+          "calibratedPhysicalCameraConfidence": false
+        }
+      ]
+    },
+    {
+      "id": "super-mario-bros",
+      "catalogId": "illumination-super-mario-trailer",
+      "originalSourceSha256": "3060ca0c8ca3e5b6cc764b846cb81711ed9517200bd0f76ea37df8cfc13d411f",
+      "detailGitBlobSha": "0f62a6c1c1ad7d75856888f97784f8de04779b19",
+      "sourceEdition": "Apple iTunes Store promotional movie preview (not verified identical to catalog YouTube upload)",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "3060ca0c8ca3e5b6cc764b846cb81711ed9517200bd0f76ea37df8cfc13d411f",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "ambiguous-correlation": 1,
+            "cut-boundary": 2,
+            "measured-image-translation": 18,
+            "unobservable-low-texture": 2
+          },
+          "measuredImageTranslationPairs": 18,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 15,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.106662,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 2,
+            "insufficient-consensus": 7,
+            "single-image-translation-candidate": 2
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "516eef0799d23be3ddd131de49b204f60184db4265f70ef993ed1879c15d602f",
+          "sourceOffsetSeconds": 36,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "ambiguous-correlation": 2,
+            "cut-boundary": 13,
+            "measured-image-translation": 8
+          },
+          "measuredImageTranslationPairs": 8,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 7,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.12989,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 7,
+            "insufficient-consensus": 3,
+            "single-image-translation-candidate": 1
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "7f8932913b3bf3a7a83dc6747c4ef1c71c42aa6dd392050adadf6941f3d60a7e",
+          "sourceOffsetSeconds": 72,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "ambiguous-correlation": 1,
+            "cut-boundary": 2,
+            "measured-image-translation": 17,
+            "unobservable-low-texture": 3
+          },
+          "measuredImageTranslationPairs": 17,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 11,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.126098,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 1,
+            "insufficient-consensus": 8,
+            "single-image-translation-candidate": 2
+          },
+          "calibratedPhysicalCameraConfidence": false
+        }
+      ]
+    },
+    {
+      "id": "zootopia-2",
+      "catalogId": "disney-zootopia-2-trailer",
+      "originalSourceSha256": "13b574710d6a9afa561647223c2e4e61ddfdf1cea2d3ce06e0297a2a19458259",
+      "detailGitBlobSha": "3b9013c947dbdab8d288da043d0c6b17b2dc74c1",
+      "sourceEdition": "Disney official public-player",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "13b574710d6a9afa561647223c2e4e61ddfdf1cea2d3ce06e0297a2a19458259",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "ambiguous-correlation": 1,
+            "cut-boundary": 9,
+            "measured-image-translation": 13
+          },
+          "measuredImageTranslationPairs": 13,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 3,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.0006,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 8,
+            "insufficient-consensus": 1,
+            "single-image-translation-candidate": 2
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "689c4c87db29d0f53c16d1025b5353df57313cbc37912d64135a05e7fce03cfc",
+          "sourceOffsetSeconds": 61,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 10,
+            "measured-image-translation": 13
+          },
+          "measuredImageTranslationPairs": 13,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 3,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.001314,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "ambiguous-dominant-group": 1,
+            "cut-boundary": 9,
+            "single-image-translation-candidate": 1
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "8225a4d6fd428e4f815eb38bcf991f4402e25b0d22fd3c27626149b1af07c89c",
+          "sourceOffsetSeconds": 121,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 3,
+            "measured-image-translation": 14,
+            "unobservable-low-texture": 6
+          },
+          "measuredImageTranslationPairs": 14,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 3,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.001576,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 3,
+            "insufficient-consensus": 5,
+            "single-image-translation-candidate": 3
+          },
+          "calibratedPhysicalCameraConfidence": false
+        }
+      ]
+    }
+  ]
+}
