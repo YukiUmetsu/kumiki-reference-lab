@@ -1,0 +1,477 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/YukiUmetsu/kumiki-reference-lab/schemas/v1/online-video-reference.schema.json",
+  "title": "Agent online-video creative reference",
+  "description": "Measured sequential frame evidence plus explicitly unreviewed sampled visual interpretations.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "id",
+    "source",
+    "numericEvidence",
+    "semanticObservations",
+    "semanticModel",
+    "semanticStatus",
+    "creativeReference",
+    "limitations"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "kumiki.online-video-reference.v1"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 90
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "watchUrl",
+        "sourceSha256",
+        "video",
+        "rightsBasis",
+        "rightsStatus",
+        "mediaRetained"
+      ],
+      "properties": {
+        "watchUrl": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://"
+        },
+        "sourceSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "video": {
+          "type": "object"
+        },
+        "rightsBasis": {
+          "enum": [
+            "own-original-work",
+            "written-permission",
+            "permissive-license",
+            "other-lawful-authorization"
+          ]
+        },
+        "rightsStatus": {
+          "const": "operator-declared-review-required"
+        },
+        "mediaRetained": {
+          "const": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "numericEvidence": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "sourceSha256",
+        "frameCount",
+        "decoderTimebase",
+        "decoderTimebaseMatchesSource",
+        "timestampStatus",
+        "analysisWindow",
+        "cutCandidateFrameIndices",
+        "frames",
+        "limits"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": "kumiki.online-frame-evidence.v1"
+        },
+        "sourceSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "video": {
+          "type": "object"
+        },
+        "frameCount": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "decoderTimebase": {
+          "type": "object",
+          "required": [
+            "numerator",
+            "denominator"
+          ],
+          "properties": {
+            "numerator": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "denominator": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "decoderTimebaseMatchesSource": {
+          "type": "boolean"
+        },
+        "timestampStatus": {
+          "type": "string"
+        },
+        "analysisWindow": {
+          "type": "object",
+          "required": [
+            "startSeconds",
+            "requestedMaxSeconds",
+            "requestedMaxFrames",
+            "lastDecodedSeconds",
+            "reportedSourceDurationSeconds",
+            "completeVideo"
+          ],
+          "properties": {
+            "startSeconds": {
+              "type": "number",
+              "minimum": 0
+            },
+            "requestedMaxSeconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "requestedMaxFrames": {
+              "type": "integer",
+              "minimum": 2
+            },
+            "lastDecodedSeconds": {
+              "type": "number"
+            },
+            "reportedSourceDurationSeconds": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "completeVideo": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "cutCandidateFrameIndices": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "frames": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "frameIndex",
+              "appearance",
+              "changeFromPrevious",
+              "cutCandidate",
+              "decodedPts",
+              "decodedSeconds"
+            ],
+            "properties": {
+              "frameIndex": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "appearance": {
+                "type": "object",
+                "required": [
+                  "meanRgb",
+                  "displayLumaProxy",
+                  "saturationProxy",
+                  "brightPixelFraction",
+                  "darkPixelFraction"
+                ],
+                "properties": {
+                  "meanRgb": {
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      }
+                    ],
+                    "minItems": 3,
+                    "maxItems": 3
+                  },
+                  "displayLumaProxy": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "saturationProxy": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "brightPixelFraction": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "darkPixelFraction": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                },
+                "additionalProperties": false
+              },
+              "changeFromPrevious": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "meanPixelDelta",
+                      "changedPixelFraction"
+                    ],
+                    "properties": {
+                      "meanPixelDelta": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "changedPixelFraction": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "cutCandidate": {
+                "type": "boolean"
+              },
+              "decodedPts": {
+                "type": "integer"
+              },
+              "decodedSeconds": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "limits": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "semanticObservations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "frameIndex",
+          "comparisonFrameIndex",
+          "observations",
+          "interpretationStatus"
+        ],
+        "properties": {
+          "frameIndex": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "comparisonFrameIndex": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "interpretationStatus": {
+            "const": "unreviewed-local-vision-hypothesis"
+          },
+          "observations": {
+            "type": "object",
+            "required": [
+              "typography",
+              "characters",
+              "animation",
+              "camera",
+              "lighting",
+              "composition",
+              "visualStyle"
+            ],
+            "properties": {
+              "typography": {
+                "type": "object",
+                "required": [
+                  "style",
+                  "visibleText",
+                  "motion"
+                ],
+                "properties": {
+                  "style": {
+                    "type": "string"
+                  },
+                  "visibleText": {
+                    "type": "string",
+                    "maxLength": 80
+                  },
+                  "motion": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "characters": {
+                "type": "array",
+                "maxItems": 3,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "look",
+                    "action"
+                  ],
+                  "properties": {
+                    "look": {
+                      "type": "string"
+                    },
+                    "action": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "animation": {
+                "type": "array",
+                "maxItems": 4,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "camera": {
+                "type": "string"
+              },
+              "lighting": {
+                "type": "string"
+              },
+              "composition": {
+                "type": "string"
+              },
+              "visualStyle": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "semanticModel": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "semanticStatus": {
+      "enum": [
+        "not-measured",
+        "unreviewed-local-vision-hypotheses"
+      ]
+    },
+    "creativeReference": {
+      "type": "object",
+      "required": [
+        "purpose",
+        "measuredFrameCount",
+        "observedAnimation",
+        "typographyNotes",
+        "visualStyles",
+        "characterAppearanceNotes",
+        "reviewStatus"
+      ],
+      "properties": {
+        "purpose": {
+          "const": "inspiration-not-reproduction"
+        },
+        "measuredFrameCount": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "observedAnimation": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "typographyNotes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "visualStyles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "characterAppearanceNotes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "frameIndex",
+              "look",
+              "action"
+            ],
+            "properties": {
+              "frameIndex": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "look": {
+                "type": "string"
+              },
+              "action": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "reviewStatus": {
+          "const": "unreviewed-machine-proposals"
+        }
+      },
+      "additionalProperties": false
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}
