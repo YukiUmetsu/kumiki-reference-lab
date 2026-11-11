@@ -18,8 +18,11 @@ To enable sampled optical flow on your Apple Silicon Mac or another CPU:
 
     pip install -e '.[dense]'
 
-OpenCV is OPTIONAL; when absent, the report marks motion not-run, while
-shot grouping, Magnitude, recipe drafts and catalog still work.
+OpenCV is OPTIONAL. Without OpenCV or NumPy, the motion stage uses a bounded,
+standard-library-only RGB block-matching fallback to report approximate
+image-plane displacements. It does **not** produce optical-flow feature tracks,
+robust affine camera proxies or verified object motion. For finer motion evidence,
+install the optional dense extra.
 
 Install Tesseract locally only if you want OCR-based text-line boxes and
 possible position-change hints. OCR is opt-in and runs on small previews.
