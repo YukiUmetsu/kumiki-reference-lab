@@ -100,6 +100,15 @@ tools operate on a different source-PTS workflow. This stage is a
 lightweight adapter for already acquired online frame-review data, not
 a replacement for those implementations.
 
+## Benchmark against human-reviewed real clips
+
+Do not use two-phase category agreement as a measure of accuracy. The
+`kumiki-sequence-benchmark` command creates a pending human source-frame
+review template, scores approved labels separately from abstentions, and
+aggregates metrics by model and distinct source. See
+[human-reviewed three-anchor benchmarking](three-anchor-human-benchmark.md).
+No approved real-clip labels are currently committed.
+
 ## Test
 
     PYTHONPATH=src python -m unittest tests.test_three_anchor_sequence_review -q
