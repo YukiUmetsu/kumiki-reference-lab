@@ -136,6 +136,43 @@ class RealVideoCharacterStudySmoke(unittest.TestCase):
             (self.out / "interaction-qa" / "interaction-feedback.json").read_text()
         )["pairs"][0]["verdict"], "pending")
 
+    def test_later_window_preserves_original_pts_through_all_galleries(self):
+        with (
+            patch(
+                "kumiki_reference_lab.pipeline.ollama_subject_detection._ollama_json",
+                side_effect=self.local_boxes,
+            ),
+            patch(
+                "kumiki_reference_lab.pipeline.ollama_character_perception._ollama_chat",
+                side_effect=self.local_appearance,
+            ),
+            patch(
+                "kumiki_reference_lab.pipeline.local_character_interactions._ollama_json",
+                side_effect=self.local_interaction,
+            ),
+        ):
+            path = run_local_character_study(
+                self.video, self.out, model="synthetic-local-vision:1b",
+                start_seconds=1, max_seconds=1, max_samples=5,
+                max_calls=10, max_pairs=4, width=160, height=90,
+                timeout_seconds=10, review=True, interactions=True,
+            )
+        manifest = json.loads(path.read_text())
+        self.assertEqual(manifest["scanStartSeconds"], 1)
+        self.assertEqual(manifest["scanPrefixSeconds"], 2)
+        predictions = json.loads(
+            (self.out / "subject-detections.json").read_text())
+        frame_pts = [x["sourcePts"] for x in predictions["frames"]]
+        self.assertEqual(len(frame_pts), 5)
+        self.assertEqual(frame_pts[0], 10240)
+        self.assertTrue(all(10240 <= x < 20480 for x in frame_pts))
+        scene = load_character_scene(
+            self.out / "character-vision" / "character-scene.json")
+        self.assertGreaterEqual(scene["window"]["startPts"], frame_pts[0])
+        self.assertEqual(len(scene["appearances"]), 10)
+        for key in ("trackletQa", "characterQa", "interactionQa"):
+            self.assertTrue((self.out / manifest["paths"][key]).is_file())
+
     def test_vision_error_leaves_no_partial_study(self):
         def no_model(*args, **kwargs):
             raise ValueError("vision model unavailable")
