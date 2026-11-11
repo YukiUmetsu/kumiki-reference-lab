@@ -56,8 +56,10 @@ def study_online_video(
             max_semantic_frames=max_semantic_frames if model is not None else 0,
             width=width, height=height, ffmpeg=ffmpeg, ffprobe=ffprobe,
         )
-        semantics = (analyze_visual_samples(samples, model=model, port=port)
-                     if model is not None else [])
+        semantics = (analyze_visual_samples(
+            samples, model=model, port=port,
+            cut_candidate_indices=tuple(numeric["cutCandidateFrameIndices"]),
+        ) if model is not None else [])
         document: dict[str, Any] = {
             "schemaVersion": SCHEMA_VERSION,
             "id": reference_id(watch_url),
