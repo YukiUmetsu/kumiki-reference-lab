@@ -88,7 +88,8 @@ class DirectWhatshipsNumericMeasurementTests(unittest.TestCase):
         }
 
     def mock_probe(self, path, *, start_seconds, seconds, max_samples,
-                   width, height, cut_threshold, rights_status, ffmpeg, ffprobe):
+                   width, height, cut_threshold, rights_status, ffmpeg, ffprobe,
+                   image_translation=False):
         self.assertEqual(path,self.media)
         self.samples.append((start_seconds,seconds,max_samples))
         if self.fail_second and start_seconds > 0:
@@ -131,6 +132,11 @@ class DirectWhatshipsNumericMeasurementTests(unittest.TestCase):
                 "status":"rgb-image-difference-proxy",
                 "meanAbsoluteDisplayRgbDelta":.02,
                 "meanAbsoluteDisplayRgbDeltaPerSecond":round(20/frame_step,6),
+                **({"imageTranslation":{
+                    "status":"measured-image-translation",
+                    "dxPixels":2.0,"dyPixels":-1.0,
+                    "peakToSidelobeRatio":12.5,
+                }} if image_translation else {}),
             } for i in range(1,len(positions))],
             "sampledWindowSummary":{
                 "cutCandidateCountBetweenFirstAndLastSample":0,
@@ -173,6 +179,19 @@ class DirectWhatshipsNumericMeasurementTests(unittest.TestCase):
         self.assertEqual([w["startSeconds"] for w in windows],[0,5])
         self.assertEqual(windows[1]["sampledFrames"][1]["sourcePts"],5500)
         self.assertNotIn(str(self.home),(self.repository/"film-one.json").read_text())
+        self.assertEqual(validate_repository_analysis(self.repository,self.catalog)
+                         ["numericSampledVideos"],1)
+
+    def test_optional_apparent_translation_is_preserved_as_numeric_not_camera_claim(self):
+        result=self.run_mock(image_translation=True)
+        self.assertTrue(result["gitWorkingTreeUpdated"])
+        record=json.loads((self.repository/"film-one.json").read_text())
+        window=record["evidence"]["numericVisual"]["windows"][0]
+        pair=window["sampledFramePairs"][0]
+        self.assertEqual(pair["imageTranslation"]["status"],
+                         "measured-image-translation")
+        self.assertEqual(pair["imageTranslation"]["dxPixels"],2.0)
+        self.assertFalse(record["coverage"]["fullFilmReviewed"])
         self.assertEqual(validate_repository_analysis(self.repository,self.catalog)
                          ["numericSampledVideos"],1)
 
