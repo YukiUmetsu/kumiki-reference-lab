@@ -101,6 +101,14 @@ def _bound_proposals(
         tid, pts = observation["trackletId"], observation["sourcePts"]
         if type(tid) is not str or type(pts) is not int:
             raise ValueError("vision observation requires a string tracklet ID and integer PTS")
+        if (type(observation["appearance"]) is not str or
+                not 1 <= len(observation["appearance"]) <= 800 or
+                type(observation["motionEvidence"]) is not str or
+                len(observation["motionEvidence"]) > 400 or
+                not isinstance(observation["visibleTraits"], list) or
+                any(type(t) is not str or len(t) > 100
+                    for t in observation["visibleTraits"])):
+            raise ValueError("unbounded or malformed model observation text")
         key = (pts, tid)
         if key in claimed or key not in proposals or key not in scene_appearances:
             raise ValueError("vision observation lacks unique source tracklet/appearance evidence")
@@ -309,7 +317,9 @@ def summarize_character_vision_feedback(feedback_path: Path, vision_path: Path) 
         if (not isinstance(row, dict) or set(row) !=
                 {"index", "appearanceVerdict", "actionVerdict", "notes"} or
                 type(row["index"]) is not int or row["index"] != i or
+                type(row["appearanceVerdict"]) is not str or
                 row["appearanceVerdict"] not in _VERDICTS or
+                type(row["actionVerdict"]) is not str or
                 type(row["notes"]) is not str or len(row["notes"]) > 500):
             raise ValueError(f"feedback row {i} invalid")
         verdict = row["actionVerdict"]
