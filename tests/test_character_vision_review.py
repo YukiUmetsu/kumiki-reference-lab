@@ -172,7 +172,7 @@ class CharacterVisionReviewTests(unittest.TestCase):
         self.vision["trackletReportSha256"] = sha256_file(self.tracklet_path)
         self.vision["observations"][0]["trackletId"] = "subject_999"
         self.save()
-        with self.assertRaisesRegex(ValueError, "lacks unique source"):
+        with self.assertRaisesRegex(ValueError, "missing character"):
             self.build()
         self.assertFalse(self.out.exists())
 
