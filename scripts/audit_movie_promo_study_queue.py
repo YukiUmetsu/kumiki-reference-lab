@@ -68,10 +68,18 @@ def audit(queue: dict, catalog: dict) -> list[str]:
                 errors.append(f"{slug}: invalid publication date")
         except (KeyError, ValueError, TypeError):
             errors.append(f"{slug}: malformed publication date")
+        if (not all(isinstance(item.get(field), str) and item[field].strip()
+                    for field in ("title", "filmStudio", "officialUploader"))
+                or isinstance(item.get("filmReleaseYear"), bool)
+                or not isinstance(item.get("filmReleaseYear"), int)
+                or not 1990 <= item["filmReleaseYear"] <= snapshot.year):
+            errors.append(f"{slug}: invalid film metadata")
         if not isinstance(item.get("studyQuestion"), str) or not item["studyQuestion"].endswith("?"):
             errors.append(f"{slug}: expected testable study question")
         tags = item.get("candidateResearchTags")
-        if not isinstance(tags, list) or not tags or len(tags) != len(set(map(str, tags))):
+        if (not isinstance(tags, list) or not tags
+                or not all(isinstance(tag, str) and SLUG.fullmatch(tag) for tag in tags)
+                or len(tags) != len(set(map(str, tags)))):
             errors.append(f"{slug}: invalid proposed research tags")
         view = item.get("viewEvidence", {})
         count = view.get("reportedViews")
@@ -82,7 +90,17 @@ def audit(queue: dict, catalog: dict) -> list[str]:
         if view.get("sourceKind") not in {"youtube-search-index", "third-party-channel-statistics"}:
             errors.append(f"{slug}: invalid view evidence category")
         url = view.get("sourceUrl")
-        if not isinstance(url, str) or urlparse(url).scheme != "https" or not urlparse(url).hostname:
+        try:
+            parsed = urlparse(url) if isinstance(url, str) else None
+            host = parsed.hostname if parsed is not None else None
+            if (parsed is None or parsed.scheme != "https"
+                    or (view.get("sourceKind") == "youtube-search-index" and
+                        (host not in {"www.youtube.com", "youtube.com"}
+                         or url != item.get("officialYoutubeUrl")))
+                    or (view.get("sourceKind") == "third-party-channel-statistics" and
+                        host != "trari.com")):
+                errors.append(f"{slug}: unsafe evidence URL")
+        except ValueError:
             errors.append(f"{slug}: unsafe evidence URL")
         if item.get("proposedAcquisitionPriority") not in {"first-wave", "second-wave"}:
             errors.append(f"{slug}: invalid queue priority")
