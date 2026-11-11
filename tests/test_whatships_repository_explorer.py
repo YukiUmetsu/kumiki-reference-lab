@@ -81,7 +81,7 @@ class WhatshipsRepositoryExplorerTests(unittest.TestCase):
         self.assertIn("A layered letter animation is visible.", html)
         self.assertIn("Saved partial visual spotcheck", html)
         self.assertIn("Unverified technique hypotheses", html)
-        self.assertIn('connect-src \\'none\\'', html)
+        self.assertIn("connect-src 'none'", html)
         self.assertNotIn(str(self.work), html)
         rows = json.loads((folder/"whatships-videos.json").read_text())
         self.assertEqual(len(rows["entries"]), 2)
