@@ -1,14 +1,14 @@
 {
   "schemaVersion": "kumiki.movie-promotion-timed-events.v1",
-  "sourceIndexGitBlobSha": "6c51281975542635e3c8b6d0beef8486f359b0b7",
+  "sourceIndexGitBlobSha": "23692403b40a9fe39068d2ae0faf3e25c80a30fc",
   "method": "Source-PTS rational cut and audio RMS-rise candidates from source-hashed local study windows. Cut candidates use detector 0.25; audio attacks use the original pre-existing level-rise detector. Cut bins are [0,5), [5,10), [10,15), [15,20) seconds per selected clip. Nearest audio attack is signed audio-minus-video milliseconds, with 250ms inclusive proximity.",
   "limitations": "Only three selected 20-second windows per source, not entire trailer. Cut candidates can be flashes/changes, audio RMS rises are not validated music beats, dialogue, or effects; nearness is not causality or creative synchronization. Reencoded middle/end clips have approximate original offsets. No copied media, visual scene tags or physical-camera inferences.",
   "coverage": {
-    "sourceCount": 13,
-    "windowCount": 39,
-    "sampledSeconds": 780,
-    "cutCandidateCount025": 268,
-    "audioLevelAttackCandidateCount": 109,
+    "sourceCount": 14,
+    "windowCount": 42,
+    "sampledSeconds": 840,
+    "cutCandidateCount025": 279,
+    "audioLevelAttackCandidateCount": 110,
     "cutCandidatesWithin250MsOfAudioAttack": 25
   },
   "videos": [
@@ -2517,6 +2517,172 @@
             }
           ],
           "audioAttackEvents": []
+        }
+      ]
+    },
+    {
+      "id": "overgrown-blender-teaser",
+      "catalogId": "uncataloged-blender-overgrown-official-teaser",
+      "originalSourceSha256": "0c49e856a034e8de9695c96d86a048a34aa7f60286c0414069a1bcf35dab8f91",
+      "detailGitBlobSha": "5f8394008180fc56277826785f127b05062eb993",
+      "sourceEdition": "Blender Studio official PeerTube OVERGROWN feature-film teaser (not a verified YouTube edition)",
+      "catalogUploadIdentityMatch": "not-verified",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "0c49e856a034e8de9695c96d86a048a34aa7f60286c0414069a1bcf35dab8f91",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 12288,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "numerator": 1,
+            "denominator": 48000
+          },
+          "sourceOffsetPrecision": "exact-opening",
+          "cutCandidateCount025": 2,
+          "audioLevelAttackCandidateCount": 0,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            0,
+            1,
+            0,
+            1
+          ],
+          "medianInteriorCandidateGapSeconds": 10.333333,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 102400,
+              "localSeconds": 8.333333,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 229376,
+              "localSeconds": 18.666667,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": []
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "04b503131cbea967a515646ac3f5aa0e0bb7450f33405ea316cb5a737e36c5d3",
+          "sourceOffsetSeconds": 30,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 12288,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "numerator": 1,
+            "denominator": 48000
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 7,
+          "audioLevelAttackCandidateCount": 0,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            1,
+            2,
+            3,
+            1
+          ],
+          "medianInteriorCandidateGapSeconds": 1.666667,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 29184,
+              "localSeconds": 2.375,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 96768,
+              "localSeconds": 7.875,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 113664,
+              "localSeconds": 9.25,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 127488,
+              "localSeconds": 10.375,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 142848,
+              "localSeconds": 11.625,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 166912,
+              "localSeconds": 13.583333,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 237056,
+              "localSeconds": 19.291667,
+              "nearestAudioAttackDeltaMs": null,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": []
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "0e44b61dcbd675660b832c06b562f11facf7a846a36fbc9b073c1dcb5c8de869",
+          "sourceOffsetSeconds": 60,
+          "scanSeconds": 20,
+          "sourceVideoTimebase": {
+            "denominator": 12288,
+            "numerator": 1
+          },
+          "sourceAudioTimebase": {
+            "numerator": 1,
+            "denominator": 48000
+          },
+          "sourceOffsetPrecision": "approximate-reencoded-window",
+          "cutCandidateCount025": 2,
+          "audioLevelAttackCandidateCount": 1,
+          "cutCandidatesWithin250MsOfAudioAttack": 0,
+          "cutCandidateCountsByFiveSecondBin": [
+            0,
+            2,
+            0,
+            0
+          ],
+          "medianInteriorCandidateGapSeconds": 1.458333,
+          "cutEvents": [
+            {
+              "sourceVideoPts": 73216,
+              "localSeconds": 5.958333,
+              "nearestAudioAttackDeltaMs": -476,
+              "audioAttackWithin250Ms": false
+            },
+            {
+              "sourceVideoPts": 91136,
+              "localSeconds": 7.416667,
+              "nearestAudioAttackDeltaMs": -1934,
+              "audioAttackWithin250Ms": false
+            }
+          ],
+          "audioAttackEvents": [
+            {
+              "sourceAudioPts": 263168,
+              "localSeconds": 5.482667,
+              "measuredRmsRiseDb": 12.5307
+            }
+          ]
         }
       ]
     },

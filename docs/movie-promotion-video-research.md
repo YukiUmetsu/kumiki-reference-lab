@@ -2,7 +2,7 @@
 
 **Research checked:** November 11, 2026
 **Machine-readable cohort:** [`research/popular-movie-videos.v1.json`](../research/popular-movie-videos.v1.json)  
-**Evidence level:** 13 official YouTube uploads with attributable popularity observations; **13 corresponding film-promotion sources actually processed** (seven Disney-hosted trailers and six Apple iTunes Store movie previews) in 39 non-overlapping 20-second windows (780 seconds total), plus separate limited manual visual observations of the original five. Apple retail previews are **not verified identical** to the catalog's YouTube uploads. Extracted numerical evidence is committed; video, audio and image files are not.
+**Evidence level:** 13 cataloged official YouTube uploads with attributable popularity observations; **14 film-promotion editions actually processed** (seven Disney-hosted trailers, six Apple iTunes Store movie previews, and one independently published Blender Studio *OVERGROWN* PeerTube teaser) in 42 non-overlapping 20-second windows (840 seconds total), plus separate limited manual visual observations of the original five. Apple retail previews are **not verified identical** to the catalog's YouTube uploads. Extracted numerical evidence is committed; video, audio and image files are not.
 
 **Measured data:** the canonical [`research/analysis/movie-promotions/`](../research/analysis/movie-promotions/) folder holds [`index.json`](../research/analysis/movie-promotions/index.json) and one granular JSON file per analyzed trailer. It retains per-window source PTS, cut-candidate positions, two-dimensional motion results, sampled image appearance, decoded audio RMS/peak trajectories, onset candidates, edit rhythms and AV-cut comparisons. No source videos, frame images, signed CDN URLs or dialogue transcripts are committed.
 
@@ -202,7 +202,7 @@ copy before attributing artistic intent or deciding on component gaps.
 
 The [derived image-motion proxies](../research/analysis/movie-promotions/derived/image-motion-proxies.v1.json)
 aggregate the original low-resolution phase-correlation and sparse-flow
-evidence across 13 filmed promotion editions and 39 windows. This is a
+evidence across the original 13 catalog-associated promotion editions and their 39 windows. The separate Blender Studio *OVERGROWN* teaser adds three new independently measured windows to the current machine-readable dataset. This is a
 different question from the cut-to-audio experiment above.
 
 | 2D sample status | Number of sampled pairs |
@@ -236,6 +236,22 @@ composition-held moments versus global apparent movement, with
 explicit per-shot confidence/abstention reporting. Do not turn a
 phase-correlation magnitude into a literal camera keyframe without
 scene-level validation or independent reconstructed geometry.
+
+## Newly measured Blender Studio feature-film teaser: *OVERGROWN*
+
+[Original publisher's player](https://video.blender.org/videos/watch/7ad3cbee-fe5f-41c2-93ea-b108986939f4) · [Timecoded numeric detail](../research/analysis/movie-promotions/overgrown-blender-teaser.json)
+
+*OVERGROWN* expands the actually measured promotional-edition corpus from **13 to 14 sources**, with **42 selected 20-second windows and 840 measured seconds**. It is an **81.088-second Blender Studio public PeerTube feature-film teaser**, not one of the 13 videos in the original Hollywood popularity catalog, and not a verified matching YouTube edit. The downloaded publisher media had SHA-256 `0c49e856a034e8de9695c96d86a048a34aa7f60286c0414069a1bcf35dab8f91`; all media and intermediate audio/frame galleries were deleted after numerical export.
+
+| Source interval | FFmpeg cut candidates, threshold 0.25 | Sensitivity threshold 0.15 | Sampled luma proxy |
+| --- | ---: | ---: | ---: |
+| Opening 0–20 seconds | 2 | 2 | 0.2657 |
+| Middle 30–50 seconds | 7 | 8 | 0.2998 |
+| Ending 60–80 seconds | 2 | 3 | 0.2046 |
+
+The middle segment has **more detected scene-change candidates**, and the ending sample is darker *on average across its 12 sampled frames* than the middle sample. These findings do not prove physical camera or lighting behavior, verified cuts, editing intent, or whole-teaser averages. The publisher clip provides 60 seconds of sampled coverage (approximately 74% of its runtime), not a complete frame review. Audio RMS/peak rows, source-PTS cut candidates, sparse-flow abstentions, and image-plane measurements are preserved in the numerical detail. Such distinctively short films should not be directly compared with feature-length movie advertising campaigns without matching runtime, source-edition and content context.
+
+After adding a measured title, run `python -m scripts.rebuild_movie_promo_derived` and `python -m scripts.rebuild_movie_promo_derived --verify`; all three derived comparison/timeline/motion reports must share the updated index Git-blob SHA. The source-hashed data is intended to help implement independently authored animation and pacing techniques in `kumiki-ui`, not to reproduce this film's copyrighted assets.
 
 ## Cross-studio comparison questions
 

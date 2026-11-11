@@ -5,9 +5,9 @@ This is the **canonical, Git-tracked numerical evidence dataset** for official m
 | File | Contents |
 | --- | --- |
 | [`index.json`](index.json) | One summary entry per actually processed video, with three bounded windows, original and clip SHA-256s, source offsets, scene-difference cut sensitivity, audio attack counts, sampled display appearance and image-motion availability |
-| `<film-slug>.json` | Detailed source-PTS cut candidates, image motion, sparse flow, sampled image color/hue, per-decoded-frame audio RMS/peak levels, audio-onset candidates and AV/edit rhythm evidence |
+| `<film-slug>.json` | Detailed source-PTS cut candidates, image motion, sparse flow, sampled image color/hue, per-decoded-frame audio RMS/peak levels, audio-onset candidates and AV/edit rhythm evidence; includes `overgrown-blender-teaser.json` |
 
-The current cohort covers **all 13 films in the popularity catalog**: seven Disney-player trailers (*Inside Out 2*, *Frozen 2*, *Moana 2*, *Avengers: Infinity War*, *Avengers: Endgame*, *Zootopia 2*, *Star Wars: The Force Awakens*) and six Apple iTunes Store movie previews (*Barbie*, *Oppenheimer*, *Spider-Man: No Way Home*, *Dune: Part Two*, *The Super Mario Bros. Movie*, *Deadpool & Wolverine*). Each has three selected 20-second windows, preserving **780 seconds of machine-measured evidence**, not verified full trailers. Additional films should extend the same index and add their own per-video files; never overwrite an earlier source SHA or segment silently.
+The dataset contains **14 measured promotional editions, 42 selected 20-second windows, and 840 seconds of machine-measured evidence**. The original 13-film popularity catalog still has seven Disney-player trailers (*Inside Out 2*, *Frozen 2*, *Moana 2*, *Avengers: Infinity War*, *Avengers: Endgame*, *Zootopia 2*, *Star Wars: The Force Awakens*) and six Apple iTunes Store movie previews (*Barbie*, *Oppenheimer*, *Spider-Man: No Way Home*, *Dune: Part Two*, *The Super Mario Bros. Movie*, *Deadpool & Wolverine*). The fourteenth source is **[OVERGROWN](overgrown-blender-teaser.json)**, Blender Studio's public PeerTube feature-film teaser, independently source-hashed and analyzed on its own publisher service. That film is **not** in the 13-video popularity catalog and must not be counted as a verified edition of a YouTube upload. Its source SHA-256 is `0c49e856a034e8de9695c96d86a048a34aa7f60286c0414069a1bcf35dab8f91`, its original duration 81.088 seconds, and its three sample offsets 0, 30 and 60 seconds. The source media and temporary analysis galleries were deleted after export. None of these 14 records has complete full-runtime human-certified coverage. New films should extend the same index and add their own per-video files; never overwrite an earlier source SHA or segment silently.
 
 ## Keep every derived report synchronized
 
@@ -151,6 +151,12 @@ Regenerate using `python scripts/derive_movie_promo_timed_events.py` only
 when the upstream original index/detail files change. `--verify` and the
 focused regression tests fail on a stale or inconsistent committed report,
 without installing FFmpeg or fetching copyrighted media.
+
+## Blender Studio *OVERGROWN* teaser measurements
+
+The publisher's [official PeerTube player](https://video.blender.org/videos/watch/7ad3cbee-fe5f-41c2-93ea-b108986939f4) provided a public, 81.088-second, 1146×480 film teaser. An isolated one-time hosted research run downloaded and SHA-256-hashed that media, ran `study-reference` on three non-overlapping 20-second windows, committed only numerical source-PTS evidence, and deleted temporary video, audio, and frames. At scene-change threshold 0.25 it measured **2 / 7 / 2 cut candidates** in opening/middle/ending samples, versus **2 / 8 / 3** at threshold 0.15. These are automated scene-change candidates, not verified editing decisions. The three windows contain 36 sampled appearance frames, 69 image-motion pair comparisons, and 2,811 decoded-audio level frame rows.
+
+This expands edition diversity (Blender Studio public PeerTube vs Disney player vs Apple retail preview); it **does not** establish a causal style or studio-effect comparison. The project may not treat Blender's feature-film teaser as equivalent to a Warner, Sony, or DreamWorks campaign. Reproduce the original bounded research procedure using [`scripts/research_movie_promo_overgrown.py`](../../../scripts/research_movie_promo_overgrown.py) on a legitimate public source, but do not rerun it against committed data or overwrite source editions. Keep derivative comparison manifests synchronized after adding new evidence.
 
 ## Reproducible comparisons
 

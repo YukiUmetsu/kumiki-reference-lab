@@ -1,30 +1,30 @@
 {
   "schemaVersion": "kumiki.movie-promotion-image-motion-proxies.v1",
-  "sourceIndexGitBlobSha": "6c51281975542635e3c8b6d0beef8486f359b0b7",
+  "sourceIndexGitBlobSha": "23692403b40a9fe39068d2ae0faf3e25c80a30fc",
   "method": "Window-level status counts from the prior 160x90 sampled-frame phase-correlation image-motion analyzer and sparse corner-flow review. Exploratory shift threshold: Euclidean norm of dxNormalized and dyNormalized / measured pair duration >= 0.01 frame fraction per second.",
   "limits": "Not camera-motion frequency, optical flow ground truth, subject activity, shot scale or visual style. Measured pairs are algorithmic correlation candidates on sparse time samples; low-texture/cut-boundary/ambiguous pairs abstain. Not all 20 seconds were observed continuously. Windows are selected, not whole-film coverage. Preview editions may differ.",
   "thresholdFractionPerSecond": 0.01,
   "coverage": {
-    "sourceCount": 13,
-    "windowCount": 39,
-    "sourceWindowSeconds": 780,
-    "imageMotionPairCount": 897,
+    "sourceCount": 14,
+    "windowCount": 42,
+    "sourceWindowSeconds": 840,
+    "imageMotionPairCount": 966,
     "imageMotionPairStatuses": {
       "ambiguous-correlation": 24,
-      "cut-boundary": 246,
-      "measured-image-translation": 522,
-      "unobservable-low-texture": 105
+      "cut-boundary": 257,
+      "measured-image-translation": 576,
+      "unobservable-low-texture": 109
     },
-    "sparseFlowPairCount": 429,
+    "sparseFlowPairCount": 462,
     "sparseFlowPairStatuses": {
       "ambiguous-dominant-group": 7,
-      "cut-boundary": 187,
-      "insufficient-consensus": 159,
-      "multiple-image-translations": 12,
-      "single-image-translation-candidate": 64
+      "cut-boundary": 197,
+      "insufficient-consensus": 166,
+      "multiple-image-translations": 16,
+      "single-image-translation-candidate": 76
     },
-    "measuredImageTranslationPairs": 522,
-    "measuredPairsAboveExploratoryMagnitudeThreshold": 303
+    "measuredImageTranslationPairs": 576,
+    "measuredPairsAboveExploratoryMagnitudeThreshold": 325
   },
   "videos": [
     {
@@ -773,6 +773,82 @@
           "sparseFlowPairStatuses": {
             "cut-boundary": 4,
             "insufficient-consensus": 3,
+            "single-image-translation-candidate": 4
+          },
+          "calibratedPhysicalCameraConfidence": false
+        }
+      ]
+    },
+    {
+      "id": "overgrown-blender-teaser",
+      "catalogId": "uncataloged-blender-overgrown-official-teaser",
+      "originalSourceSha256": "0c49e856a034e8de9695c96d86a048a34aa7f60286c0414069a1bcf35dab8f91",
+      "detailGitBlobSha": "5f8394008180fc56277826785f127b05062eb993",
+      "sourceEdition": "Blender Studio official PeerTube OVERGROWN feature-film teaser (not a verified YouTube edition)",
+      "windows": [
+        {
+          "window": "opening",
+          "windowSourceSha256": "0c49e856a034e8de9695c96d86a048a34aa7f60286c0414069a1bcf35dab8f91",
+          "sourceOffsetSeconds": 0,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 2,
+            "measured-image-translation": 20,
+            "unobservable-low-texture": 1
+          },
+          "measuredImageTranslationPairs": 20,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 3,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.000264,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 2,
+            "insufficient-consensus": 1,
+            "multiple-image-translations": 1,
+            "single-image-translation-candidate": 7
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "middle",
+          "windowSourceSha256": "04b503131cbea967a515646ac3f5aa0e0bb7450f33405ea316cb5a737e36c5d3",
+          "sourceOffsetSeconds": 30,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 7,
+            "measured-image-translation": 16
+          },
+          "measuredImageTranslationPairs": 16,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 11,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.016282,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 6,
+            "insufficient-consensus": 1,
+            "multiple-image-translations": 3,
+            "single-image-translation-candidate": 1
+          },
+          "calibratedPhysicalCameraConfidence": false
+        },
+        {
+          "window": "ending",
+          "windowSourceSha256": "0e44b61dcbd675660b832c06b562f11facf7a846a36fbc9b073c1dcb5c8de869",
+          "sourceOffsetSeconds": 60,
+          "scanSeconds": 20,
+          "imageMotionPairCount": 23,
+          "imageMotionPairStatuses": {
+            "cut-boundary": 2,
+            "measured-image-translation": 18,
+            "unobservable-low-texture": 3
+          },
+          "measuredImageTranslationPairs": 18,
+          "measuredPairsAboveExploratoryMagnitudeThreshold": 8,
+          "medianFrameNormalizedShiftPerSecondOfMeasuredPairs": 0.003933,
+          "sparseFlowPairCount": 11,
+          "sparseFlowPairStatuses": {
+            "cut-boundary": 2,
+            "insufficient-consensus": 5,
             "single-image-translation-candidate": 4
           },
           "calibratedPhysicalCameraConfidence": false
