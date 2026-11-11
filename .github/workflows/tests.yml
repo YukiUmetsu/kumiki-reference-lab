@@ -36,6 +36,7 @@ jobs:
           python -m unittest tests.test_three_anchor_sequence_review -q
           python -m unittest tests.test_sequence_benchmark -q
           python -m unittest tests.test_sequence_review_workbench -q
+          python -m unittest tests.test_motion_mechanic_ideas -q
           python -m unittest tests.test_directors_library -q
           python -m unittest tests.test_cinematic_intelligence -q
           python -m unittest tests.test_movie_promo_evidence -q
