@@ -94,34 +94,20 @@ def _crop_rgb(pixels: bytes, width: int, height: int,
     return result, x1-x0, y1-y0
 
 
-def _ollama_chat(images: list[bytes], *, model: str, port: int,
-                 timeout_seconds: int, previous: bool) -> dict[str, Any]:
-    """Send a bounded request only to literal IPv4 loopback; never follow redirects."""
+def _ollama_json(images: list[bytes], *, model: str, port: int,
+                 timeout_seconds: int, instruction: str) -> dict[str, Any]:
+    """Bounded localhost-only JSON vision inference shared by character and pair reviews."""
     if type(port) is not int or not 1 <= port <= 65535:
         raise ValueError("Ollama port must be 1..65535")
     if type(timeout_seconds) is not int or not 5 <= timeout_seconds <= 300:
         raise ValueError("Ollama timeout must be 5..300 seconds")
     if type(model) is not str or not _MODEL.fullmatch(model):
         raise ValueError("Ollama model must be an explicit local model tag")
-    if not 1 <= len(images) <= 2 or any(len(image) > 1_000_000 for image in images):
-        raise ValueError("vision images must be bounded")
-    instruction = (
-        "You are reviewing cropped frames of a single provisional subject from a film. "
-        "The images show the same local tracklet, not a verified person identity. "
-        "Describe only OBSERVABLE colors, clothing, hairstyle, silhouette, pose and props. "
-        "Never infer real identity, age, gender, race, ethnicity, nationality or personality. "
-        "Do not attribute speech or emotion. The subject can be cartoon or live action. "
-        "Return exactly a JSON object with appearance (12-450 chars), visibleTraits "
-        "(0-8 short strings), observedAction (one of none, walking, running, turning, "
-        "raising-arm, lowering-arm, waving, pointing, sitting-down, standing-up, "
-        "gesturing, moving-object, other-visible-motion), and motionEvidence (string). "
-        + ("First image is earlier; second is later. Only choose a motion action when "
-           "the two frames clearly demonstrate the visible change. Motion due to "
-           "camera movement or ambiguity must be none. Do not invent a target character."
-           if previous else
-           "Only one still image is present; observedAction MUST be none and "
-           "motionEvidence MUST be empty.")
-    )
+    if type(instruction) is not str or not 10 <= len(instruction) <= 2200:
+        raise ValueError("Ollama instruction must be a bounded prompt")
+    if not 1 <= len(images) <= 2 or any(
+            not isinstance(image, bytes) or len(image) > 1_000_000 for image in images):
+        raise ValueError("vision images must be bounded binary PNGs")
     body = json.dumps({
         "model": model, "stream": False, "format": "json",
         "options": {"temperature": 0, "num_predict": 280},
@@ -144,8 +130,9 @@ def _ollama_chat(images: list[bytes], *, model: str, port: int,
         raise ValueError("local Ollama request failed or timed out") from exc
     finally:
         connection.close()
+
     def unique_fields(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
-        result = {}
+        result: dict[str, Any] = {}
         for key, value in pairs:
             if key in result:
                 raise ValueError("duplicate Ollama response property")
@@ -162,6 +149,33 @@ def _ollama_chat(images: list[bytes], *, model: str, port: int,
                               parse_constant=lambda value: (_ for _ in ()).throw(ValueError("nonfinite JSON")))
     except (UnicodeError, json.JSONDecodeError, KeyError, TypeError) as exc:
         raise ValueError("Ollama did not return a valid JSON observation") from exc
+    if not isinstance(proposed, dict):
+        raise ValueError("Ollama observation must be a JSON object")
+    return proposed
+
+
+def _ollama_chat(images: list[bytes], *, model: str, port: int,
+                 timeout_seconds: int, previous: bool) -> dict[str, Any]:
+    """Describe one provisional subject on one or two original-frame crops."""
+    instruction = (
+        "You are reviewing cropped frames of a single provisional subject from a film. "
+        "The images show the same local tracklet, not a verified person identity. "
+        "Describe only OBSERVABLE colors, clothing, hairstyle, silhouette, pose and props. "
+        "Never infer real identity, age, gender, race, ethnicity, nationality or personality. "
+        "Do not attribute speech or emotion. The subject can be cartoon or live action. "
+        "Return exactly a JSON object with appearance (12-450 chars), visibleTraits "
+        "(0-8 short strings), observedAction (one of none, walking, running, turning, "
+        "raising-arm, lowering-arm, waving, pointing, sitting-down, standing-up, "
+        "gesturing, moving-object, other-visible-motion), and motionEvidence (string). "
+        + ("First image is earlier; second is later. Only choose a motion action when "
+           "the two frames clearly demonstrate the visible change. Motion due to "
+           "camera movement or ambiguity must be none. Do not invent a target character."
+           if previous else
+           "Only one still image is present; observedAction MUST be none and "
+           "motionEvidence MUST be empty.")
+    )
+    proposed = _ollama_json(images, model=model, port=port,
+                            timeout_seconds=timeout_seconds, instruction=instruction)
     return _parse_model_response(proposed, allow_action=previous)
 
 
