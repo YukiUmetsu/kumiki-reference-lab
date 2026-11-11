@@ -70,6 +70,8 @@ Reference Lab turns these observations into an auditable analysis pipeline and a
 
 **One-command local character study (new):** [`character-study-local`](docs/local-character-study.md) orchestrates locally proposed human/animated character boxes, conservative tracklets, visual descriptions, two-frame gesture/interaction hypotheses, and actual source-frame QA galleries in one atomic run. Requires an already installed local Ollama vision model; all labels remain provisional until human review. Supports `--detector ollama` or macOS `apple-vision`, with optional QA/interaction skipping.
 
+**Subject detection accuracy evaluation (new):** [`character-labels-template` and `evaluate-character-detections`](docs/subject-box-ground-truth-benchmark.md) support explicit human labels on every sampled original-PTS frame, with source-verified per-category precision, recall, F1 and matched IoU. This reveals missed characters, not just incorrect model boxes. Empty pending labels cannot silently count as ground truth; metrics are limited to the reviewed sample and do not certify model generalization.
+
 ## Ecosystem boundaries
 
 | Repository | Owns | Does not own |
