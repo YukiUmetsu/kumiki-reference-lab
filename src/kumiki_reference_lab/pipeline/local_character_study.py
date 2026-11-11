@@ -30,7 +30,8 @@ SCHEMA_VERSION = "kumiki.local-character-study.v1"
 
 def run_local_character_study(
     source: Path, out: Path, *, model: str, detector: str = "ollama",
-    max_seconds: int = 10, max_samples: int = 8, max_calls: int = 12,
+    max_seconds: int = 10, start_seconds: int = 0,
+    max_samples: int = 8, max_calls: int = 12,
     max_pairs: int = 6, width: int = 320, height: int = 180,
     port: int = 11434, timeout_seconds: int = 180,
     ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
@@ -49,6 +50,8 @@ def run_local_character_study(
     if (type(port) is not int or not 1 <= port <= 65535 or
             type(timeout_seconds) is not int or not 5 <= timeout_seconds <= 300 or
             type(max_seconds) is not int or not 1 <= max_seconds <= 30 or
+            type(start_seconds) is not int or start_seconds < 0 or
+            start_seconds + max_seconds > 120 or
             type(max_samples) is not int or not 5 <= max_samples <= 12 or
             type(max_calls) is not int or not 1 <= max_calls <= 24 or
             type(max_pairs) is not int or not 1 <= max_pairs <= 12 or
@@ -63,6 +66,7 @@ def run_local_character_study(
         raise ValueError("local study output must be a new nonexisting directory")
 
     signature = file_signature(source)
+    scan_prefix = start_seconds + max_seconds
     out.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".kumiki-character-study-", dir=out.parent) as temp:
         staged = Path(temp)
@@ -71,12 +75,14 @@ def run_local_character_study(
             detect_local_ollama_subjects(
                 source, boxes_path, model=model, port=port,
                 seconds=max_seconds, max_samples=max_samples,
+                start_seconds=start_seconds,
                 width=width, height=height, timeout_seconds=timeout_seconds,
                 ffmpeg=ffmpeg, ffprobe=ffprobe, rights_status=rights_status,
             )
         else:
             detect_mac_vision_people(
                 source, boxes_path, seconds=max_seconds, max_samples=max_samples,
+                start_seconds=start_seconds,
                 width=width, height=height,
                 ffmpeg=ffmpeg, ffprobe=ffprobe, rights_status=rights_status,
             )
@@ -99,7 +105,7 @@ def run_local_character_study(
         if review:
             build_subject_tracklet_review(
                 source, tracks_path, staged / "tracklet-qa",
-                max_frames=min(max_samples, 8), scan_seconds=max_seconds,
+                max_frames=min(max_samples, 8), scan_seconds=scan_prefix,
                 width=width, height=height, ffmpeg=ffmpeg, ffprobe=ffprobe)
             paths["trackletQa"] = "tracklet-qa/index.html"
 
@@ -107,13 +113,13 @@ def run_local_character_study(
         scene_path = describe_local_characters(
             source, tracks_path, vision_dir, model=model, port=port,
             max_frames=min(max_samples, 8), max_calls=max_calls,
-            scan_seconds=max_seconds, width=width, height=height,
+            scan_seconds=scan_prefix, width=width, height=height,
             timeout_seconds=timeout_seconds, ffmpeg=ffmpeg, ffprobe=ffprobe)
         observed_scene = load_character_scene(scene_path)
         if review and observed_scene["appearances"]:
             build_character_vision_review(
                 source, tracks_path, vision_dir, staged / "character-qa",
-                scan_seconds=max_seconds, width=width, height=height,
+                scan_seconds=scan_prefix, width=width, height=height,
                 ffmpeg=ffmpeg, ffprobe=ffprobe)
             paths["characterQa"] = "character-qa/index.html"
         if interactions and len(observed_scene["characters"]) >= 2:
@@ -121,7 +127,7 @@ def run_local_character_study(
             analyze_local_interactions(
                 source, tracks_path, vision_dir, interaction_dir,
                 model=model, port=port, max_pairs=max_pairs,
-                scan_seconds=max_seconds, width=width, height=height,
+                scan_seconds=scan_prefix, width=width, height=height,
                 timeout_seconds=timeout_seconds, ffmpeg=ffmpeg, ffprobe=ffprobe)
             paths["interactions"] = "character-interactions/character-scene.json"
             paths["interactionManifest"] = "character-interactions/character-interactions.json"
@@ -142,7 +148,8 @@ def run_local_character_study(
             "modelDigestVerified": False,
             "detectorBackend": detector,
             "rightsStatus": rights_status,
-            "maxSeconds": max_seconds, "maxSamples": max_samples,
+            "scanStartSeconds": start_seconds, "maxSeconds": max_seconds,
+            "scanPrefixSeconds": scan_prefix, "maxSamples": max_samples,
             "maxVisionCalls": max_calls, "maxInteractionPairs": max_pairs,
             "detectedRegionProposals": sum(
                 len(frame["detections"]) for frame in detections["frames"]),
