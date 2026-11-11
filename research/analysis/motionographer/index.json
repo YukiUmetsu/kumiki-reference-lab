@@ -1,11 +1,11 @@
 {
   "schemaVersion": "kumiki.motionographer-index.v1",
-  "generatedAt": "2026-11-11T21:10:06.706178Z",
+  "generatedAt": "2026-11-11T21:10:23.844490Z",
   "catalogSha256": "23f813dafb11e546fc8c62f962bf435b8d7aa75e4a00f3c4179f6459e68b7893",
   "counts": {
-    "measured": 20,
+    "measured": 25,
     "no-video": 7385,
-    "pending": 43,
+    "pending": 38,
     "unsupported-format": 1053,
     "unsupported-host-not-allowlisted": 17,
     "unsupported-other-embed": 56,
@@ -6620,7 +6620,18 @@
       "mediaSlug": "dontblink-low-light",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 1.533333,
+      "resolution": [
+        1280,
+        720
+      ],
+      "sourceSha256": "77bc17a65b24b1a70388ba16457553b36874ddc4d106082c8ac39b83aca2df09",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.047828,
+      "meanSaturation": 0.0,
+      "recordPath": "videos/4-ways-dont-blink-is-a-masterclass-of-type-and-rhythm--dontblink-low-light.json"
     },
     {
       "postId": 64918,
@@ -6630,7 +6641,18 @@
       "mediaSlug": "dontblink-resistant",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 5.905,
+      "resolution": [
+        1280,
+        720
+      ],
+      "sourceSha256": "8c6ce3eec36645dda2d88971fde06566690e20215c9b3d4a95ad5f60f16eca21",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 24.0,
+      "meanDisplayLuma": 0.122151,
+      "meanSaturation": 0.004649,
+      "recordPath": "videos/4-ways-dont-blink-is-a-masterclass-of-type-and-rhythm--dontblink-resistant.json"
     },
     {
       "postId": 64918,
@@ -6640,7 +6662,18 @@
       "mediaSlug": "dontblink-airpods-audio",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 8.823106,
+      "resolution": [
+        1280,
+        720
+      ],
+      "sourceSha256": "4f39e2c3d0a39980b4887aab75b3e7af1e519f73adde3f3c1fd2ee1edd27ef49",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 60.0,
+      "meanDisplayLuma": 0.407787,
+      "meanSaturation": 0.015821,
+      "recordPath": "videos/4-ways-dont-blink-is-a-masterclass-of-type-and-rhythm--dontblink-airpods-audio.json"
     },
     {
       "postId": 64918,
@@ -6650,7 +6683,18 @@
       "mediaSlug": "dontblink-nits",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 11.643333,
+      "resolution": [
+        1280,
+        720
+      ],
+      "sourceSha256": "3c374a88b2b5febeafa864b98983c45725f21041eaffca08b5560e190ceee983",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 18.0,
+      "meanDisplayLuma": 0.20241,
+      "meanSaturation": 0.149515,
+      "recordPath": "videos/4-ways-dont-blink-is-a-masterclass-of-type-and-rhythm--dontblink-nits.json"
     },
     {
       "postId": 64849,
@@ -6950,7 +6994,18 @@
       "mediaSlug": "glass-1",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 1.960292,
+      "resolution": [
+        1920,
+        1080
+      ],
+      "sourceSha256": "5164208bed9e42c70b3d165bdd504fa730801a3768aa34c5c7f8084d1e2df839",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.575006,
+      "meanSaturation": 0.061212,
+      "recordPath": "videos/vr-without-goggles-field-trip-to-mars-sends-a-souped-up-school-bus-to-space--glass-1.json"
     },
     {
       "postId": 64338,
