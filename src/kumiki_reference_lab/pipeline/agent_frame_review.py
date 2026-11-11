@@ -323,20 +323,26 @@ def scan_frames(
             or any(cat not in _CATEGORIES for cat in categories)
             or len(set(categories)) != len(categories)):
         raise ValueError("invalid low-resource scan budget or categories")
-    manifest, _, _ = load_workspace(workspace)
+    manifest, numeric, _ = load_workspace(workspace)
+    if (type(after) is not int or not -1 <= after < manifest["frameCount"]
+            or mode not in ("every", "changed", "cuts", "interval")
+            or type(min_change) not in (int, float) or not 0 <= min_change <= 1
+            or type(interval) is not int or not 1 <= interval <= 3600):
+        raise ValueError("invalid scan frame selection")
     from kumiki_reference_lab.pipeline.magnitude_vision import infer_workspace_frame
     prior = _load_annotations(workspace)
     visited = {(x["endFrameIndex"], x["category"]) for x in prior}
+    # Read the numeric report ONCE, rather than reparsing it for every frame.
     targets = [0] if after < 0 else []
-    index = after
-    while True:
-        item = next_frame(workspace, after=index, mode=mode,
-                          interval=interval, min_change=min_change)
-        if item.get("complete"):
-            break
-        index = item["frameIndex"]
-        if index not in targets:
-            targets.append(index)
+    for i in range(after + 1, manifest["frameCount"]):
+        row = numeric["frames"][i]
+        if (mode == "every" or
+                (mode == "cuts" and row["cutCandidate"]) or
+                (mode == "changed" and row["changeFromPrevious"] and
+                 row["changeFromPrevious"]["meanPixelDelta"] >= min_change) or
+                (mode == "interval" and i % interval == 0)):
+            if i not in targets:
+                targets.append(i)
     attempts = successes = failures = skipped = 0
     errors: list[dict[str, Any]] = []
     exhausted = False
