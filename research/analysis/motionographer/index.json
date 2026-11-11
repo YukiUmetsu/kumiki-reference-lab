@@ -1,11 +1,11 @@
 {
   "schemaVersion": "kumiki.motionographer-index.v1",
-  "generatedAt": "2026-11-11T21:11:11.591771Z",
+  "generatedAt": "2026-11-11T21:11:29.793086Z",
   "catalogSha256": "23f813dafb11e546fc8c62f962bf435b8d7aa75e4a00f3c4179f6459e68b7893",
   "counts": {
-    "measured": 35,
+    "measured": 40,
     "no-video": 7385,
-    "pending": 28,
+    "pending": 23,
     "unsupported-format": 1053,
     "unsupported-host-not-allowlisted": 17,
     "unsupported-other-embed": 56,
@@ -8775,7 +8775,18 @@
       "mediaSlug": "g-voice-flow",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 13.546667,
+      "resolution": [
+        1680,
+        1152
+      ],
+      "sourceSha256": "4e63783f4b1fa27482149faa2da46a1dd2bf0bcccaddb14db9e41ca40cd3b25c",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.843039,
+      "meanSaturation": 0.053159,
+      "recordPath": "videos/interview-motion-design-and-the-google-identity--g-voice-flow.json"
     },
     {
       "postId": 60676,
@@ -8785,7 +8796,18 @@
       "mediaSlug": "brikk",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 4.04,
+      "resolution": [
+        720,
+        404
+      ],
+      "sourceSha256": "791ba5e75c2737f5e2db7a79eec16feb7e785f320a9de2f400e15c442a726a73",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.599276,
+      "meanSaturation": 0.461056,
+      "recordPath": "videos/min-stora-dag--brikk.json"
     },
     {
       "postId": 60676,
@@ -8915,7 +8937,18 @@
       "mediaSlug": "magic-leap1",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 5.005,
+      "resolution": [
+        720,
+        404
+      ],
+      "sourceSha256": "9c5f2872be1408ffdca78f2192069800fa64b57bb6ee1f2df9f77e2d07daed0e",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.181643,
+      "meanSaturation": 0.243744,
+      "recordPath": "videos/magic-leap-no-for-real-this-time--magic-leap1.json"
     },
     {
       "postId": 60494,
@@ -8935,7 +8968,18 @@
       "mediaSlug": "magic-leap-solar",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 5.005,
+      "resolution": [
+        720,
+        404
+      ],
+      "sourceSha256": "feab95aee980bbddba5b5af2528a1fd34f04ff7c8fba397412165dc9b45f3178",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 0.0,
+      "meanDisplayLuma": 0.360496,
+      "meanSaturation": 0.373881,
+      "recordPath": "videos/magic-leap-no-for-real-this-time--magic-leap-solar.json"
     },
     {
       "postId": 60494,
@@ -9155,7 +9199,18 @@
       "mediaSlug": "BCPsAGU",
       "provider": "self-hosted-mp4",
       "reason": "eligible-site-mp4",
-      "status": "pending"
+      "status": "measured",
+      "durationSeconds": 5.005,
+      "resolution": [
+        720,
+        404
+      ],
+      "sourceSha256": "0e15508103309b107670b0bd1931dbad93b43f2edcf8ad50e32e9e23d8a28040",
+      "windowCount": 1,
+      "cutCandidateRatePerMinute": 15.0,
+      "meanDisplayLuma": 0.239979,
+      "meanSaturation": 0.101492,
+      "recordPath": "videos/pes-creates-paper-a-stop-motion-masterpiece-for-honda--BCPsAGU.json"
     },
     {
       "postId": 60053,
