@@ -1,6 +1,6 @@
 # Batch multiple independent character-study windows
 
-`character-study-batch` processes **several short, nonoverlapping intervals** from the first 120 seconds of an authorized local video. It invokes the established source-PTS-verified `character-study-local` pipeline for each interval and publishes all studies as **one atomic, immutable batch**.
+`character-study-batch` processes **several short, nonoverlapping intervals** from the first 3600 seconds of an authorized local video. It invokes the established source-PTS-verified `character-study-local` pipeline for each interval and publishes all studies as **one atomic, immutable batch**.
 
 This is useful when a reference video introduces different characters after its opening title, contains multiple shots, or is longer than a single 10-second analysis window. The batch can be processed without repeatedly constructing manual commands, and retains all per-window review galleries.
 
@@ -26,7 +26,7 @@ Alternatively, `--detector apple-vision` is available for macOS live-action huma
 
 - Total windows: 1–6, duration per window: 1–30 seconds.
 - `--stride-seconds` is the distance between window starts and must be **at least** the window duration. Omit it for consecutive nonoverlapping windows.
-- The last window must end within the **first 120 source-relative seconds**. The current FFmpeg backend decodes the bounded source prefix to preserve exact frame ordinals and PTS. Long-video sampling after 120 seconds requires a new, independently verified seek implementation.
+- The last window can end within the **first 3600 source-relative seconds** (one hour). Windows ending within 120 seconds use the bounded source prefix; later windows use the original-PTS-verified FFprobe/FFmpeg seek backend, without decoding from the start.
 - Default inference bounds per window: 8 sampled frames, 8 character-VLM calls and 3 candidate pair-interaction calls. An explicit `--skip-interactions` avoids pair inference, and `--skip-qa` avoids generating source-frame galleries. Both reduce cost; source/provenance checks remain enabled.
 - No automatic video downloads, remote model inference, unlicensed source extraction or automatic model-weight installation. The Ollama daemon is contacted only through localhost.
 

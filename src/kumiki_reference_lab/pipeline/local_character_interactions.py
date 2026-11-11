@@ -20,6 +20,7 @@ from kumiki_reference_lab.analyzers.motion.review import _png_rgb
 from kumiki_reference_lab.analyzers.techniques.propose import _json_file
 from kumiki_reference_lab.backends.ffmpeg.frames import read_frame_pts
 from kumiki_reference_lab.backends.ffmpeg.raw_frames import read_rgb_frames
+from kumiki_reference_lab.backends.ffmpeg.source_seek import decode_verified_later_source_frames
 from kumiki_reference_lab.core.provenance import file_signature, require_unchanged
 from kumiki_reference_lab.pipeline.ollama_character_perception import (
     _ollama_json, _DISALLOWED, _MODEL, _VIDEO_EXTENSIONS,
@@ -121,6 +122,7 @@ def analyze_local_interactions(
     source: Path, report_path: Path, vision_run: Path, out: Path, *, model: str,
     port: int = 11434, max_pairs: int = 6, gap_seconds: int = 3,
     scan_seconds: int = 20, width: int = 320, height: int = 180,
+    seek_start_seconds: int | None = None,
     timeout_seconds: int = 180, ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
 ) -> Path:
     """Enrich a source-bound character scene without changing existing observations."""
@@ -130,6 +132,10 @@ def analyze_local_interactions(
             type(width) is not int or not 64 <= width <= 320 or
             type(height) is not int or not 36 <= height <= 180):
         raise ValueError("interaction scanning budgets out of range")
+    if seek_start_seconds is not None and (
+            type(seek_start_seconds) is not int or seek_start_seconds < 0 or
+            scan_seconds > 30 or seek_start_seconds+scan_seconds > 3600):
+        raise ValueError("character interaction seek window invalid")
     if type(model) is not str or not _MODEL.fullmatch(model):
         raise ValueError("a locally installed vision model tag is required")
     if type(port) is not int or not 1 <= port <= 65535:
@@ -173,24 +179,31 @@ def analyze_local_interactions(
     selected_pts = sorted({row[p] for row in candidates for p in ("startPts", "endPts")})
     by_frame: dict[int, bytes] = {}
     if selected_pts:
-        decoded = read_frame_pts(source, tracklets["sourceStreamIndex"],
-                                 seconds=scan_seconds, ffprobe=ffprobe)
-        choices: dict[int, list[int]] = {}
-        for row in decoded:
-            if row.pts is not None:
-                choices.setdefault(row.pts, []).append(row.ordinal)
-        ordinals = []
-        for pts in selected_pts:
-            indices = choices.get(pts, [])
-            if len(indices) != 1:
-                raise ValueError("interaction source PTS missing or ambiguous")
-            ordinals.append(indices[0])
-        if ordinals != sorted(set(ordinals)):
-            raise ValueError("interaction source ordinals out of decode order")
-        images = read_rgb_frames(
-            source, tracklets["sourceStreamIndex"], ordinals,
-            selected_pts, timebase=Fraction(**tracklets["sourceTimebase"]),
-            seconds=scan_seconds, width=width, height=height, ffmpeg=ffmpeg)
+        if seek_start_seconds is not None:
+            images = decode_verified_later_source_frames(
+                source, tracklets["sourceStreamIndex"], selected_pts,
+                timebase=Fraction(**tracklets["sourceTimebase"]),
+                start_seconds=seek_start_seconds, seconds=scan_seconds,
+                width=width, height=height, ffprobe=ffprobe, ffmpeg=ffmpeg)
+        else:
+            decoded = read_frame_pts(source, tracklets["sourceStreamIndex"],
+                                     seconds=scan_seconds, ffprobe=ffprobe)
+            choices: dict[int, list[int]] = {}
+            for row in decoded:
+                if row.pts is not None:
+                    choices.setdefault(row.pts, []).append(row.ordinal)
+            ordinals = []
+            for pts in selected_pts:
+                indices = choices.get(pts, [])
+                if len(indices) != 1:
+                    raise ValueError("interaction source PTS missing or ambiguous")
+                ordinals.append(indices[0])
+            if ordinals != sorted(set(ordinals)):
+                raise ValueError("interaction source ordinals out of decode order")
+            images = read_rgb_frames(
+                source, tracklets["sourceStreamIndex"], ordinals,
+                selected_pts, timebase=Fraction(**tracklets["sourceTimebase"]),
+                seconds=scan_seconds, width=width, height=height, ffmpeg=ffmpeg)
         by_frame = dict(zip(selected_pts, images, strict=True))
     for file, signature in zip(files, signatures, strict=True):
         require_unchanged(file, signature)
@@ -245,6 +258,7 @@ def analyze_local_interactions(
         "maxPairGapSeconds": gap_seconds,
         "renderWidth": width, "renderHeight": height,
         "scanSeconds": scan_seconds,
+        "seekStartSeconds": seek_start_seconds,
         "pairOrdering": "sorted-tracklet-ids-first-red-second-cyan",
         "inferenceEndpoint": f"http://127.0.0.1:{port}/api/chat",
         "candidatePairs": len(candidates), "actionProposals": len(new_actions),

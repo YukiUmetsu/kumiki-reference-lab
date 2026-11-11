@@ -30,8 +30,8 @@ def _window_schedule(*, start_seconds: int, window_seconds: int,
     if stride < window_seconds:
         raise ValueError("character batch windows must not overlap")
     last_end = start_seconds + (window_count-1)*stride + window_seconds
-    if last_end > 120:
-        raise ValueError("character batch final window must end within first 120 seconds")
+    if last_end > 3600:
+        raise ValueError("character batch final window must end within first 3600 seconds")
     return [(start_seconds + i*stride, start_seconds + i*stride + window_seconds)
             for i in range(window_count)]
 
@@ -97,7 +97,11 @@ def run_character_study_batch(
                     report.get("schemaVersion") != "kumiki.local-character-study.v1" or
                     report.get("scanStartSeconds") != start or
                     report.get("maxSeconds") != end-start or
-                    report.get("scanPrefixSeconds") != end or
+                    report.get("sourceWindowEndSeconds") != end or
+                    report.get("scanPrefixSeconds") != (end if end <= 120 else None) or
+                    report.get("sourceDecodeMode") != (
+                        "prefix-ordinal-pts-v1" if end <= 120
+                        else "verified-seek-original-pts-v1") or
                     report.get("status") != "completed-unverified-model-proposals" or
                     report.get("detectorBackend") != detector or
                     report.get("modelTag") != model):
@@ -149,7 +153,8 @@ def run_character_study_batch(
                 "No cross-window character ID matching is performed, even if two windows are adjacent.",
                 "Model predictions and actor-to-target interactions remain unverified and may be wrong.",
                 "No claims are made about video segments outside the requested bounded windows.",
-                "Source-prefix decoding still limits the final window end to 120 seconds.",
+                "A verified source-PTS seek backend covers later source windows, up to one hour.",
+                "FFprobe index seeking is keyframe-dependent and does not prove exhaustive frame coverage.",
             ],
         }
         (staging / "batch-manifest.json").write_text(

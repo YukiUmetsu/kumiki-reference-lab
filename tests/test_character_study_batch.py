@@ -39,7 +39,12 @@ class LocalCharacterStudyBatchTests(unittest.TestCase):
             "sourceSha256": "f"*64 if self.mismatch_index == index else self.sha,
             "scanStartSeconds": start_seconds,
             "maxSeconds": max_seconds,
-            "scanPrefixSeconds": start_seconds + max_seconds,
+            "sourceWindowEndSeconds": start_seconds + max_seconds,
+            "scanPrefixSeconds": (start_seconds+max_seconds
+                                  if start_seconds+max_seconds <= 120 else None),
+            "sourceDecodeMode": ("prefix-ordinal-pts-v1"
+                                 if start_seconds+max_seconds <= 120 else
+                                 "verified-seek-original-pts-v1"),
             "status": "completed-unverified-model-proposals",
             "modelTag": model, "detectorBackend": detector,
             "detectedRegionProposals": 10,
@@ -103,7 +108,7 @@ class LocalCharacterStudyBatchTests(unittest.TestCase):
             {"start_seconds": 0, "window_seconds": 31, "stride_seconds": 31, "window_count": 3},
             {"start_seconds": 0, "window_seconds": 10, "stride_seconds": 9, "window_count": 3},
             {"start_seconds": 0, "window_seconds": 10, "stride_seconds": 10, "window_count": 7},
-            {"start_seconds": 110, "window_seconds": 10, "stride_seconds": 10, "window_count": 2},
+            {"start_seconds": 3590, "window_seconds": 10, "stride_seconds": 10, "window_count": 2},
             {"start_seconds": 0, "window_seconds": 10, "stride_seconds": True, "window_count": 2},
         ):
             with self.subTest(args=args), self.assertRaises(ValueError):
@@ -111,6 +116,20 @@ class LocalCharacterStudyBatchTests(unittest.TestCase):
         self.assertEqual(_window_schedule(
             start_seconds=0, window_seconds=10, stride_seconds=None, window_count=2),
             [(0, 10), (10, 20)])
+
+    def test_late_seek_windows_still_have_distinct_local_id_namespaces(self):
+        manifest_path = self.run_fake(
+            start_seconds=125, window_seconds=3, window_count=2,
+            stride_seconds=10)
+        result = json.loads(manifest_path.read_text())
+        self.assertEqual(self.calls, [(125,3), (135,3)])
+        self.assertEqual(result["windowCount"], 2)
+        self.assertEqual(result["identityContinuityAcrossWindows"], "not-established")
+        self.assertEqual(result["totalCounts"]["provisionalTracklets"], 4)
+        for row in result["windows"]:
+            child = json.loads((self.out / row["manifest"]).read_text())
+            self.assertEqual(child["sourceDecodeMode"], "verified-seek-original-pts-v1")
+            self.assertIsNone(child["scanPrefixSeconds"])
 
     def test_local_inference_bounds_refused_without_any_model_invocation(self):
         for kwargs in (

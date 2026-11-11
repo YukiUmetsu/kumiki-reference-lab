@@ -51,7 +51,7 @@ def run_local_character_study(
             type(timeout_seconds) is not int or not 5 <= timeout_seconds <= 300 or
             type(max_seconds) is not int or not 1 <= max_seconds <= 30 or
             type(start_seconds) is not int or start_seconds < 0 or
-            start_seconds + max_seconds > 120 or
+            start_seconds + max_seconds > 3600 or
             type(max_samples) is not int or not 5 <= max_samples <= 12 or
             type(max_calls) is not int or not 1 <= max_calls <= 24 or
             type(max_pairs) is not int or not 1 <= max_pairs <= 12 or
@@ -67,6 +67,8 @@ def run_local_character_study(
 
     signature = file_signature(source)
     scan_prefix = start_seconds + max_seconds
+    seek_start = start_seconds if scan_prefix > 120 else None
+    study_scan_seconds = max_seconds if seek_start is not None else scan_prefix
     out.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".kumiki-character-study-", dir=out.parent) as temp:
         staged = Path(temp)
@@ -105,7 +107,8 @@ def run_local_character_study(
         if review:
             build_subject_tracklet_review(
                 source, tracks_path, staged / "tracklet-qa",
-                max_frames=min(max_samples, 8), scan_seconds=scan_prefix,
+                max_frames=min(max_samples, 8),
+                scan_seconds=study_scan_seconds, seek_start_seconds=seek_start,
                 width=width, height=height, ffmpeg=ffmpeg, ffprobe=ffprobe)
             paths["trackletQa"] = "tracklet-qa/index.html"
 
@@ -113,13 +116,15 @@ def run_local_character_study(
         scene_path = describe_local_characters(
             source, tracks_path, vision_dir, model=model, port=port,
             max_frames=min(max_samples, 8), max_calls=max_calls,
-            scan_seconds=scan_prefix, width=width, height=height,
+            scan_seconds=study_scan_seconds, seek_start_seconds=seek_start,
+            width=width, height=height,
             timeout_seconds=timeout_seconds, ffmpeg=ffmpeg, ffprobe=ffprobe)
         observed_scene = load_character_scene(scene_path)
         if review and observed_scene["appearances"]:
             build_character_vision_review(
                 source, tracks_path, vision_dir, staged / "character-qa",
-                scan_seconds=scan_prefix, width=width, height=height,
+                scan_seconds=study_scan_seconds, seek_start_seconds=seek_start,
+                width=width, height=height,
                 ffmpeg=ffmpeg, ffprobe=ffprobe)
             paths["characterQa"] = "character-qa/index.html"
         if interactions and len(observed_scene["characters"]) >= 2:
@@ -127,7 +132,8 @@ def run_local_character_study(
             analyze_local_interactions(
                 source, tracks_path, vision_dir, interaction_dir,
                 model=model, port=port, max_pairs=max_pairs,
-                scan_seconds=scan_prefix, width=width, height=height,
+                scan_seconds=study_scan_seconds, seek_start_seconds=seek_start,
+                width=width, height=height,
                 timeout_seconds=timeout_seconds, ffmpeg=ffmpeg, ffprobe=ffprobe)
             paths["interactions"] = "character-interactions/character-scene.json"
             paths["interactionManifest"] = "character-interactions/character-interactions.json"
@@ -149,7 +155,11 @@ def run_local_character_study(
             "detectorBackend": detector,
             "rightsStatus": rights_status,
             "scanStartSeconds": start_seconds, "maxSeconds": max_seconds,
-            "scanPrefixSeconds": scan_prefix, "maxSamples": max_samples,
+            "sourceWindowEndSeconds": scan_prefix,
+            "sourceDecodeMode": ("verified-seek-original-pts-v1"
+                                 if seek_start is not None else "prefix-ordinal-pts-v1"),
+            "scanPrefixSeconds": scan_prefix if seek_start is None else None,
+            "maxSamples": max_samples,
             "maxVisionCalls": max_calls, "maxInteractionPairs": max_pairs,
             "detectedRegionProposals": sum(
                 len(frame["detections"]) for frame in detections["frames"]),
