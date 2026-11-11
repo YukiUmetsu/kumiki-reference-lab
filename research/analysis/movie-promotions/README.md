@@ -54,6 +54,46 @@ index/detail cross-checks, and remove the downloaded media before publishing
 a measurement PR. If access is unavailable, keep the entry metadata-only
 rather than inventing cuts, color, character actions, audio, or timestamps.
 
+## Timecoded candidate-edit and audio-attack timelines
+
+The reproducible [timed-event dataset](derived/timed-events.v1.json) adds
+**source-PTS-backed candidate timelines** for the 13 already measured
+promotional editions. It is derived from the existing source-hashed detail
+files, not from newly downloaded footage. The generator retains each
+original clip SHA-256, detail Git blob SHA, rational video and audio
+timebases, original clip-local PTS and the **approximate** source offset
+for re-encoded middle/ending windows.
+
+The 39 selected 20-second windows have **268 cut candidates** (scene
+detector threshold 0.25) and **109 audio RMS-rise candidates**. Exactly
+**25 of the 268** cut candidates have at least one audio attack candidate
+within ±250 ms. The dataset includes the signed nearest attack offset for
+each candidate cut; a null offset explicitly means no detected attack in
+that clip. Each window also has four non-overlapping five-second cut-count
+bins and an observed *interior* candidate-gap median (null if fewer than
+two cuts). No timing measurements from the unmeasured 26-trailer queue
+are included.
+
+**Do not equate proximity with audio sync or editorial intent.** A cut
+candidate may represent a flash or image-content change; a level rise
+may be unrelated to music beats, dialogue or sound effects. The 250 ms
+rule is a descriptive query, not a statistical significance test.
+Unobserved film sections and censored window boundaries are excluded,
+and the output does not identify camera motion, character actions,
+lighting setups or creative causation.
+
+```bash
+python scripts/derive_movie_promo_timed_events.py --verify
+PYTHONPATH=. python -m unittest tests.test_movie_promo_timed_events -v
+jq '.videos[] | {id, windows: [.windows[] | {window, cutCandidateCountsByFiveSecondBin, cutCandidatesWithin250MsOfAudioAttack}]}' \
+  research/analysis/movie-promotions/derived/timed-events.v1.json
+```
+
+Regenerate using `python scripts/derive_movie_promo_timed_events.py` only
+when the upstream original index/detail files change. `--verify` and the
+focused regression tests fail on a stale or inconsistent committed report,
+without installing FFmpeg or fetching copyrighted media.
+
 ## Reproducible comparisons
 
 The [derived comparison](derived/comparison.v1.json) is computed solely from the
