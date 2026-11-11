@@ -257,6 +257,23 @@ class SequenceBenchmarkTests(unittest.TestCase):
         self.assertEqual(
             json.loads(aggregate_path.read_text())["modelCount"], 1)
 
+    def test_empty_sequence_cohort_cannot_claim_completed_accuracy(self):
+        self.insights["threeAnchorSequenceReview"]["sequences"] = []
+        with self.assertRaisesRegex(ValueError, "no three-anchor predictions"):
+            make_label_template(
+                self.insights, insights_sha=self.insights_sha)
+        with self.assertRaisesRegex(ValueError, "cannot score an empty"):
+            evaluate_sequence_labels(
+                self.insights, {
+                    "schemaVersion": LABEL_VERSION,
+                    "sourceSha256": SHA,
+                    "insightsFileSha256": self.insights_sha,
+                    "modelTagObserved": "small-local-q4",
+                    "coverageDeclaration": "all-listed-source-frame-phases-human-reviewed",
+                    "reviewer": {"kind": "human", "id": "fake-reviewed"},
+                    "sequences": [],
+                }, insights_sha=self.insights_sha, labels_sha="b"*64)
+
     def test_strict_json_and_symlink_rejected(self):
         duplicate = self.root / "duplicate.json"
         duplicate.write_text('{"schemaVersion":1,"schemaVersion":2}')
