@@ -125,6 +125,58 @@ For actual character/person box tracking, this repository already supports
 its separate seeded ROI and optional macOS Apple Vision workflows. There is
 no automatically established named-character identity in these new reports.
 
+## Optional: follow known products, characters or text across a shot
+
+The generic optical-flow stage tracks *anonymous image features*. To follow a
+particular visible subject, create a very small local seed JSON yourself or
+with an image-capable agent, after inspecting the specific source frame.
+This makes the hard semantic decision once, not on every frame.
+
+    {
+      "schemaVersion": "kumiki.online-region-seeds.v1",
+      "sourceSha256": "<SHA-256 from source JSON>",
+      "subjects": [
+        {
+          "id": "hero",
+          "kind": "animated-character",
+          "label": "Red-jacket hero",
+          "startFrameIndex": 10,
+          "boxNormalized": [0.2, 0.2, 0.3, 0.5]
+        },
+        {
+          "id": "product",
+          "kind": "product",
+          "label": "Main product",
+          "startFrameIndex": 10,
+          "boxNormalized": [0.65, 0.3, 0.2, 0.35]
+        }
+      ]
+    }
+
+The example boxes are placeholders: measure them on real frame images
+before running the tracker. Coordinates are [left, top, width, height]
+normalized 0..1 with image origin at the upper left. Use a verified source
+SHA-256 copied from the analyzed JSON's `source.sourceSha256`.
+
+    kumiki-insights --workspace "$REVIEW" --roi-seeds /path/to/seeds.json       --max-roi-frames 240 --overwrite
+
+Requires `pip install -e '.[dense]'`. At most eight seeded regions are
+accepted. Each tracker follows LK image features within its original box
+and estimates bounded screen translation, apparent rotation and scale.
+Tracks stop at a cut, tracking failure, image boundary, or the chosen
+frame budget. No automatic cross-cut re-identification occurs.
+
+The report's `seededSubjectTracks` contains each source-seeded box
+trajectory, tracking status, and **screenRelationshipProxies** for pairs
+of simultaneously tracked subjects: screen overlap or apparent closeness.
+Those proxies do **not** establish a conversation, emotion, social action,
+or actual human/character interaction. Stronger evidence must come from
+reviewed visual sequences and verified character identities.
+
+This method is especially useful for a small local agent: it only needs
+to label and box one or two keyframes, then deterministic code handles
+the subsequent image-plane tracking.
+
 ## 4. Compare references and search the learned patterns
 
 Build a searchable cross-video catalog:
