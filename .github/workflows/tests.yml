@@ -33,6 +33,7 @@ jobs:
           python -m unittest tests.test_region_semantic_review -q
           python -m unittest tests.test_multi_region_temporal -q
           python -m unittest tests.test_online_event_review -q
+          python -m unittest tests.test_three_anchor_sequence_review -q
           python -m unittest tests.test_cinematic_intelligence -q
           python -m unittest tests.test_movie_promo_evidence -q
           python -m unittest tests.test_blender_publisher_promo -q
