@@ -257,6 +257,10 @@ def match_image_plane_motion(
             or type(min_texture) not in (int, float)
             or not math.isfinite(min_texture) or not 0 <= min_texture <= 64):
         raise ValueError("invalid bounded block-matching parameters")
+    # The supported 64x36 minimum preview needs finer reduction to leave
+    # room for a 5x5 patch and the search window in both directions.
+    if height < 48:
+        reduction = min(reduction, 2)
     before, w, h = _grayscale(previous, width, height, reduction)
     after, _, _ = _grayscale(current, width, height, reduction)
     patch_radius = 2
