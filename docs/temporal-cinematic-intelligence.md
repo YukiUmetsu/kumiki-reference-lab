@@ -180,6 +180,18 @@ This method is especially useful for a small local agent: it only needs
 to label and box one or two keyframes, then deterministic code handles
 the subsequent image-plane tracking.
 
+## Automatic motion-region discovery (no manual boxes)
+
+Run `kumiki-insights --workspace "$REVIEW" --auto-regions` to propose
+unclassified moving screen regions from the existing locally ignored
+frame previews. No Magnitude inference or OpenCV is necessary to propose
+regions; OpenCV is needed to **track** eligible candidate regions.
+Complex backgrounds, flashes and unsupported changes abstain rather
+than being classified as characters or objects. This mode is mutually
+exclusive with `--roi-seeds`. See
+[automatic motion-region discovery](auto-motion-region-discovery.md)
+for exact limits and tests.
+
 ## 4. Compare references and search the learned patterns
 
 Build a searchable cross-video catalog:
