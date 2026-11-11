@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.derive_movie_promo_timed_events import derive_from_folder, derive_timed_events
+from scripts.derive_movie_promo_timed_events import _rounded, derive_from_folder, derive_timed_events
 
 
 def first_difference(expected, actual, path="root"):
@@ -72,6 +72,10 @@ class TimedMovieEvidenceTests(unittest.TestCase):
 
     def derive(self):
         return derive_timed_events(self.index, {"film": (self.detail, "a" * 40)}, "b" * 40)
+
+    def test_tie_rounding_matches_committed_precision(self):
+        self.assertEqual(_rounded(13.67685, 4), 13.6769)
+        self.assertEqual(_rounded(-4100.5, 0), -4100)
 
     def test_rational_pts_5s_bins_and_nearest_audio(self):
         result = self.derive()
