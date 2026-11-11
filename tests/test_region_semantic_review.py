@@ -97,6 +97,12 @@ class RegionReviewTests(unittest.TestCase):
                          box=self.discovery["proposals"][0]["boxNormalized"])
         self.assertTrue(crop.startswith(b"\x89PNG\r\n\x1a\n"))
         self.assertLess(len(crop), 1_000_000)
+        context, duplicate_crop = _crop_png(
+            path, width=WIDTH, height=HEIGHT,
+            box=self.discovery["proposals"][0]["boxNormalized"],
+            with_context=True)
+        self.assertEqual(duplicate_crop, crop)
+        self.assertEqual(context, _png_rgb(rectangle(index), WIDTH, HEIGHT))
         self.assertEqual(original, set(self.workspace.iterdir()))
         with self.assertRaisesRegex(ValueError, "exceeds"):
             _crop_png(path, width=WIDTH, height=HEIGHT,
