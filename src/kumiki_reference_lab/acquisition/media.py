@@ -10,6 +10,7 @@ from __future__ import annotations
 import ipaddress
 import re
 import subprocess
+import time
 from pathlib import Path
 from typing import Any, Callable, Iterable
 from urllib.parse import urljoin, urlsplit
@@ -407,6 +408,8 @@ def download_media(
     max_duration_seconds: float | None = None,
     yt_dlp: str = "yt-dlp", max_height: int = 720, prefer_h264: bool = True,
     log: Callable[[str], None] | None = None, allow_query: bool = False,
+    attempts: int = 2, backoff_seconds: float = 6.0,
+    sleeper: Callable[[float], None] = time.sleep,
 ) -> tuple[Path, str]:
     """Download one allowlisted public video into ``directory``.
 
@@ -420,6 +423,11 @@ def download_media(
     ``allow_query`` admits signed query-string URLs (and signed redirects) and
     is threaded through playlist resolution, probing, and the download itself.
     It does not apply to YouTube, whose single-video allowlist owns the query.
+
+    ``attempts`` / ``backoff_seconds`` / ``sleeper`` apply only to the YouTube
+    path, where they bound the 403/CDN-data retry (see
+    :func:`~.ytdlp.download_via_ytdlp`). HLS and direct downloads ignore them
+    entirely, so their requests are unchanged.
     """
     # Local import: probe adapters themselves depend on this module's
     # allowlisting and bounded-read primitives.
@@ -451,7 +459,9 @@ def download_media(
         downloaded = ytdlp_adapter.download_via_ytdlp(
             validated, directory, yt_dlp=yt_dlp, max_bytes=max_bytes,
             max_height=max_height, timeout_seconds=timeout,
-            prefer_h264=prefer_h264, allowed_hosts=allowed_hosts)
+            prefer_h264=prefer_h264, allowed_hosts=allowed_hosts,
+            attempts=attempts, backoff_seconds=backoff_seconds,
+            sleeper=sleeper)
         return downloaded, ytdlp_adapter.METHOD_YTDLP_MERGE
 
     target = media_target(directory, url)

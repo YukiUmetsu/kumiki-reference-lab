@@ -32,8 +32,10 @@ Enforced once, for every caller:
   `rightsStatus: review-required`.
 - YouTube acquisition is yt-dlp-mediated, cookie-free and login-free. No
   `--cookies-from-browser`, no `--netrc`, no credentials, no DRM/PO-token/nsig
-  workaround beyond what stock yt-dlp does by itself. A provider refusal (403,
-  login-only, unsupported client) is `provider-refused` and is never retried.
+  workaround beyond what stock yt-dlp does by itself. A hard provider refusal
+  (login-only, private, members-only, bot-check, unsupported client) is
+  `provider-refused` and is never retried. The intermittent 403/CDN-data class
+  is also `provider-refused`, but gets a bounded retry with backoff (see below).
   Media is always ephemeral. `yt-dlp >= 2026.10` is required: older builds
   return HTTP 403 on public YouTube videos with the stock client.
 - The package never deletes your files. Ephemeral deletion is the caller's job
@@ -48,7 +50,7 @@ Enforced once, for every caller:
 | module | what it gives you |
 | --- | --- |
 | `media` | `allowlisted_url` / `allowlisted_video_url` / `allowlisted_image_url` (all accept `allow_query`), `fetch_bytes`, `fetch_text`, `download_http`, `plan_hls_download`, `download_media` (HLS stream-copy remux, direct GET, or bounded yt-dlp), `media_target`, `image_target`, `check_downloaded` |
-| `ytdlp` | `allowlisted_youtube_url` (single-video URL policy), `download_via_ytdlp`, `youtube_source_metadata` (`--dump-single-json --skip-download`), `classify_ytdlp_failure`, `YtDlpError` / `YtDlpRefusedError` |
+| `ytdlp` | `allowlisted_youtube_url` (single-video URL policy), `download_via_ytdlp` (bounded 403 retry), `youtube_source_metadata` (`--dump-single-json --skip-download`), `classify_ytdlp_failure`, `is_retryable_refusal`, `YtDlpError` / `YtDlpRefusedError` |
 | `probe` | `run_ffprobe_json` (retry/backoff), `remote_source_metadata`, `ranged_source_metadata` (bounded `Range` fallback for flaky hosts), `source_metadata`, `probe_image_dimensions`, `metadata_from_probe`, `finite_float` / `as_int` / `as_text` |
 | `windows` | `plan_windows`, `measure_windows`, `summarize_probes`, `build_video_evidence` |
 | `stills` | `measure_still`, `compute_still_metrics`, `dominant_hue_family`, `decode_still_rgb`, `infer_decoded_dimensions`, `still_image_format`, `build_still_evidence` |
@@ -110,7 +112,9 @@ The invocation is stock and bounded:
 - one playlist item, one concurrent fragment, one retry, one fragment retry,
   15 s socket timeout, `--merge-output-format mp4`, a byte cap, and
   `--paths <destination> --output source.%(ext)s` into an empty, real
-  (non-symlink) directory the caller owns;
+  (non-symlink) directory the caller owns. Those are yt-dlp's own flags; the
+  bounded engine-level 403 retry described below is separate and capped at
+  three total attempts;
 - `--ignore-config --no-plugin-dirs`, so local config and plugins cannot widen
   the run;
 - `--format` prefers an H.264/AAC stream at `height <= 720` (the analyzers
@@ -121,14 +125,55 @@ The invocation is stock and bounded:
   remote component downloads, no DRM/PO-token/nsig workaround.**
 
 `yt-dlp` stderr is captured only to classify the failure and is never echoed
-(it can contain signed URLs and local paths). A `403 Forbidden`, "sign in to
-confirm", "only available when logged-in", unsupported-client or outdated-
-client failure raises `YtDlpRefusedError` with `reason == "provider-refused"`
-and is never retried; everything else is a `YtDlpError` with
-`reason == "transient"`. Both are `ValueError` subclasses, so existing adapter
-error handling keeps working. `safe_error` also redacts signature-like query
-material (`expire`, `ip`, `sig`, `nsig`, `sparams`, `ei`, …) that survives outside a
-full URL.
+(it can contain signed URLs and local paths). Two refusal classes are
+distinguished internally while keeping the public vocabulary unchanged:
+
+- **Hard refusal** — `sign in` / bot-check, `logged-in` / `login required`,
+  `private video`, `members-only`, `requires payment`, `unsupported client`,
+  outdated client, `nsig`, PO token. Raises `YtDlpRefusedError`
+  (`reason == "provider-refused"`) on the first attempt; **never retried**,
+  because the same request will fail identically.
+- **Retryable 403/CDN-data class** — `403 forbidden`, `http error 403`, any
+  standalone `403`, `unable to download video data`. Also
+  `provider-refused` when it ultimately fails, but it is first retried a
+  bounded number of times, because YouTube intermittently refuses one stream or
+  fragment while the same public URL succeeds moments later.
+
+Everything else is a `YtDlpError` with `reason == "transient"`. Both are
+`ValueError` subclasses, so existing adapter error handling keeps working.
+`safe_error` also redacts signature-like query material (`expire`, `ip`, `sig`,
+`nsig`, `sparams`, `ei`, …) that survives outside a full URL.
+`is_retryable_refusal(stderr)` exposes the split for tests and adapters;
+`classify_ytdlp_failure(stderr)` still returns only `"provider-refused"` or
+`"transient"`.
+
+### Bounded 403 retry policy
+
+```python
+download_via_ytdlp(url, directory, ..., attempts=2, backoff_seconds=6.0)
+download_media(url, YOUTUBE, directory, ..., attempts=2, backoff_seconds=6.0)
+```
+
+- `attempts` includes the first try and is clamped to `1..3`; `attempts=1`
+  disables retrying. Both defaults preserve existing adapter call sites: HLS
+  and direct downloads ignore these parameters entirely and issue exactly the
+  same requests as before.
+- Only the 403/CDN-data class retries. Hard refusal markers are raised on the
+  first attempt, even if the same stderr also mentions 403.
+- Between attempts the engine deletes any partial output from the failed
+  attempt, then sleeps `backoff_seconds + uniform(0, backoff_seconds)` (equal
+  jitter, the same idea as `run_batch`). `sleeper` is injectable so tests stay
+  offline.
+- A retry that also fails raises `YtDlpRefusedError` exactly as before; a
+  different class on a later attempt raises its own error.
+
+A 403 retry is **not a bypass**. It sends the identical anonymous public
+request again after a delay. Nothing is added: no cookies, browser profiles,
+logins, API keys, PO tokens, nsig extraction, `--remote-components`, or proxy
+rotation. The retry exists because YouTube's own front end intermittently
+throttles a single stream under burst load, not to defeat an access control.
+If the video is genuinely gated, its stderr carries a hard marker and no retry
+happens.
 
 `youtube_source_metadata` returns the neutral ffprobe-shaped dict plus `fps`,
 `codec`, `sizeBytes`, `estimatedBytes`, `title` and `formatId`; omitted fields

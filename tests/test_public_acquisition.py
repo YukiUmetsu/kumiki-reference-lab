@@ -1013,6 +1013,9 @@ class YtDlpDownloadTests(unittest.TestCase):
         for kwargs in (
             {"max_bytes": 0}, {"max_height": 0}, {"timeout_seconds": 5},
             {"prefer_h264": "yes"}, {"yt_dlp": ""},
+            {"attempts": "2"}, {"attempts": True},
+            {"backoff_seconds": -1}, {"backoff_seconds": 600},
+            {"sleeper": None},
         ):
             with self.subTest(kwargs=kwargs), \
                     patch.object(acq.ytdlp.subprocess,
@@ -1064,14 +1067,14 @@ class YtDlpDownloadTests(unittest.TestCase):
                 acq.download_via_ytdlp(
                     self.url, self.destination, max_bytes=32)
 
-    def test_provider_refusal_is_distinct_and_never_retried(self) -> None:
+    def test_provider_refusal_is_distinct_and_never_leaks_stderr(self) -> None:
         stderr = (b"ERROR: [youtube] ZfJOq_B_XBM: HTTP Error 403: Forbidden; "
                   b"visit https://www.youtube.com/watch?v=ZfJOq_B_XBM")
         fake = subprocess.CompletedProcess([], 1, b"", stderr)
         with patch.object(acq.ytdlp.subprocess, "run",
                           return_value=fake) as run:
             with self.assertRaises(acq.YtDlpRefusedError) as raised:
-                acq.download_via_ytdlp(self.url, self.destination)
+                acq.download_via_ytdlp(self.url, self.destination, attempts=1)
         self.assertEqual(run.call_count, 1)
         self.assertEqual(raised.exception.reason, "provider-refused")
         message = str(raised.exception)
@@ -1111,6 +1114,130 @@ class YtDlpDownloadTests(unittest.TestCase):
                           side_effect=FileNotFoundError("yt-dlp")):
             with self.assertRaisesRegex(acq.YtDlpError, "not installed"):
                 acq.download_via_ytdlp(self.url, self.destination)
+
+    forbidden_stderr = (
+        b"ERROR: [youtube] ZfJOq_B_XBM: unable to download video data: "
+        b"HTTP Error 403: Forbidden")
+
+    def test_retries_the_403_class_once_then_succeeds(self) -> None:
+        calls: list[int] = []
+        sleeps: list[float] = []
+        seen: list[list[str]] = []
+
+        def fake_run(args, **kwargs):  # noqa: ANN001 - test double
+            calls.append(1)
+            if len(calls) == 1:
+                (Path(kwargs["cwd"]) / "source.mp4").write_bytes(b"x" * 16)
+                return subprocess.CompletedProcess(
+                    args, 1, b"", self.forbidden_stderr)
+            seen.append(sorted(entry.name
+                               for entry in Path(kwargs["cwd"]).iterdir()))
+            (Path(kwargs["cwd"]) / "source.mp4").write_bytes(b"y" * 64)
+            return subprocess.CompletedProcess(args, 0, b"", b"")
+
+        result = self._run_download(fake_run, sleeper=sleeps.append)
+        self.assertEqual(result, self.destination / "source.mp4")
+        self.assertEqual(result.stat().st_size, 64)
+        self.assertEqual(len(calls), 2)
+        # The partial from the refused attempt is gone before the retry runs.
+        self.assertEqual(seen, [[]])
+        self.assertEqual(len(sleeps), 1)
+        # backoff (6.0) plus equal jitter, so [6.0, 12.0].
+        self.assertGreaterEqual(sleeps[0], 6.0)
+        self.assertLessEqual(sleeps[0], 12.0)
+
+    def test_two_403_attempts_still_raise_a_provider_refusal(self) -> None:
+        sleeps: list[float] = []
+        fake = subprocess.CompletedProcess([], 1, b"", self.forbidden_stderr)
+        with patch.object(acq.ytdlp.subprocess, "run",
+                          return_value=fake) as run:
+            with self.assertRaises(acq.YtDlpRefusedError) as raised:
+                acq.download_via_ytdlp(
+                    self.url, self.destination,
+                    backoff_seconds=0.25, sleeper=sleeps.append)
+        self.assertEqual(run.call_count, 2)
+        self.assertEqual(raised.exception.reason, "provider-refused")
+        self.assertEqual(len(sleeps), 1)
+        self.assertGreaterEqual(sleeps[0], 0.25)
+        self.assertLessEqual(sleeps[0], 0.5)
+
+    def test_hard_refusal_markers_are_never_retried(self) -> None:
+        for stderr in (
+            b"ERROR: Sign in to confirm you're not a bot",
+            b"ERROR: Sign in to confirm you're not a bot; HTTP Error 403",
+            b"ERROR: Private video. Sign in if you've been granted access",
+            b"ERROR: This video is members-only",
+            b"ERROR: Unsupported client 'web_safari'; please update yt-dlp",
+        ):
+            sleeps: list[float] = []
+            with self.subTest(stderr=stderr), \
+                    patch.object(
+                        acq.ytdlp.subprocess, "run",
+                        return_value=subprocess.CompletedProcess(
+                            [], 1, b"", stderr)) as run, \
+                    self.assertRaises(acq.YtDlpRefusedError):
+                acq.download_via_ytdlp(
+                    self.url, self.destination, sleeper=sleeps.append)
+            self.assertEqual(run.call_count, 1)
+            self.assertEqual(sleeps, [])
+
+    def test_attempts_one_disables_the_retry(self) -> None:
+        sleeps: list[float] = []
+        fake = subprocess.CompletedProcess([], 1, b"", self.forbidden_stderr)
+        with patch.object(acq.ytdlp.subprocess, "run",
+                          return_value=fake) as run:
+            with self.assertRaises(acq.YtDlpRefusedError):
+                acq.download_via_ytdlp(
+                    self.url, self.destination, attempts=1,
+                    sleeper=sleeps.append)
+        self.assertEqual(run.call_count, 1)
+        self.assertEqual(sleeps, [])
+
+    def test_attempts_are_bounded_and_clamped(self) -> None:
+        sleeps: list[float] = []
+        fake = subprocess.CompletedProcess([], 1, b"", self.forbidden_stderr)
+        with patch.object(acq.ytdlp.subprocess, "run",
+                          return_value=fake) as run:
+            with self.assertRaises(acq.YtDlpRefusedError):
+                acq.download_via_ytdlp(
+                    self.url, self.destination, attempts=0,
+                    backoff_seconds=0.0, sleeper=sleeps.append)
+        self.assertEqual(run.call_count, 1)
+        self.assertEqual(sleeps, [])
+
+        sleeps.clear()
+        with patch.object(acq.ytdlp.subprocess, "run",
+                          return_value=fake) as run:
+            with self.assertRaises(acq.YtDlpRefusedError):
+                acq.download_via_ytdlp(
+                    self.url, self.destination, attempts=99,
+                    backoff_seconds=0.0, sleeper=sleeps.append)
+        self.assertEqual(run.call_count, acq.ytdlp._MAX_ATTEMPTS)
+        self.assertEqual(len(sleeps), acq.ytdlp._MAX_ATTEMPTS - 1)
+        for seconds in sleeps:
+            self.assertEqual(seconds, 0.0)
+
+    def test_retryable_refusal_is_split_from_hard_refusal(self) -> None:
+        for stderr in (
+            b"ERROR: HTTP Error 403: Forbidden",
+            b"ERROR: [youtube] x: unable to download video data: HTTP Error 403",
+            b"ERROR: got error 403 from the CDN",
+        ):
+            with self.subTest(stderr=stderr):
+                self.assertTrue(acq.is_retryable_refusal(stderr))
+                self.assertEqual(acq.classify_ytdlp_failure(stderr),
+                                 "provider-refused")
+        for stderr in (
+            b"ERROR: Sign in to confirm you're not a bot",
+            b"ERROR: Private video",
+            b"ERROR: This video is members-only",
+            b"ERROR: unable to connect to the host",
+            b"ERROR: Sign in to confirm you're not a bot; HTTP Error 403",
+        ):
+            with self.subTest(stderr=stderr):
+                self.assertFalse(acq.is_retryable_refusal(stderr))
+        self.assertEqual(acq.classify_ytdlp_failure(b"connection reset"),
+                         "transient")
 
 
 class YtDlpMetadataTests(unittest.TestCase):
@@ -1244,6 +1371,40 @@ class YoutubeDownloadMediaTests(unittest.TestCase):
                     acq.YOUTUBE, self.directory,
                     allowed_hosts=("*",), max_bytes=4096)
         download.assert_not_called()
+
+    def test_threads_the_bounded_retry_policy_into_the_ytdlp_path(self) -> None:
+        target = self.directory / "source.mp4"
+        sleeper = lambda _seconds: None  # noqa: E731 - test double
+
+        with patch.object(acq.ytdlp, "youtube_source_metadata",
+                          return_value={}), \
+                patch.object(acq.ytdlp, "download_via_ytdlp",
+                             return_value=target) as download:
+            acq.download_media(
+                self.url, acq.YOUTUBE, self.directory,
+                allowed_hosts=("*",), max_bytes=4096,
+                attempts=3, backoff_seconds=1.5, sleeper=sleeper)
+        kwargs = download.call_args.kwargs
+        self.assertEqual(kwargs["attempts"], 3)
+        self.assertEqual(kwargs["backoff_seconds"], 1.5)
+        self.assertIs(kwargs["sleeper"], sleeper)
+
+    def test_direct_downloads_ignore_the_retry_policy(self) -> None:
+        target = self.directory / "source.mp4"
+
+        def never_sleeps(_seconds):  # noqa: ANN001 - test double
+            raise AssertionError("direct downloads must not sleep")
+
+        with patch.object(acq.probe, "remote_source_metadata",
+                          return_value={"durationSeconds": 5.0,
+                                        "estimatedBytes": None}), \
+                patch.object(acq.media, "download_http",
+                             return_value=target):
+            path, method = acq.download_media(
+                "https://media.example/clip.mp4", acq.DIRECT, self.directory,
+                allowed_hosts=ALLOWED_HOSTS, max_bytes=4096,
+                attempts=3, backoff_seconds=0.5, sleeper=never_sleeps)
+        self.assertEqual((path, method), (target, acq.METHOD_HTTP_DOWNLOAD))
 
     def test_safe_error_redacts_url_signature_material(self) -> None:
         message = acq.safe_error(ValueError(
