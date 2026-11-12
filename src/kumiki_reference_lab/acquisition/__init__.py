@@ -25,7 +25,8 @@ Safety contract, enforced by every public entry point here:
 
 Modules: :mod:`media` (allowlisting, bounded fetch, download, HLS),
 :mod:`ytdlp` (bounded, cookie-free YouTube acquisition), :mod:`probe` (ffprobe
-adapters), :mod:`windows` (window planning and evidence), :mod:`stills` (still
+adapters), :mod:`windows` (window planning and evidence), :mod:`census`
+(full-runtime cut candidates and fixed-cadence appearance), :mod:`stills` (still
 measurement), :mod:`reporting` (rankability, dedupe, coverage and comparability
 report helpers), :mod:`store` (atomic writes, indexes), :mod:`runner` (generic
 batch loop). Nothing here needs ffmpeg at import time.
@@ -33,6 +34,9 @@ batch loop). Nothing here needs ffmpeg at import time.
 
 from __future__ import annotations
 
+from .census import (
+    CENSUS_SCHEMA, build_census_evidence, scan_full_runtime,
+)
 from .media import (
     DEFAULT_TEXT_LIMIT, DIRECT, HLS, IMAGE_SUFFIXES, METHOD_HLS_REMUX,
     METHOD_HTTP_DOWNLOAD, USER_AGENT, VIDEO_SUFFIXES, allowlisted_image_url,
@@ -72,6 +76,8 @@ from .ytdlp import (
 )
 
 __all__ = [
+    # census
+    "CENSUS_SCHEMA", "build_census_evidence", "scan_full_runtime",
     # media
     "DEFAULT_TEXT_LIMIT", "DIRECT", "HLS", "IMAGE_SUFFIXES",
     "METHOD_HLS_REMUX", "METHOD_HTTP_DOWNLOAD", "USER_AGENT", "VIDEO_SUFFIXES",
