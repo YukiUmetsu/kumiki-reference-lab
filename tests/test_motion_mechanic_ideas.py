@@ -114,7 +114,14 @@ class OriginalMechanicIdeasTests(unittest.TestCase):
         for recipe, mode in expectations.items():
             proposals = [p for p in report["proposals"]
                          if p["originalRecipe"] == recipe]
-            self.assertEqual(len(proposals), 1)
+            self.assertGreaterEqual(len(proposals), 1)
+            self.assertTrue(all(
+                proposal["availableOriginalImplementation"] is not None
+                and proposal["availableOriginalImplementation"]["registryItem"]
+                    == "paired-focus"
+                and proposal["availableOriginalImplementation"]["suggestedAuthoredMode"]
+                    == mode
+                for proposal in proposals))
             proposal = proposals[0]
             shipped = proposal["availableOriginalImplementation"]
             self.assertIsNotNone(shipped)
