@@ -156,6 +156,17 @@ authored stage and timing, no source-frame reproduction, and pending
 human visual approval. Other animation ideas are still proposals.
 See [source-grounded animation mechanics](docs/source-to-original-animation-mechanics.md).
 
+### More source-grounded motion implementations
+
+Measured screen-region convergence and divergence proposals now link
+to the actual
+[Paired Focus choreography pack](https://github.com/YukiUmetsu/kumiki-ui/blob/main/docs/component-specs/paired-focus.md)
+(merged UI PR #129). As with Two-Lane Swap, this does **not** mean
+video measurements can recreate source motion or that visual polish
+has been approved; authored art, geometry, timing and independent
+render review remain required. See
+[source-to-animation mechanics](docs/source-to-original-animation-mechanics.md).
+
 ## Why this exists
 
 Professional motion graphics depend on more than shaders and easing presets:
