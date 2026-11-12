@@ -220,6 +220,112 @@ class AllowlistTests(unittest.TestCase):
             acq.allowlisted_video_url(signed, allowed_hosts=ALLOWED_HOSTS)
 
 
+class AsciiUrlTests(unittest.TestCase):
+    def test_non_ascii_path_is_percent_encoded_as_utf8(self) -> None:
+        self.assertEqual(
+            acq.ascii_url(
+                "https://media.example/Ordinary-Rio-40°-André.jpg"),
+            "https://media.example/Ordinary-Rio-40%C2%B0-Andr%C3%A9.jpg")
+
+    def test_already_encoded_url_is_unchanged(self) -> None:
+        url = ("https://media.example/a%20b%C3%A9.jpg?"
+               "name=Andr%C3%A9&x=1#frag%20ment")
+        self.assertEqual(acq.ascii_url(url), url)
+
+    def test_plain_ascii_url_is_byte_identical(self) -> None:
+        for url in (
+            "https://media.example/clip.mp4",
+            "https://MEDIA.EXAMPLE:443/a/b.mp4?Signature=x&Expires=1",
+            "http://www.stashmedia.tv/wp-content/uploads/poster.jpg",
+        ):
+            with self.subTest(url=url):
+                self.assertEqual(acq.ascii_url(url), url)
+
+    def test_non_ascii_query_value_is_encoded(self) -> None:
+        self.assertEqual(
+            acq.ascii_url("https://media.example/p.jpg?name=André&x=1"),
+            "https://media.example/p.jpg?name=Andr%C3%A9&x=1")
+
+    def test_non_ascii_fragment_is_encoded(self) -> None:
+        self.assertEqual(
+            acq.ascii_url("https://media.example/p.jpg#André"),
+            "https://media.example/p.jpg#Andr%C3%A9")
+
+    def test_non_ascii_host_is_refused(self) -> None:
+        with self.assertRaisesRegex(ValueError, "host"):
+            acq.ascii_url("https://exämple.com/p.jpg")
+
+    def test_port_and_userinfo_are_preserved(self) -> None:
+        self.assertEqual(
+            acq.ascii_url("https://user:pw@media.example:8443/André.jpg"),
+            "https://user:pw@media.example:8443/Andr%C3%A9.jpg")
+
+    def test_scheme_is_enforced(self) -> None:
+        for url in (
+            "ftp://media.example/André.jpg",
+            "file:///tmp/André.jpg",
+            "mailto:andre@example.com",
+            "https:///André.jpg",
+            "",
+            "   ",
+            None,
+            42,
+        ):
+            with self.subTest(url=url), self.assertRaises(ValueError):
+                acq.ascii_url(url)
+
+    def test_allowlist_validates_the_normalized_form(self) -> None:
+        self.assertEqual(
+            acq.allowlisted_url(
+                "https://media.example/André.jpg?name=André",
+                allowed_hosts=ALLOWED_HOSTS, allow_query=True),
+            "https://media.example/Andr%C3%A9.jpg?name=Andr%C3%A9")
+        self.assertEqual(
+            acq.allowlisted_image_url(
+                "https://media.example/André.png", allowed_hosts=ALLOWED_HOSTS),
+            "https://media.example/Andr%C3%A9.png")
+        with self.assertRaisesRegex(ValueError, "not allowlisted"):
+            acq.allowlisted_url(
+                "https://evil.example/André.jpg", allowed_hosts=ALLOWED_HOSTS)
+        with self.assertRaisesRegex(ValueError, "host"):
+            acq.allowlisted_url(
+                "https://exämple.com/André.jpg", allowed_hosts=ALLOWED_HOSTS)
+
+    def test_fetch_bytes_requests_the_encoded_url(self) -> None:
+        seen: list[str] = []
+
+        def fake_urlopen(request, timeout=None):  # noqa: ANN001
+            seen.append(request.full_url)
+            return _FakeResponse(b"#EXTM3U\n", request.full_url)
+
+        iri = "https://media.example/Ordinary-Rio-40°-André.m3u8"
+        encoded = ("https://media.example/"
+                   "Ordinary-Rio-40%C2%B0-Andr%C3%A9.m3u8")
+        with patch.object(acq.media, "urlopen", side_effect=fake_urlopen):
+            payload = acq.fetch_bytes(
+                iri, allowed_hosts=ALLOWED_HOSTS, max_bytes=64)
+        self.assertEqual(payload, b"#EXTM3U\n")
+        self.assertEqual(seen, [encoded])
+
+    def test_download_http_requests_the_encoded_url(self) -> None:
+        seen: list[str] = []
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "poster.img"
+
+            def fake_urlopen(request, timeout=None):  # noqa: ANN001
+                seen.append(request.full_url)
+                return _FakeResponse(b"image-bytes", request.full_url)
+
+            iri = "https://media.example/André poster.jpg"
+            encoded = "https://media.example/Andr%C3%A9%20poster.jpg"
+            with patch.object(acq.media, "urlopen", side_effect=fake_urlopen):
+                result = acq.download_http(
+                    iri, target, allowed_hosts=ALLOWED_HOSTS, max_bytes=1024)
+            self.assertEqual(result, target)
+            self.assertEqual(target.read_bytes(), b"image-bytes")
+        self.assertEqual(seen, [encoded])
+
+
 class BoundedFetchTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory()

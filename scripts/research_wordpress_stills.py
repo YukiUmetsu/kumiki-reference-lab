@@ -508,6 +508,12 @@ def policy_image_url(site: Mapping[str, Any], url: object) -> str:
     site itself is HTTPS. For the *same* allowlisted host the scheme is
     upgraded to HTTPS before policy validation; nothing else is rewritten.
     Any other host, credentials, port, fragment, or query is still refused.
+
+    The returned value is the engine's ASCII URI form of the URL: WordPress
+    uploads keep raw UTF-8 characters in filenames (``André``, ``Rio 40°``), and
+    the request line cannot carry them. Recording this return value is what
+    keeps a record's ``imageUrl`` exactly the URL that was fetched, so a reader
+    can reproduce the request.
     """
     text = as_text(url)
     if text is None:
