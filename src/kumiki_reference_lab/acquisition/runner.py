@@ -43,7 +43,8 @@ def safe_error(
     text = re.sub(
         r"(?i)\b((?:AWSAccessKeyId|AWSSAKAccessKeyId|Signature|"
         r"X-Amz-Signature|X-Amz-Credential|X-Amz-Security-Token|"
-        r"Key-Pair-Id|Policy)=)[^&\s'\"]+",
+        r"Key-Pair-Id|Policy|Expires?|ipbits|ip|ei|nsig|sig|sparams|"
+        r"requiressl|token)=)[^&\s'\"]+",
         r"\1[redacted]", text)
     for value in redact:
         if isinstance(value, str) and value:

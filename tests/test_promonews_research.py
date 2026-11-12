@@ -18,6 +18,8 @@ THUMB = f"{ADMIN}/sites/default/files/styles/thumb/public/poster.png?itok=abc123
 FULL = f"{ADMIN}/sites/default/files/poster-full.png"
 ORIGINAL = f"{ADMIN}/sites/default/files/poster-original.png"
 CREATED = 1714953600  # 2024-05-06T00:00:00Z
+VALID_VIDEO_URL = "https://www.youtube.com/watch?v=ZfJOq_B_XBM"
+VALID_VIDEO_SHORT = "https://youtu.be/ZfJOq_B_XBM"
 
 
 # ---------------------------------------------------------------------------
@@ -71,6 +73,13 @@ def row(**overrides: object) -> dict:
     return pnm.normalize_source(raw_source(**overrides))
 
 
+def youtube_row(**overrides: object) -> dict:
+    """A projected row whose embed URL passes the real YouTube allowlist."""
+    projected = row(**overrides)
+    projected["videoUrl"] = VALID_VIDEO_URL
+    return projected
+
+
 def payload(sources: list[dict], *, total: int | None = None) -> dict:
     return {"hits": {
         "total": len(sources) if total is None else total,
@@ -101,6 +110,57 @@ def synthetic_still_record(
             "edgeDensityProxy": 0.1,
         },
     }, generated_at=generated_at)
+
+
+def synthetic_video_record(
+    source: dict, *, luma: float = 0.5, cuts: int = 3,
+    generated_at: str = "2026-01-02T00:00:00Z",
+) -> dict:
+    try:
+        video_url = pnm.canonical_youtube_url(source.get("videoUrl"))
+    except ValueError:
+        video_url = VALID_VIDEO_URL
+    return pnm.build_video_record(
+        source,
+        source={
+            "mediaSha256": "a" * 64,
+            "sizeBytes": 5_000_000,
+            "durationSeconds": 120.0,
+            "resolution": [1280, 720],
+            "frameRate": {"numerator": 25, "denominator": 1},
+            "sourceTimebase": None,
+            "container": "mp4",
+            "videoCodec": "h264",
+            "audioCodec": "aac",
+            "hasAudio": True,
+        },
+        coverage={
+            "windowsMeasured": 2,
+            "windowSeconds": 10,
+            "sampledSeconds": 20,
+            "fractionOfRuntime": 0.166667,
+            "fullRuntimeMeasured": False,
+            "note": "evenly spread source-PTS windows, not full-film review",
+        },
+        windows=[{
+            "startSeconds": 0,
+            "endSeconds": 10,
+            "probe": {
+                "sampledWindowSummary": {
+                    "cutCandidateCountBetweenFirstAndLastSample": cuts,
+                    "meanSampledDisplayLumaProxy": luma,
+                    "meanSampledSaturationProxy": 0.2,
+                    "cutSeparatedPairs": 2,
+                },
+                "sampledFrames": [0, 1],
+                "sampledFramePairs": [
+                    {"meanAbsoluteDisplayRgbDeltaPerSecond": 0.1}],
+            },
+        }],
+        method=acq.METHOD_YTDLP_MERGE,
+        video_url=video_url,
+        generated_at=generated_at,
+    )
 
 
 class _FakeResponse:
@@ -766,6 +826,302 @@ class ReportTests(unittest.TestCase):
         self.assertIn("| 0.4000 |", row_line)
         self.assertIn("| 0.2000 |", row_line)
         self.assertIn("| 0.1000 |", row_line)
+
+
+# ---------------------------------------------------------------------------
+# video lane
+# ---------------------------------------------------------------------------
+
+
+class CollectTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+
+    def write_catalog(self, rows: list[dict]) -> Path:
+        path = self.root / "catalog.json"
+        acq.write_json_atomic(path, pnm.build_catalog(
+            rows, len(rows), generated_at="2026-01-01T00:00:00Z"))
+        return path
+
+    def index(self, out_dir: Path) -> dict:
+        return json.loads(
+            (out_dir / "index.json").read_text(encoding="utf-8"))
+
+    def test_provider_routing_never_attempts_vimeo(self) -> None:
+        youtube = youtube_row(nid=1)
+        vimeo = row(nid=2, videos=[{
+            "url": "https://vimeo.com/123", "filemime": "video/vimeo"}])
+        absent = row(nid=3, videos=[])
+        self.assertEqual(pnm.collect_reference(youtube),
+                         ("youtube", VALID_VIDEO_URL))
+        self.assertIsNone(pnm.collect_skip_reason(youtube))
+        self.assertEqual(pnm.collect_skip_reason(vimeo), "unsupported-vimeo")
+        self.assertEqual(pnm.collect_skip_reason(absent), "no-video-reference")
+        self.assertEqual(
+            pnm.canonical_youtube_url("https://youtu.be/xyz98765432"),
+            "https://www.youtube.com/watch?v=xyz98765432")
+        self.assertEqual(
+            pnm.canonical_youtube_url(
+                "https://www.youtube.com/shorts/xyz98765432"),
+            "https://www.youtube.com/watch?v=xyz98765432")
+
+    def test_first_youtube_entry_wins_over_a_leading_vimeo_entry(self) -> None:
+        source = raw_source(videos=[
+            {"url": "https://vimeo.com/123", "filemime": "video/vimeo"},
+            {"url": "https://youtu.be/xyz98765432",
+             "filemime": "video/youtube"},
+        ])
+        projected = pnm.normalize_source(source)
+        self.assertEqual(projected["provider"], "youtube")
+        self.assertEqual(projected["videoUrl"], "https://youtu.be/xyz98765432")
+        self.assertIsNone(pnm.collect_skip_reason(projected))
+        with_list = dict(projected)
+        with_list["videos"] = source["videos"]
+        self.assertEqual(pnm.collect_reference(with_list),
+                         ("youtube", "https://youtu.be/xyz98765432"))
+
+    def test_limit_counts_only_attempted_rows(self) -> None:
+        vimeo = row(nid=3, created=300, videos=[{
+            "url": "https://vimeo.com/123", "filemime": "video/vimeo"}])
+        second = row(nid=2, created=200)
+        first = row(nid=1, created=100)
+        catalog_path = self.write_catalog([first, second, vimeo])
+        out_dir = self.root / "out"
+
+        def fake_collect(source: dict, out: Path, **_options: object) -> dict:
+            record = synthetic_video_record(source)
+            acq.write_json_atomic(pnm.video_record_path(out, source), record)
+            return record
+
+        with patch.object(pnm, "collect_one",
+                          side_effect=fake_collect) as collect:
+            code = pnm.run_collect(
+                catalog_path, out_dir=out_dir, limit=1, delay_seconds=0,
+                acknowledge_rights=True, log=lambda _s: None)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(collect.call_count, 1)
+        self.assertEqual(collect.call_args.args[0]["nid"], 2)
+        index = self.index(out_dir)
+        self.assertEqual(index["schemaVersion"], pnm.VIDEO_INDEX_SCHEMA)
+        self.assertEqual(index["counts"],
+                         {"measured": 1, "skipped": 1, "failed": 0})
+        self.assertEqual(index["skips"][0]["reason"], "unsupported-vimeo")
+
+    def test_acknowledgement_is_required(self) -> None:
+        catalog_path = self.write_catalog([row()])
+        with self.assertRaises(ValueError):
+            pnm.run_collect(
+                catalog_path, out_dir=self.root / "out",
+                acknowledge_rights=False, log=lambda _s: None)
+        with self.assertRaises(SystemExit):
+            pnm.main([
+                "collect", "--catalog", str(catalog_path),
+                "--out-dir", str(self.root / "out2")])
+
+    def test_resume_skips_an_existing_video_record(self) -> None:
+        source = row()
+        catalog_path = self.write_catalog([source])
+        out_dir = self.root / "out"
+        existing = pnm.video_record_path(out_dir, source)
+        acq.write_json_atomic(existing, synthetic_video_record(source))
+        before = existing.read_bytes()
+
+        with patch.object(pnm, "collect_one") as collect:
+            code = pnm.run_collect(
+                catalog_path, out_dir=out_dir, limit=0, resume=True,
+                delay_seconds=0, acknowledge_rights=True, log=lambda _s: None)
+
+        self.assertEqual(code, 0)
+        collect.assert_not_called()
+        self.assertEqual(existing.read_bytes(), before)
+        index = self.index(out_dir)
+        self.assertEqual(index["skips"][0]["reason"], "resume-existing-record")
+        self.assertEqual(index["counts"],
+                         {"measured": 1, "skipped": 1, "failed": 0})
+
+    def test_refusal_is_a_skip_and_transient_is_a_failure(self) -> None:
+        first = row(nid=1, created=100)
+        second = row(nid=2, created=200)
+        third = row(nid=3, created=300)
+        catalog_path = self.write_catalog([first, second, third])
+        out_dir = self.root / "out"
+        effects = [
+            acq.YtDlpRefusedError("provider refused"),
+            acq.YtDlpError("network wobble"),
+            synthetic_video_record(first),
+        ]
+
+        with patch.object(pnm, "collect_one", side_effect=effects) as collect:
+            code = pnm.run_collect(
+                catalog_path, out_dir=out_dir, limit=0, delay_seconds=0,
+                acknowledge_rights=True, log=lambda _s: None)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(collect.call_count, 3)  # a refusal is not retried
+        index = self.index(out_dir)
+        self.assertEqual(index["counts"],
+                         {"measured": 1, "skipped": 1, "failed": 1})
+        self.assertEqual(index["skips"][0]["nid"], 3)
+        self.assertEqual(index["skips"][0]["reason"], "provider-refused")
+        self.assertEqual(index["failures"][0]["nid"], 2)
+        self.assertIn("transient", index["failures"][0]["reason"])
+
+    def test_video_record_shape_and_evidence_labels(self) -> None:
+        record = synthetic_video_record(row())
+        self.assertEqual(record["schemaVersion"], pnm.VIDEO_SCHEMA)
+        self.assertEqual(record["provider"], "youtube")
+        self.assertEqual(record["videoUrl"], VALID_VIDEO_URL)
+        self.assertEqual(record["downloadMethod"], acq.METHOD_YTDLP_MERGE)
+        self.assertIsNone(record["unsupportedReason"])
+        self.assertFalse(record["mediaRetained"])
+        self.assertFalse(record["acquisition"]["mediaRetained"])
+        self.assertEqual(record["acquisition"]["provider"], "youtube")
+        self.assertEqual(record["acquisition"]["method"],
+                         acq.METHOD_YTDLP_MERGE)
+        self.assertEqual(record["evidenceStatus"],
+                         pnm.VIDEO_EVIDENCE_STATUS)
+        self.assertIn("rendition", record["renditionNote"].lower())
+        limits = " ".join(record["limits"]).lower()
+        self.assertIn("not the work's delivered master", limits)
+        self.assertIn("deleted", limits)
+        self.assertIn("provider refusal", limits)
+
+    def test_collect_one_writes_a_record_and_retains_no_media(self) -> None:
+        out_dir = self.root / "out"
+        coverage = {
+            "windowsMeasured": 1, "windowSeconds": 10,
+            "sampledSeconds": 10, "fractionOfRuntime": 0.1,
+            "fullRuntimeMeasured": False,
+            "note": "evenly spread source-PTS windows, not full-film review",
+        }
+        measured = [{
+            "startSeconds": 0, "endSeconds": 10,
+            "probe": {"sampledWindowSummary": {
+                "cutCandidateCountBetweenFirstAndLastSample": 1,
+                "meanSampledDisplayLumaProxy": 0.4,
+                "meanSampledSaturationProxy": 0.2,
+                "cutSeparatedPairs": 0},
+                "sampledFrames": [0],
+                "sampledFramePairs": [
+                    {"meanAbsoluteDisplayRgbDeltaPerSecond": 0.05}]},
+        }]
+
+        def fake_download(url: str, provider: str, directory: Path,
+                          **_options: object) -> tuple[Path, str]:
+            target = Path(directory) / "source.mp4"
+            target.write_bytes(b"\x00" * 64)
+            return target, acq.METHOD_YTDLP_MERGE
+
+        with patch.object(pnm, "download_media", side_effect=fake_download), \
+                patch.object(pnm, "source_metadata", return_value={
+                    "mediaSha256": "a" * 64, "sizeBytes": 64,
+                    "durationSeconds": 100.0, "resolution": [1280, 720],
+                    "frameRate": {"numerator": 25, "denominator": 1},
+                    "sourceTimebase": None, "container": "mp4",
+                    "videoCodec": "h264", "audioCodec": "aac",
+                    "hasAudio": True}), \
+                patch.object(pnm, "measure_windows",
+                             return_value=(coverage, measured)):
+            record = pnm.collect_one(youtube_row(), out_dir)
+
+        self.assertEqual(record["mediaRetained"], False)
+        written = pnm.video_record_path(out_dir, youtube_row())
+        self.assertTrue(written.is_file())
+        self.assertEqual(
+            json.loads(written.read_text(encoding="utf-8"))["schemaVersion"],
+            pnm.VIDEO_SCHEMA)
+        self.assertEqual(list(self.root.rglob("*.mp4")), [])
+
+    def test_probe_failure_still_deletes_downloaded_media(self) -> None:
+        created: list[Path] = []
+        real_temporary = tempfile.TemporaryDirectory
+
+        def factory(*args: object, **kwargs: object):
+            manager = real_temporary(*args, dir=str(self.root), **kwargs)
+            created.append(Path(manager.name))
+            return manager
+
+        def fake_download(url: str, provider: str, directory: Path,
+                          **_options: object) -> tuple[Path, str]:
+            target = Path(directory) / "source.mp4"
+            target.write_bytes(b"\x00" * 64)
+            return target, acq.METHOD_YTDLP_MERGE
+
+        with patch.object(pnm.tempfile, "TemporaryDirectory",
+                          side_effect=factory), \
+                patch.object(pnm, "download_media", side_effect=fake_download), \
+                patch.object(pnm, "source_metadata",
+                             side_effect=ValueError("probe exploded")):
+            with self.assertRaises(pnm.ProbeFailed):
+                pnm.collect_one(youtube_row(), self.root / "out")
+
+        self.assertTrue(created)
+        for path in created:
+            self.assertFalse(path.exists())
+        self.assertEqual(list(self.root.rglob("*.mp4")), [])
+
+
+class VideoReportTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+
+    def write_still(self, out_dir: Path, record: dict) -> None:
+        acq.write_json_atomic(
+            out_dir / "stills" / f"{pnm.record_stem(record)}.json", record)
+
+    def write_video(self, out_dir: Path, record: dict) -> None:
+        acq.write_json_atomic(
+            out_dir / "videos" / f"{pnm.record_stem(record)}.json", record)
+
+    def test_report_separates_video_and_still_evidence(self) -> None:
+        out_dir = self.root / "out"
+        self.write_video(out_dir, synthetic_video_record(row(nid=1), luma=0.5))
+        self.write_still(out_dir, synthetic_still_record(row(nid=1), luma=0.9))
+        self.write_still(out_dir, synthetic_still_record(
+            row(nid=2, created=CREATED - 60), luma=0.0))
+
+        code = pnm.run_report(out_dir, log=lambda _s: None)
+        self.assertEqual(code, 0)
+        aggregate = json.loads(
+            (out_dir / "aggregate.json").read_text(encoding="utf-8"))
+        self.assertEqual(aggregate["evidence"],
+                         "video-measured+still-measured")
+        self.assertEqual(aggregate["counts"]["videoMeasured"], 1)
+        self.assertEqual(aggregate["counts"]["stillMeasured"], 2)
+        self.assertEqual(aggregate["counts"]["stillOnly"], 1)
+        luma = aggregate["videoAggregates"]["distributions"]["meanDisplayLuma"]
+        self.assertEqual(luma["n"], 1)
+        self.assertEqual(luma["median"], 0.5)
+        report = (out_dir / "report.md").read_text(encoding="utf-8")
+        self.assertIn("Aggregates (video-measured records only)", report)
+        self.assertIn("Still-only records", report)
+        self.assertIn("Video-measured records: 1", report)
+        self.assertIn("ytdlp-merge", report)
+        self.assertNotIn("Why there is no motion evidence", report)
+
+    def test_report_with_videos_is_byte_identical_across_runs(self) -> None:
+        out_dir = self.root / "out"
+        self.write_video(out_dir, synthetic_video_record(
+            row(nid=1), generated_at="2026-01-04T00:00:00Z"))
+        self.write_still(out_dir, synthetic_still_record(
+            row(nid=1), generated_at="2026-01-03T00:00:00Z"))
+        self.write_still(out_dir, synthetic_still_record(
+            row(nid=2, created=CREATED - 60), luma=0.1,
+            generated_at="2026-01-02T00:00:00Z"))
+
+        pnm.run_report(out_dir, top=5, log=lambda _s: None)
+        first_report = (out_dir / "report.md").read_bytes()
+        first_aggregate = (out_dir / "aggregate.json").read_bytes()
+        pnm.run_report(out_dir, top=5, log=lambda _s: None)
+
+        self.assertEqual((out_dir / "report.md").read_bytes(), first_report)
+        self.assertEqual(
+            (out_dir / "aggregate.json").read_bytes(), first_aggregate)
 
 
 # ---------------------------------------------------------------------------

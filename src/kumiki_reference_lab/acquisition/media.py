@@ -405,30 +405,55 @@ def download_media(
     max_bytes: int, ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
     timeout: float = 360.0, max_width: int = 1280,
     max_duration_seconds: float | None = None,
+    yt_dlp: str = "yt-dlp", max_height: int = 720, prefer_h264: bool = True,
     log: Callable[[str], None] | None = None, allow_query: bool = False,
 ) -> tuple[Path, str]:
     """Download one allowlisted public video into ``directory``.
 
-    ``provider`` is the caller's generic delivery mode (:data:`HLS` or
-    :data:`DIRECT`). HLS uses a stream-copy remux of one bounded rendition;
-    direct sources use urllib. Oversized or duration-exceeding sources are
-    rejected from remote metadata before bytes are written. Never
+    ``provider`` is the caller's generic delivery mode (:data:`HLS`,
+    :data:`DIRECT`, or :data:`~.ytdlp.YOUTUBE`). HLS uses a stream-copy remux
+    of one bounded rendition; direct sources use urllib; YouTube is fetched by
+    a bounded, cookie-free local ``yt-dlp``. Oversized or duration-exceeding
+    sources are rejected from remote metadata before bytes are written. Never
     authenticates. Returns ``(local path, method label)``.
 
     ``allow_query`` admits signed query-string URLs (and signed redirects) and
     is threaded through playlist resolution, probing, and the download itself.
+    It does not apply to YouTube, whose single-video allowlist owns the query.
     """
     # Local import: probe adapters themselves depend on this module's
     # allowlisting and bounded-read primitives.
     from . import probe as probe_adapter
+    from . import ytdlp as ytdlp_adapter
 
     allowed_hosts = _freeze_hosts(allowed_hosts)
-    allowlisted_url(url, allowed_hosts=allowed_hosts, label="video source URL",
-                    allow_query=allow_query)
-    if provider not in (HLS, DIRECT):
+    if provider != ytdlp_adapter.YOUTUBE:
+        allowlisted_url(url, allowed_hosts=allowed_hosts,
+                        label="video source URL", allow_query=allow_query)
+    if provider not in (HLS, DIRECT, ytdlp_adapter.YOUTUBE):
         raise ValueError("provider is not downloadable by design")
     if directory.is_symlink() or not directory.is_dir():
         raise ValueError("download directory is not a real directory")
+
+    if provider == ytdlp_adapter.YOUTUBE:
+        validated = ytdlp_adapter.allowlisted_youtube_url(
+            url, allowed_hosts=allowed_hosts)
+        remote: dict[str, Any] | None = None
+        try:
+            remote = ytdlp_adapter.youtube_source_metadata(
+                validated, yt_dlp=yt_dlp, allowed_hosts=allowed_hosts)
+        except ValueError as metadata_error:
+            if log is not None:
+                log(f"YouTube metadata pre-check unavailable "
+                    f"({metadata_error}); continuing to a bounded download")
+        if remote is not None:
+            _reject_excess_duration(remote, max_duration_seconds)
+        downloaded = ytdlp_adapter.download_via_ytdlp(
+            validated, directory, yt_dlp=yt_dlp, max_bytes=max_bytes,
+            max_height=max_height, timeout_seconds=timeout,
+            prefer_h264=prefer_h264, allowed_hosts=allowed_hosts)
+        return downloaded, ytdlp_adapter.METHOD_YTDLP_MERGE
+
     target = media_target(directory, url)
 
     if provider == HLS:

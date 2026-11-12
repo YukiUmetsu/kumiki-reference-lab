@@ -815,6 +815,448 @@ class ReportTests(unittest.TestCase):
         self.assertIn("image galleries", report)
 
 
+class EmbedExtractionTests(unittest.TestCase):
+    """Article HTML -> first YouTube embed, with Vimeo/no-embed skips."""
+
+    def row(self, link: str = "https://directorslibrary.com/video/demo-video/"):
+        return wps.normalize_row(
+            wps.SITES[DL], raw_item(link=link), {})
+
+    def test_iframe_embed_is_extracted_and_canonicalised(self) -> None:
+        page = (
+            '<html><body><iframe src="https://player.vimeo.com/video/1">'
+            '</iframe><iframe src="https://www.youtube.com/embed/abcdefghijk'
+            '?feature=oembed"></iframe></body></html>')
+        self.assertEqual(wps.find_youtube_id(page), "abcdefghijk")
+        url = wps.youtube_url_for_row(
+            wps.SITES[DL], self.row(), fetch=lambda _: page)
+        self.assertEqual(url, "https://www.youtube.com/watch?v=abcdefghijk")
+
+    def test_jsonld_embed_is_the_fallback(self) -> None:
+        # Unicode-escaped solidus keeps the direct scan from matching; only
+        # json.loads -> embedUrl reveals the URL.
+        page = (
+            '<html><head><script type="application/ld+json">'
+            '{"@type": "VideoObject", "embedUrl": '
+            '"https:\\u002F\\u002Fwww.youtube.com\\u002Fembed\\u002Fzyxwvutsrqp'
+            '?feature=oembed"}'
+            "</script></head><body></body></html>")
+        self.assertIsNone(
+            wps._youtube_id_in_text(wps._normalise_markup(page)))
+        self.assertEqual(wps.find_youtube_id(page), "zyxwvutsrqp")
+        self.assertEqual(
+            wps.youtube_url_for_row(
+                wps.SITES[DL], self.row(), fetch=lambda _: page),
+            "https://www.youtube.com/watch?v=zyxwvutsrqp")
+
+    def test_watch_shorts_and_short_link_shapes(self) -> None:
+        for url, expected in (
+                ("https://www.youtube.com/watch?v=abcdefghijk&list=x",
+                 "abcdefghijk"),
+                ("https://m.youtube.com/shorts/ABCDEFGHIJK", "ABCDEFGHIJK"),
+                ("https://youtu.be/12345678901", "12345678901")):
+            with self.subTest(url=url):
+                self.assertEqual(
+                    wps.find_youtube_id(f'<a href="{url}">x</a>'), expected)
+
+    def test_vimeo_only_is_an_explicit_skip(self) -> None:
+        page = ('<iframe src="https://player.vimeo.com/video/98765">'
+                "</iframe>")
+        with self.assertRaises(wps.VideoSkip) as raised:
+            wps.youtube_url_for_row(
+                wps.SITES[DL], self.row(), fetch=lambda _: page)
+        self.assertEqual(raised.exception.reason, "unsupported-vimeo")
+
+    def test_no_embed_is_an_explicit_skip(self) -> None:
+        with self.assertRaises(wps.VideoSkip) as raised:
+            wps.youtube_url_for_row(
+                wps.SITES[DL], self.row(), fetch=lambda _: "<p>no video</p>")
+        self.assertEqual(raised.exception.reason, "no-embed-found")
+
+    def test_article_403_is_a_site_refusal(self) -> None:
+        def refuse(url: str) -> str:
+            raise HTTPError(url, 403, "Forbidden", None, io.BytesIO(b""))
+
+        with self.assertRaises(wps.ArticleRefused):
+            wps.youtube_url_for_row(
+                wps.SITES[DL], self.row(), fetch=refuse)
+
+    def test_article_url_off_host_is_a_skip_before_fetch(self) -> None:
+        called: list[str] = []
+
+        def fetch(url: str) -> str:
+            called.append(url)
+            return ""
+
+        row = self.row(link="https://evil.example/video/demo/")
+        with self.assertRaises(wps.VideoSkip) as raised:
+            wps.youtube_url_for_row(wps.SITES[DL], row, fetch=fetch)
+        self.assertEqual(raised.exception.reason, "article-url-not-allowlisted")
+        self.assertEqual(called, [])
+
+
+def synthetic_video_probe(
+    *, cuts: int = 2, luma: float = 0.3, saturation: float = 0.2,
+    delta: float = 0.01,
+) -> dict:
+    return {
+        "sampledWindowSummary": {
+            "cutCandidateCountBetweenFirstAndLastSample": cuts,
+            "meanSampledDisplayLumaProxy": luma,
+            "meanSampledSaturationProxy": saturation,
+        },
+        "sampledFrames": [{}, {}],
+        "sampledFramePairs": [
+            {"meanAbsoluteDisplayRgbDeltaPerSecond": delta}],
+    }
+
+
+def synthetic_source(*, duration: float = 100.0) -> dict:
+    return {
+        "mediaSha256": "d" * 64,
+        "sizeBytes": 2_000_000,
+        "durationSeconds": duration,
+        "resolution": [1280, 720],
+        "frameRate": 25.0,
+        "sourceTimebase": "1/25",
+        "container": "mp4",
+        "videoCodec": "h264",
+        "audioCodec": "aac",
+        "hasAudio": True,
+    }
+
+
+def build_video_record_for(
+    row: dict, *, luma: float = 0.3, cuts: int = 2,
+    generated_at: str = "2026-01-05T00:00:00Z",
+) -> dict:
+    return wps.build_video_record(
+        DL, row, source=synthetic_source(),
+        coverage={
+            "windowsMeasured": 1, "windowSeconds": 10, "sampledSeconds": 10.0,
+            "fractionOfRuntime": 0.1, "fullRuntimeMeasured": False,
+            "note": "synthetic test window"},
+        windows=[{
+            "startSeconds": 0, "endSeconds": 10,
+            "probe": synthetic_video_probe(cuts=cuts, luma=luma)}],
+        method="ytdlp-merge",
+        video_url="https://www.youtube.com/watch?v=abcdefghijk",
+        generated_at=generated_at)
+
+
+class CollectLaneTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+
+    def catalog(self, items: list[dict], *, site_key: str = DL) -> Path:
+        cache = {
+            "categories": {"3": {"name": "Awards", "slug": "awards"}},
+            "tags": {"9": {"name": "3d", "slug": "3d"}},
+        }
+        rows = [wps.normalize_row(wps.SITES[site_key], item, cache)
+                for item in items]
+        catalog = wps.build_catalog(
+            site_key, rows, meta={
+                "reportedTotal": len(rows), "pagesFetched": 1,
+                "termCache": cache, "termErrors": {}},
+            generated_at="2026-01-01T00:00:00Z")
+        path = self.root / "catalog.json"
+        acq.write_json_atomic(path, catalog)
+        return path
+
+    def row(self, item: dict, site_key: str = DL) -> dict:
+        return wps.normalize_row(wps.SITES[site_key], item, {})
+
+    def test_acknowledgement_gate_refuses_without_attestation(self) -> None:
+        catalog = self.catalog([raw_item()])
+        with self.assertRaises(ValueError):
+            wps.run_collect(
+                DL, catalog, out_dir=self.root / "out",
+                acknowledge_rights=False, delay_seconds=0, log=lambda _: None)
+
+    def test_jobs_above_two_and_bad_budgets_are_refused(self) -> None:
+        catalog = self.catalog([raw_item()])
+        with self.assertRaises(ValueError):
+            wps.run_collect(
+                DL, catalog, out_dir=self.root / "o", jobs=3,
+                acknowledge_rights=True, log=lambda _: None)
+        with self.assertRaises(ValueError):
+            wps.run_collect(
+                DL, catalog, out_dir=self.root / "o", max_file_bytes=0,
+                acknowledge_rights=True, log=lambda _: None)
+        with self.assertRaises(ValueError):
+            wps.run_collect(
+                DL, catalog, out_dir=self.root / "o", window_seconds=31,
+                acknowledge_rights=True, log=lambda _: None)
+
+    def test_stash_every_row_is_refused_without_attempting(self) -> None:
+        catalog = self.catalog(
+            [stash_item(id=1, slug="one"), stash_item(id=2, slug="two")],
+            site_key=STASH)
+        out_dir = self.root / "out"
+        with patch.object(wps, "collect_video_one") as collect:
+            code = wps.run_collect(
+                STASH, catalog, out_dir=out_dir, acknowledge_rights=True,
+                delay_seconds=0, log=lambda _: None)
+        self.assertEqual(code, 0)
+        collect.assert_not_called()
+        index = json.loads(
+            (out_dir / "index.json").read_text(encoding="utf-8"))
+        self.assertEqual(index["schemaVersion"], "kumiki.stash-index.v1")
+        self.assertEqual(index["counts"],
+                         {"measured": 0, "skipped": 2, "failed": 0})
+        self.assertEqual(
+            {row["reason"] for row in index["skips"]},
+            {"site-has-no-downloadable-rendition"})
+        self.assertEqual(list((out_dir / "videos").glob("*.json")), [])
+
+    def test_resume_leaves_existing_video_record_untouched(self) -> None:
+        catalog = self.catalog([raw_item()])
+        out_dir = self.root / "out"
+        row = self.row(raw_item())
+        existing = wps.video_record_path(out_dir, row)
+        acq.write_json_atomic(existing, build_video_record_for(row))
+        before = existing.read_bytes()
+        before_mtime = existing.stat().st_mtime_ns
+
+        with patch.object(wps, "collect_video_one") as collect:
+            code = wps.run_collect(
+                DL, catalog, out_dir=out_dir, resume=True,
+                acknowledge_rights=True, delay_seconds=0, log=lambda _: None)
+
+        self.assertEqual(code, 0)
+        collect.assert_not_called()
+        self.assertEqual(existing.read_bytes(), before)
+        self.assertEqual(existing.stat().st_mtime_ns, before_mtime)
+        index = json.loads(
+            (out_dir / "index.json").read_text(encoding="utf-8"))
+        self.assertEqual(index["schemaVersion"],
+                         "kumiki.directorslibrary-index.v1")
+        self.assertEqual(index["counts"],
+                         {"measured": 1, "skipped": 1, "failed": 0})
+        self.assertEqual(index["skips"][0]["reason"],
+                         "resume-existing-record")
+
+    def test_refusal_is_a_skip_and_transient_is_a_failure_without_retry(self) -> None:
+        catalog = self.catalog([
+            raw_item(id=1, slug="refused"),
+            raw_item(id=2, slug="transient"),
+        ])
+        out_dir = self.root / "out"
+        calls: list[str] = []
+
+        def fake_collect(site_key, row, out_dir, **kwargs):
+            calls.append(row["slug"])
+            if row["slug"] == "refused":
+                raise acq.YtDlpRefusedError("provider refused")
+            raise acq.YtDlpError("network wobble")
+
+        with patch.object(wps, "collect_video_one", side_effect=fake_collect):
+            code = wps.run_collect(
+                DL, catalog, out_dir=out_dir, acknowledge_rights=True,
+                delay_seconds=0, log=lambda _: None)
+
+        self.assertEqual(code, 1)
+        self.assertEqual(sorted(calls), ["refused", "transient"])
+        index = json.loads(
+            (out_dir / "index.json").read_text(encoding="utf-8"))
+        self.assertEqual([row["reason"] for row in index["skips"]],
+                         ["provider-refused"])
+        self.assertEqual(index["counts"],
+                         {"measured": 0, "skipped": 1, "failed": 1})
+        self.assertTrue(index["failures"][0]["reason"].startswith("transient"))
+
+    def test_site_refusal_is_a_skip_not_a_failure(self) -> None:
+        catalog = self.catalog([raw_item()])
+        out_dir = self.root / "out"
+
+        def fake_collect(site_key, row, out_dir, **kwargs):
+            raise wps.ArticleRefused("article page refused (HTTP 403)")
+
+        with patch.object(wps, "collect_video_one", side_effect=fake_collect):
+            code = wps.run_collect(
+                DL, catalog, out_dir=out_dir, acknowledge_rights=True,
+                delay_seconds=0, log=lambda _: None)
+
+        self.assertEqual(code, 1)
+        index = json.loads(
+            (out_dir / "index.json").read_text(encoding="utf-8"))
+        self.assertEqual(index["skips"][0]["reason"], "site-refused")
+        self.assertEqual(index["counts"],
+                         {"measured": 0, "skipped": 1, "failed": 0})
+
+    def test_limit_counts_only_attempted_rows(self) -> None:
+        catalog = self.catalog([
+            raw_item(id=1, slug="one"),
+            raw_item(id=2, slug="two"),
+            raw_item(id=3, slug="three"),
+        ])
+        out_dir = self.root / "out"
+        resumed = self.row(raw_item(id=3, slug="three"))
+        acq.write_json_atomic(
+            wps.video_record_path(out_dir, resumed),
+            build_video_record_for(resumed))
+
+        with patch.object(
+                wps, "collect_video_one",
+                side_effect=lambda site_key, row, out_dir, **kw:
+                    build_video_record_for(row)) as collect:
+            wps.run_collect(
+                DL, catalog, out_dir=out_dir, limit=2, acknowledge_rights=True,
+                delay_seconds=0, log=lambda _: None)
+
+        self.assertEqual(collect.call_count, 2)
+        index = json.loads(
+            (out_dir / "index.json").read_text(encoding="utf-8"))
+        self.assertEqual(index["counts"],
+                         {"measured": 3, "skipped": 1, "failed": 0})
+
+    def test_collect_video_one_deletes_media_and_writes_video_schema(self) -> None:
+        row = self.row(raw_item())
+        out_dir = self.root / "out"
+        created: list[Path] = []
+        page = ('<iframe src="https://www.youtube.com/embed/abcdefghijk'
+                '?feature=oembed"></iframe>')
+
+        def fake_download(url, provider, directory, **kwargs):
+            target = Path(directory) / "source.mp4"
+            target.write_bytes(b"\x00" * 32)
+            created.append(target)
+            return target, "ytdlp-merge"
+
+        coverage = {
+            "windowsMeasured": 1, "windowSeconds": 10, "sampledSeconds": 10.0,
+            "fractionOfRuntime": 0.1, "fullRuntimeMeasured": False,
+            "note": "synthetic"}
+        windows = [{"startSeconds": 0, "endSeconds": 10,
+                    "probe": synthetic_video_probe()}]
+        with patch.object(wps, "download_media", side_effect=fake_download), \
+                patch.object(wps, "source_metadata",
+                             return_value=synthetic_source()), \
+                patch.object(wps, "measure_windows",
+                             return_value=(coverage, windows)):
+            record = wps.collect_video_one(
+                DL, row, out_dir, article_fetch=lambda _: page)
+
+        self.assertTrue(created and all(not path.exists() for path in created))
+        self.assertEqual(list(out_dir.rglob("*.mp4")), [])
+        saved = wps.video_record_path(out_dir, row)
+        self.assertTrue(saved.is_file())
+        self.assertEqual(saved.parent.name, "videos")
+        self.assertEqual(record["schemaVersion"],
+                         "kumiki.directorslibrary-video-evidence.v1")
+
+    def test_video_record_shape_and_labels(self) -> None:
+        row = self.row(raw_item())
+        record = build_video_record_for(row, luma=0.3, cuts=2)
+        self.assertEqual(record["schemaVersion"],
+                         "kumiki.directorslibrary-video-evidence.v1")
+        self.assertEqual(record["site"], DL)
+        self.assertEqual(record["provider"], "youtube")
+        self.assertEqual(record["videoUrl"],
+                         "https://www.youtube.com/watch?v=abcdefghijk")
+        self.assertEqual(record["downloadMethod"], "ytdlp-merge")
+        self.assertFalse(record["mediaRetained"])
+        self.assertFalse(record["acquisition"]["mediaRetained"])
+        self.assertEqual(record["acquisition"]["provider"], "youtube")
+        self.assertIn("platform-encoded YouTube rendition",
+                      record["renditionNote"])
+        self.assertEqual(record["evidenceStatus"],
+                         "sampled-original-source-pts-metrics-not-expert-reviewed")
+        self.assertTrue(any("delivered master" in limit
+                            for limit in record["limits"]))
+        self.assertEqual(record["summary"]["cutCandidates"], 2)
+
+
+class VideoReportTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+
+    def build_out_dir(self) -> Path:
+        out_dir = self.root / "out"
+        cache = {
+            "categories": {"3": {"name": "Awards", "slug": "awards"}},
+            "tags": {"9": {"name": "3d", "slug": "3d"},
+                     "10": {"name": "typography", "slug": "typography"}},
+        }
+        items = [
+            raw_item(id=1, slug="one", categories=[3], tags=[9]),
+            raw_item(id=2, slug="two", categories=[3], tags=[10]),
+            raw_item(id=3, slug="three", categories=[3], tags=[9, 10]),
+        ]
+        rows = [wps.normalize_row(wps.SITES[DL], item, cache) for item in items]
+        for row, luma, hue in zip(rows, (0.2, 0.6, 0.4),
+                                  ("red", "blue", "green")):
+            record = wps.build_still_record(DL, row, still={
+                "imageUrl": row["posterUrl"],
+                "imageSha256": "a" * 64,
+                "imageFormat": "jpg",
+                "imageBytes": 1000 + row["id"],
+                "imageWidth": 1280,
+                "imageHeight": 720,
+                "metrics": {
+                    "meanDisplayLumaProxy": luma,
+                    "meanSaturationProxy": 0.3,
+                    "dominantHueFamily": hue,
+                    "edgeDensityProxy": 0.07,
+                    "lumaHistogram": [0.1, 0.2, 0.3, 0.2, 0.2],
+                },
+            }, generated_at=f"2026-01-0{row['id']}T00:00:00Z")
+            acq.write_json_atomic(wps.record_path(out_dir, row), record)
+        for row, luma, cuts in ((rows[0], 0.9, 1), (rows[1], 0.7, 3)):
+            acq.write_json_atomic(
+                wps.video_record_path(out_dir, row),
+                build_video_record_for(
+                    row, luma=luma, cuts=cuts,
+                    generated_at="2026-01-09T00:00:00Z"))
+        catalog = wps.build_catalog(
+            DL, rows, meta={"reportedTotal": len(rows), "pagesFetched": 1,
+                            "termCache": cache, "termErrors": {}},
+            generated_at="2026-01-01T00:00:00Z")
+        acq.write_json_atomic(out_dir / "catalog.json", catalog)
+        return out_dir
+
+    def test_report_separates_video_still_and_still_only_and_is_deterministic(self) -> None:
+        out_dir = self.build_out_dir()
+        wps.run_report(DL, out_dir, top=10, log=lambda _: None)
+        first_report = (out_dir / "report.md").read_bytes()
+        first_aggregate = (out_dir / "aggregate.json").read_bytes()
+
+        wps.run_report(DL, out_dir, top=10, log=lambda _: None)
+        self.assertEqual((out_dir / "report.md").read_bytes(), first_report)
+        self.assertEqual((out_dir / "aggregate.json").read_bytes(),
+                         first_aggregate)
+
+        aggregate = json.loads(first_aggregate)
+        counts = aggregate["counts"]
+        self.assertEqual(aggregate["evidence"],
+                         "video-measured+still-measured")
+        self.assertEqual(counts["videoMeasured"], 2)
+        self.assertEqual(counts["stillMeasured"], 3)
+        self.assertEqual(counts["stillOnly"], 1)
+        self.assertEqual(counts["videoByProvider"], {"youtube": 2})
+        # Still-only evidence stays out of the video aggregates.
+        video_luma = aggregate["videoAggregates"]["distributions"][
+            "meanDisplayLuma"]
+        self.assertEqual(video_luma, {"n": 2, "min": 0.7, "median": 0.8,
+                                      "max": 0.9})
+        self.assertEqual(
+            aggregate["distributions"]["meanDisplayLuma"],
+            {"n": 3, "min": 0.2, "median": 0.4, "max": 0.6})
+        self.assertEqual(len(aggregate["videos"]), 2)
+        self.assertEqual(len(aggregate["stills"]), 3)
+        report = first_report.decode("utf-8")
+        self.assertIn("## Per-video analysis", report)
+        self.assertIn("## Aggregates (video-measured records only)", report)
+        self.assertIn("still-only rows, never enter", report)
+        self.assertIn("platform-encoded YouTube rendition", report)
+        self.assertIn("## Measured stills", report)
+
+
 class SchemaAndConfigTests(unittest.TestCase):
     def test_unknown_site_is_refused(self) -> None:
         with self.assertRaises(ValueError):
@@ -838,6 +1280,23 @@ class SchemaAndConfigTests(unittest.TestCase):
         with contextlib.redirect_stderr(io.StringIO()):
             with self.assertRaises(SystemExit):
                 parser.parse_args(["catalog", "--out", "/tmp/x.json"])
+
+    def test_collect_cli_defaults_and_surface(self) -> None:
+        parser = wps.build_parser()
+        args = parser.parse_args([
+            "collect", "--site", DL, "--catalog", "c.json",
+            "--out-dir", "out", "--acknowledge-rights", "--limit", "2"])
+        self.assertEqual(args.limit, 2)
+        self.assertEqual(args.window_count, 4)
+        self.assertEqual(args.window_seconds, 10)
+        self.assertEqual(args.max_duration_seconds, 600.0)
+        self.assertEqual(args.max_file_bytes, 250 * 1024 * 1024)
+        self.assertEqual(args.delay_seconds, 1.4)
+        self.assertEqual(args.jobs, 1)
+        self.assertTrue(args.resume)
+        self.assertTrue(args.acknowledge_rights)
+        self.assertEqual(args.yt_dlp, "yt-dlp")
+        self.assertEqual(wps.parse_byte_size("250MiB"), 250 * 1024 * 1024)
 
 
 if __name__ == "__main__":

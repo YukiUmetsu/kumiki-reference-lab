@@ -1,12 +1,16 @@
-"""Ephemeral, source-hashed measurement of Promonews poster stills.
+"""Ephemeral, source-hashed measurement of Promonews videos and poster stills.
 
 Promonews' public catalogue is an Elasticsearch proxy (``POST
 /api/content/video/_search``) with no auth. It reports 17,805 videos, and
 virtually every one is a YouTube or Vimeo embed: the site publishes no
-progressive MP4/HLS file. Per repository policy those providers are recorded as
-unsupported and never attempted. There is therefore **no video lane**; the
-honest deliverable is full catalogue coverage plus one measured *published
-poster still* per item, labelled still-only.
+progressive MP4/HLS file. The **video lane** therefore measures YouTube entries
+through the engine's cookie-free yt-dlp provider (``YOUTUBE``) and records
+Vimeo entries as ``unsupported-vimeo`` without ever attempting them. The
+``stills`` lane keeps measuring one *published poster still* per item.
+
+The two evidence classes stay separate: ``report`` distinguishes video-measured,
+still-measured, and still-only rows, and still-only evidence never enters the
+motion/cut/luma aggregates.
 
 The catalogues's ES-6-shaped result window is 10,000: ``from=10000`` answers
 HTTP 500. Pagination is continued by sharding on the ``created`` epoch with a
@@ -14,11 +18,12 @@ bare ``{"range": {"created": {"lt": ...}}}`` query, restarting ``from`` at 0 at
 each boundary. Every boundary is logged. The DSL is kept minimal on purpose:
 ``track_total_hits``, ``bool``, and term filters made this endpoint answer 500.
 
-This is a *site adapter*: allowlisting, bounded retrieval, still measurement,
-evidence assembly, atomic writes, resume checks, index assembly, and the pooled
-batch loop come from :mod:`kumiki_reference_lab.acquisition`. The adapter
-supplies the endpoint, the slim catalogue projection, the image host policy,
-schema/evidence/limits/rights strings, and the CLI.
+This is a *site adapter*: allowlisting, bounded retrieval, video/still
+measurement, evidence assembly, atomic writes, resume checks, and index assembly
+come from :mod:`kumiki_reference_lab.acquisition`. The adapter supplies the
+endpoint, the slim catalogue projection, the image host policy,
+schema/evidence/limits/rights strings, the yt-dlp refusal classification, and
+the CLI.
 """
 
 from __future__ import annotations
@@ -32,12 +37,14 @@ import shlex
 import statistics
 import sys
 import tempfile
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable, Mapping
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -45,11 +52,14 @@ if str(ROOT / "src") not in sys.path:
     sys.path.insert(0, str(ROOT / "src"))
 
 from kumiki_reference_lab.acquisition import (  # noqa: E402
-    STILL_MAX_BYTES, STILL_METHOD, USER_AGENT, allowlisted_image_url,
-    allowlisted_url, as_int, as_text, build_index, build_still_evidence,
-    download_http, finite_float, image_target, measure_still,
+    DEFAULT_YOUTUBE_HOSTS, MAX_WINDOWS, MAX_WINDOW_SECONDS,
+    METHOD_YTDLP_MERGE, STILL_MAX_BYTES, STILL_METHOD, USER_AGENT, YOUTUBE,
+    YtDlpError, YtDlpRefusedError, allowlisted_image_url, allowlisted_url,
+    allowlisted_youtube_url, as_int, as_text, build_index,
+    build_still_evidence, build_video_evidence, download_http, download_media,
+    finite_float, image_target, measure_still, measure_windows,
     resume_matches as _resume_matches, run_batch, safe_error, safe_slug,
-    still_image_format, utc_now, write_json_atomic,
+    source_metadata, still_image_format, utc_now, write_json_atomic,
 )
 from kumiki_reference_lab.analyzers.media.inspect import sha256_file  # noqa: E402
 
@@ -65,6 +75,8 @@ CMS_BASE = "https://admin.promonews.tv"
 CATALOG_SCHEMA = "kumiki.promonews-catalog.v1"
 STILL_SCHEMA = "kumiki.promonews-still-evidence.v1"
 STILLS_INDEX_SCHEMA = "kumiki.promonews-stills-index.v1"
+VIDEO_SCHEMA = "kumiki.promonews-video-evidence.v1"
+VIDEO_INDEX_SCHEMA = "kumiki.promonews-index.v1"
 AGGREGATE_SCHEMA = "kumiki.promonews-aggregate.v1"
 
 # Drupal serves poster derivatives (``?itok=``) from the CMS host only. This is
@@ -110,6 +122,40 @@ STILL_LIMITS = [
     "Catalogue metadata is self-reported by Promonews and is not independently "
     "verified.",
 ]
+
+VIDEO_EVIDENCE_STATUS = "sampled-original-source-pts-metrics-not-expert-reviewed"
+RENDITION_NOTE = (
+    "platform-encoded YouTube rendition measured, not the work's delivered "
+    "master")
+VIDEO_LIMITS = [
+    "Only sampled source-PTS windows were measured; this is not a full-film "
+    "review.",
+    "The source is a platform-encoded YouTube rendition, not the work's "
+    "delivered master; every number describes that rendition only.",
+    "The download used a bounded, cookie-free local yt-dlp: no cookies, "
+    "logins, browser profile, netrc, remote components, or DRM/PO-token/nsig "
+    "workaround. A provider refusal is recorded and never retried.",
+    "The downloaded file was deleted immediately after measurement; no media, "
+    "frames, thumbnails, or audio are retained.",
+    "Public availability is not a licence; rightsStatus remains "
+    "review-required.",
+    "Catalogue metadata is self-reported by Promonews and is not independently "
+    "verified.",
+]
+DEFAULT_RIGHTS_NOTE = (
+    "operator attests public-page research use; the public YouTube rendition is "
+    "downloaded once by a cookie-free yt-dlp, measured numerically, and deleted "
+    "without redistribution")
+DEFAULT_VIDEO_DELAY = 1.2
+DEFAULT_COLLECT_LIMIT = 250
+DEFAULT_MAX_DURATION_SECONDS = 600.0
+DEFAULT_MAX_FILE_BYTES = 250 * 1024 * 1024
+DEFAULT_WINDOW_COUNT = 4
+DEFAULT_WINDOW_SECONDS = 10
+
+_VIDEO_FOLDER = "videos"
+_VIDEO_INDEX_NAME = "index.json"
+_VIDEO_SCRATCH_PREFIX = "kumiki-promonews-video-"
 
 _STILL_FOLDER = "stills"
 _INDEX_NAME = "stills-index.json"
@@ -327,6 +373,20 @@ def _video_entries(source: Mapping[str, Any]) -> list[dict[str, Any]]:
     return []
 
 
+def _preferred_video(source: Mapping[str, Any]) -> dict[str, Any] | None:
+    """Return the first YouTube entry, else the first declared entry.
+
+    Promonews occasionally lists more than one embed per row; the video lane
+    only supports YouTube, so a leading Vimeo entry must not mask a YouTube one.
+    """
+    entries = _video_entries(source)
+    for entry in entries:
+        if classify_provider(
+                entry.get("url"), entry.get("filemime")) == "youtube":
+            return entry
+    return entries[0] if entries else None
+
+
 def classify_provider(video_url: object, filemime: object = None) -> str:
     """Classify an embed by declared MIME first, host second. Never guesses."""
     mime = (as_text(filemime) or "").lower()
@@ -443,10 +503,10 @@ def normalize_source(source: Mapping[str, Any]) -> dict[str, Any]:
         raise ValueError("catalog hit has no integer nid")
     path = video_path(source, nid)
     slug = path.rsplit("/", 1)[-1]
-    entries = _video_entries(source)
-    video_url = as_text(entries[0].get("url")) if entries else None
-    provider = (classify_provider(video_url, entries[0].get("filemime"))
-                if entries else None)
+    entry = _preferred_video(source)
+    video_url = as_text(entry.get("url")) if entry else None
+    provider = (classify_provider(video_url, entry.get("filemime"))
+                if entry else None)
     poster_url, poster_width, poster_height = _poster(source.get("images"))
     return {
         "nid": nid,
@@ -696,6 +756,10 @@ def record_path(out_dir: Path, row: Mapping[str, Any]) -> Path:
     return Path(out_dir) / _STILL_FOLDER / f"{record_stem(row)}.json"
 
 
+def video_record_path(out_dir: Path, row: Mapping[str, Any]) -> Path:
+    return Path(out_dir) / _VIDEO_FOLDER / f"{record_stem(row)}.json"
+
+
 def _identity(row: Mapping[str, Any]) -> dict[str, Any]:
     return {
         "nid": as_int(row.get("nid")),
@@ -714,6 +778,48 @@ def _identity(row: Mapping[str, Any]) -> dict[str, Any]:
         "countries": list(row.get("countries") or []),
         "credits": list(row.get("credits") or []),
         "videoUrl": row.get("videoUrl"),
+    }
+
+
+def canonical_youtube_url(url: object) -> str:
+    """Validate one YouTube URL and return its canonical ``watch?v=`` form."""
+    validated = allowlisted_youtube_url(
+        url, allowed_hosts=DEFAULT_YOUTUBE_HOSTS)
+    parsed = urlsplit(validated)
+    host = (parsed.hostname or "").lower()
+    if host == "youtu.be":
+        video_id = parsed.path.strip("/")
+    elif parsed.path == "/watch":
+        video_id = (parse_qs(parsed.query).get("v") or [""])[0]
+    else:
+        video_id = parsed.path.strip("/").rsplit("/", 1)[-1]
+    return f"https://www.youtube.com/watch?v={video_id}"
+
+
+def build_video_record(
+    row: Mapping[str, Any], *, source: dict[str, Any],
+    coverage: dict[str, Any], windows: list[dict[str, Any]], method: str,
+    video_url: str, rights_note: str = DEFAULT_RIGHTS_NOTE,
+    generated_at: str | None = None,
+) -> dict[str, Any]:
+    """Merge row identity around the package's neutral video evidence payload."""
+    evidence = build_video_evidence(
+        source=source, coverage=coverage, windows=windows, method=method,
+        provider=YOUTUBE, video_url=video_url, rights_basis=RIGHTS_BASIS,
+        rights_note=rights_note, schema_version=VIDEO_SCHEMA,
+        evidence_status=VIDEO_EVIDENCE_STATUS, limits=VIDEO_LIMITS,
+        generated_at=generated_at, rights_status=RIGHTS_STATUS)
+    return {
+        "schemaVersion": VIDEO_SCHEMA,
+        **_identity(row),
+        # The row is measured, so the catalogue's "unsupported" label no longer
+        # applies; the platform is now named explicitly beside the watch URL.
+        "unsupportedReason": None,
+        "videoUrl": video_url,
+        "downloadMethod": method,
+        "mediaRetained": False,
+        "renditionNote": RENDITION_NOTE,
+        **evidence,
     }
 
 
@@ -787,6 +893,326 @@ def collect_still_one(
 
 
 # ---------------------------------------------------------------------------
+# video lane: YouTube through the engine's cookie-free yt-dlp provider
+# ---------------------------------------------------------------------------
+
+
+class DownloadFailed(RuntimeError):
+    """The bounded download failed before any measurement was attempted."""
+
+
+class ProbeFailed(RuntimeError):
+    """Local characterisation or source-PTS window measurement failed."""
+
+
+def _require_video_budgets(
+    *, windows: int, window_seconds: int, max_duration_seconds: float,
+    max_file_bytes: int,
+) -> None:
+    if (type(windows) is not int or not 1 <= windows <= MAX_WINDOWS
+            or type(window_seconds) is not int
+            or not 1 <= window_seconds <= MAX_WINDOW_SECONDS):
+        raise ValueError("window budgets are out of bounds")
+    if (not finite_float(max_duration_seconds) or max_duration_seconds <= 0
+            or type(max_file_bytes) is not int or max_file_bytes <= 0):
+        raise ValueError("collection budgets are out of bounds")
+
+
+def collect_reference(
+    row: Mapping[str, Any],
+) -> tuple[str | None, str | None]:
+    """Return ``(provider, url)`` for the row's first YouTube reference.
+
+    A catalogue row may carry its full ``videos[]`` list. The video lane only
+    supports YouTube, so the first YouTube entry wins; a Vimeo-only row yields
+    ``("vimeo", url)`` and is skipped without any request.
+    """
+    entries = row.get("videos")
+    if isinstance(entries, dict):
+        entries = [entries]
+    if isinstance(entries, list):
+        entries = [entry for entry in entries if isinstance(entry, dict)]
+        for entry in entries:
+            if classify_provider(
+                    entry.get("url"), entry.get("filemime")) == "youtube":
+                return "youtube", as_text(entry.get("url"))
+        if entries:
+            first = entries[0]
+            return (classify_provider(
+                first.get("url"), first.get("filemime")),
+                as_text(first.get("url")))
+    return as_text(row.get("provider")), as_text(row.get("videoUrl"))
+
+
+def collect_skip_reason(row: Mapping[str, Any]) -> str | None:
+    """Static, pre-download skip reason. Vimeo is never attempted."""
+    provider, url = collect_reference(row)
+    if provider == "vimeo":
+        return "unsupported-vimeo"
+    if provider != "youtube":
+        return "unsupported-provider" if provider else "no-video-reference"
+    if url is None:
+        return "no-video-reference"
+    return None
+
+
+def collect_one(
+    row: Mapping[str, Any], out_dir: Path, *, windows: int = 4,
+    window_seconds: int = 10,
+    max_duration_seconds: float = DEFAULT_MAX_DURATION_SECONDS,
+    max_file_bytes: int = DEFAULT_MAX_FILE_BYTES,
+    rights_note: str = DEFAULT_RIGHTS_NOTE, ffmpeg: str = "ffmpeg",
+    ffprobe: str = "ffprobe", yt_dlp: str = "yt-dlp",
+    download_timeout: float = 360.0,
+) -> dict[str, Any]:
+    """Download, measure, write one record, and always delete the media."""
+    _require_video_budgets(
+        windows=windows, window_seconds=window_seconds,
+        max_duration_seconds=max_duration_seconds,
+        max_file_bytes=max_file_bytes)
+    if not isinstance(rights_note, str) or not rights_note.strip():
+        raise ValueError("rights note must be non-empty")
+    provider, url = collect_reference(row)
+    if provider != "youtube" or url is None:
+        raise ValueError("row has no YouTube reference")
+    canonical = canonical_youtube_url(url)
+    target_path = video_record_path(Path(out_dir), row)
+    with tempfile.TemporaryDirectory(prefix=_VIDEO_SCRATCH_PREFIX) as directory:
+        media_dir = Path(directory) / "media"
+        media_dir.mkdir()
+        try:
+            path, method = download_media(
+                url, YOUTUBE, media_dir,
+                allowed_hosts=DEFAULT_YOUTUBE_HOSTS,
+                max_bytes=max_file_bytes, ffmpeg=ffmpeg, ffprobe=ffprobe,
+                timeout=download_timeout,
+                max_duration_seconds=max_duration_seconds, yt_dlp=yt_dlp,
+                max_height=720)
+        except YtDlpRefusedError:
+            # Provider refusals are a policy skip, never a retry. Let the lane
+            # classify them; wrapping would lose the distinction.
+            raise
+        except YtDlpError as error:
+            raise DownloadFailed(
+                f"yt-dlp transient failure: {error}") from None
+        except ValueError as error:
+            raise DownloadFailed(str(error)) from None
+        try:
+            source = source_metadata(path, ffprobe=ffprobe)
+            if source["durationSeconds"] > max_duration_seconds:
+                raise ValueError("source exceeds the bounded duration budget")
+            coverage, measured = measure_windows(
+                path, duration_seconds=source["durationSeconds"],
+                window_count=windows, window_seconds=window_seconds,
+                image_translation=False, ffmpeg=ffmpeg, ffprobe=ffprobe)
+        except Exception as error:  # noqa: BLE001 - classified for the index
+            raise ProbeFailed(str(error)) from None
+        record = build_video_record(
+            row, source=source, coverage=coverage, windows=measured,
+            method=method, video_url=canonical, rights_note=rights_note)
+    # The TemporaryDirectory deleted the media before this write; only numerics
+    # and the source hash leave the scratch directory.
+    write_json_atomic(target_path, record)
+    return record
+
+
+def _video_sort_key(row: Mapping[str, Any]) -> tuple[int, str]:
+    nid = as_int(row.get("nid"))
+    return (nid if nid is not None else -1, str(row.get("slug") or ""))
+
+
+def _video_summary_row(
+    record: Mapping[str, Any], path: Path | None = None,
+) -> dict[str, Any]:
+    source = record.get("source") or {}
+    coverage = record.get("coverage") or {}
+    summary = record.get("summary") or {}
+    acquisition = record.get("acquisition") or {}
+    return {
+        "nid": as_int(record.get("nid")),
+        "slug": record.get("slug"),
+        "title": record.get("title"),
+        "publishedDate": record.get("publishedDate"),
+        "createdEpoch": as_int(record.get("createdEpoch")),
+        "provider": acquisition.get("provider") or record.get("provider"),
+        "videoUrl": acquisition.get("videoUrl") or record.get("videoUrl"),
+        "downloadMethod": (record.get("downloadMethod")
+                           or acquisition.get("method")),
+        "durationSeconds": finite_float(source.get("durationSeconds")),
+        "resolution": list(source.get("resolution") or []),
+        "windowsMeasured": as_int(coverage.get("windowsMeasured")),
+        "cutCandidates": as_int(summary.get("cutCandidates")),
+        "cutsPerMinute": finite_float(
+            summary.get("cutCandidateRatePerMinute")),
+        "meanDisplayLuma": finite_float(summary.get("meanDisplayLuma")),
+        "meanSaturation": finite_float(summary.get("meanSaturation")),
+        "recordPath": (path.as_posix() if path is not None
+                       else f"{_VIDEO_FOLDER}/{record_stem(record)}.json"),
+    }
+
+
+def _video_detail(record: Mapping[str, Any]) -> str:
+    source = record.get("source") or {}
+    summary = record.get("summary") or {}
+    resolution = source.get("resolution") or [None, None]
+    width, height = (list(resolution) + [None, None])[:2]
+    return (f"{width}x{height} {(source.get('durationSeconds') or 0):.1f}s "
+            f"cuts={summary.get('cutCandidates', 0)}")
+
+
+def _load_retained_videos(out_dir: Path) -> list[dict[str, Any]]:
+    retained: list[dict[str, Any]] = []
+    directory = out_dir / _VIDEO_FOLDER
+    if not directory.is_dir():
+        return retained
+    for path in sorted(directory.glob("*.json")):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if isinstance(payload, dict) and payload.get(
+                "schemaVersion") == VIDEO_SCHEMA:
+            retained.append(
+                _video_summary_row(payload, path.relative_to(out_dir)))
+    return retained
+
+
+def run_collect(
+    catalog_path: Path, *, out_dir: Path,
+    limit: int | None = DEFAULT_COLLECT_LIMIT, resume: bool = True,
+    jobs: int = 1, acknowledge_rights: bool = False,
+    delay_seconds: float = DEFAULT_VIDEO_DELAY, windows: int = 4,
+    window_seconds: int = 10,
+    max_duration_seconds: float = DEFAULT_MAX_DURATION_SECONDS,
+    max_file_bytes: int = DEFAULT_MAX_FILE_BYTES,
+    ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe", yt_dlp: str = "yt-dlp",
+    log: Callable[[str], None] = print,
+) -> int:
+    """Measure eligible YouTube rows; ``--limit`` counts attempted rows only.
+
+    Vimeo-only, reference-less, and already-measured rows are recorded as skips
+    and do not consume the limit. A provider refusal is a skip and is never
+    retried; a transient failure is a failure row.
+    """
+    if acknowledge_rights is not True:
+        raise ValueError(
+            "explicit --acknowledge-rights attestation is required: public "
+            "availability is not a license, and each downloaded file is "
+            "deleted after numeric measurement")
+    if limit is not None and (type(limit) is not int or limit < 0):
+        raise ValueError("limit must be a non-negative integer or None")
+    if type(jobs) is not int or not 1 <= jobs <= MAX_JOBS:
+        raise ValueError(f"jobs must be between 1 and {MAX_JOBS}")
+    if not isinstance(delay_seconds, (int, float)) or delay_seconds < 0:
+        raise ValueError("delay_seconds must be a non-negative number")
+    _require_video_budgets(
+        windows=windows, window_seconds=window_seconds,
+        max_duration_seconds=max_duration_seconds,
+        max_file_bytes=max_file_bytes)
+    catalog_file = Path(catalog_path)
+    if not catalog_file.is_file():
+        raise ValueError("a catalog file is required for the video lane")
+    catalog_sha = sha256_file(catalog_file)
+    rows = sorted(_load_catalog(catalog_file)["videos"],
+                  key=catalog_order, reverse=True)
+    out_dir = Path(out_dir)
+    (out_dir / _VIDEO_FOLDER).mkdir(parents=True, exist_ok=True)
+    index_path = out_dir / _VIDEO_INDEX_NAME
+    retained = _load_retained_videos(out_dir) if resume else []
+    cap = None if limit in (None, 0) else limit
+
+    skips: list[dict[str, Any]] = []
+    failures: list[dict[str, Any]] = []
+    measured: list[dict[str, Any]] = []
+    pending: list[dict[str, Any]] = []
+    for row in rows:
+        reason = collect_skip_reason(row)
+        if reason is None:
+            try:
+                existing = video_record_path(out_dir, row)
+            except ValueError as error:
+                reason = f"unsafe-slug: {error}"
+            else:
+                if resume and _resume_matches(
+                        existing, row.get("nid"), field="nid"):
+                    reason = "resume-existing-record"
+        if reason is not None:
+            skips.append(_skip_row(row, reason))
+            continue
+        pending.append(row)
+        if cap is not None and len(pending) >= cap:
+            break
+
+    attempted = 0
+    details: dict[str, str] = {}
+    lock = threading.Lock()
+
+    def refresh() -> None:
+        write_json_atomic(index_path, build_index(
+            schema_version=VIDEO_INDEX_SCHEMA,
+            records=[*retained, *sorted(measured, key=_video_sort_key)],
+            skips=sorted(skips, key=_video_sort_key),
+            failures=sorted(failures, key=_video_sort_key),
+            generated_at=utc_now(),
+            extra={"catalogSha256": catalog_sha, "limit": limit,
+                   "resume": resume}))
+
+    def handle(row: dict[str, Any]) -> None:
+        nonlocal attempted
+        with lock:
+            attempted += 1
+            position = attempted
+        label = str(row.get("slug") or "")
+        try:
+            record = collect_one(
+                row, out_dir, windows=windows, window_seconds=window_seconds,
+                max_duration_seconds=max_duration_seconds,
+                max_file_bytes=max_file_bytes, ffmpeg=ffmpeg,
+                ffprobe=ffprobe, yt_dlp=yt_dlp)
+        except YtDlpRefusedError:
+            with lock:
+                skips.append(_skip_row(row, "provider-refused"))
+                refresh()
+            print(f"[{position}/{len(pending)}] skip {label} provider-refused",
+                  flush=True)
+            return
+        except Exception as error:  # noqa: BLE001 - one row never aborts
+            reason = _video_error_text(out_dir)(error)
+            with lock:
+                failures.append(_skip_row(row, reason))
+                refresh()
+            print(f"[{position}/{len(pending)}] fail {label} {reason}",
+                  flush=True)
+            return
+        with lock:
+            measured.append(_video_summary_row(record))
+            details[label] = _video_detail(record)
+            refresh()
+        print(f"[{position}/{len(pending)}] ok {label} {details[label]}",
+              flush=True)
+
+    refresh()
+    if jobs == 1:
+        for position, row in enumerate(pending):
+            handle(row)
+            if delay_seconds and position + 1 < len(pending):
+                time.sleep(float(delay_seconds)
+                           + random.uniform(0, float(delay_seconds)))
+    else:
+        with ThreadPoolExecutor(max_workers=jobs) as pool:
+            futures = [pool.submit(handle, row) for row in pending]
+            for future in as_completed(futures):
+                future.result()
+    refresh()
+    log(f"video-measured={len(retained) + len(measured)} "
+        f"skipped={len(skips)} failed={len(failures)} "
+        f"attempted={attempted} index={index_path}")
+    log("all downloaded media was deleted; only numeric evidence and catalogue "
+        "metadata remain")
+    return 1 if attempted and not (retained or measured) else 0
+
+
+# ---------------------------------------------------------------------------
 # stills lane
 # ---------------------------------------------------------------------------
 
@@ -850,13 +1276,34 @@ def _load_retained(out_dir: Path) -> list[dict[str, Any]]:
     return retained
 
 
-def _error_text(out_dir: Path) -> Callable[[Exception], str]:
-    scratch = re.compile(
-        rf"/[^\s:'\"]*{re.escape(_SCRATCH_PREFIX)}[^\s:'\"]*")
+_SCRATCH_RE = re.compile(
+    rf"/[^\s:'\"]*(?:{re.escape(_SCRATCH_PREFIX)}|"
+    rf"{re.escape(_VIDEO_SCRATCH_PREFIX)})[^\s:'\"]*")
 
+
+def _error_text(out_dir: Path) -> Callable[[Exception], str]:
     def render(error: Exception) -> str:
-        return scratch.sub("[scratch]",
-                           safe_error(error, redact=(str(out_dir),)))
+        return _SCRATCH_RE.sub(
+            "[scratch]", safe_error(error, redact=(str(out_dir),)))
+    return render
+
+
+def _video_error_text(out_dir: Path) -> Callable[[Exception], str]:
+    def render(error: Exception) -> str:
+        if isinstance(error, DownloadFailed):
+            reason = "download-failed"
+        elif isinstance(error, ProbeFailed):
+            reason = "probe-failed"
+        elif isinstance(error, YtDlpRefusedError):
+            reason = "provider-refused"
+        elif isinstance(error, YtDlpError):
+            reason = "transient"
+        else:
+            reason = type(error).__name__
+        text = _SCRATCH_RE.sub(
+            "[scratch]", safe_error(error, redact=(str(out_dir),)))
+        text = re.sub(r"^[A-Za-z_][A-Za-z0-9_.]*: ", "", text)
+        return f"{reason}: {text}"[:360]
     return render
 
 
@@ -1062,6 +1509,129 @@ def _still_order(row: Mapping[str, Any]) -> tuple[int, str]:
     return (nid if nid is not None else 0, str(row.get("slug") or ""))
 
 
+def _record_video_relative(record: Mapping[str, Any]) -> str:
+    try:
+        return f"{_VIDEO_FOLDER}/{record_stem(record)}.json"
+    except ValueError:
+        nid = as_int(record.get("nid"))
+        return f"{_VIDEO_FOLDER}/nid-{nid if nid is not None else 'unknown'}.json"
+
+
+def _video_window_row(window: object) -> dict[str, Any]:
+    if not isinstance(window, dict):
+        window = {}
+    probe = window.get("probe") if isinstance(window.get("probe"), dict) else {}
+    summary = (probe.get("sampledWindowSummary")
+               if isinstance(probe.get("sampledWindowSummary"), dict) else {})
+    frames = probe.get("sampledFrames")
+    pairs = probe.get("sampledFramePairs")
+    deltas = [value for pair in pairs if isinstance(pair, dict)
+              for value in (finite_float(
+                  pair.get("meanAbsoluteDisplayRgbDeltaPerSecond")),)
+              if value is not None] if isinstance(pairs, list) else []
+    start = finite_float(window.get("startSeconds"))
+    end = finite_float(window.get("endSeconds"))
+    return {
+        "startSeconds": start,
+        "endSeconds": end,
+        "windowSeconds": (round(end - start, 6)
+                          if start is not None and end is not None else None),
+        "sampledFrames": len(frames) if isinstance(frames, list) else None,
+        "cutCandidates": as_int(
+            summary.get("cutCandidateCountBetweenFirstAndLastSample")),
+        "meanDisplayLuma": finite_float(
+            summary.get("meanSampledDisplayLumaProxy")),
+        "meanSaturation": finite_float(
+            summary.get("meanSampledSaturationProxy")),
+        "withinShotDeltaPerSecond": (round(statistics.mean(deltas), 6)
+                                     if deltas else None),
+    }
+
+
+def _video_row(
+    record: Mapping[str, Any], path: Path | None = None,
+) -> dict[str, Any]:
+    """Derive one per-video table row strictly from embedded record fields."""
+    source = record.get("source") if isinstance(record.get("source"), dict) else {}
+    acquisition = (record.get("acquisition")
+                   if isinstance(record.get("acquisition"), dict) else {})
+    coverage = (record.get("coverage")
+                if isinstance(record.get("coverage"), dict) else {})
+    summary = (record.get("summary")
+               if isinstance(record.get("summary"), dict) else {})
+    resolution = source.get("resolution")
+    resolution_text = None
+    if isinstance(resolution, (list, tuple)) and len(resolution) == 2:
+        width, height = as_int(resolution[0]), as_int(resolution[1])
+        if width is not None and height is not None:
+            resolution_text = f"{width}x{height}"
+    duration = finite_float(source.get("durationSeconds"))
+    size = finite_float(source.get("sizeBytes"))
+    bitrate = (round(size * 8 / duration / 1_000_000, 6)
+               if size is not None and duration is not None and duration > 0
+               else None)
+    windows = (record.get("windows")
+               if isinstance(record.get("windows"), list) else [])
+    fraction = finite_float(coverage.get("fractionOfRuntime"))
+    return {
+        "nid": as_int(record.get("nid")),
+        "slug": record.get("slug"),
+        "title": record.get("title"),
+        "publishedDate": record.get("publishedDate"),
+        "createdEpoch": as_int(record.get("createdEpoch")),
+        "provider": acquisition.get("provider") or record.get("provider"),
+        "videoUrl": acquisition.get("videoUrl") or record.get("videoUrl"),
+        "downloadMethod": (record.get("downloadMethod")
+                           or acquisition.get("method")),
+        "runtimeSeconds": duration,
+        "resolution": resolution_text,
+        "bitrateMbps": bitrate,
+        "downloadMb": (round(size / (1024 * 1024), 6)
+                       if size is not None else None),
+        "windowsMeasured": as_int(coverage.get("windowsMeasured")),
+        "coveragePercent": (round(fraction * 100, 6)
+                            if fraction is not None else None),
+        "sampledSeconds": finite_float(coverage.get("sampledSeconds")),
+        "cutCandidates": as_int(summary.get("cutCandidates")),
+        "cutsPerMinute": finite_float(
+            summary.get("cutCandidateRatePerMinute")),
+        "meanDisplayLuma": finite_float(summary.get("meanDisplayLuma")),
+        "meanSaturation": finite_float(summary.get("meanSaturation")),
+        "meanWithinShotDeltaPerSecond": finite_float(
+            summary.get("meanWithinShotRgbDeltaPerSecond")),
+        "windowRows": [_video_window_row(window) for window in windows],
+        "recordPath": (path.as_posix() if path is not None
+                       else _record_video_relative(record)),
+    }
+
+
+def _video_order(row: Mapping[str, Any]) -> tuple[bool, int, int]:
+    """Newest catalogue row first, then nid descending; missing epochs last."""
+    created = as_int(row.get("createdEpoch"))
+    nid = as_int(row.get("nid"))
+    return (created is None, -(created or 0), -(nid or 0))
+
+
+def _coverage_aggregate(rows: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
+    paired = [(row.get("runtimeSeconds"), row.get("sampledSeconds"))
+              for row in rows
+              if row.get("runtimeSeconds") and row.get("sampledSeconds")
+              is not None]
+    total_runtime = (round(sum(runtime for runtime, _ in paired), 6)
+                     if paired else 0.0)
+    total_sampled = (round(sum(sampled for _, sampled in paired), 6)
+                     if paired else 0.0)
+    return {
+        "recordsWithRuntime": len(paired),
+        "totalRuntimeSeconds": total_runtime,
+        "totalSampledSeconds": total_sampled,
+        "sampledFractionOfTotalRuntime": (
+            round(total_sampled / total_runtime, 6) if total_runtime else None),
+        "perRecordCoveragePercent": _distribution(
+            row.get("coveragePercent") for row in rows),
+    }
+
+
 def _term_distributions(
     rows: Iterable[Mapping[str, Any]], field: str,
 ) -> dict[str, dict[str, Any]]:
@@ -1137,6 +1707,8 @@ def _reproduce_commands(
     return [
         "python scripts/research_promonews.py catalog "
         f"--out {catalog}",
+        "python scripts/research_promonews.py collect "
+        f"--catalog {catalog} --out-dir {out} --acknowledge-rights",
         "python scripts/research_promonews.py stills "
         f"--catalog {catalog} --out-dir {out} --resume",
         "python scripts/research_promonews.py report "
@@ -1149,18 +1721,30 @@ def _render_report(
 ) -> str:
     counts = aggregate["counts"]
     rows = aggregate["stills"]
+    videos = aggregate.get("videos") or []
+    video_aggregates = aggregate.get("videoAggregates") or {}
+    video_top = videos[:top]
     lines: list[str] = []
 
     def add(text: str = "") -> None:
         lines.append(text)
 
-    add("# Promonews — published-still evidence (still-only) report")
-    add()
-    add("This deliverable tabulates only what the committed evidence records "
-        "contain: Promonews catalogue metadata and one measured, published "
-        "poster still per item. It is **still-only**: it makes no motion, cut, "
-        "pacing, timing, sequence, edit-rhythm, aesthetic, style, authorship, "
-        "or quality claim.")
+    if videos:
+        add("# Promonews — measured video and still evidence report")
+        add()
+        add("This deliverable tabulates only what the committed evidence "
+            "records contain: Promonews catalogue metadata, sampled source-PTS "
+            "numeric probes of the public YouTube rendition, and one measured, "
+            "published poster still per item where present. It makes no "
+            "aesthetic, stylistic, intentional, authorship, or quality claim.")
+    else:
+        add("# Promonews — published-still evidence (still-only) report")
+        add()
+        add("This deliverable tabulates only what the committed evidence records "
+            "contain: Promonews catalogue metadata and one measured, published "
+            "poster still per item. It is **still-only**: it makes no motion, "
+            "cut, pacing, timing, sequence, edit-rhythm, aesthetic, style, "
+            "authorship, or quality claim.")
     add()
 
     add("## Provenance")
@@ -1169,7 +1753,10 @@ def _render_report(
     add(f"- Catalog `hits.total` reported: {_int(counts['catalogReportedTotal'])}")
     add(f"- Catalog complete (all reported hits collected): "
         f"{_cell(counts['catalogComplete'])}")
+    add(f"- Video-measured records: {_int(counts.get('videoMeasured'))}")
     add(f"- Still-measured records: {_int(counts['stillMeasured'])}")
+    add(f"- Still-only records (no matching video record): "
+        f"{_int(counts.get('stillOnly'))}")
     add(f"- Skipped, no usable image: {_int(counts['skippedNoImage'])}")
     add(f"- Skipped (index context): {_int(counts['skipped'])}")
     add(f"- Failed acquisitions (index context): {_int(counts['failed'])}")
@@ -1185,11 +1772,25 @@ def _render_report(
         add("- Provider split (measured stills): " + ", ".join(
             f"{_cell(provider)} x {count}"
             for provider, count in sorted(measured_providers.items())))
+    video_providers = counts.get("videoByProvider") or {}
+    if video_providers:
+        add("- Provider split (measured videos): " + ", ".join(
+            f"{_cell(provider)} x {count}"
+            for provider, count in sorted(video_providers.items())))
     skip_reasons = aggregate.get("skipReasons") or {}
+    video_skip_reasons = aggregate.get("videoSkipReasons") or {}
     if skip_reasons:
-        add("- Skip reasons: " + ", ".join(
+        add("- Skip reasons (stills index): " + ", ".join(
             f"{_cell(reason)} x {count}"
             for reason, count in sorted(skip_reasons.items())))
+    if video_skip_reasons:
+        add("- Skip reasons (video index): " + ", ".join(
+            f"{_cell(reason)} x {count}"
+            for reason, count in sorted(video_skip_reasons.items())))
+    if top < len(videos):
+        add(f"- `--top {top}` applied: the first {top} of {len(videos)} "
+            "video-measured rows are tabulated below; `aggregate.json` holds "
+            "all.")
     if top < len(rows):
         add(f"- `--top {top}` applied: the first {top} of {len(rows)} measured "
             "stills are tabulated below; `aggregate.json` holds all.")
@@ -1201,6 +1802,72 @@ def _render_report(
             out_dir=out_dir, catalog_path=catalog_path, top=top):
         add(command)
     add("```")
+    add()
+
+    add("## Per-video analysis")
+    add()
+    add(f"{len(videos)} video-measured record(s), newest catalogue row first. "
+        "All columns are numeric record fields from the sampled source-PTS "
+        "windows of the public YouTube rendition; `duration_s` is the decoded "
+        "local source duration, not a catalogue value.")
+    add()
+    if not video_top:
+        add("No video-measured records.")
+        add()
+    else:
+        columns = (
+            "nid", "slug", "title", "provider", "published", "duration_s",
+            "resolution", "download_mb", "windows", "coverage_pct", "cuts",
+            "cuts_per_min", "mean_luma", "mean_sat", "delta_per_s")
+        add("| " + " | ".join(columns) + " |")
+        add("| " + " | ".join("---" for _ in columns) + " |")
+        for row in video_top:
+            values = (
+                _int(row["nid"]), row["slug"], row["title"], row["provider"],
+                row["publishedDate"], _num(row["runtimeSeconds"], 2),
+                row["resolution"], _num(row["downloadMb"], 1),
+                _int(row["windowsMeasured"]), _num(row["coveragePercent"], 1),
+                _int(row["cutCandidates"]), _num(row["cutsPerMinute"], 2),
+                _num(row["meanDisplayLuma"], 4),
+                _num(row["meanSaturation"], 4),
+                _num(row["meanWithinShotDeltaPerSecond"], 4))
+            add("| " + " | ".join(_cell(value) for value in values) + " |")
+        add()
+        add("| download_method | provider | video_url |")
+        add("| --- | --- | --- |")
+        for row in video_top:
+            add("| " + " | ".join((
+                _cell(row["downloadMethod"]), _cell(row["provider"]),
+                _cell(row["videoUrl"]))) + " |")
+        add()
+
+    add("## Aggregates (video-measured records only)")
+    add()
+    add("Every number in this section is computed ONLY over the video-measured "
+        "records tabulated above. Published stills, including still-only rows, "
+        "never enter the motion, cut, luma, or saturation aggregates.")
+    add()
+    distributions = video_aggregates.get("distributions") or {}
+    add("| metric | n | min | median | max |")
+    add("| --- | --- | --- | --- | --- |")
+    for label, key, digits in (
+            ("duration_s", "runtimeSeconds", 2),
+            ("cuts_per_min", "cutsPerMinute", 2),
+            ("mean_luma", "meanDisplayLuma", 4),
+            ("mean_sat", "meanSaturation", 4),
+            ("delta_per_s", "meanWithinShotDeltaPerSecond", 4)):
+        entry = distributions.get(key) or {"n": 0, "min": None,
+                                           "median": None, "max": None}
+        add(f"| {label} | {entry['n']} | {_num(entry['min'], digits)} | "
+            f"{_num(entry['median'], digits)} | "
+            f"{_num(entry['max'], digits)} |")
+    add()
+    coverage = video_aggregates.get("coverage") or {}
+    add("Coverage-weighted caveat: "
+        f"{_num(coverage.get('totalSampledSeconds'), 1)} sampled seconds cover "
+        f"{_num(coverage.get('totalRuntimeSeconds'), 1)} runtime seconds "
+        f"({_num((coverage.get('sampledFractionOfTotalRuntime') or 0) * 100, 1)}%). "
+        "Aggregates describe the sampled windows, not the full films.")
     add()
 
     add("## Measured stills")
@@ -1252,48 +1919,77 @@ def _render_report(
                 _num(luma["median"], 4), _num(luma["max"], 4))) + " |")
         add()
 
-    add("## Why there is no motion evidence")
-    add()
-    add("There is no video lane for Promonews, by design:")
-    add()
-    add("- Every catalogue video reference is a YouTube or Vimeo embed "
-        "(`video/youtube` or `video/vimeo`); the site publishes no progressive "
-        "MP4/HLS file.")
-    add("- YouTube and Vimeo players are third-party platforms. Per repository "
-        "policy they are recorded as `unsupported-youtube` / "
-        "`unsupported-vimeo` and are never probed.")
-    add("- No cookies, logins, player-API tricks, or DRM circumvention were "
-        "used, and no embed was fetched.")
-    add("- Therefore this report cannot and does not measure motion, cuts, "
-        "pacing, timing, sequences, or edit rhythm. A poster still is not a "
-        "video frame.")
-    if catalog_providers:
-        add("- Catalogue provider split: " + ", ".join(
-            f"{provider} x {count}"
-            for provider, count in sorted(catalog_providers.items())) + ".")
-    add()
+    if videos:
+        add("## What was measured, and what was not")
+        add()
+        add("The video lane measures YouTube entries only:")
+        add()
+        add("- Each video-measured row is a sampled source-PTS probe of the "
+            "public YouTube rendition, obtained by a bounded, cookie-free local "
+            "yt-dlp; it is not the work's delivered master.")
+        add("- Vimeo references are recorded as `unsupported-vimeo` and were "
+            "never fetched, probed, or player-inspected.")
+        add("- No cookies, logins, browser profiles, remote components, or "
+            "DRM/PO-token circumvention were used, and a provider refusal was "
+            "never retried.")
+        add("- Published poster stills are reported separately and never enter "
+            "the motion, cut, luma, or saturation aggregates.")
+        if catalog_providers:
+            add("- Catalogue provider split: " + ", ".join(
+                f"{provider} x {count}"
+                for provider, count in sorted(catalog_providers.items())) + ".")
+        add()
+    else:
+        add("## Why there is no motion evidence")
+        add()
+        add("There is no video lane for Promonews in this evidence set:")
+        add()
+        add("- Every catalogue video reference is a YouTube or Vimeo embed "
+            "(`video/youtube` or `video/vimeo`); the site publishes no "
+            "progressive MP4/HLS file.")
+        add("- The video lane records Vimeo references as `unsupported-vimeo` "
+            "and never probes them; YouTube entries are measured only when a "
+            "`collect` run has produced video records.")
+        add("- No cookies, logins, player-API tricks, or DRM circumvention were "
+            "used, and no embed was fetched by the stills lane.")
+        add("- Therefore this report cannot and does not measure motion, cuts, "
+            "pacing, timing, sequences, or edit rhythm from stills. A poster "
+            "still is not a video frame.")
+        if catalog_providers:
+            add("- Catalogue provider split: " + ", ".join(
+                f"{provider} x {count}"
+                for provider, count in sorted(catalog_providers.items())) + ".")
+        add()
 
     add("## Explicit non-claims")
     add()
-    for claim in (
-            "A published poster still is not a video frame; single-image "
-            "colour, luminance, histogram, hue, and edge-density numbers carry "
-            "no motion, cut, pacing, timing, sequence, or edit-rhythm evidence.",
-            "No style, aesthetic quality, mood, lighting, camera/lens, "
-            "editorial intent, authorship, identity, or creative-origin "
-            "inference is made from these numbers.",
-            "The poster is prepared by Promonews/the CMS, not necessarily by "
-            "the work's author.",
-            "No duration was derived from a YouTube or Vimeo id; "
-            "`durationSeconds` is recorded as null everywhere because the "
-            "catalogue exposes no duration field.",
-            "Public availability is not a licence: `rightsStatus` remains "
-            "`review-required`, and reuse needs its own review.",
-            "YouTube/Vimeo embeds were never acquired or probed.",
-            "Catalogue metadata is self-reported by Promonews and is not "
-            "independently verified.",
-            "Downloaded poster images are never retained: only hashes and "
-            "numbers remain."):
+    claims = [
+        "A published poster still is not a video frame; single-image "
+        "colour, luminance, histogram, hue, and edge-density numbers carry "
+        "no motion, cut, pacing, timing, sequence, or edit-rhythm evidence.",
+        "No style, aesthetic quality, mood, lighting, camera/lens, "
+        "editorial intent, authorship, identity, or creative-origin "
+        "inference is made from these numbers.",
+        "The poster is prepared by Promonews/the CMS, not necessarily by "
+        "the work's author.",
+        "No duration was derived from a YouTube or Vimeo id; the catalogue "
+        "`durationSeconds` stays null because it exposes no duration field. "
+        "Measured durations come only from the acquired local source.",
+        "Public availability is not a licence: `rightsStatus` remains "
+        "`review-required`, and reuse needs its own review.",
+        "Catalogue metadata is self-reported by Promonews and is not "
+        "independently verified.",
+        "Downloaded media and poster images are never retained: only hashes "
+        "and numbers remain.",
+    ]
+    if videos:
+        claims.append(
+            "The measured source is a platform-encoded YouTube rendition, not "
+            "the work's delivered master; every video number describes that "
+            "rendition only.")
+    else:
+        claims.append("YouTube/Vimeo embeds were never acquired or probed.")
+    for claim in claims:
         add(f"- {claim}")
     add()
     return "\n".join(lines)
@@ -1318,22 +2014,42 @@ def run_report(
 
     records, problems = _load_records(
         out_dir / _STILL_FOLDER, STILL_SCHEMA, prefix=_STILL_FOLDER)
+    video_records, video_problems = _load_records(
+        out_dir / _VIDEO_FOLDER, VIDEO_SCHEMA, prefix=_VIDEO_FOLDER)
+    problems.extend(video_problems)
     catalog, catalog_problems = _load_json_context(
         catalog_file, prefix=_CATALOG_NAME)
     index, index_problems = _load_json_context(
         out_dir / _INDEX_NAME, prefix=_INDEX_NAME)
+    video_index, video_index_problems = _load_json_context(
+        out_dir / _VIDEO_INDEX_NAME, prefix=_VIDEO_INDEX_NAME)
     problems.extend(catalog_problems)
     problems.extend(index_problems)
+    problems.extend(video_index_problems)
     problems.sort(key=lambda item: (item["file"], item["reason"]))
 
     if generated_at is None:
-        generated_at = _latest_timestamp(records, catalog, index)
+        generated_at = _latest_timestamp(
+            [*video_records, *records], catalog, index)
+        if isinstance(video_index, dict):
+            video_stamp = as_text(video_index.get("generatedAt"))
+            if video_stamp is not None and (
+                    generated_at is None or video_stamp > generated_at):
+                generated_at = video_stamp
 
     rows = sorted(
         (_still_row(record, Path(_record_relative(record)))
          for record in records),
         key=_still_order)
+    video_rows = sorted(
+        (_video_row(record, Path(_record_video_relative(record)))
+         for record in video_records),
+        key=_video_order)
+    video_keys = {as_int(record.get("nid")) for record in video_records}
+    still_only = sum(1 for record in records
+                     if as_int(record.get("nid")) not in video_keys)
     skip_reasons = _skip_reasons(index)
+    video_skip_reasons = _skip_reasons(video_index)
     skipped_no_image = sum(
         count for reason, count in skip_reasons.items()
         if reason == "no-usable-poster" or reason.startswith("no-"))
@@ -1349,24 +2065,37 @@ def run_report(
     catalog_providers = catalog_counts.get("byProvider")
     if not isinstance(catalog_providers, dict):
         catalog_providers = {}
+    if video_rows and rows:
+        evidence = "video-measured+still-measured"
+    elif video_rows:
+        evidence = "video-measured"
+    else:
+        evidence = "still-only"
 
     aggregate = {
         "schemaVersion": AGGREGATE_SCHEMA,
         "generatedAt": generated_at,
-        "evidence": "still-only",
+        "evidence": evidence,
         "counts": {
             "catalogCollected": catalog_collected,
             "catalogReportedTotal": catalog_total,
             "catalogComplete": bool(catalog_counts.get("complete")),
+            "videoMeasured": len(video_rows),
             "stillMeasured": len(rows),
+            "stillOnly": still_only,
             "skipped": _list_length(index, "skips"),
             "skippedNoImage": skipped_no_image,
+            "videoSkipped": _list_length(video_index, "skips"),
             "failed": _list_length(index, "failures"),
+            "videoFailed": _list_length(video_index, "failures"),
             "unreadable": len(problems),
             "catalogByProvider": dict(catalog_providers),
             "measuredByProvider": _counter(row.get("provider") for row in rows),
+            "videoByProvider": _counter(
+                row.get("provider") for row in video_rows),
         },
         "skipReasons": skip_reasons,
+        "videoSkipReasons": video_skip_reasons,
         "distributions": {
             "meanDisplayLuma": _distribution(
                 row.get("meanDisplayLuma") for row in rows),
@@ -1376,10 +2105,31 @@ def run_report(
                 row.get("edgeDensity") for row in rows),
             "imageBytes": _distribution(row.get("imageBytes") for row in rows),
         },
+        "videoAggregates": {
+            "basis": ("video-measured records only; published stills and "
+                      "still-only rows never enter these numbers"),
+            "recordCount": len(video_rows),
+            "distributions": {
+                "runtimeSeconds": _distribution(
+                    row.get("runtimeSeconds") for row in video_rows),
+                "cutsPerMinute": _distribution(
+                    row.get("cutsPerMinute") for row in video_rows),
+                "meanDisplayLuma": _distribution(
+                    row.get("meanDisplayLuma") for row in video_rows),
+                "meanSaturation": _distribution(
+                    row.get("meanSaturation") for row in video_rows),
+                "meanWithinShotDeltaPerSecond": _distribution(
+                    row.get("meanWithinShotDeltaPerSecond")
+                    for row in video_rows),
+            },
+            "coverage": _coverage_aggregate(video_rows),
+        },
         "byGenre": _term_distributions(rows, "genres"),
         "byCategory": _term_distributions(rows, "categories"),
+        "videos": video_rows,
         "stills": rows,
         "limits": list(STILL_LIMITS),
+        "videoLimits": list(VIDEO_LIMITS),
         "unreadableRecords": problems,
     }
 
@@ -1389,7 +2139,8 @@ def run_report(
     _write_text_atomic(report_path, _render_report(
         aggregate, out_dir=out_dir,
         catalog_path=catalog_file or default_catalog, top=top))
-    log(f"report: stills={len(rows)} skipped={aggregate['counts']['skipped']} "
+    log(f"report: videos={len(video_rows)} stills={len(rows)} "
+        f"skipped={aggregate['counts']['skipped']} "
         f"failed={aggregate['counts']['failed']} unreadable={len(problems)} "
         f"-> {report_path}")
     return 0
@@ -1399,11 +2150,41 @@ def run_report(
 # CLI
 # ---------------------------------------------------------------------------
 
+_SIZE_UNITS = {
+    "": 1, "b": 1,
+    "k": 1024, "kb": 1024, "kib": 1024,
+    "m": 1024 ** 2, "mb": 1024 ** 2, "mib": 1024 ** 2,
+    "g": 1024 ** 3, "gb": 1024 ** 3, "gib": 1024 ** 3,
+}
+
+
+def parse_byte_size(value: object) -> int:
+    """Parse ``250MiB``/``250M``/``262144000`` into bytes."""
+    if isinstance(value, bool):
+        raise ValueError("byte size must be an integer or a size string")
+    if isinstance(value, int):
+        if value <= 0:
+            raise ValueError("byte size must be positive")
+        return value
+    text = as_text(value)
+    if text is None:
+        raise ValueError("byte size must be a positive integer or size string")
+    match = re.fullmatch(r"(\d+)\s*([A-Za-z]*)", text)
+    if match is None:
+        raise ValueError("byte size is not a positive integer or size string")
+    unit = match.group(2).lower()
+    if unit not in _SIZE_UNITS:
+        raise ValueError("byte size unit is not recognised")
+    size = int(match.group(1)) * _SIZE_UNITS[unit]
+    if size <= 0:
+        raise ValueError("byte size must be positive")
+    return size
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Ephemeral Promonews catalogue + poster-still research "
-                    "collector (no video lane)")
+        description="Ephemeral Promonews catalogue + YouTube video + "
+                    "poster-still research collector")
     sub = parser.add_subparsers(dest="command", required=True)
 
     catalog = sub.add_parser(
@@ -1416,6 +2197,36 @@ def build_parser() -> argparse.ArgumentParser:
     catalog.add_argument("--delay-seconds", type=float,
                          default=DEFAULT_CATALOG_DELAY,
                          help="politeness pause (plus equal jitter) between pages")
+
+    collect = sub.add_parser(
+        "collect", help="download, measure, and delete public YouTube videos")
+    collect.add_argument("--catalog", type=Path, required=True)
+    collect.add_argument("--out-dir", type=Path, required=True)
+    collect.add_argument("--limit", type=int, default=DEFAULT_COLLECT_LIMIT,
+                         help="cap attempted rows (0 = all remaining); skips "
+                              "do not count")
+    collect.add_argument("--acknowledge-rights", action="store_true")
+    collect_group = collect.add_mutually_exclusive_group()
+    collect_group.add_argument("--resume", dest="resume", action="store_true",
+                               default=True)
+    collect_group.add_argument("--refresh", dest="resume",
+                               action="store_false")
+    collect.add_argument("--jobs", type=int, default=1)
+    collect.add_argument("--delay-seconds", type=float,
+                         default=DEFAULT_VIDEO_DELAY,
+                         help="politeness pause (plus equal jitter) per video")
+    collect.add_argument("--window-count", type=int,
+                         default=DEFAULT_WINDOW_COUNT)
+    collect.add_argument("--window-seconds", type=int,
+                         default=DEFAULT_WINDOW_SECONDS)
+    collect.add_argument("--max-duration-seconds", type=float,
+                         default=DEFAULT_MAX_DURATION_SECONDS)
+    collect.add_argument("--max-file-bytes", type=parse_byte_size,
+                         default=DEFAULT_MAX_FILE_BYTES,
+                         help="download cap in bytes or a size like 250MiB")
+    collect.add_argument("--yt-dlp", default="yt-dlp")
+    collect.add_argument("--ffmpeg", default="ffmpeg")
+    collect.add_argument("--ffprobe", default="ffprobe")
 
     stills = sub.add_parser(
         "stills", help="measure one published poster still per catalog item")
@@ -1436,8 +2247,8 @@ def build_parser() -> argparse.ArgumentParser:
     stills.add_argument("--ffprobe", default="ffprobe")
 
     report = sub.add_parser(
-        "report", help="write report.md + aggregate.json from still records "
-                       "(read-only, offline)")
+        "report", help="write report.md + aggregate.json from video and still "
+                       "records (read-only, offline)")
     report.add_argument("--out-dir", type=Path, required=True)
     report.add_argument("--catalog", type=Path, default=None,
                         help="catalog JSON (default: <out-dir>/catalog.json)")
@@ -1454,6 +2265,22 @@ def main(argv: list[str] | None = None) -> int:
             return run_catalog(
                 args.out, limit=args.limit, page_size=args.page_size,
                 delay_seconds=args.delay_seconds)
+        if args.command == "collect":
+            if not args.acknowledge_rights:
+                parser.error(
+                    "--acknowledge-rights is required: public availability is "
+                    "not a license and downloaded media is deleted after "
+                    "numeric measurement")
+            return run_collect(
+                args.catalog, out_dir=args.out_dir, limit=args.limit,
+                resume=args.resume, jobs=args.jobs,
+                acknowledge_rights=args.acknowledge_rights,
+                delay_seconds=args.delay_seconds,
+                windows=args.window_count,
+                window_seconds=args.window_seconds,
+                max_duration_seconds=args.max_duration_seconds,
+                max_file_bytes=args.max_file_bytes, yt_dlp=args.yt_dlp,
+                ffmpeg=args.ffmpeg, ffprobe=args.ffprobe)
         if args.command == "stills":
             return run_stills(
                 args.catalog, out_dir=args.out_dir, limit=args.limit,
