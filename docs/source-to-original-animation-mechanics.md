@@ -103,6 +103,38 @@ clearance and viewport boundaries. TypeScript, focused unit tests and
 registry validation passed, while **independent human visual approval
 and browser screenshots remain pending**, not certified.
 
+## Second merged implementation: Paired Focus
+
+[kumiki-ui PR #129](https://github.com/YukiUmetsu/kumiki-ui/pull/129)
+adds the independent **paired-focus** registry pack at pinned commit
+`71ab08fcb014959016304c2eb158acf6ddb70283`.
+
+- `registry/motion/paired-focus.ts`: `compilePairedFocus` and
+  `evaluatePairedFocus`
+- `registry/motion/paired-focus-react.tsx`: `PairedFocusSvg`
+
+One reusable authored component implements three modes:
+`converge`, `diverge`, and `converge-then-diverge`.
+The `screen-centers-closer` / `paired-convergence` research idea
+now links to authored mode `converge`;
+`screen-centers-farther` / `paired-divergence` links to
+authored mode `diverge`. A focal hold/release is optional original
+choreography and must **not** be inferred from sparse image evidence.
+
+`availableOriginalImplementation` identifies the exact shipped
+registry pack, pinned commit, exported compiler/render functions and
+per-idea authored mode. The screen-geometry measurements are
+**not valid executable input**: the component still requires original
+assets, independent bounding radii, a focal anchor, stage and timing.
+There is no source-to-component conversion adapter, no recovered
+source animation, and no character/physical contact inference.
+`registryApiVerifiedForThisRecipe` stays `false` because a
+measurement-to-authoring mapping has not been verified.
+
+Typecheck, frame-based geometry tests and registry validation passed
+on the merged UI PR. The dedicated manual Storybook screenshots and
+human visual craft approval remain **pending**.
+
 ## Craft and animation-quality gates
 
 For each approved new template:

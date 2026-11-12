@@ -88,7 +88,10 @@ class OriginalMechanicIdeasTests(unittest.TestCase):
         self.assertFalse(swap["registryApiVerifiedForThisRecipe"])
         self.assertTrue(all(p["availableOriginalImplementation"] is None
                             for p in report["proposals"]
-                            if p["originalRecipe"] != "two-lane-swap"))
+                            if p["originalRecipe"] not in {
+                                "two-lane-swap", "paired-convergence",
+                                "paired-divergence",
+                            }))
         # Caller mutations must never change the static shipped registry map.
         shipped["modules"].append("invented-add-on.ts")
         shipped["publicExports"].clear()
@@ -100,6 +103,64 @@ class OriginalMechanicIdeasTests(unittest.TestCase):
         self.assertIn("TwoLaneSwapSvg", available["publicExports"])
         self.assertEqual(again["proposals"][0]["id"],
                          report["proposals"][0]["id"])
+
+    def test_both_measured_distance_directions_link_to_shipped_paired_focus(self):
+        temporal = observed_events()
+        report = propose_motion_mechanics(temporal)
+        expectations = {
+            "paired-convergence": "converge",
+            "paired-divergence": "diverge",
+        }
+        for recipe, mode in expectations.items():
+            proposals = [p for p in report["proposals"]
+                         if p["originalRecipe"] == recipe]
+            self.assertGreaterEqual(len(proposals), 1)
+            self.assertTrue(all(
+                proposal["availableOriginalImplementation"] is not None
+                and proposal["availableOriginalImplementation"]["registryItem"]
+                    == "paired-focus"
+                and proposal["availableOriginalImplementation"]["suggestedAuthoredMode"]
+                    == mode
+                for proposal in proposals))
+            proposal = proposals[0]
+            shipped = proposal["availableOriginalImplementation"]
+            self.assertIsNotNone(shipped)
+            self.assertEqual(shipped["registryItem"], "paired-focus")
+            self.assertEqual(shipped["repository"], "YukiUmetsu/kumiki-ui")
+            self.assertEqual(shipped["commitSha"],
+                             "71ab08fcb014959016304c2eb158acf6ddb70283")
+            self.assertIn("registry/motion/paired-focus.ts",
+                          shipped["modules"])
+            self.assertIn("compilePairedFocus", shipped["publicExports"])
+            self.assertIn("evaluatePairedFocus", shipped["publicExports"])
+            self.assertIn("PairedFocusSvg", shipped["publicExports"])
+            self.assertIn("converge-then-diverge",
+                          shipped["supportedOriginalModes"])
+            self.assertEqual(shipped["suggestedAuthoredMode"], mode)
+            self.assertFalse(shipped["sourceGeometryCanBeUsedAsExecutableSpec"])
+            self.assertTrue(shipped["requiresOriginalAssetsAndAuthoredLayout"])
+            self.assertTrue(shipped["requiresIndependentRenderedVisualApproval"])
+            self.assertIn("visual-review-pending", shipped["status"])
+            self.assertFalse(proposal["registryApiVerifiedForThisRecipe"])
+            self.assertTrue(proposal["requiresOriginalArtAssets"])
+            self.assertNotIn("sourceArtwork", shipped)
+
+        # A mutated caller result cannot alter the static catalog or
+        # another proposal's independent nested arrays.
+        first = next(p for p in report["proposals"]
+                     if p["originalRecipe"] == "paired-convergence")
+        shipped = first["availableOriginalImplementation"]
+        shipped["modules"].clear()
+        shipped["publicExports"].append("fictionalCharacterSpeech")
+        shipped["supportedOriginalModes"].clear()
+        again = propose_motion_mechanics(temporal)
+        for p in again["proposals"]:
+            if p["originalRecipe"] in expectations:
+                row = p["availableOriginalImplementation"]
+                self.assertIn("PairedFocusSvg", row["publicExports"])
+                self.assertEqual(len(row["supportedOriginalModes"]), 3)
+        self.assertEqual([p["id"] for p in report["proposals"]],
+                         [p["id"] for p in again["proposals"]])
 
     def test_shared_background_motion_is_not_asserted_camera_pan(self):
         numeric = evidence()
