@@ -42,12 +42,19 @@ if str(ROOT / "src") not in sys.path:
 
 from kumiki_reference_lab.acquisition import (  # noqa: E402
     ANALYZER_RIGHTS_STATUS, DIRECT, MAX_WINDOWS, MAX_WINDOW_SECONDS,
-    STILL_MAX_BYTES, USER_AGENT, allowlisted_image_url,
-    allowlisted_video_url, as_int, as_text, build_index, build_still_evidence,
-    build_video_evidence, download_http, download_media, finite_float,
-    image_target, measure_still, measure_windows,
-    resume_matches as _resume_matches, run_batch, safe_error, safe_slug,
-    source_metadata, still_image_format, utc_now, write_json_atomic,
+    STILL_MAX_BYTES, STILL_NON_EVIDENCE_FLAGS, USER_AGENT, BatchSkip,
+    aggregate_extremes, allowlisted_image_url, allowlisted_video_url, as_int,
+    as_text, build_index, build_still_evidence, build_video_evidence,
+    comparability_block, coverage_distribution, cut_columns, download_http,
+    download_media, duplicate_summary, finite_float, image_target,
+    measure_still, measure_windows, resume_matches as _resume_matches,
+    run_batch, safe_error, safe_slug, source_metadata,
+    still_decode_counts, still_decode_dimensions, still_has_quality_flags,
+    still_image_format, still_quality_flags, still_quality_summary,
+    unique_media_rows, utc_now, write_json_atomic,
+)
+from kumiki_reference_lab.acquisition.reporting import (  # noqa: E402
+    comparability_lines, coverage_lines, excluded_leaders_lines, extreme_text,
 )
 from kumiki_reference_lab.analyzers.media.inspect import (  # noqa: E402
     inspect_source, sha256_file,
@@ -176,6 +183,28 @@ def _url_name(url: object) -> str | None:
         return Path(urlsplit(text).path).name or None
     except ValueError:
         return None
+
+
+# Basenames that are site chrome rather than a clip's published frame. The
+# check is token-based on purpose: ``maxresdefault.jpg`` (a real YouTube
+# thumbnail) must not match the ``default`` token, while ``yda-shotslogo.jpg``
+# and ``spotify-no-logo.jpg`` must.
+_SITE_ASSET_TOKENS = frozenset({
+    "logo", "shotslogo", "favicon", "placeholder", "default", "noimage",
+})
+
+
+def is_site_asset_url(url: object) -> bool:
+    """True when a poster URL's basename looks like site chrome, not a frame."""
+    name = _url_name(url)
+    if name is None:
+        return False
+    stem = name.rsplit(".", 1)[0].lower()
+    tokens = {token for token in re.split(r"[^a-z0-9]+", stem) if token}
+    compact = re.sub(r"[^a-z0-9]+", "", stem)
+    return (bool(tokens & _SITE_ASSET_TOKENS)
+            or "no-image" in stem
+            or "noimage" in compact)
 
 
 def _rational_float(value: object) -> float | None:
@@ -686,13 +715,15 @@ def build_video_record(
 
 def build_still_record(
     row: dict[str, Any], *, still: dict[str, Any],
+    quality_flags: list[str] | None = None,
     generated_at: str | None = None,
 ) -> dict[str, Any]:
     """Merge clip identity around neutral single-published-still evidence."""
     evidence = build_still_evidence(
         still=still, schema_version=STILL_SCHEMA,
         evidence_status=STILL_EVIDENCE_STATUS, limits=STILL_LIMITS,
-        coverage_note=STILL_COVERAGE_NOTE, generated_at=generated_at)
+        coverage_note=STILL_COVERAGE_NOTE, quality_flags=quality_flags,
+        generated_at=generated_at)
     return {
         "schemaVersion": STILL_SCHEMA,
         "clipId": as_int(row.get("id")),
@@ -915,7 +946,10 @@ def _run_lane(
         f"failed={outcome.failed} attempted={outcome.attempted} "
         f"elapsed={outcome.elapsed_seconds:.1f}s index={index_path}")
     log(final_note)
-    return 1 if outcome.attempted and not (retained or outcome.measured) else 0
+    # A batch whose attempts all ended as policy skips (for example degenerate
+    # posters) is a successful run, not a failure.
+    return 1 if (outcome.attempted and outcome.failed
+                 and not (retained or outcome.measured)) else 0
 
 
 def _load_retained(
@@ -1049,6 +1083,9 @@ def collect_still_one(
     if not isinstance(url, str) or not url.strip():
         raise ValueError("clip has no allowlisted published thumbnail")
     url = _policy_image_url(url)
+    if is_site_asset_url(url):
+        # Site chrome (logo/favicon/placeholder) is not a published frame.
+        raise BatchSkip("content-identical-placeholder")
     target_path = record_path(Path(out_dir), "stills", row)
     with tempfile.TemporaryDirectory(prefix="kumiki-shots-still-") as directory:
         target = image_target(Path(directory), url)
@@ -1062,10 +1099,16 @@ def collect_still_one(
         finally:
             # Guarantee: even a failed decode leaves no image bytes.
             target.unlink(missing_ok=True)
+    flags = still_quality_flags(
+        measured["metrics"], width=measured.get("imageWidth"),
+        height=measured.get("imageHeight"))
+    if any(flag in STILL_NON_EVIDENCE_FLAGS for flag in flags):
+        # A near-empty placeholder is not poster evidence; record a skip row.
+        raise BatchSkip("degenerate-poster")
     record = build_still_record(row, still={
         "imageUrl": url, "imageSha256": digest,
         "imageFormat": still_image_format(url, measured.pop("imageCodec", None)),
-        "imageBytes": image_bytes, **measured})
+        "imageBytes": image_bytes, **measured}, quality_flags=flags)
     write_json_atomic(target_path, record)
     return record
 
@@ -1099,6 +1142,7 @@ def _still_summary_row(
         "meanDisplayLumaProxy": metrics.get("meanDisplayLumaProxy"),
         "dominantHueFamily": metrics.get("dominantHueFamily"),
         "edgeDensityProxy": metrics.get("edgeDensityProxy"),
+        "qualityFlags": still.get("qualityFlags") or [],
         "recordPath": (path.as_posix() if path is not None else
                        f"stills/{record_stem(record)}.json"),
     }
@@ -1150,6 +1194,10 @@ def run_stills(
         for row in page:
             if not row.get("thumbnailUrl"):
                 initial_skips.append(_skip_row(row, "no-published-thumbnail"))
+                continue
+            if is_site_asset_url(row.get("thumbnailUrl")):
+                initial_skips.append(
+                    _skip_row(row, "content-identical-placeholder"))
                 continue
             try:
                 existing = record_path(out_dir, "stills", row)
@@ -1316,6 +1364,7 @@ def _video_row(record: dict[str, Any]) -> dict[str, Any]:
                if size is not None and duration is not None and duration > 0
                else None)
     windows = record.get("windows") if isinstance(record.get("windows"), list) else []
+    cuts = cut_columns(record)
     fraction = finite_float(coverage.get("fractionOfRuntime"))
     return {
         "clipId": as_int(record.get("clipId")),
@@ -1323,6 +1372,7 @@ def _video_row(record: dict[str, Any]) -> dict[str, Any]:
         "title": clip.get("title"),
         "brand": clip.get("brand"),
         "rendition": acquisition.get("rendition"),
+        "mediaSha256": source.get("mediaSha256"),
         "runtimeSeconds": duration,
         "resolution": resolution_text,
         "fps": fps,
@@ -1334,6 +1384,16 @@ def _video_row(record: dict[str, Any]) -> dict[str, Any]:
         "sampledSeconds": finite_float(coverage.get("sampledSeconds")),
         "cutCandidates": as_int(summary.get("cutCandidates")),
         "cutsPerMinute": finite_float(summary.get("cutCandidateRatePerMinute")),
+        "candidateCount": cuts["candidate_count"],
+        "sampledCutCandidatesPerMinute": cuts["candidates_per_min"],
+        "ci95": cuts["ci95"],
+        "medianGapFrames": cuts["median_gap_frames"],
+        "burstFraction": cuts["burst_fraction"],
+        "withinShotPairs": cuts["within_shot_pairs"],
+        "cutSeparatedPairs": cuts["cut_separated_pairs"],
+        "deltaBasisPairs": cuts["delta_basis_pairs"],
+        "validityFlags": cuts["validity_flags"],
+        "rankable": cuts["rankable"],
         "meanDisplayLuma": finite_float(summary.get("meanDisplayLuma")),
         "meanSaturation": finite_float(summary.get("meanSaturation")),
         "meanWithinShotDeltaPerSecond": finite_float(
@@ -1455,6 +1515,9 @@ def _render_report(aggregate: dict[str, Any], *, out_dir: Path,
     add()
     add(f"- Catalog clips: {_int(counts['catalogClips'])}")
     add(f"- Video-measured records: {_int(counts['videoMeasured'])}")
+    add(f"- Unique media after dedupe: {_int(counts.get('videoUniqueMedia'))} "
+        f"({_int(counts.get('videoDuplicateExtra'))} extra record(s) in "
+        f"{_int(counts.get('videoDuplicateGroups'))} duplicate group(s))")
     add(f"- Still-measured records: {_int(counts['stillMeasured'])}")
     add(f"- Still-only records (no matching video record): {_int(counts['stillOnly'])}")
     add(f"- Skipped video items (index context): {_int(counts['skippedVideo'])}")
@@ -1466,6 +1529,11 @@ def _render_report(aggregate: dict[str, Any], *, out_dir: Path,
         add("- Video skip reasons (index context): " + ", ".join(
             f"{_cell(reason)} x {count}"
             for reason, count in sorted(skip_reasons.items())))
+    still_skip_reasons = (aggregate.get("stills") or {}).get("skipReasons")
+    if isinstance(still_skip_reasons, dict) and still_skip_reasons:
+        add("- Still skip reasons (stills index context): " + ", ".join(
+            f"{_cell(reason)} x {count}"
+            for reason, count in sorted(still_skip_reasons.items())))
     add(f"- Unreadable records: {_int(counts['unreadable'])}")
     add(f"- generatedAt: {_cell(aggregate.get('generatedAt'))}")
     if limit is not None:
@@ -1506,19 +1574,26 @@ def _render_report(aggregate: dict[str, Any], *, out_dir: Path,
     columns = (
         "clip_id", "slug", "title", "brand", "rendition", "runtime_s",
         "resolution", "fps", "bitrate_mbps", "download_mb", "windows",
-        "coverage_pct", "cuts", "cuts_per_min", "mean_luma", "mean_sat",
-        "delta_per_s")
+        "coverage_pct", "candidates_n", "sampled_cut_candidates_per_min",
+        "ci95", "burst", "gap_frames", "within_shot_pairs", "cut_sep_pairs",
+        "delta_basis_pairs", "validity", "mean_luma", "mean_sat", "delta_per_s")
     add("| " + " | ".join(columns) + " |")
     add("| " + " | ".join("---" for _ in columns) + " |")
     for row in rows:
+        ci = row["ci95"]
         values = (
             _int(row["clipId"]), row["slug"], row["title"], row["brand"],
             row["rendition"], _num(row["runtimeSeconds"], 2), row["resolution"],
             _num(row["fps"], 3), _num(row["bitrateMbps"], 2),
             _num(row["downloadMb"], 1), _int(row["windowsMeasured"]),
-            _num(row["coveragePercent"], 1), _int(row["cutCandidates"]),
-            _num(row["cutsPerMinute"], 2), _num(row["meanDisplayLuma"], 4),
-            _num(row["meanSaturation"], 4),
+            _num(row["coveragePercent"], 1), _int(row["candidateCount"]),
+            _num(row["sampledCutCandidatesPerMinute"], 2),
+            (f"{_num(ci[0], 2)}-{_num(ci[1], 2)}" if ci else None),
+            _num(row["burstFraction"], 3), _num(row["medianGapFrames"], 1),
+            _int(row["withinShotPairs"]), _int(row["cutSeparatedPairs"]),
+            _int(row["deltaBasisPairs"]),
+            ", ".join(row["validityFlags"]) or "—",
+            _num(row["meanDisplayLuma"], 4), _num(row["meanSaturation"], 4),
             _num(row["meanWithinShotDeltaPerSecond"], 4))
         add("| " + " | ".join(_cell(value) for value in values) + " |")
     add()
@@ -1542,8 +1617,17 @@ def _render_report(aggregate: dict[str, Any], *, out_dir: Path,
                 ("download_mb", _num(row["downloadMb"], 1)),
                 ("windows", _int(row["windowsMeasured"])),
                 ("coverage_pct", _num(row["coveragePercent"], 1)),
-                ("cuts", _int(row["cutCandidates"])),
-                ("cuts_per_min", _num(row["cutsPerMinute"], 2)),
+                ("candidates_n", _int(row["candidateCount"])),
+                ("sampled_cut_candidates_per_min",
+                 _num(row["sampledCutCandidatesPerMinute"], 2)),
+                ("ci95", (f"{_num(row['ci95'][0], 2)}-{_num(row['ci95'][1], 2)}"
+                          if row["ci95"] else None)),
+                ("burst", _num(row["burstFraction"], 3)),
+                ("gap_frames", _num(row["medianGapFrames"], 1)),
+                ("within_shot_pairs", _int(row["withinShotPairs"])),
+                ("cut_sep_pairs", _int(row["cutSeparatedPairs"])),
+                ("delta_basis_pairs", _int(row["deltaBasisPairs"])),
+                ("validity", ", ".join(row["validityFlags"]) or "—"),
                 ("mean_luma", _num(row["meanDisplayLuma"], 4)),
                 ("mean_sat", _num(row["meanSaturation"], 4)),
                 ("delta_per_s", _num(row["meanWithinShotDeltaPerSecond"], 4))):
@@ -1586,17 +1670,36 @@ def _render_report(aggregate: dict[str, Any], *, out_dir: Path,
     add()
     add("### Distributions")
     add()
-    add("| metric | n | min | median | max |")
+    add("All minima and maxima are computed over `rankable` records only and "
+        "name the record id and validity flags.")
+    add()
+    ranking = aggregates["cutRanking"]
+    add(f"Unique records before dedupe: "
+        f"{aggregates.get('recordCountBeforeDedupe')}; after dedupe: "
+        f"{aggregates.get('recordCount')} "
+        f"({(aggregates.get('dedupe') or {}).get('extraRecords', 0)} "
+        "duplicate extra record(s) collapsed).")
+    add()
+    add(f"Rankable records: {ranking['rankable']} of "
+        f"{aggregates['recordCount']} unique; excluded as non-rankable: "
+        f"{ranking['excluded']}.")
+    add()
+    add("| metric | n | min (record; flags) | median | max (record; flags) |")
     add("| --- | --- | --- | --- | --- |")
-    for label, key, digits in (
-            ("runtime_s", "runtimeSeconds", 2),
-            ("cuts_per_min", "cutsPerMinute", 2),
-            ("mean_luma", "meanDisplayLuma", 4),
-            ("mean_sat", "meanSaturation", 4),
-            ("coverage_pct", "coveragePercent", 1)):
-        entry = aggregates["distributions"][key]
-        add(f"| {label} | {entry['n']} | {_num(entry['min'], digits)} | "
-            f"{_num(entry['median'], digits)} | {_num(entry['max'], digits)} |")
+    for label, extremes, digits in (
+            ("runtime_s", ranking["runtimeSeconds"], 2),
+            ("candidates_n", ranking["candidateCount"], 0),
+            ("sampled_cut_candidates_per_min", ranking["candidatesPerMinute"], 2),
+            ("mean_luma", ranking["meanDisplayLuma"], 4),
+            ("mean_sat", ranking["meanSaturation"], 4)):
+        add(f"| {label} | {extremes['n']} | "
+            f"{_cell(extreme_text(extremes['min'], digits=digits))} | "
+            f"{_num(extremes['median'], digits)} | "
+            f"{_cell(extreme_text(extremes['max'], digits=digits))} |")
+    for line in excluded_leaders_lines(
+            ranking["candidatesPerMinute"],
+            metric="sampled_cut_candidates_per_min"):
+        add(line)
     add()
     coverage = aggregates["coverage"]
     add("Coverage-weighted caveat: "
@@ -1606,6 +1709,22 @@ def _render_report(aggregate: dict[str, Any], *, out_dir: Path,
         "Aggregates describe the sampled windows, not the full clips.")
     add()
 
+    add("## Comparability")
+    add()
+    for line in comparability_lines(aggregates["comparability"]):
+        add(line)
+    add()
+
+    add("## Coverage")
+    add()
+    add("Per-record coverage distribution over the deduped records. The "
+        "unobserved gap is the median time between consecutive sampled windows, "
+        "derived from runtime, window count and sampled seconds.")
+    add()
+    for line in coverage_lines(aggregates["coverageDistribution"]):
+        add(line)
+    add()
+
     add("## Published-still evidence (single-frame only)")
     add()
     add("Separate lane. A published poster still is not a video frame: these "
@@ -1613,12 +1732,45 @@ def _render_report(aggregate: dict[str, Any], *, out_dir: Path,
         "or timing evidence, and are never used in the video aggregates above.")
     add()
     add(f"- n: {stills['n']}")
+    add("- decode size: stills are measured at the aspect-preserving "
+        "`160×90` fit; the source dimensions stay in `img_w×img_h`, so the "
+        "decode size is derived from the source aspect, not stored per record.")
+    add()
+    add("| source_img | decode | stills |")
+    add("| --- | --- | --- |")
+    decode_items = sorted(
+        (stills.get("decodeSizes") or {}).items(),
+        key=lambda item: (-item[1], item[0]))
+    for key, value in decode_items[:20]:
+        source, decode = key.split(" -> ", 1)
+        add(f"| {_cell(source)} | {_cell(decode)} | {value} |")
+    if len(decode_items) > 20:
+        add(f"| (+{len(decode_items) - 20} more source/decode pairs) | — | — |")
+    add()
+    add(f"- stills carrying no quality flag (used for colour aggregates): "
+        f"{stills.get('evidenceN', stills['n'])}")
     add(f"- median meanDisplayLumaProxy: "
         f"{_num(stills['medianMeanDisplayLumaProxy'], 4)}")
     add()
     add("| dominant_hue_family | stills |")
     add("| --- | --- |")
     for key, value in stills["dominantHueFamilyCounts"].items():
+        add(f"| {_cell(key)} | {value} |")
+    add()
+    quality = aggregate.get("stillQuality") or {}
+    add("### Still quality signals")
+    add()
+    add("Quality flags are measurements, not verdicts: the record keeps every "
+        "number above so a consumer can decide. A still carrying any flag is "
+        "excluded from this section's colour aggregates and counted separately "
+        "here.")
+    add()
+    add(f"- flagged stills (excluded from colour aggregates): "
+        f"{quality.get('flagged', 0)} of {stills['n']}")
+    add()
+    add("| quality flag | stills |")
+    add("| --- | --- |")
+    for key, value in (quality.get("flags") or {}).items():
         add(f"| {_cell(key)} | {value} |")
     add()
 
@@ -1700,6 +1852,10 @@ def run_report(
                       key=_video_order)
     measured_total = len(all_rows)
     tabulated = all_rows[:limit] if limit is not None else all_rows
+    unique_rows = list(unique_media_rows(tabulated))
+    dedupe = duplicate_summary(
+        [{"id": row["slug"], "mediaSha256": row["mediaSha256"]}
+         for row in tabulated], "mediaSha256")
     details = [{"slug": row["slug"], "windows": row["windowRows"]}
                for row in tabulated[:top]]
 
@@ -1710,11 +1866,14 @@ def run_report(
     still_skip_reasons = _skip_reasons(stills_index)
     still_metrics = [((record.get("still") or {}).get("metrics") or {})
                      for record in still_records
-                     if isinstance(record.get("still"), dict)]
+                     if isinstance(record.get("still"), dict)
+                     and not still_has_quality_flags(record)]
+    still_evidence = [record for record in still_records
+                      if not still_has_quality_flags(record)]
     still_lumas = [finite_float(metrics.get("meanDisplayLumaProxy"))
                    for metrics in still_metrics]
     still_lumas = [value for value in still_lumas if value is not None]
-    paired = [(row["runtimeSeconds"], row["sampledSeconds"]) for row in tabulated
+    paired = [(row["runtimeSeconds"], row["sampledSeconds"]) for row in unique_rows
               if row.get("runtimeSeconds") is not None and row["runtimeSeconds"] > 0
               and row.get("sampledSeconds") is not None]
     total_runtime = round(sum(runtime for runtime, _ in paired), 6) if paired else 0.0
@@ -1732,6 +1891,9 @@ def run_report(
             "catalogClips": catalog_clips,
             "videoMeasured": len(tabulated),
             "videoMeasuredTotal": measured_total,
+            "videoUniqueMedia": len(unique_rows),
+            "videoDuplicateGroups": dedupe["groups"],
+            "videoDuplicateExtra": dedupe["extraRecords"],
             "stillMeasured": len(still_records),
             "stillOnly": still_only,
             "skippedVideo": _list_length(index, "skips"),
@@ -1745,18 +1907,56 @@ def run_report(
         "aggregates": {
             "basis": "video-measured records only; published stills never enter "
                      "these numbers",
-            "recordCount": len(tabulated),
-            "byRendition": _counter(row["rendition"] for row in tabulated),
-            "byBrand": _counter(row["brand"] for row in tabulated),
+            "recordCount": len(unique_rows),
+            "recordCountBeforeDedupe": len(tabulated),
+            "dedupe": dedupe,
+            "byRendition": _counter(row["rendition"] for row in unique_rows),
+            "byBrand": _counter(row["brand"] for row in unique_rows),
             "distributions": {
-                "runtimeSeconds": _distribution(row["runtimeSeconds"] for row in tabulated),
-                "cutsPerMinute": _distribution(row["cutsPerMinute"] for row in tabulated),
-                "meanDisplayLuma": _distribution(row["meanDisplayLuma"] for row in tabulated),
-                "meanSaturation": _distribution(row["meanSaturation"] for row in tabulated),
-                "coveragePercent": _distribution(row["coveragePercent"] for row in tabulated),
+                "runtimeSeconds": _distribution(
+                    row["runtimeSeconds"] for row in unique_rows),
+                "cutsPerMinute": _distribution(
+                    row["sampledCutCandidatesPerMinute"] for row in unique_rows
+                    if row["rankable"]),
+                "sampledCutCandidatesPerMinute": _distribution(
+                    row["sampledCutCandidatesPerMinute"] for row in unique_rows
+                    if row["rankable"]),
+                "candidateCount": _distribution(
+                    row["candidateCount"] for row in unique_rows
+                    if row["rankable"]),
+                "meanDisplayLuma": _distribution(
+                    row["meanDisplayLuma"] for row in unique_rows),
+                "meanSaturation": _distribution(
+                    row["meanSaturation"] for row in unique_rows),
+                "coveragePercent": _distribution(
+                    row["coveragePercent"] for row in unique_rows),
+            },
+            "cutRanking": {
+                "basis": "rankable unique records only; non-rankable rows are "
+                         "excluded from cut aggregates",
+                "rankable": sum(1 for row in unique_rows if row["rankable"]),
+                "excluded": sum(1 for row in unique_rows
+                                if not row["rankable"]),
+                "candidatesPerMinute": aggregate_extremes(
+                    unique_rows, "sampledCutCandidatesPerMinute", id_key="slug",
+                    gate=True),
+                "candidateCount": aggregate_extremes(
+                    unique_rows, "candidateCount", id_key="slug", gate=True),
+                "runtimeSeconds": aggregate_extremes(
+                    unique_rows, "runtimeSeconds", id_key="slug",
+                    gate=True),
+                "meanDisplayLuma": aggregate_extremes(
+                    unique_rows, "meanDisplayLuma", id_key="slug",
+                    gate=True),
+                "meanSaturation": aggregate_extremes(
+                    unique_rows, "meanSaturation", id_key="slug",
+                    gate=True),
+                "meanWithinShotDeltaPerSecond": aggregate_extremes(
+                    unique_rows, "meanWithinShotDeltaPerSecond",
+                    id_key="slug", gate=True),
             },
             "coverage": {
-                "recordsWithRuntime": sum(1 for row in tabulated
+                "recordsWithRuntime": sum(1 for row in unique_rows
                                           if row.get("runtimeSeconds") is not None),
                 "recordsWithCoverage": len(paired),
                 "totalRuntimeSeconds": total_runtime,
@@ -1765,18 +1965,46 @@ def run_report(
                     round(total_sampled / total_runtime, 6)
                     if total_runtime else None),
             },
+            "coverageDistribution": coverage_distribution(unique_rows),
+            "comparability": comparability_block(
+                site="shots.net",
+                catalog_size=catalog_clips,
+                measured=len(tabulated),
+                selection_rule=("allowlisted 720p web rendition, ready list "
+                                "stream, or signed original availability"),
+                provider_counts=_counter(row["rendition"] for row in unique_rows),
+                rendition_notes=("platform-encoded source renditions only; "
+                                 "no ladder rung is the delivered master"),
+                resolution_counts=_counter(row["resolution"] for row in unique_rows),
+                fps_counts=_counter(
+                    f"{row['fps']:g}" if row["fps"] is not None else None
+                    for row in unique_rows),
+                bitrate_counts=_counter(
+                    f"{row['bitrateMbps']:.1f}"
+                    if row["bitrateMbps"] is not None else None
+                    for row in unique_rows),
+                coverage=coverage_distribution(unique_rows),
+                duplicate_groups=dedupe,
+                still_overlap=(f"{len(still_records)} still record(s), "
+                               f"{still_only} still-only, are a separate "
+                               "single-frame lane and never enter these "
+                               "aggregates"),
+            ),
         },
         "stills": {
             "evidence": STILL_EVIDENCE_STATUS,
             "singleFrameOnly": True,
             "n": len(still_records),
+            "evidenceN": len(still_evidence),
             "medianMeanDisplayLumaProxy": (
                 round(statistics.median(still_lumas), 6)
                 if still_lumas else None),
             "dominantHueFamilyCounts": _counter(
                 metrics.get("dominantHueFamily") for metrics in still_metrics),
             "skipReasons": still_skip_reasons,
+            "decodeSizes": still_decode_counts(still_records),
         },
+        "stillQuality": still_quality_summary(still_records),
         "skipReasons": skip_reasons,
         "unreadableRecords": problems,
     }

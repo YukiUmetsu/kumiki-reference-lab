@@ -26,7 +26,8 @@ Safety contract, enforced by every public entry point here:
 Modules: :mod:`media` (allowlisting, bounded fetch, download, HLS),
 :mod:`ytdlp` (bounded, cookie-free YouTube acquisition), :mod:`probe` (ffprobe
 adapters), :mod:`windows` (window planning and evidence), :mod:`stills` (still
-measurement), :mod:`store` (atomic writes, indexes), :mod:`runner` (generic
+measurement), :mod:`reporting` (rankability, dedupe, coverage and comparability
+report helpers), :mod:`store` (atomic writes, indexes), :mod:`runner` (generic
 batch loop). Nothing here needs ffmpeg at import time.
 """
 
@@ -45,12 +46,19 @@ from .probe import (
     probe_image_dimensions, ranged_source_metadata, remote_source_metadata,
     run_ffprobe_json, source_metadata,
 )
-from .runner import BatchOutcome, run_batch, safe_error
+from .runner import BatchOutcome, BatchSkip, run_batch, safe_error
 from .stills import (
     STILL_DECODE_HEIGHT, STILL_DECODE_WIDTH, STILL_MAX_BYTES, STILL_METHOD,
+    STILL_NON_EVIDENCE_FLAGS, STILL_QUALITY_FLAGS,
     build_still_evidence, compute_still_metrics, decode_still_rgb,
     dominant_hue_family, infer_decoded_dimensions, measure_still,
-    still_image_format,
+    still_has_quality_flags, still_image_format, still_quality_counts,
+    still_quality_flags, still_quality_summary, still_record_flags,
+)
+from .reporting import (
+    aggregate_extremes, comparability_block, coverage_distribution, cut_columns,
+    duplicate_summary, still_decode_counts, still_decode_dimensions,
+    unique_media_rows,
 )
 from .store import build_index, resume_matches, safe_slug, utc_now, write_json_atomic
 from .windows import (
@@ -78,14 +86,21 @@ __all__ = [
     "remote_source_metadata", "run_ffprobe_json", "source_metadata",
     # stills
     "STILL_DECODE_HEIGHT", "STILL_DECODE_WIDTH", "STILL_MAX_BYTES",
-    "STILL_METHOD", "build_still_evidence", "compute_still_metrics",
+    "STILL_METHOD", "STILL_NON_EVIDENCE_FLAGS", "STILL_QUALITY_FLAGS",
+    "build_still_evidence", "compute_still_metrics",
     "decode_still_rgb", "dominant_hue_family", "infer_decoded_dimensions",
-    "measure_still", "still_image_format",
+    "measure_still", "still_has_quality_flags", "still_image_format",
+    "still_quality_counts", "still_quality_flags", "still_quality_summary",
+    "still_record_flags",
+    # reporting
+    "aggregate_extremes", "comparability_block", "coverage_distribution",
+    "cut_columns", "duplicate_summary", "still_decode_counts",
+    "still_decode_dimensions", "unique_media_rows",
     # store
     "build_index", "resume_matches", "safe_slug", "utc_now",
     "write_json_atomic",
     # runner
-    "BatchOutcome", "run_batch", "safe_error",
+    "BatchOutcome", "BatchSkip", "run_batch", "safe_error",
     # windows
     "MAX_WINDOWS", "MAX_WINDOW_SECONDS", "build_video_evidence",
     "measure_windows", "plan_windows", "summarize_probes",

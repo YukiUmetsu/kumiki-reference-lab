@@ -52,10 +52,11 @@ Enforced once, for every caller:
 | `media` | `allowlisted_url` / `allowlisted_video_url` / `allowlisted_image_url` (all accept `allow_query`), `fetch_bytes`, `fetch_text`, `download_http`, `plan_hls_download`, `download_media` (HLS stream-copy remux, direct GET, or bounded yt-dlp), `media_target`, `image_target`, `check_downloaded` |
 | `ytdlp` | `allowlisted_youtube_url` (single-video URL policy), `download_via_ytdlp` (bounded 403 retry), `youtube_source_metadata` (`--dump-single-json --skip-download`), `classify_ytdlp_failure`, `is_retryable_refusal`, `YtDlpError` / `YtDlpRefusedError` |
 | `probe` | `run_ffprobe_json` (retry/backoff), `remote_source_metadata`, `ranged_source_metadata` (bounded `Range` fallback for flaky hosts), `source_metadata`, `probe_image_dimensions`, `metadata_from_probe`, `finite_float` / `as_int` / `as_text` |
-| `windows` | `plan_windows`, `measure_windows`, `summarize_probes`, `build_video_evidence` |
-| `stills` | `measure_still`, `compute_still_metrics`, `dominant_hue_family`, `decode_still_rgb`, `infer_decoded_dimensions`, `still_image_format`, `build_still_evidence` |
+| `windows` | `plan_windows`, `measure_windows`, `summarize_probes`, `cut_validity`, `build_video_evidence` |
+| `reporting` | `cut_columns`, `coverage_distribution`, `comparability_block`, `duplicate_summary`, `unique_media_rows`, `aggregate_extremes`, `still_decode_dimensions` |
+| `stills` | `measure_still`, `compute_still_metrics`, `dominant_hue_family`, `decode_still_rgb`, `infer_decoded_dimensions`, `still_image_format`, `build_still_evidence`, `still_quality_flags` (plus `still_record_flags` / `still_has_quality_flags` / `still_quality_counts` / `still_quality_summary` for report consumers) |
 | `store` | `write_json_atomic`, `safe_slug`, `resume_matches`, `build_index`, `utc_now` |
-| `runner` | `run_batch` (sequential or pooled, jittered politeness delay, resume skip, per-item failure isolation, atomic index refresh), `safe_error` |
+| `runner` | `run_batch` (sequential or pooled, jittered politeness delay, resume skip, per-item failure isolation, atomic index refresh), `BatchSkip` (raise from `run_one` to record a skip row instead of a failure), `safe_error` |
 
 Provider constants: `HLS`, `DIRECT`, `YOUTUBE`; method labels:
 `METHOD_HLS_REMUX`, `METHOD_HTTP_DOWNLOAD`, `METHOD_YTDLP_MERGE`.
@@ -227,6 +228,110 @@ generically useful without a site.
   `isSourceVideoFrame: false` and deny motion/cut/timing evidence in `limits`.
 - Unsupported providers (e.g. a host that requires login) get an explicit
   `unsupported-*` skip row. Do not attempt a bypass.
+
+## Interpreting cut candidates
+
+A `cutCandidatePts` entry is an **ffmpeg scene-score exceedance** inside one
+sampled window. It is a *candidate*, not an edit: fast movement, flashes,
+strobe lighting, transitions, and compression can all exceed the threshold.
+Consequently `cutCandidateRatePerMinute` (and the older `cutCandidates` count)
+describe candidate density in sampled windows, not an edit rate for the film.
+A record whose `validityFlags` is non-empty **must not enter a ranking**; the
+flag says the candidate count is not measuring cuts, not that the film is
+poorly edited.
+
+`cut_validity(probes, *, sampled_seconds, fps=None, timebase=None,
+sampled_fraction=None)` is the pure derivation and `summarize_probes` calls it.
+Because it reads only the probe payloads (`cutCandidatePts`,
+`sampledWindowSummary`, `sampledFramePairs`), an audit can recompute the same
+numbers offline from a stored record. `fps` accepts a number or a
+`{"numerator", "denominator"}` rational; `timebase` accepts a seconds-per-tick
+number or the rational dict stored on each probe. When `timebase` is omitted
+the first probe's `sourceTimebase` is used.
+
+| field | exact definition |
+| --- | --- |
+| `cutCandidateCount` | size of the sorted, de-duplicated union of `cutCandidatePts` across windows |
+| `medianCutGapSeconds` | median gap between consecutive union candidates in source seconds (`null` with < 2 candidates or no timebase) |
+| `medianCutGapFrames` | raw median gap in seconds × fps, rounded to 6 decimals, when fps is available; else `null` |
+| `minCutGapSeconds` | smallest consecutive gap in source seconds |
+| `burstFraction` | fraction of candidates whose nearest neighbour is < 0.25 s; `null` with < 2 candidates |
+| `withinShotPairs` | sum of each window's `sampledWindowSummary.withinShotComparedPairs` |
+| `cutSeparatedPairs` | sum of each window's `sampledWindowSummary.cutSeparatedPairs` |
+| `deltaBasisPairs` | number of `sampledFramePairs` entries with a finite `meanAbsoluteDisplayRgbDeltaPerSecond` (the actual basis for the mean delta) |
+| `cutsPerMinuteCi95` | `[low, high]` Poisson 95% interval on candidates per sampled minute |
+| `validityFlags` | sorted list of the flags below (always present, `[]` when clean) |
+
+`cutsPerMinuteCi95` uses the exact Garwood count interval
+(`P(X ≤ n-1 \| low) = 0.975`, `P(X ≤ n \| high) = 0.025`) divided by sampled
+minutes. When at least three windows exist and the mean window count is
+positive, each half-width is widened by `sqrt(designEffect)` with
+`designEffect = max(1.0, sampleVariance(windowCounts) / mean(windowCounts))`.
+With zero observed candidates the interval is exactly
+`[0, 3.689 / sampledMinutes]`.
+
+| flag | measured condition |
+| --- | --- |
+| `non-edit-scene-change` | `medianCutGapFrames < 3` or `medianCutGapSeconds < 0.10` |
+| `burst-heavy` | `burstFraction > 0.5` |
+| `sparse-delta-basis` | `deltaBasisPairs < 8` |
+| `no-delta-basis` | `deltaBasisPairs == 0` |
+| `low-coverage` | supplied `sampled_fraction` < 0.25 |
+| `short-sample` | `sampled_seconds < 20` |
+| `no-cuts-observed` | `cutCandidateCount == 0` |
+
+These are **flags, not verdicts**: the record keeps every measured number and
+the flags travel with it so a report can exclude the row or qualify the rate.
+
+## Reporting contract
+
+Every adapter's `report` command assembles its tables from
+:mod:`kumiki_reference_lab.acquisition.reporting`, so the same four rules apply
+everywhere:
+
+- **Rankability gate.** `cut_columns(record)` returns `rankable: false` when
+  any of `non-edit-scene-change`, `burst-heavy`, `no-delta-basis`, or
+  `short-sample` is present. Cut-candidate minima/maxima are computed only over
+  rankable records; the excluded count is stated next to the aggregate. A
+  reported maximum always names its record id and its `validityFlags`, so a
+  strobe (for example a 60 fps record whose median candidate gap is 3 frames)
+  can no longer surface as the fastest-cut work.
+- **Dedupe.** Video aggregates dedupe by media hash with
+  `duplicate_summary(records, "source.mediaSha256")` and report `n` before and
+  after dedupe, plus the number of duplicate groups. A catalogue that lists the
+  same upload twice therefore states its unique-work count.
+- **Comparability block.** `comparability_block(...)` always returns
+  `poolable: false`, the fixed `comparableWithin` / `notComparableTo` lists,
+  the echoed inputs (catalogue size, measured count, provider/rendition/
+  resolution/fps/bitrate counts, coverage, duplicate groups, still overlap) and
+  a plain-sentence `caveats` list. Cross-site pooling is never implied.
+- **Coverage block.** `coverage_distribution(rows)` reports min/p10/median/
+  p90/max coverage, the below-20% and below-10% shares, and the median
+  unobserved gap between sampled windows. A pooled "18% of runtime" line is
+  therefore accompanied by the distribution that produced it.
+
+Still tables show the source `img_w×img_h` beside the `decode_w×decode_h` the
+still was actually measured at; when the record stores no decode size it is
+derived from the aspect-preserving `160×90` rule and labelled as derived.
+
+## Still quality flags
+
+`still_quality_flags(metrics, *, width=None, height=None)` returns a sorted list
+of zero or more documented flags from a still's stored metrics:
+
+| flag | measured condition |
+| --- | --- |
+| `near-black-placeholder` | mean luma < 0.05 and saturation < 0.02 |
+| `near-white-placeholder` | mean luma > 0.97 and saturation < 0.02 |
+| `near-uniform` | `displayLumaStdDev` < 0.01 |
+| `degenerate-histogram` | one `lumaHistogram` bucket holds > 0.99 of pixels |
+| `low-information-resolution` | source `width × height` < 100,000 (both given) |
+
+These are **flags, not verdicts**: the record keeps every measured number and
+each consumer decides what a flag means for its use. `build_still_evidence`
+writes them to `still.qualityFlags` (always present; `[]` when clean). A lane
+that treats a flag as non-evidence raises `BatchSkip(reason)` from `run_one`, so
+the item lands in the index's `skips` list rather than `records` or `failures`.
 
 ## Verification
 

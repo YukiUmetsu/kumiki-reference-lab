@@ -14,6 +14,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from kumiki_reference_lab import acquisition as acq
+from kumiki_reference_lab.acquisition.windows import cut_validity
 
 ALLOWED_HOSTS = ("media.example", ".cdn.example")
 
@@ -76,6 +77,31 @@ def synthetic_probe(
             {"meanAbsoluteDisplayRgbDeltaPerSecond": value}
             for value in per_second
         ],
+    }
+
+
+def cut_probe(
+    points, *, timebase=(1, 1000), within_shot=0, cut_separated=0,
+    deltas=(),
+) -> dict:
+    """Synthetic stored-probe payload for the cut-validity derivation."""
+    pairs = [
+        {"meanAbsoluteDisplayRgbDeltaPerSecond": value} for value in deltas
+    ]
+    pairs += [
+        {"meanAbsoluteDisplayRgbDeltaPerSecond": None}
+        for _ in range(cut_separated)
+    ]
+    return {
+        "sourceTimebase": {
+            "numerator": timebase[0], "denominator": timebase[1]},
+        "cutCandidatePts": list(points),
+        "sampledWindowSummary": {
+            "cutCandidateCountBetweenFirstAndLastSample": len(points),
+            "withinShotComparedPairs": within_shot,
+            "cutSeparatedPairs": cut_separated,
+        },
+        "sampledFramePairs": pairs,
     }
 
 
@@ -608,6 +634,262 @@ class WindowAndSummaryTests(unittest.TestCase):
         self.assertIsNone(summary["meanDisplayLuma"])
         self.assertIsNone(summary["meanSaturation"])
         self.assertIsNone(summary["meanWithinShotRgbDeltaPerSecond"])
+
+    def test_summary_is_additive_over_the_existing_keys(self) -> None:
+        summary = acq.summarize_probes([
+            synthetic_probe(2, 0.5, 0.25, 3, [1.0, 3.0, None]),
+            synthetic_probe(0, 0.7, 0.35, 2, [2.0]),
+        ], sampled_seconds=20.0)
+        self.assertEqual(set(summary), {
+            "cutCandidates", "cutCandidateRatePerMinute", "meanDisplayLuma",
+            "meanSaturation", "meanWithinShotRgbDeltaPerSecond",
+            "sampledFrames", "windowsWithCuts",
+            "medianCutGapSeconds", "medianCutGapFrames", "minCutGapSeconds",
+            "cutCandidateCount", "burstFraction", "withinShotPairs",
+            "cutSeparatedPairs", "deltaBasisPairs", "cutsPerMinuteCi95",
+            "validityFlags",
+        })
+        self.assertEqual(summary["cutCandidates"], 2)
+        self.assertEqual(summary["cutCandidateCount"], 0)
+        self.assertEqual(summary["cutCandidateRatePerMinute"], 6.0)
+        self.assertEqual(summary["cutsPerMinuteCi95"], [0.0, 11.067])
+        self.assertIn("no-cuts-observed", summary["validityFlags"])
+
+
+class CutValidityTests(unittest.TestCase):
+    def test_zero_candidates_uses_the_one_sided_poisson_upper_bound(self) -> None:
+        probes = [
+            cut_probe([], within_shot=5, cut_separated=5, deltas=[1.0] * 5)
+            for _ in range(4)
+        ]
+        result = cut_validity(
+            probes, sampled_seconds=40.0, sampled_fraction=0.5)
+        self.assertEqual(result["cutCandidateCount"], 0)
+        self.assertEqual(result["cutsPerMinuteCi95"], [0.0, 5.5335])
+        self.assertEqual(result["validityFlags"], ["no-cuts-observed"])
+        self.assertIsNone(result["medianCutGapSeconds"])
+        self.assertIsNone(result["medianCutGapFrames"])
+        self.assertIsNone(result["minCutGapSeconds"])
+        self.assertIsNone(result["burstFraction"])
+
+    def test_thirteen_candidates_over_forty_seconds_uses_the_garwood_interval(
+            self) -> None:
+        windows = [
+            cut_probe([0, 3000, 6000], within_shot=3,
+                      cut_separated=8, deltas=[1.0] * 3),
+            cut_probe([10000, 13000, 16000], within_shot=3,
+                      cut_separated=8, deltas=[1.0] * 3),
+            cut_probe([20000, 23000, 26000], within_shot=3,
+                      cut_separated=8, deltas=[1.0] * 3),
+            cut_probe([30000, 33000, 36000, 39000], within_shot=4,
+                      cut_separated=7, deltas=[1.0] * 4),
+        ]
+        result = cut_validity(windows, sampled_seconds=40.0)
+        self.assertEqual(result["cutCandidateCount"], 13)
+        self.assertEqual(result["medianCutGapSeconds"], 3.0)
+        self.assertEqual(result["minCutGapSeconds"], 3.0)
+        # Garwood exact Poisson 95% interval for 13 events, per sampled minute.
+        self.assertEqual(result["cutsPerMinuteCi95"], [10.382929, 33.345594])
+        self.assertNotIn("non-edit-scene-change", result["validityFlags"])
+
+    def test_sixty_fps_strobe_is_flagged_as_non_edit_and_bursty(self) -> None:
+        points = [index * 768 for index in range(20)]  # 0.05 s apart
+        probe = cut_probe(
+            points, timebase=(1, 15360), within_shot=10,
+            cut_separated=10, deltas=[0.1] * 10)
+        result = cut_validity(
+            [probe], sampled_seconds=10.0, fps=60, sampled_fraction=0.5)
+        self.assertEqual(result["medianCutGapSeconds"], 0.05)
+        self.assertEqual(result["medianCutGapFrames"], 3.0)
+        self.assertEqual(result["burstFraction"], 1.0)
+        self.assertIn("non-edit-scene-change", result["validityFlags"])
+        self.assertIn("burst-heavy", result["validityFlags"])
+
+    def test_one_delta_pair_is_sparse_but_not_absent(self) -> None:
+        probe = cut_probe(
+            [0], within_shot=1, cut_separated=10, deltas=[1.0])
+        result = cut_validity([probe], sampled_seconds=10.0,
+                              sampled_fraction=0.5)
+        self.assertEqual(result["deltaBasisPairs"], 1)
+        self.assertEqual(result["withinShotPairs"], 1)
+        self.assertEqual(result["cutSeparatedPairs"], 10)
+        self.assertIn("sparse-delta-basis", result["validityFlags"])
+        self.assertNotIn("no-delta-basis", result["validityFlags"])
+
+    def test_cut_validity_is_exactly_reproducible_from_a_stored_record(
+            self) -> None:
+        record = {
+            "coverage": {"sampledSeconds": 40, "fractionOfRuntime": 0.2},
+            "source": {
+                "frameRate": {"numerator": 60, "denominator": 1},
+                "sourceTimebase": {"numerator": 1, "denominator": 15360},
+            },
+            "windows": [
+                {"probe": cut_probe(
+                    [index * 768 for index in range(12)],
+                    timebase=(1, 15360), within_shot=4,
+                    cut_separated=7, deltas=[0.2] * 4)},
+                {"probe": cut_probe(
+                    [20000, 20768, 21536], timebase=(1, 15360),
+                    within_shot=2, cut_separated=9,
+                    deltas=[0.3] * 2)},
+            ],
+        }
+        stored = json.loads(json.dumps(record))
+        probes = [window["probe"] for window in stored["windows"]]
+        kwargs = {
+            "sampled_seconds": stored["coverage"]["sampledSeconds"],
+            "fps": stored["source"]["frameRate"],
+            "timebase": stored["source"]["sourceTimebase"],
+            "sampled_fraction": stored["coverage"]["fractionOfRuntime"],
+        }
+        direct = cut_validity(probes, **kwargs)
+        summary = acq.summarize_probes(probes, **kwargs)
+        for key, value in direct.items():
+            self.assertEqual(summary[key], value, key)
+        self.assertEqual(direct["cutCandidateCount"], 15)
+
+
+class ReportingHelperTests(unittest.TestCase):
+    def _record(self, probes, *, sampled_seconds=40.0,
+                sampled_fraction=0.5, fps=25) -> dict:
+        return {
+            "coverage": {"sampledSeconds": sampled_seconds,
+                         "fractionOfRuntime": sampled_fraction},
+            "source": {
+                "frameRate": {"numerator": fps, "denominator": 1},
+                "sourceTimebase": {"numerator": 1, "denominator": 1000},
+            },
+            "windows": [{"probe": probe} for probe in probes],
+            "summary": {},
+        }
+
+    def test_cut_columns_on_a_strobe_record_is_not_rankable(self) -> None:
+        # 20 candidates 0.05 s apart: a strobe, not cutting.
+        points = [index * 50 for index in range(20)]
+        record = self._record([
+            cut_probe(points, timebase=(1, 1000), within_shot=10,
+                      cut_separated=10, deltas=[0.1] * 10)])
+        columns = acq.cut_columns(record)
+        self.assertEqual(columns["candidate_count"], 20)
+        self.assertEqual(columns["median_gap_frames"], 1.25)
+        self.assertGreater(columns["burst_fraction"], 0.5)
+        self.assertIn("non-edit-scene-change", columns["validity_flags"])
+        self.assertIn("burst-heavy", columns["validity_flags"])
+        self.assertFalse(columns["rankable"])
+
+    def test_cut_columns_on_a_clean_record_is_rankable(self) -> None:
+        record = self._record([
+            cut_probe([0, 10000, 20000], timebase=(1, 1000), within_shot=10,
+                      cut_separated=0, deltas=[0.2] * 10)])
+        columns = acq.cut_columns(record)
+        self.assertEqual(columns["candidate_count"], 3)
+        self.assertEqual(columns["median_gap_frames"], 250.0)
+        self.assertEqual(columns["burst_fraction"], 0.0)
+        self.assertEqual(columns["delta_basis_pairs"], 10)
+        self.assertEqual(columns["within_shot_pairs"], 10)
+        self.assertEqual(columns["validity_flags"], [])
+        self.assertTrue(columns["rankable"])
+        self.assertEqual(columns["candidates_per_min"], 4.5)
+        low, high = columns["ci95"]
+        self.assertLess(low, high)
+
+    def test_cut_columns_prefer_stored_summary_values(self) -> None:
+        record = self._record([
+            cut_probe([0, 10000, 20000], timebase=(1, 1000), within_shot=10,
+                      cut_separated=0, deltas=[0.2] * 10)])
+        record["summary"] = {
+            "cutCandidateCount": 999, "cutsPerMinuteCi95": [1.0, 2.0],
+            "medianCutGapFrames": 12.0, "burstFraction": 0.1,
+            "withinShotPairs": 3, "cutSeparatedPairs": 4,
+            "deltaBasisPairs": 5, "validityFlags": ["burst-heavy"],
+        }
+        columns = acq.cut_columns(record)
+        self.assertEqual(columns["candidate_count"], 999)
+        self.assertEqual(columns["ci95"], (1.0, 2.0))
+        self.assertEqual(columns["median_gap_frames"], 12.0)
+        self.assertEqual(columns["validity_flags"], ["burst-heavy"])
+        self.assertFalse(columns["rankable"])
+
+    def test_coverage_distribution_gap_and_shares(self) -> None:
+        rows = [
+            {"coveragePercent": 10.0, "runtimeSeconds": 300.0,
+             "windowsMeasured": 4, "sampledSeconds": 40.0},
+            {"coveragePercent": 50.0, "runtimeSeconds": 300.0,
+             "windowsMeasured": 4, "sampledSeconds": 40.0},
+            {"coveragePercent": 15.0, "runtimeSeconds": 300.0,
+             "windowsMeasured": 4, "sampledSeconds": 40.0},
+            {"coveragePercent": 90.0, "runtimeSeconds": 300.0,
+             "windowsMeasured": 4, "sampledSeconds": 40.0},
+        ]
+        distribution = acq.coverage_distribution(rows)
+        self.assertEqual(distribution["min"], 10.0)
+        self.assertEqual(distribution["max"], 90.0)
+        self.assertEqual(distribution["median"], 32.5)
+        self.assertEqual(distribution["below20Pct"], 50.0)
+        self.assertEqual(distribution["below10Pct"], 0.0)
+        # usable end = 0.9 * 300 = 270; stride = 86; gap = 86 - 10 = 76.
+        self.assertEqual(distribution["gapSecondsMedian"], 76.0)
+
+    def test_comparability_block_shape_and_non_poolability(self) -> None:
+        block = acq.comparability_block(
+            site="Example", catalog_size=100, measured=25,
+            selection_rule="availability", provider_counts={"x": 25},
+            rendition_notes="one encoded rendition",
+            resolution_counts={"1280x720": 25}, fps_counts={"25": 25},
+            bitrate_counts={"2.0": 25},
+            coverage=acq.coverage_distribution([]),
+            duplicate_groups=acq.duplicate_summary([], "mediaSha256"),
+            still_overlap="none")
+        self.assertFalse(block["poolable"])
+        self.assertIn("same site", block["comparableWithin"])
+        self.assertIn("other sites", block["notComparableTo"])
+        self.assertEqual(block["site"], "Example")
+        self.assertEqual(block["catalogSize"], 100)
+        self.assertTrue(block["caveats"])
+        self.assertTrue(all(isinstance(item, str) for item in block["caveats"]))
+        self.assertTrue(any("poolable is false" in item
+                            for item in block["caveats"]))
+
+    def test_duplicate_summary_groups_two_records_sharing_a_sha(self) -> None:
+        summary = acq.duplicate_summary([
+            {"id": "a", "source": {"mediaSha256": "x" * 64}},
+            {"id": "b", "source": {"mediaSha256": "x" * 64}},
+            {"id": "c", "source": {"mediaSha256": "y" * 64}},
+        ], "source.mediaSha256")
+        self.assertEqual(summary["groups"], 1)
+        self.assertEqual(summary["extraRecords"], 1)
+        self.assertEqual(summary["uniqueMedia"], 2)
+        self.assertEqual(summary["groupsDetail"],
+                         [{"id": "x" * 64, "members": ["a", "b"]}])
+
+    def test_aggregate_extremes_excludes_a_non_rankable_leader(self) -> None:
+        rows = [
+            {"id": "clean", "sampledCutCandidatesPerMinute": 10.0,
+             "rankable": True, "validityFlags": []},
+            {"id": "strobe", "sampledCutCandidatesPerMinute": 639.0,
+             "rankable": False,
+             "validityFlags": ["burst-heavy", "non-edit-scene-change"]},
+        ]
+        extremes = acq.aggregate_extremes(
+            rows, "sampledCutCandidatesPerMinute", gate=True)
+        self.assertEqual(extremes["max"]["id"], "clean")
+        self.assertEqual(extremes["max"]["value"], 10.0)
+        self.assertEqual(extremes["excludedNonRankable"], 1)
+        self.assertEqual(extremes["excluded"][0]["id"], "strobe")
+        self.assertEqual(extremes["excluded"][0]["value"], 639.0)
+
+    def test_still_decode_dimensions_are_derived_from_the_source_aspect(
+            self) -> None:
+        result = acq.still_decode_dimensions(
+            {"imageWidth": 1080, "imageHeight": 454})
+        self.assertEqual((result["width"], result["height"]), (160, 67))
+        self.assertTrue(result["derived"])
+        stored = acq.still_decode_dimensions(
+            {"imageWidth": 1080, "imageHeight": 454,
+             "decodeWidth": 160, "decodeHeight": 68})
+        self.assertEqual((stored["width"], stored["height"]), (160, 68))
+        self.assertFalse(stored["derived"])
 
 
 class ProbeAdapterTests(unittest.TestCase):
