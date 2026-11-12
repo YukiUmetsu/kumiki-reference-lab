@@ -127,10 +127,11 @@ def run_ffprobe_json(
 
 def ffprobe_remote_json(
     url: str, *, allowed_hosts: Iterable[str], ffprobe: str = "ffprobe",
-    timeout: float = 90.0, attempts: int = 3,
+    timeout: float = 90.0, attempts: int = 3, allow_query: bool = False,
 ) -> dict[str, Any]:
     """Probe one allowlisted remote URL without downloading it."""
-    allowlisted_url(url, allowed_hosts=allowed_hosts, label="probe source URL")
+    allowlisted_url(url, allowed_hosts=allowed_hosts, label="probe source URL",
+                    allow_query=allow_query)
     return run_ffprobe_json(url, ffprobe=ffprobe, timeout=timeout,
                             attempts=attempts, network=True,
                             label="remote probe")
@@ -164,15 +165,18 @@ def metadata_from_probe(payload: dict[str, Any]) -> dict[str, Any]:
 
 def remote_source_metadata(
     url: str, *, allowed_hosts: Iterable[str], ffprobe: str = "ffprobe",
+    allow_query: bool = False,
 ) -> dict[str, Any]:
     """Cheap metadata-only probe used to reject oversized sources pre-download."""
     return metadata_from_probe(
-        ffprobe_remote_json(url, allowed_hosts=allowed_hosts, ffprobe=ffprobe))
+        ffprobe_remote_json(url, allowed_hosts=allowed_hosts, ffprobe=ffprobe,
+                            allow_query=allow_query))
 
 
 def ranged_source_metadata(
     url: str, *, allowed_hosts: Iterable[str], ffprobe: str = "ffprobe",
     probe_bytes: int = RANGED_PROBE_BYTES, timeout: float = 60.0,
+    allow_query: bool = False,
 ) -> dict[str, Any]:
     """Characterise a remote source from its first bounded bytes.
 
@@ -183,7 +187,8 @@ def ranged_source_metadata(
     which is enough to report duration and bitrate.
     """
     allowed_hosts = _freeze_hosts(allowed_hosts)
-    allowlisted_url(url, allowed_hosts=allowed_hosts, label="probe source URL")
+    allowlisted_url(url, allowed_hosts=allowed_hosts, label="probe source URL",
+                    allow_query=allow_query)
     if (type(probe_bytes) is not int
             or not 1 <= probe_bytes <= MAX_RANGED_PROBE_BYTES):
         raise ValueError("ranged probe byte budget is out of bounds")
@@ -191,7 +196,7 @@ def ranged_source_metadata(
         target = media_target(Path(directory), url)
         data = fetch_bytes(
             url, allowed_hosts=allowed_hosts, max_bytes=probe_bytes,
-            timeout=timeout, accept="video/*",
+            timeout=timeout, accept="video/*", allow_query=allow_query,
             headers={"Range": f"bytes=0-{probe_bytes - 1}"})
         if not data:
             raise ValueError("ranged probe returned no bytes")

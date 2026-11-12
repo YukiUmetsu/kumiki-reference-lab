@@ -3,8 +3,10 @@
 Safety contract, enforced by every public entry point here:
 
 - HTTPS only, and only hosts the caller passes in an explicit allowlist; no
-  credentials, custom ports, query strings, fragments, IP literals, or
-  loopback/private names.
+  credentials, custom ports, fragments, IP literals, or loopback/private names.
+  Query strings are refused by default; `allow_query=True` opts one call into
+  signed, cookie-free CDN URLs, and redirects are re-validated with the same
+  setting.
 - Downloads are byte-capped and land only in a directory the caller owns.
   Every byte (media, frames, stills, audio) is ephemeral: this package never
   deletes your files for you, it never keeps bytes, and it never writes media
