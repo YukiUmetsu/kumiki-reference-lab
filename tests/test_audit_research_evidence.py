@@ -7,13 +7,15 @@ root so the suite stays fast and order-independent.
 
 from __future__ import annotations
 
+import contextlib
 import copy
+import io
 import json
 import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.audit_research_evidence import run_audit
+from scripts.audit_research_evidence import main, run_audit
 
 GOOD_SHA = "a" * 64
 GOOD_IMAGE_SHA = "b" * 64
@@ -220,13 +222,23 @@ class AuditorTests(unittest.TestCase):
     def rules(self, report: dict[str, object]) -> list[str]:
         return [finding["rule"] for finding in report["findings"]]
 
+    def exit_code(self, *arguments: str) -> int:
+        with contextlib.redirect_stdout(io.StringIO()):
+            return main(["--root", str(self.root), *arguments])
+
     def test_clean_tree_has_no_findings(self) -> None:
-        self.write("videos", "1-demo.json", good_video())
-        self.write("stills", "1-demo.json", good_still())
+        self.write("videos", "1-demo.json", good_video(1))
+        # A still for a *different* work must not create a cross-family pair.
+        self.write("stills", "2-demo.json", good_still(2))
         report = run_audit(self.root)
         self.assertEqual(report["findings"], [])
         counts = report["sites"]["demo"]["recordCounts"]
         self.assertEqual(counts, {"video": 1, "still": 1, "unclassified": 0})
+
+    def test_clean_tree_exits_zero(self) -> None:
+        self.write("videos", "1-demo.json", good_video(1))
+        self.write("stills", "2-demo.json", good_still(2))
+        self.assertEqual(self.exit_code(), 0)
 
     def test_bad_window_arithmetic_is_error(self) -> None:
         record = good_video()
@@ -250,12 +262,80 @@ class AuditorTests(unittest.TestCase):
         report = run_audit(self.root)
         self.assertIn("arithmetic.coverage-fraction", self.rules(report))
 
-    def test_duplicate_sha_pair_is_one_error(self) -> None:
+    def test_duplicate_sha_pair_is_one_warning(self) -> None:
         self.write("videos", "1-demo.json", good_video(1))
         self.write("videos", "2-demo.json", good_video(2))
         report = run_audit(self.root)
-        rules = self.rules(report)
-        self.assertEqual(rules.count("duplicate.source-sha256"), 1)
+        findings = [finding for finding in report["findings"]
+                    if finding["rule"] == "duplicate.source-sha256"]
+        self.assertEqual(len(findings), 1)
+        finding = findings[0]
+        self.assertEqual(finding["severity"], "warning")
+        self.assertEqual(finding["class"], "same-media-same-site-same-family")
+        self.assertEqual(len(finding["group"]), 2)
+        self.assertEqual(
+            {member["path"] for member in finding["group"]},
+            {"demo/videos/1-demo.json", "demo/videos/2-demo.json"})
+        self.assertEqual(report["summary"]["bySeverity"]["error"], 0)
+        self.assertEqual(report["summary"]["duplicates"]["groups"], 1)
+        self.assertEqual(
+            report["summary"]["duplicates"]["byClass"][finding["class"]], 1)
+
+    def test_cross_site_duplicate_class(self) -> None:
+        other = self.root / "other" / "videos"
+        other.mkdir(parents=True)
+        (other / "9-other.json").write_text(
+            json.dumps(good_video(9)), encoding="utf-8")
+        self.write("videos", "1-demo.json", good_video(1))
+        report = run_audit(self.root)
+        findings = [finding for finding in report["findings"]
+                    if finding["rule"] == "duplicate.source-sha256"]
+        self.assertEqual(len(findings), 1)
+        self.assertEqual(findings[0]["class"], "same-media-cross-site")
+        self.assertEqual(
+            {member["site"] for member in findings[0]["group"]},
+            {"demo", "other"})
+
+    def test_cross_family_pair_is_one_expected_warning(self) -> None:
+        self.write("videos", "1-demo.json", good_video(1))
+        self.write("stills", "1-demo.json", good_still(1))
+        report = run_audit(self.root)
+        findings = [finding for finding in report["findings"]
+                    if finding["rule"] == "duplicate.media-cross-family"]
+        self.assertEqual(len(findings), 1)
+        finding = findings[0]
+        self.assertEqual(finding["severity"], "warning")
+        self.assertEqual(finding["class"], "same-media-cross-family")
+        self.assertEqual(
+            {(member["site"], member["family"], member["id"])
+             for member in finding["group"]},
+            {("demo", "video", 1), ("demo", "still", 1)})
+        self.assertIn("expected", finding["detail"])
+        self.assertEqual(report["summary"]["bySeverity"]["error"], 0)
+
+    def test_warnings_only_tree_exits_zero(self) -> None:
+        self.write("videos", "1-demo.json", good_video(1))
+        self.write("videos", "2-demo.json", good_video(2))
+        self.assertEqual(self.exit_code(), 0)
+
+    def test_strict_duplicates_exits_one(self) -> None:
+        self.write("videos", "1-demo.json", good_video(1))
+        self.write("videos", "2-demo.json", good_video(2))
+        report = run_audit(self.root, strict_duplicates=True)
+        self.assertEqual(report["summary"]["bySeverity"]["error"], 1)
+        self.assertEqual(self.exit_code("--strict-duplicates"), 1)
+
+    def test_integrity_error_exits_one(self) -> None:
+        record = good_video()
+        record["coverage"]["fractionOfRuntime"] = 0.9
+        self.write("videos", "1-demo.json", record)
+        self.assertEqual(self.exit_code(), 1)
+
+    def test_duplicate_identity_is_still_an_error(self) -> None:
+        self.write("videos", "1-demo.json", good_video(1, sha="a" * 64))
+        self.write("videos", "2-demo.json", good_video(1, sha="c" * 64))
+        report = run_audit(self.root)
+        self.assertIn("duplicate.identity", self.rules(report))
         self.assertEqual(report["summary"]["bySeverity"]["error"], 1)
 
     def test_bad_histogram_still_is_error(self) -> None:
@@ -289,7 +369,7 @@ class AuditorTests(unittest.TestCase):
         report = run_audit(self.root)
         self.assertIn("index.count-mismatch", self.rules(report))
         self.assertEqual(report["summary"]["bySeverity"]["error"], 0)
-        self.assertEqual(report["summary"]["bySeverity"]["warn"], 1)
+        self.assertEqual(report["summary"]["bySeverity"]["warning"], 1)
 
     def test_site_filter(self) -> None:
         other = self.root / "other" / "videos"

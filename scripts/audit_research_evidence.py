@@ -6,9 +6,20 @@ The auditor walks site trees under ``--root`` (each a directory containing a
 internal consistency, cross-record duplicates, still quality, and index/tree
 reconciliation. It never downloads anything.
 
+Integrity violations (schema, identity, window arithmetic, consistency,
+histogram, unreadable JSON, unknown schema) are errors. Duplicate media is a
+warning: the source catalogues legitimately list one work under several
+categories or sites, and every work is expected to have both video and still
+evidence. Duplicate findings are aggregated one-per-group and classified as
+``same-media-same-site-same-family``, ``same-media-cross-site`` or
+``same-media-cross-family``; pass ``--strict-duplicates`` to promote them back
+to errors.
+
 Only the Python standard library is used. Run with::
 
     python scripts/audit_research_evidence.py --root research/analysis
+    python scripts/audit_research_evidence.py --root research/analysis \
+        --json-out /tmp/audit.json [--strict-duplicates]
 """
 
 from __future__ import annotations
@@ -67,6 +78,19 @@ STILL_METRIC_RANGES = (
     "edgeDensityProxy",
 )
 
+DUPLICATE_CLASS_SAME_SITE = "same-media-same-site-same-family"
+DUPLICATE_CLASS_CROSS_SITE = "same-media-cross-site"
+DUPLICATE_CLASS_CROSS_FAMILY = "same-media-cross-family"
+DUPLICATE_CLASSES = (
+    DUPLICATE_CLASS_SAME_SITE,
+    DUPLICATE_CLASS_CROSS_SITE,
+    DUPLICATE_CLASS_CROSS_FAMILY,
+)
+DUPLICATE_RULES = frozenset({
+    "duplicate.source-sha256",
+    "duplicate.media-cross-family",
+})
+
 MEDIA_EXTENSIONS = (
     ".mp4", ".mov", ".m4v", ".webm", ".mkv", ".avi", ".m2ts", ".ts",
     ".m4a", ".mp3", ".wav", ".aac", ".flac", ".ogg",
@@ -93,13 +117,17 @@ URL_SCHEME_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*://")
 # ---------------------------------------------------------------------------
 
 
-def _finding(rule: str, severity: str, path: str, detail: str) -> dict[str, str]:
-    return {
+def _finding(
+    rule: str, severity: str, path: str, detail: str, **extra: Any,
+) -> dict[str, Any]:
+    finding: dict[str, Any] = {
         "rule": rule,
         "severity": severity,
         "path": path,
         "detail": detail,
     }
+    finding.update(extra)
+    return finding
 
 
 def _is_number(value: Any) -> bool:
@@ -729,11 +757,11 @@ def _check_index(
         data, error = _read_json(index_path)
         if error is not None:
             findings.append(_finding(
-                "index.unreadable", "warn", rel, error))
+                "index.unreadable", "warning", rel, error))
             continue
         if not isinstance(data, dict):
             findings.append(_finding(
-                "index.unreadable", "warn", rel,
+                "index.unreadable", "warning", rel,
                 "index root is not an object"))
             continue
         counts = data.get("counts")
@@ -743,36 +771,48 @@ def _check_index(
             measured = len(records) if isinstance(records, list) else None
         if measured is None:
             findings.append(_finding(
-                "index.unreadable", "warn", rel,
+                "index.unreadable", "warning", rel,
                 "index has no usable measured count or records list"))
             continue
         folder_path = site_dir / folder
         on_disk = len(list(folder_path.glob("*.json"))) if folder_path.is_dir() else 0
         if measured != on_disk:
             findings.append(_finding(
-                "index.count-mismatch", "warn", rel,
+                "index.count-mismatch", "warning", rel,
                 f"index measured={measured} but {on_disk} {folder}/*.json on disk "
                 f"(delta {measured - on_disk:+d})"))
     return findings
 
 
-def run_audit(root: Path, sites: list[str] | None = None) -> dict[str, Any]:
-    """Audit ``root`` and return a JSON-serialisable report."""
+def run_audit(
+    root: Path, sites: list[str] | None = None,
+    strict_duplicates: bool = False,
+) -> dict[str, Any]:
+    """Audit ``root`` and return a JSON-serialisable report.
+
+    Duplicate-media findings are warnings by default; ``strict_duplicates``
+    promotes them to errors for an integrity push.
+    """
     root = root.resolve()
     requested = set(sites) if sites else None
     site_reports: dict[str, Any] = {}
     global_counts: dict[str, int] = {"video": 0, "still": 0, "unclassified": 0}
 
-    # Duplicate maps are scoped per family: a video record and a still record
-    # for the same work are the intended paired evidence, not duplicates.
-    sha_map: dict[tuple[str, str], list[str]] = defaultdict(list)
+    # Media duplicates are keyed by sha256 across families: the source
+    # catalogues repeat a work under several categories/sites, and byte
+    # identity is the only reliable signal for the same file. A video record
+    # and a still record for the same work intentionally have different bytes;
+    # that pairing is detected separately by work identity below.
+    sha_map: dict[str, list[dict[str, Any]]] = defaultdict(list)
     id_map: dict[tuple[str, str, str], list[str]] = defaultdict(list)
+    work_map: dict[tuple[str, str], dict[str, list[dict[str, Any]]]] = (
+        defaultdict(lambda: defaultdict(list)))
 
     for site_dir in discover_sites(root):
         site = site_dir.name
         if requested is not None and site not in requested:
             continue
-        findings: list[dict[str, str]] = []
+        findings: list[dict[str, Any]] = []
         counts = {"video": 0, "still": 0, "unclassified": 0}
 
         for entry in _load_records(site_dir):
@@ -820,11 +860,23 @@ def run_audit(root: Path, sites: list[str] | None = None) -> dict[str, Any]:
             elif family in ("still", None) and isinstance(record.get("still"), dict):
                 sha = record["still"].get("imageSha256")
             if isinstance(sha, str) and sha.strip():
-                sha_map[(family or "unknown", sha)].append(rel)
+                sha_map[sha.strip()].append({
+                    "site": site,
+                    "family": family or "unknown",
+                    "id": _identity_value(record),
+                    "path": rel,
+                })
 
             identity = _identity_value(record)
             if identity is not None:
                 id_map[(family or "unknown", site, str(identity))].append(rel)
+                if family in ("video", "still"):
+                    work_map[(site, str(identity))][family].append({
+                        "site": site,
+                        "family": family,
+                        "id": identity,
+                        "path": rel,
+                    })
 
         findings.extend(_check_index(site_dir, root))
         site_reports[site] = {
@@ -834,17 +886,63 @@ def run_audit(root: Path, sites: list[str] | None = None) -> dict[str, Any]:
         for family in counts:
             global_counts[family] += counts[family]
 
-    # Duplicate findings: one per group, anchored at the alphabetically first
-    # record so that cross-site groups still land in a deterministic site.
-    for (family, sha), paths in sha_map.items():
-        if len(paths) < 2:
+    duplicate_counts: dict[str, Any] = {
+        "groups": 0,
+        "byClass": {name: 0 for name in DUPLICATE_CLASSES},
+        "memberRecords": 0,
+    }
+    duplicate_severity = "error" if strict_duplicates else "warning"
+
+    def add_duplicate(
+        rule: str, duplicate_class: str,
+        members: list[dict[str, Any]], detail: str,
+    ) -> None:
+        members.sort(key=lambda member: (member["path"], member["site"],
+                                         member["family"]))
+        anchor = members[0]
+        target = site_reports.get(anchor["site"])
+        if target is None:
+            return
+        target["findings"].append(_finding(
+            rule, duplicate_severity, anchor["path"], detail,
+            **{"class": duplicate_class, "group": members}))
+        duplicate_counts["groups"] += 1
+        duplicate_counts["byClass"][duplicate_class] += 1
+        duplicate_counts["memberRecords"] += len(members)
+
+    def classify(members: list[dict[str, Any]]) -> str:
+        if len({member["family"] for member in members}) > 1:
+            return DUPLICATE_CLASS_CROSS_FAMILY
+        if len({member["site"] for member in members}) > 1:
+            return DUPLICATE_CLASS_CROSS_SITE
+        return DUPLICATE_CLASS_SAME_SITE
+
+    # Byte-identical media: one finding per sha256 group, anchored at the
+    # alphabetically first record so cross-site groups land deterministically.
+    for sha, members in sorted(sha_map.items()):
+        if len(members) < 2:
             continue
-        paths = sorted(paths)
-        site = paths[0].split("/", 1)[0]
-        site_reports[site]["findings"].append(_finding(
-            "duplicate.source-sha256", "error", paths[0],
-            f"sha256 {sha[:12]}... shared by {len(paths)} {family} records: "
-            + ", ".join(paths[1:])))
+        duplicate_class = classify(members)
+        sites = sorted({member["site"] for member in members})
+        families = sorted({member["family"] for member in members})
+        add_duplicate(
+            "duplicate.source-sha256", duplicate_class, members,
+            f"sha256 {sha[:12]}... shared by {len(members)} "
+            f"{'/'.join(families)} records across {', '.join(sites)}")
+
+    # Cross-family pairing: a video record and a still record for the same
+    # work intentionally have different bytes, so this is reported separately
+    # as expected evidence pairing rather than a byte duplicate.
+    for (site, identity), families in sorted(work_map.items()):
+        if not {"video", "still"} <= set(families):
+            continue
+        members = [member for group in families.values() for member in group]
+        add_duplicate(
+            "duplicate.media-cross-family", DUPLICATE_CLASS_CROSS_FAMILY, members,
+            f"work {identity} at {site} has both video and still evidence "
+            f"({len(members)} records); expected pairing, not duplicate bytes")
+
+    # Same-family identity reuse is a genuine bookkeeping error.
     for (family, site, identity), paths in id_map.items():
         if len(paths) < 2:
             continue
@@ -854,30 +952,38 @@ def run_audit(root: Path, sites: list[str] | None = None) -> dict[str, Any]:
             f"({site}, {identity}) appears in {len(paths)} {family} records: "
             + ", ".join(paths[1:])))
 
+    duplicate_counts["crossFamilyGroups"] = duplicate_counts["byClass"][
+        DUPLICATE_CLASS_CROSS_FAMILY]
+    duplicate_counts["byteIdenticalGroups"] = (
+        duplicate_counts["groups"] - duplicate_counts["crossFamilyGroups"])
+
     # Per-site and global summaries.
-    global_severity: dict[str, int] = {"error": 0, "warn": 0}
+    global_severity: dict[str, int] = {"error": 0, "warning": 0}
     global_rules: dict[str, dict[str, Any]] = defaultdict(
-        lambda: {"error": 0, "warn": 0, "severity": "warn"})
+        lambda: {"error": 0, "warning": 0, "severity": "warning"})
     for report in site_reports.values():
         findings = report["findings"]
-        by_severity = {"error": 0, "warn": 0}
+        by_severity = {"error": 0, "warning": 0}
         by_rule: dict[str, dict[str, Any]] = defaultdict(
-            lambda: {"error": 0, "warn": 0, "severity": "warn"})
+            lambda: {"error": 0, "warning": 0, "severity": "warning"})
         for finding in findings:
             severity = finding["severity"]
             by_severity[severity] = by_severity.get(severity, 0) + 1
             entry = by_rule[finding["rule"]]
             entry[severity] += 1
-            entry["severity"] = "error" if entry["error"] else "warn"
+            entry["severity"] = "error" if entry["error"] else "warning"
             global_severity[severity] += 1
             global_entry = global_rules[finding["rule"]]
             global_entry[severity] += 1
-            global_entry["severity"] = "error" if global_entry["error"] else "warn"
+            global_entry["severity"] = (
+                "error" if global_entry["error"] else "warning")
         findings.sort(key=lambda item: (item["severity"] != "error",
                                         item["rule"], item["path"]))
         report["bySeverity"] = by_severity
         report["byRule"] = {rule: dict(values)
                             for rule, values in sorted(by_rule.items())}
+        report["duplicateGroups"] = sum(
+            1 for finding in findings if finding["rule"] in DUPLICATE_RULES)
 
     all_findings = [finding for report in site_reports.values()
                     for finding in report["findings"]]
@@ -891,6 +997,7 @@ def run_audit(root: Path, sites: list[str] | None = None) -> dict[str, Any]:
             "bySeverity": global_severity,
             "byRule": {rule: dict(values)
                        for rule, values in sorted(global_rules.items())},
+            "duplicates": duplicate_counts,
         },
         "findings": all_findings,
     }
@@ -921,21 +1028,37 @@ def _write_json_atomic(path: Path, payload: Any) -> None:
 def _print_report(report: dict[str, Any]) -> None:
     print(f"root: {report['root']}")
     print()
-    header = f"{'site':<24} {'videos':>7} {'stills':>7} {'errors':>7} {'warns':>7}"
+    header = (f"{'site':<24} {'videos':>7} {'stills':>7} {'errors':>7} "
+              f"{'warnings':>9} {'dup groups':>10}")
     print(header)
     print("-" * len(header))
     for site, data in report["sites"].items():
         counts = data["recordCounts"]
         severity = data["bySeverity"]
         print(f"{site:<24} {counts['video']:>7} {counts['still']:>7} "
-              f"{severity['error']:>7} {severity['warn']:>7}")
+              f"{severity['error']:>7} {severity['warning']:>9} "
+              f"{data['duplicateGroups']:>10}")
     totals = report["summary"]["recordCounts"]
     severity = report["summary"]["bySeverity"]
     print("-" * len(header))
     print(f"{'GLOBAL':<24} {totals['video']:>7} {totals['still']:>7} "
-          f"{severity['error']:>7} {severity['warn']:>7}")
+          f"{severity['error']:>7} {severity['warning']:>9} "
+          f"{report['summary']['duplicates']['groups']:>10}")
     if totals["unclassified"]:
         print(f"unclassified records: {totals['unclassified']}")
+    print()
+
+    duplicates = report["summary"]["duplicates"]
+    by_class = duplicates["byClass"]
+    print(
+        f"duplicate media groups: {duplicates['groups']:,} "
+        f"(same-site {by_class[DUPLICATE_CLASS_SAME_SITE]:,}, "
+        f"cross-site {by_class[DUPLICATE_CLASS_CROSS_SITE]:,}, "
+        f"cross-family {by_class[DUPLICATE_CLASS_CROSS_FAMILY]:,})")
+    print(
+        f"  byte-identical groups: {duplicates['byteIdenticalGroups']:,} "
+        f"({duplicates['memberRecords']:,} records in all duplicate groups); "
+        "cross-family groups are expected video+still evidence for one work")
     print()
 
     print("rules:")
@@ -943,9 +1066,9 @@ def _print_report(report: dict[str, Any]) -> None:
     if not rules:
         print("  (none)")
     for rule, values in rules.items():
-        total = values["error"] + values["warn"]
-        print(f"  {values['severity']:<5} {rule:<38} {total:>6} "
-              f"(error={values['error']}, warn={values['warn']})")
+        total = values["error"] + values["warning"]
+        print(f"  {values['severity']:<7} {rule:<38} {total:>6} "
+              f"(error={values['error']}, warning={values['warning']})")
     print()
 
     print("per-site rules:")
@@ -954,7 +1077,7 @@ def _print_report(report: dict[str, Any]) -> None:
             continue
         parts = []
         for rule, values in data["byRule"].items():
-            total = values["error"] + values["warn"]
+            total = values["error"] + values["warning"]
             parts.append(f"{rule}={total}({values['severity']})")
         print(f"  {site}: " + ", ".join(parts))
     print()
@@ -963,8 +1086,12 @@ def _print_report(report: dict[str, Any]) -> None:
     if findings:
         print(f"findings ({len(findings)}):")
         for finding in findings:
-            print(f"  {finding['severity'].upper():<5} {finding['rule']:<38} "
+            print(f"  {finding['severity'].upper():<7} {finding['rule']:<38} "
                   f"{finding['path']}: {finding['detail']}")
+            if "class" in finding:
+                print(f"          [{finding['class']}] group: "
+                      + ", ".join(member["path"]
+                                  for member in finding["group"]))
     else:
         print("findings: none")
 
@@ -980,13 +1107,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--site", action="append", default=None, metavar="SLUG",
         help="restrict the audit to one site slug; repeatable")
+    parser.add_argument(
+        "--strict-duplicates", action="store_true",
+        help="promote duplicate-media findings back to errors")
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
-    report = run_audit(args.root, args.site)
+    report = run_audit(
+        args.root, args.site, strict_duplicates=args.strict_duplicates)
     if args.json_out is not None:
         _write_json_atomic(args.json_out, report)
     _print_report(report)
