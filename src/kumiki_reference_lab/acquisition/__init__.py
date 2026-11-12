@@ -35,9 +35,9 @@ from __future__ import annotations
 from .media import (
     DEFAULT_TEXT_LIMIT, DIRECT, HLS, IMAGE_SUFFIXES, METHOD_HLS_REMUX,
     METHOD_HTTP_DOWNLOAD, USER_AGENT, VIDEO_SUFFIXES, allowlisted_image_url,
-    allowlisted_url, allowlisted_video_url, check_downloaded, download_http,
-    download_media, fetch_bytes, fetch_text, image_target, media_target,
-    plan_hls_download,
+    allowlisted_url, allowlisted_video_url, ascii_url, check_downloaded,
+    download_http, download_media, fetch_bytes, fetch_text, image_target,
+    media_target, plan_hls_download,
 )
 from .probe import (
     ANALYZER_RIGHTS_STATUS, MAX_RANGED_PROBE_BYTES, RANGED_PROBE_BYTES, as_int,
@@ -68,8 +68,9 @@ __all__ = [
     "DEFAULT_TEXT_LIMIT", "DIRECT", "HLS", "IMAGE_SUFFIXES",
     "METHOD_HLS_REMUX", "METHOD_HTTP_DOWNLOAD", "USER_AGENT", "VIDEO_SUFFIXES",
     "allowlisted_image_url", "allowlisted_url", "allowlisted_video_url",
-    "check_downloaded", "download_http", "download_media", "fetch_bytes",
-    "fetch_text", "image_target", "media_target", "plan_hls_download",
+    "ascii_url", "check_downloaded", "download_http", "download_media",
+    "fetch_bytes", "fetch_text", "image_target", "media_target",
+    "plan_hls_download",
     # probe
     "ANALYZER_RIGHTS_STATUS", "MAX_RANGED_PROBE_BYTES", "RANGED_PROBE_BYTES",
     "as_int", "as_text", "ffprobe_remote_json", "finite_float",

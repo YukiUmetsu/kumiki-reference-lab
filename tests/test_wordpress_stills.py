@@ -663,6 +663,54 @@ class StillCollectionTests(unittest.TestCase):
         download.assert_not_called()
         self.assertFalse((out_dir / "stills").exists())
 
+    def test_accented_poster_url_is_recorded_as_the_fetched_ascii_iri(self) -> None:
+        """A raw UTF-8 ``og:image`` must not reach the ASCII request line."""
+        iri = ("https://www.stashmedia.tv/wp-content/uploads/"
+               "Ordinary-Folk-Rio-40°-André-_-STASH-MAGAZINE8.jpg")
+        encoded = ("https://www.stashmedia.tv/wp-content/uploads/"
+                   "Ordinary-Folk-Rio-40%C2%B0-Andr%C3%A9-_-"
+                   "STASH-MAGAZINE8.jpg")
+        row = wps.normalize_row(
+            wps.SITES[STASH],
+            stash_item(yoast_head_json={"og_image": [{
+                "url": iri, "width": 1200, "height": 630}]}),
+            {})
+        self.assertEqual(row["posterUrl"], encoded)
+        out_dir = self.root / "out"
+        fetched: list[str] = []
+
+        def fake_download(url: str, target: Path, **kwargs: object) -> Path:
+            # http.client writes the request line as ASCII; this is the exact
+            # failure that produced 22 stale failure rows.
+            url.encode("ascii")
+            fetched.append(url)
+            target.write_bytes(b"\xff\xd8\xff\xe0fake-jpeg")
+            return target
+
+        measured = {
+            "imageWidth": 1200, "imageHeight": 630, "imageCodec": "mjpeg",
+            "metrics": {
+                "meanDisplayLumaProxy": 0.35,
+                "meanSaturationProxy": 0.28,
+                "dominantHueFamily": "green",
+                "edgeDensityProxy": 0.06,
+                "lumaHistogram": [0.1, 0.2, 0.3, 0.2, 0.2],
+            },
+        }
+        with patch.object(wps, "download_http", side_effect=fake_download), \
+                patch.object(wps, "measure_still", return_value=measured):
+            record = wps.collect_still_one(STASH, row, out_dir)
+
+        self.assertEqual(fetched, [encoded])
+        self.assertTrue(record["still"]["imageUrl"].isascii())
+        self.assertEqual(record["still"]["imageUrl"], encoded)
+        self.assertEqual(record["poster"]["url"], encoded)
+        self.assertEqual(record["still"]["imageWidth"], 1200)
+        self.assertEqual(record["still"]["metrics"]["dominantHueFamily"],
+                         "green")
+        self.assertFalse(record["acquisition"]["imageRetained"])
+        self.assertEqual(list(out_dir.rglob("*.jpg")), [])
+
 
 class ReportTests(unittest.TestCase):
     def setUp(self) -> None:

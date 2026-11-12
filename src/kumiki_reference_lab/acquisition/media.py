@@ -13,7 +13,7 @@ import subprocess
 import time
 from pathlib import Path
 from typing import Any, Callable, Iterable
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import quote, urljoin, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 
 # Generic delivery modes. Callers map their own catalog vocabulary onto these.
@@ -54,6 +54,59 @@ def _freeze_hosts(allowed_hosts: Iterable[str]) -> Iterable[str]:
     if isinstance(allowed_hosts, (str, bytes)):
         return allowed_hosts
     return tuple(allowed_hosts)
+
+
+# Characters that may stand literally in a URI path, query, or fragment
+# (RFC 3986 ``pchar``/``sub-delims`` plus "/" and, for query/fragment, "?").
+# ``%`` is included so an existing percent-escape is never encoded twice.
+_PATH_SAFE = "/:@!$&'()*+,;=-._~%"
+_QUERY_SAFE = _PATH_SAFE + "?"
+
+
+def ascii_url(url: object) -> str:
+    """Return one http(s) URL as an ASCII URI, encoding an IRI's non-ASCII text.
+
+    WordPress hands out ``og:image`` values as IRIs: the path keeps the raw
+    UTF-8 characters of the uploaded filename (``André``, ``Rio 40°``, a
+    ``U+2028`` separator). ``http.client`` writes the request line as ASCII, so
+    such a URL raises ``UnicodeEncodeError`` before a request is ever sent and
+    can never be fetched as-is.
+
+    Path, query, and fragment are percent-encoded as UTF-8. ``%`` stays safe, so
+    an existing escape is preserved, an already-encoded URL passes through
+    byte-identical, and nothing is ever double-encoded. Scheme, host, port, and
+    userinfo are left exactly as supplied.
+
+    Only ``http``/``https`` with a host is accepted. A non-ASCII *host* is
+    refused instead of being punycoded: silently mapping ``exämple.com`` onto an
+    IDN form would make a homograph indistinguishable from the allowlisted host
+    it imitates, and this module never converts a third-party host on its own.
+    """
+    if not isinstance(url, str) or not url.strip():
+        raise ValueError("URL is absent")
+    try:
+        parsed = urlsplit(url)
+    except ValueError:
+        raise ValueError("URL is not a parsable URL") from None
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError("URL must use http or https")
+    host = parsed.hostname
+    if not host:
+        raise ValueError("URL has no host")
+    if not host.isascii():
+        raise ValueError(
+            "URL host must be ASCII; internationalized (IDN) hosts are refused "
+            "to avoid homograph impersonation")
+    path = quote(parsed.path, safe=_PATH_SAFE)
+    query = quote(parsed.query, safe=_QUERY_SAFE)
+    fragment = quote(parsed.fragment, safe=_QUERY_SAFE)
+    normalized = url
+    if (path, query, fragment) != (parsed.path, parsed.query, parsed.fragment):
+        normalized = urlunsplit(
+            (parsed.scheme, parsed.netloc, path, query, fragment))
+    if not normalized.isascii():
+        raise ValueError("URL contains non-ASCII text that cannot be encoded")
+    return normalized
 
 
 ANY_PUBLIC_HOST = "*"
@@ -131,9 +184,18 @@ def allowlisted_url(
     relaxes only the query check: a fragment is still refused and every other
     invariant, including the exact host allowlist, still applies. The default
     is ``False``, so generic scraping policy is unchanged.
+
+    The URL is first converted to its ASCII URI form with :func:`ascii_url`, so
+    a percent-encoded IRI (a WordPress ``og:image`` with an accented filename)
+    is validated — and returned — in exactly the form that will be requested.
+    An already-ASCII URL is returned byte-identical.
     """
     if not isinstance(url, str) or not url.strip():
         raise ValueError(f"{label} is absent")
+    try:
+        url = ascii_url(url)
+    except ValueError as error:
+        raise ValueError(f"{label}: {error}") from None
     try:
         parsed = urlsplit(url)
     except ValueError:
@@ -234,6 +296,7 @@ def fetch_bytes(
     """
     _checked_budget(max_bytes, label="read byte budget")
     allowed_hosts = _freeze_hosts(allowed_hosts)
+    url = ascii_url(url)
     allowlisted_url(url, allowed_hosts=allowed_hosts, allow_query=allow_query)
     request_headers = {"User-Agent": user_agent}
     if accept is not None:
@@ -260,6 +323,7 @@ def fetch_text(
     limit: int = DEFAULT_TEXT_LIMIT, allow_query: bool = False,
 ) -> str:
     """Read at most ``limit`` bytes of UTF-8 text from one allowlisted URL."""
+    url = ascii_url(url)
     return fetch_bytes(
         url, allowed_hosts=allowed_hosts, max_bytes=limit, timeout=timeout,
         allow_query=allow_query,
@@ -280,6 +344,7 @@ def download_http(
     """
     _checked_budget(max_bytes, label="download byte budget")
     allowed_hosts = _freeze_hosts(allowed_hosts)
+    url = ascii_url(url)
     allowlisted_url(url, allowed_hosts=allowed_hosts, allow_query=allow_query)
     request = Request(url, headers={"Accept": accept, "User-Agent": user_agent})
     total = 0
@@ -329,6 +394,7 @@ def plan_hls_download(
     variant, and audio URLs alike.
     """
     allowed_hosts = _freeze_hosts(allowed_hosts)
+    master_url = ascii_url(master_url)
     allowlisted_url(master_url, allowed_hosts=allowed_hosts,
                     label="HLS master URL", allow_query=allow_query)
     if type(max_width) is not int or max_width < 1:
@@ -349,7 +415,7 @@ def plan_hls_download(
             attributes = _parse_attributes(line)
             if attributes.get("TYPE") != "AUDIO" or not attributes.get("URI"):
                 continue
-            uri = urljoin(master_url, attributes["URI"])
+            uri = ascii_url(urljoin(master_url, attributes["URI"]))
             audio_by_group.setdefault(attributes.get("GROUP-ID") or "", uri)
             if first_audio_url is None:
                 first_audio_url = uri
@@ -360,7 +426,7 @@ def plan_hls_download(
             variants.append({
                 "width": int(resolution.group(1)) if resolution else 0,
                 "height": int(resolution.group(2)) if resolution else 0,
-                "url": urljoin(master_url, line),
+                "url": ascii_url(urljoin(master_url, line)),
                 "audioGroup": pending.get("AUDIO") or "",
             })
             pending = None
@@ -436,6 +502,7 @@ def download_media(
 
     allowed_hosts = _freeze_hosts(allowed_hosts)
     if provider != ytdlp_adapter.YOUTUBE:
+        url = ascii_url(url)
         allowlisted_url(url, allowed_hosts=allowed_hosts,
                         label="video source URL", allow_query=allow_query)
     if provider not in (HLS, DIRECT, ytdlp_adapter.YOUTUBE):
