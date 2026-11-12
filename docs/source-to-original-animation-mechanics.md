@@ -67,6 +67,42 @@ Before implementing, inspect the latest component source, registry IDs,
 Storybook previews and current documentation. Prefer composing existing
 primitives where possible rather than introducing redundant components.
 
+## First merged implementation: Two-Lane Swap
+
+As of the merged
+[kumiki-ui PR #128](https://github.com/YukiUmetsu/kumiki-ui/pull/128),
+the original **two-lane-swap** animation is an actual, installable
+registry pack at kumiki-ui commit
+`662f60704851c01c0e6ef58244132fe9f29896ac`.
+
+The directly implemented entrypoints are:
+
+- `registry/motion/two-lane-swap.ts`:
+  `compileTwoLaneSwap`, `evaluateTwoLaneSwap`
+- `registry/motion/two-lane-swap-react.tsx`:
+  `TwoLaneSwapSvg`
+
+`originalMotionMechanicIdeas` now adds
+`availableOriginalImplementation` to **only** the
+`horizontal-image-order-reversal` / `two-lane-swap` proposal.
+It pins that Git commit and registry name, and records that
+compiler/renderer structural CI passed. The other six ideas remain
+unimplemented proposal concepts in this cross-repository bridge.
+
+**This is not an automatic reference-video-to-animation adapter.**
+The published component requires original artwork, a designed stage,
+subject bounding radii, screen lane positions and newly authored
+frame timing. Source-video normalized bounding boxes cannot be
+passed directly into the compiler to recreate the source footage.
+The original research field still marks
+`registryApiVerifiedForThisRecipe=false` because no automatic
+mapping from image measurements to a valid authored scene API exists.
+
+The library validates source-independent, frame-by-frame subject
+clearance and viewport boundaries. TypeScript, focused unit tests and
+registry validation passed, while **independent human visual approval
+and browser screenshots remain pending**, not certified.
+
 ## Craft and animation-quality gates
 
 For each approved new template:
