@@ -13,15 +13,21 @@ Safety contract, enforced by every public entry point here:
   into the evidence tree.
 - No cookies, logins, tokens, DRM circumvention, or access-control bypass.
   Public availability is not a licence; callers supply their own rights basis
-  and attestation text.
+  and attestation text. YouTube acquisition is yt-dlp-mediated but still
+  cookie-free and login-free: no `--cookies-from-browser`, no `--netrc`, no
+  DRM/PO-token/nsig workaround beyond stock yt-dlp, and a provider refusal
+  (403, login-only, unsupported client) is never retried. Media is always
+  ephemeral, and a current `yt-dlp` (>= 2026.10) is required because older
+  builds return HTTP 403 on public YouTube videos.
 - Only numeric measurements and hashes leave this package. Builders return
   neutral evidence payloads; the caller supplies schemas, limits, and subject
   identity fields, and prints its own progress.
 
 Modules: :mod:`media` (allowlisting, bounded fetch, download, HLS),
-:mod:`probe` (ffprobe adapters), :mod:`windows` (window planning and evidence),
-:mod:`stills` (still measurement), :mod:`store` (atomic writes, indexes),
-:mod:`runner` (generic batch loop). Nothing here needs ffmpeg at import time.
+:mod:`ytdlp` (bounded, cookie-free YouTube acquisition), :mod:`probe` (ffprobe
+adapters), :mod:`windows` (window planning and evidence), :mod:`stills` (still
+measurement), :mod:`store` (atomic writes, indexes), :mod:`runner` (generic
+batch loop). Nothing here needs ffmpeg at import time.
 """
 
 from __future__ import annotations
@@ -51,6 +57,11 @@ from .windows import (
     MAX_WINDOWS, MAX_WINDOW_SECONDS, build_video_evidence, measure_windows,
     plan_windows, summarize_probes,
 )
+from .ytdlp import (
+    DEFAULT_YOUTUBE_HOSTS, METHOD_YTDLP_MERGE, YOUTUBE, YtDlpError,
+    YtDlpRefusedError, allowlisted_youtube_url, classify_ytdlp_failure,
+    download_via_ytdlp, youtube_source_metadata,
+)
 
 __all__ = [
     # media
@@ -77,4 +88,8 @@ __all__ = [
     # windows
     "MAX_WINDOWS", "MAX_WINDOW_SECONDS", "build_video_evidence",
     "measure_windows", "plan_windows", "summarize_probes",
+    # ytdlp
+    "DEFAULT_YOUTUBE_HOSTS", "METHOD_YTDLP_MERGE", "YOUTUBE", "YtDlpError",
+    "YtDlpRefusedError", "allowlisted_youtube_url", "classify_ytdlp_failure",
+    "download_via_ytdlp", "youtube_source_metadata",
 ]

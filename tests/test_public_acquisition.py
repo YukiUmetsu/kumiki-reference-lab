@@ -861,5 +861,397 @@ class BatchRunnerTests(unittest.TestCase):
         self.assertIn("Signature=[redacted]", message)
 
 
+class YtDlpUrlTests(unittest.TestCase):
+    def test_accepts_the_four_single_video_shapes(self) -> None:
+        for url in (
+            "https://www.youtube.com/watch?v=ZfJOq_B_XBM",
+            "https://youtube.com/watch?v=ZfJOq_B_XBM",
+            "https://m.youtube.com/watch?v=ZfJOq_B_XBM",
+            "https://www.youtube.com/shorts/ZfJOq_B_XBM",
+            "https://www.youtube.com/embed/ZfJOq_B_XBM",
+            "https://youtu.be/ZfJOq_B_XBM",
+        ):
+            with self.subTest(url=url):
+                self.assertEqual(acq.allowlisted_youtube_url(url), url)
+
+    def test_rejects_playlists_channels_live_and_host_tricks(self) -> None:
+        for url in (
+            "http://www.youtube.com/watch?v=ZfJOq_B_XBM",
+            "https://www.youtube.com/playlist?list=PL123",
+            "https://www.youtube.com/watch?v=ZfJOq_B_XBM&list=PL123",
+            "https://www.youtube.com/watch?v=ZfJOq_B_XBM&t=10s",
+            "https://www.youtube.com/watch?v=short",
+            "https://www.youtube.com/watch?v=ZfJOq_B_XBM#frag",
+            "https://www.youtube.com/channel/UC1234567890",
+            "https://www.youtube.com/live/ZfJOq_B_XBM",
+            "https://www.youtube.com/watch/",
+            "https://www.youtube.com/shorts/ZfJOq_B_XBM/extra",
+            "https://youtu.be/ZfJOq_B_XBM?t=1",
+            "https://youtu.be/short",
+            "https://evil.example/watch?v=ZfJOq_B_XBM",
+            "https://youtube.com.evil.example/watch?v=ZfJOq_B_XBM",
+            "https://user:pass@youtube.com/watch?v=ZfJOq_B_XBM",
+            "https://www.youtube.com:8443/watch?v=ZfJOq_B_XBM",
+            "",
+            "   ",
+            None,
+            42,
+        ):
+            with self.subTest(url=url), self.assertRaises(ValueError):
+                acq.allowlisted_youtube_url(url)
+
+    def test_honours_a_caller_supplied_host_allowlist(self) -> None:
+        self.assertEqual(
+            acq.allowlisted_youtube_url(
+                "https://youtu.be/ZfJOq_B_XBM", allowed_hosts=("youtu.be",)),
+            "https://youtu.be/ZfJOq_B_XBM")
+        with self.assertRaisesRegex(ValueError, "not allowlisted"):
+            acq.allowlisted_youtube_url(
+                "https://www.youtube.com/watch?v=ZfJOq_B_XBM",
+                allowed_hosts=("youtu.be",))
+
+
+class YtDlpDownloadTests(unittest.TestCase):
+    url = "https://www.youtube.com/watch?v=ZfJOq_B_XBM"
+    forbidden_flags = (
+        "--cookies", "--cookies-from-browser", "--username", "--password",
+        "--netrc", "--netrc-file", "--browser", "--remote-components",
+        "--config-location",
+    )
+
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.destination = self.root / "media"
+        self.destination.mkdir()
+
+    def _clear(self) -> None:
+        for entry in self.destination.iterdir():
+            entry.unlink()
+
+    def _run_download(self, fake_run, **kwargs):
+        with patch.object(acq.ytdlp.subprocess, "run", side_effect=fake_run):
+            return acq.download_via_ytdlp(
+                self.url, self.destination, **kwargs)
+
+    def test_emits_only_bounded_flags_and_no_cookie_or_login_state(self) -> None:
+        captured: dict = {}
+
+        def fake_run(args, **kwargs):  # noqa: ANN001 - test double
+            captured["args"] = list(args)
+            captured["kwargs"] = dict(kwargs)
+            (Path(kwargs["cwd"]) / "source.mp4").write_bytes(b"x" * 64)
+            return subprocess.CompletedProcess(args, 0, b"", b"")
+
+        result = self._run_download(fake_run)
+        self.assertEqual(result, self.destination / "source.mp4")
+        args = captured["args"]
+        self.assertEqual(args[0], "yt-dlp")
+        self.assertEqual(args[-2:], ["--", self.url])
+        for flag in (
+            "--ignore-config", "--no-plugin-dirs", "--no-playlist",
+            "--no-mtime", "--no-progress", "--no-continue", "--no-part",
+            "--no-cache-dir", "--no-write-info-json", "--merge-output-format",
+        ):
+            self.assertIn(flag, args)
+        self.assertEqual(args[args.index("--playlist-items") + 1], "1")
+        self.assertEqual(args[args.index("--retries") + 1], "1")
+        self.assertEqual(args[args.index("--fragment-retries") + 1], "1")
+        self.assertEqual(args[args.index("--concurrent-fragments") + 1], "1")
+        self.assertEqual(args[args.index("--socket-timeout") + 1], "15")
+        self.assertEqual(args[args.index("--max-filesize") + 1], "250M")
+        self.assertEqual(args[args.index("--paths") + 1],
+                         str(self.destination.resolve()))
+        self.assertEqual(args[args.index("--output") + 1], "source.%(ext)s")
+        for flag in self.forbidden_flags:
+            self.assertFalse(
+                any(arg == flag or arg.startswith(flag + "=") for arg in args),
+                f"{flag} must never be emitted")
+        self.assertIs(captured["kwargs"]["stdout"], subprocess.DEVNULL)
+        self.assertEqual(captured["kwargs"]["timeout"], 300.0)
+        self.assertEqual(captured["kwargs"]["cwd"], self.destination)
+
+    def test_format_selector_prefers_h264_and_respects_the_height_cap(self) -> None:
+        selectors: list[str] = []
+
+        def fake_run(args, **kwargs):  # noqa: ANN001 - test double
+            selectors.append(args[args.index("--format") + 1])
+            (Path(kwargs["cwd"]) / "source.mp4").write_bytes(b"x" * 8)
+            return subprocess.CompletedProcess(args, 0, b"", b"")
+
+        self._run_download(fake_run, max_height=480, prefer_h264=True)
+        self._clear()
+        self._run_download(fake_run, max_height=480, prefer_h264=False)
+        self.assertIn("[height<=480][vcodec^=avc1]", selectors[0])
+        self.assertIn("[acodec^=mp4a]", selectors[0])
+        self.assertNotIn("avc1", selectors[1])
+        self.assertIn("[height<=480]", selectors[1])
+
+    def test_requires_an_empty_real_directory(self) -> None:
+        def fake_run(args, **kwargs):  # noqa: ANN001 - test double
+            raise AssertionError("no process may start")
+
+        occupied = self.root / "occupied"
+        occupied.mkdir()
+        (occupied / "leftover.txt").write_text("x", encoding="utf-8")
+        with patch.object(acq.ytdlp.subprocess, "run", side_effect=fake_run):
+            with self.assertRaisesRegex(ValueError, "must be empty"):
+                acq.download_via_ytdlp(self.url, occupied)
+            with self.assertRaisesRegex(ValueError, "not a real directory"):
+                acq.download_via_ytdlp(self.url, self.root / "missing")
+        link = self.root / "linked"
+        link.symlink_to(occupied, target_is_directory=True)
+        with patch.object(acq.ytdlp.subprocess, "run", side_effect=fake_run):
+            with self.assertRaisesRegex(ValueError, "not a real directory"):
+                acq.download_via_ytdlp(self.url, link)
+
+    def test_rejects_out_of_bounds_parameters_before_running(self) -> None:
+        def fake_run(args, **kwargs):  # noqa: ANN001 - test double
+            raise AssertionError("no process may start")
+
+        for kwargs in (
+            {"max_bytes": 0}, {"max_height": 0}, {"timeout_seconds": 5},
+            {"prefer_h264": "yes"}, {"yt_dlp": ""},
+        ):
+            with self.subTest(kwargs=kwargs), \
+                    patch.object(acq.ytdlp.subprocess,
+                                 "run", side_effect=fake_run), \
+                    self.assertRaises(ValueError):
+                acq.download_via_ytdlp(self.url, self.destination, **kwargs)
+
+    def test_enforces_exactly_one_regular_known_suffix_file(self) -> None:
+        def run_writing(*names: str, size: int = 8):
+            def fake_run(args, **kwargs):  # noqa: ANN001 - test double
+                for name in names:
+                    (Path(kwargs["cwd"]) / name).write_bytes(b"x" * size)
+                return subprocess.CompletedProcess(args, 0, b"", b"")
+
+            return fake_run
+
+        for fake_run in (
+            run_writing(),
+            run_writing("source.mp4", "source.webm"),
+            run_writing("source.txt"),
+            run_writing("source.mp4", size=0),
+        ):
+            self._clear()
+            with self.subTest(fake_run=fake_run), \
+                    patch.object(acq.ytdlp.subprocess,
+                                 "run", side_effect=fake_run), \
+                    self.assertRaises(acq.YtDlpError):
+                acq.download_via_ytdlp(self.url, self.destination)
+
+    def test_rejects_symlinked_and_oversized_results(self) -> None:
+        outside = self.root / "outside.mp4"
+        outside.write_bytes(b"x" * 8)
+
+        def symlink_run(args, **kwargs):  # noqa: ANN001 - test double
+            (Path(kwargs["cwd"]) / "source.mp4").symlink_to(outside)
+            return subprocess.CompletedProcess(args, 0, b"", b"")
+
+        with patch.object(acq.ytdlp.subprocess, "run", side_effect=symlink_run):
+            with self.assertRaisesRegex(acq.YtDlpError, "no regular"):
+                acq.download_via_ytdlp(self.url, self.destination)
+        self._clear()
+
+        def oversize_run(args, **kwargs):  # noqa: ANN001 - test double
+            (Path(kwargs["cwd"]) / "source.mp4").write_bytes(b"x" * 64)
+            return subprocess.CompletedProcess(args, 0, b"", b"")
+
+        with patch.object(acq.ytdlp.subprocess, "run", side_effect=oversize_run):
+            with self.assertRaisesRegex(acq.YtDlpError, "size cap"):
+                acq.download_via_ytdlp(
+                    self.url, self.destination, max_bytes=32)
+
+    def test_provider_refusal_is_distinct_and_never_retried(self) -> None:
+        stderr = (b"ERROR: [youtube] ZfJOq_B_XBM: HTTP Error 403: Forbidden; "
+                  b"visit https://www.youtube.com/watch?v=ZfJOq_B_XBM")
+        fake = subprocess.CompletedProcess([], 1, b"", stderr)
+        with patch.object(acq.ytdlp.subprocess, "run",
+                          return_value=fake) as run:
+            with self.assertRaises(acq.YtDlpRefusedError) as raised:
+                acq.download_via_ytdlp(self.url, self.destination)
+        self.assertEqual(run.call_count, 1)
+        self.assertEqual(raised.exception.reason, "provider-refused")
+        message = str(raised.exception)
+        for leaked in ("403", "Forbidden", "youtube.com", "ERROR"):
+            self.assertNotIn(leaked, message)
+
+    def test_outdated_client_and_login_only_are_refusals(self) -> None:
+        for stderr in (
+            b"ERROR: Unsupported client 'web_safari'; please update yt-dlp",
+            b"ERROR: Sign in to confirm you're not a bot",
+            b"ERROR: This video is only available when logged-in",
+            b"WARNING: nsig extraction failed",
+        ):
+            with self.subTest(stderr=stderr), \
+                    patch.object(
+                        acq.ytdlp.subprocess, "run",
+                        return_value=subprocess.CompletedProcess(
+                            [], 1, b"", stderr)), \
+                    self.assertRaises(acq.YtDlpRefusedError):
+                acq.download_via_ytdlp(self.url, self.destination)
+        self.assertEqual(acq.classify_ytdlp_failure(b"connection reset"),
+                         "transient")
+
+    def test_plain_transient_failure_does_not_leak_stderr(self) -> None:
+        stderr = b"ERROR: unable to connect to https://secret.example/x"
+        with patch.object(
+                acq.ytdlp.subprocess, "run",
+                return_value=subprocess.CompletedProcess([], 1, b"", stderr)):
+            with self.assertRaises(acq.YtDlpError) as raised:
+                acq.download_via_ytdlp(self.url, self.destination)
+        self.assertNotIsInstance(raised.exception, acq.YtDlpRefusedError)
+        self.assertEqual(raised.exception.reason, "transient")
+        self.assertNotIn("secret.example", str(raised.exception))
+
+    def test_missing_executable_is_a_contract_error(self) -> None:
+        with patch.object(acq.ytdlp.subprocess, "run",
+                          side_effect=FileNotFoundError("yt-dlp")):
+            with self.assertRaisesRegex(acq.YtDlpError, "not installed"):
+                acq.download_via_ytdlp(self.url, self.destination)
+
+
+class YtDlpMetadataTests(unittest.TestCase):
+    url = "https://www.youtube.com/watch?v=ZfJOq_B_XBM"
+
+    def _metadata(self, payload, *, returncode: int = 0,
+                  stderr: bytes = b"") -> dict:
+        body = payload if isinstance(payload, bytes) else json.dumps(
+            payload).encode("utf-8")
+        fake = subprocess.CompletedProcess([], returncode, body, stderr)
+        with patch.object(acq.ytdlp.subprocess, "run", return_value=fake):
+            return acq.youtube_source_metadata(
+                self.url, yt_dlp="/opt/yt-dlp")
+
+    def test_reduces_the_info_json_to_the_neutral_shape(self) -> None:
+        metadata = self._metadata({
+            "duration": 42.5, "width": 1280, "height": 720, "fps": 29.97,
+            "vcodec": "avc1.64001F", "tbr": 1200.0, "filesize": 1_234_567,
+            "title": "Demo clip", "format_id": "137",
+        })
+        self.assertEqual(metadata["durationSeconds"], 42.5)
+        self.assertEqual((metadata["width"], metadata["height"]), (1280, 720))
+        self.assertEqual(metadata["fps"], 29.97)
+        self.assertEqual(metadata["codec"], "avc1.64001F")
+        self.assertEqual(metadata["bitRate"], 1_200_000.0)
+        self.assertEqual(metadata["sizeBytes"], 1_234_567)
+        self.assertEqual(metadata["estimatedBytes"], 6_375_000.0)
+        self.assertEqual(metadata["title"], "Demo clip")
+        self.assertEqual(metadata["formatId"], "137")
+
+    def test_missing_fields_stay_none_instead_of_being_invented(self) -> None:
+        metadata = self._metadata({"duration": 10})
+        self.assertEqual(metadata["durationSeconds"], 10.0)
+        for field in ("width", "height", "fps", "codec", "bitRate",
+                      "sizeBytes", "estimatedBytes", "title", "formatId"):
+            self.assertIsNone(metadata[field], field)
+        estimated = self._metadata({"duration": 10, "vbr": 800})
+        self.assertEqual(estimated["bitRate"], 800_000.0)
+        self.assertEqual(estimated["estimatedBytes"], 1_000_000.0)
+        self.assertEqual(estimated["sizeBytes"], 1_000_000.0)
+
+    def test_uses_dump_single_json_without_media_or_login_state(self) -> None:
+        captured: dict = {}
+
+        def fake_run(args, **kwargs):  # noqa: ANN001 - test double
+            captured["args"] = list(args)
+            return subprocess.CompletedProcess(args, 0, b"{}", b"")
+
+        with patch.object(acq.ytdlp.subprocess, "run", side_effect=fake_run):
+            acq.youtube_source_metadata(self.url, yt_dlp="/opt/yt-dlp")
+        args = captured["args"]
+        self.assertEqual(args[0], "/opt/yt-dlp")
+        self.assertIn("--dump-single-json", args)
+        self.assertIn("--skip-download", args)
+        self.assertIn("--no-warnings", args)
+        self.assertEqual(args[-2:], ["--", self.url])
+        for flag in ("--cookies", "--cookies-from-browser", "--username",
+                     "--password", "--netrc", "--browser",
+                     "--remote-components"):
+            self.assertNotIn(flag, args)
+
+    def test_metadata_failures_are_classified_and_never_echo_stderr(self) -> None:
+        with self.assertRaises(acq.YtDlpRefusedError):
+            self._metadata(b"", returncode=1,
+                           stderr=b"ERROR: HTTP Error 403: Forbidden")
+        with self.assertRaisesRegex(acq.YtDlpError, "unusable metadata"):
+            self._metadata(b"not-json")
+
+    def test_validates_the_url_before_starting_a_process(self) -> None:
+        with patch.object(acq.ytdlp.subprocess, "run") as run:
+            with self.assertRaisesRegex(ValueError, "single-video"):
+                acq.youtube_source_metadata(
+                    "https://www.youtube.com/playlist?list=PL123")
+        run.assert_not_called()
+
+
+class YoutubeDownloadMediaTests(unittest.TestCase):
+    url = "https://www.youtube.com/watch?v=ZfJOq_B_XBM"
+
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.directory = Path(self.temp.name)
+
+    def test_dispatches_youtube_to_the_bounded_ytdlp_path(self) -> None:
+        target = self.directory / "source.mp4"
+        with patch.object(acq.ytdlp, "youtube_source_metadata",
+                          return_value={"durationSeconds": 30.0}) as metadata, \
+                patch.object(acq.ytdlp, "download_via_ytdlp",
+                             return_value=target) as download:
+            path, method = acq.download_media(
+                self.url, acq.YOUTUBE, self.directory,
+                allowed_hosts=("*",), max_bytes=4096,
+                max_duration_seconds=60.0)
+        self.assertEqual((path, method), (target, acq.METHOD_YTDLP_MERGE))
+        metadata.assert_called_once()
+        download.assert_called_once()
+        self.assertEqual(download.call_args.args[0], self.url)
+        self.assertEqual(download.call_args.args[1], self.directory)
+
+    def test_pre_rejects_over_long_videos_before_downloading(self) -> None:
+        with patch.object(acq.ytdlp, "youtube_source_metadata",
+                          return_value={"durationSeconds": 1000.0}), \
+                patch.object(acq.ytdlp, "download_via_ytdlp") as download:
+            with self.assertRaisesRegex(ValueError, "duration budget"):
+                acq.download_media(
+                    self.url, acq.YOUTUBE, self.directory,
+                    allowed_hosts=("*",), max_bytes=4096,
+                    max_duration_seconds=60.0)
+        download.assert_not_called()
+
+    def test_unavailable_metadata_does_not_block_the_download(self) -> None:
+        target = self.directory / "source.mp4"
+        messages: list[str] = []
+        with patch.object(acq.ytdlp, "youtube_source_metadata",
+                          side_effect=ValueError("metadata pre-check failed")), \
+                patch.object(acq.ytdlp, "download_via_ytdlp",
+                             return_value=target):
+            path, method = acq.download_media(
+                self.url, acq.YOUTUBE, self.directory,
+                allowed_hosts=("*",), max_bytes=4096,
+                log=messages.append)
+        self.assertEqual((path, method), (target, acq.METHOD_YTDLP_MERGE))
+        self.assertTrue(messages)
+
+    def test_playlist_urls_are_refused_before_any_download(self) -> None:
+        with patch.object(acq.ytdlp, "download_via_ytdlp") as download:
+            with self.assertRaisesRegex(ValueError, "single-video"):
+                acq.download_media(
+                    "https://www.youtube.com/playlist?list=PL123",
+                    acq.YOUTUBE, self.directory,
+                    allowed_hosts=("*",), max_bytes=4096)
+        download.assert_not_called()
+
+    def test_safe_error_redacts_url_signature_material(self) -> None:
+        message = acq.safe_error(ValueError(
+            "googlevideo failed: expire=1700000000&ip=203.0.113.9"
+            "&sig=abcd&ei=xyz"))
+        for leaked in ("1700000000", "203.0.113.9", "abcd", "xyz"):
+            self.assertNotIn(leaked, message)
+
+
 if __name__ == "__main__":
     unittest.main()

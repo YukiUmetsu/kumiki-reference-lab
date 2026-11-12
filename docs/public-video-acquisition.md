@@ -30,6 +30,12 @@ Enforced once, for every caller:
   grant. Public availability is not a licence: the caller supplies its own
   rights basis and attestation text, and records keep
   `rightsStatus: review-required`.
+- YouTube acquisition is yt-dlp-mediated, cookie-free and login-free. No
+  `--cookies-from-browser`, no `--netrc`, no credentials, no DRM/PO-token/nsig
+  workaround beyond what stock yt-dlp does by itself. A provider refusal (403,
+  login-only, unsupported client) is `provider-refused` and is never retried.
+  Media is always ephemeral. `yt-dlp >= 2026.10` is required: older builds
+  return HTTP 403 on public YouTube videos with the stock client.
 - The package never deletes your files. Ephemeral deletion is the caller's job
   (`TemporaryDirectory` around the whole acquire → measure → record cycle, so
   partial downloads are removed on failure too).
@@ -41,15 +47,16 @@ Enforced once, for every caller:
 
 | module | what it gives you |
 | --- | --- |
-| `media` | `allowlisted_url` / `allowlisted_video_url` / `allowlisted_image_url` (all accept `allow_query`), `fetch_bytes`, `fetch_text`, `download_http`, `plan_hls_download`, `download_media` (HLS stream-copy remux or direct GET), `media_target`, `image_target`, `check_downloaded` |
+| `media` | `allowlisted_url` / `allowlisted_video_url` / `allowlisted_image_url` (all accept `allow_query`), `fetch_bytes`, `fetch_text`, `download_http`, `plan_hls_download`, `download_media` (HLS stream-copy remux, direct GET, or bounded yt-dlp), `media_target`, `image_target`, `check_downloaded` |
+| `ytdlp` | `allowlisted_youtube_url` (single-video URL policy), `download_via_ytdlp`, `youtube_source_metadata` (`--dump-single-json --skip-download`), `classify_ytdlp_failure`, `YtDlpError` / `YtDlpRefusedError` |
 | `probe` | `run_ffprobe_json` (retry/backoff), `remote_source_metadata`, `ranged_source_metadata` (bounded `Range` fallback for flaky hosts), `source_metadata`, `probe_image_dimensions`, `metadata_from_probe`, `finite_float` / `as_int` / `as_text` |
 | `windows` | `plan_windows`, `measure_windows`, `summarize_probes`, `build_video_evidence` |
 | `stills` | `measure_still`, `compute_still_metrics`, `dominant_hue_family`, `decode_still_rgb`, `infer_decoded_dimensions`, `still_image_format`, `build_still_evidence` |
 | `store` | `write_json_atomic`, `safe_slug`, `resume_matches`, `build_index`, `utc_now` |
 | `runner` | `run_batch` (sequential or pooled, jittered politeness delay, resume skip, per-item failure isolation, atomic index refresh), `safe_error` |
 
-Provider constants: `HLS`, `DIRECT`; method labels: `METHOD_HLS_REMUX`,
-`METHOD_HTTP_DOWNLOAD`.
+Provider constants: `HLS`, `DIRECT`, `YOUTUBE`; method labels:
+`METHOD_HLS_REMUX`, `METHOD_HTTP_DOWNLOAD`, `METHOD_YTDLP_MERGE`.
 
 ### Signed URLs: `allow_query`
 
@@ -89,6 +96,57 @@ Enable it for one adapter's media allowlist only when that host actually
 requires signed delivery. Keep it off for poster/image lanes unless a signed
 poster is the only published URL.
 
+## YouTube acquisition (yt-dlp-mediated)
+
+`YOUTUBE` is a third provider beside `HLS` and `DIRECT`. `download_media`
+validates the URL through `allowlisted_youtube_url` (exactly `/watch?v=<11>`,
+`/shorts/<11>`, `/embed/<11>`, or `youtu.be/<11>`; playlists, channels and live
+URLs are refused), reads metadata first so an over-long source is rejected
+before any media byte moves, then calls `download_via_ytdlp` and returns
+`(path, METHOD_YTDLP_MERGE)`.
+
+The invocation is stock and bounded:
+
+- one playlist item, one concurrent fragment, one retry, one fragment retry,
+  15 s socket timeout, `--merge-output-format mp4`, a byte cap, and
+  `--paths <destination> --output source.%(ext)s` into an empty, real
+  (non-symlink) directory the caller owns;
+- `--ignore-config --no-plugin-dirs`, so local config and plugins cannot widen
+  the run;
+- `--format` prefers an H.264/AAC stream at `height <= 720` (the analyzers
+  decode frames with ffmpeg; AV1 works but is slower, and the engine must not
+  silently prefer it), falling back progressively. `prefer_h264=False` drops
+  the codec preference;
+- **no cookies, no logins, no `--cookies-from-browser`, no `--netrc`, no
+  remote component downloads, no DRM/PO-token/nsig workaround.**
+
+`yt-dlp` stderr is captured only to classify the failure and is never echoed
+(it can contain signed URLs and local paths). A `403 Forbidden`, "sign in to
+confirm", "only available when logged-in", unsupported-client or outdated-
+client failure raises `YtDlpRefusedError` with `reason == "provider-refused"`
+and is never retried; everything else is a `YtDlpError` with
+`reason == "transient"`. Both are `ValueError` subclasses, so existing adapter
+error handling keeps working. `safe_error` also redacts signature-like query
+material (`expire`, `ip`, `sig`, `nsig`, `sparams`, `ei`, …) that survives outside a
+full URL.
+
+`youtube_source_metadata` returns the neutral ffprobe-shaped dict plus `fps`,
+`codec`, `sizeBytes`, `estimatedBytes`, `title` and `formatId`; omitted fields
+stay `None` rather than being invented. `download_media` uses its
+`durationSeconds` for `max_duration_seconds`; adapters can call it directly to
+pre-reject oversize videos too.
+
+**`yt-dlp >= 2026.10` is required.** Older builds (for example the system
+2026.03.17) return HTTP 403 on public YouTube videos with the stock client. Use
+an explicit path so a stale system binary cannot be picked up by accident:
+
+```bash
+python -m venv /tmp/ytdlp-venv && /tmp/ytdlp-venv/bin/pip -q install -U yt-dlp
+```
+
+Media remains ephemeral: run the whole acquire → measure → delete cycle inside
+one `TemporaryDirectory`, exactly as for HLS and direct downloads.
+
 ## Adapter recipe
 
 A new site needs only this:
@@ -96,16 +154,19 @@ A new site needs only this:
 1. **Enumerate candidates** into neutral dicts with a stable `id`, a page URL, an
    optional media URL, and whatever site metadata you want in the record.
 2. **Declare**: media/image host allowlists, delivery mode per candidate
-   (`HLS` or `DIRECT`), schema strings, evidence-status strings, `limits` text,
-   rights basis/note, and the identity field `--resume` matches on.
+   (`HLS`, `DIRECT`, or `YOUTUBE`), schema strings, evidence-status strings,
+   `limits` text, rights basis/note, and the identity field `--resume` matches
+   on.
 3. **Write `run_one(candidate)`** as
    `TemporaryDirectory` → `allowlisted_video_url` (`allow_query=True` only when
-   the host requires signed URLs) → `remote_source_metadata` (reject
-   duration/size before download) → `download_media(...,
-   allow_query=...)` → `source_metadata` → `measure_windows` →
-   `build_video_evidence` (+ your identity fields and schema) →
-   `write_json_atomic`. Deletion happens in the `finally` of the context
-   manager.
+   the host requires signed URLs; YouTube URLs go through
+   `allowlisted_youtube_url` instead) → `remote_source_metadata` or
+   `youtube_source_metadata` (reject duration/size before download) →
+   `download_media(...)` with `allow_query=...` for signed CDNs or
+   `yt_dlp="/explicit/path/to/yt-dlp"` for YouTube → `source_metadata` →
+   `measure_windows` → `build_video_evidence` (+ your identity fields and
+   schema) → `write_json_atomic`. Deletion happens in the `finally` of the
+   context manager.
 4. **Drive the batch** with `run_batch(items, run_one=..., index_path=...,
    build_index=..., summary_row=..., skip_row=..., jobs=..., delay_seconds=...)`.
 
@@ -126,8 +187,32 @@ generically useful without a site.
 
 ```bash
 PYTHONPATH=src python -m unittest tests.test_public_acquisition -v
-grep -rin "motiondesignawards\|keyfram\|cloudflare\|vimeo\|yt-dlp" src/kumiki_reference_lab/acquisition/   # must be empty
+# Site vocabulary stays out of the engine. `yt-dlp` is the sanctioned YouTube
+# mechanism and is expected to appear; site names are not.
+grep -rin "motiondesignawards\|keyfram\|cloudflare\|vimeo" src/kumiki_reference_lab/acquisition/   # must be empty
 PYTHONPATH=src python -c "import kumiki_reference_lab.acquisition as a; print(sorted(a.__all__))"
+```
+
+One live YouTube smoke, with an explicit yt-dlp path and ephemeral media:
+
+```bash
+PYTHONPATH=src python - <<'PY'
+import subprocess, tempfile
+from pathlib import Path
+from kumiki_reference_lab.acquisition import YOUTUBE, download_media
+
+URL = "https://www.youtube.com/watch?v=ZfJOq_B_XBM"
+with tempfile.TemporaryDirectory(prefix="kumiki-youtube-smoke-") as tmp:
+    path, method = download_media(
+        URL, YOUTUBE, Path(tmp), allowed_hosts=("*",),
+        max_bytes=250 * 1024 * 1024, max_height=720,
+        yt_dlp="/tmp/ytdlp-venv/bin/yt-dlp")
+    print(method, path.name, path.stat().st_size)
+    subprocess.run(["ffprobe", "-v", "error", "-show_entries",
+                    "format=duration,size,bit_rate:stream=codec_name,width,height",
+                    "-of", "json", str(path)], check=True)
+# The TemporaryDirectory deletes the video before this script exits.
+PY
 ```
 
 ## Known gaps (deliberate)
