@@ -15,8 +15,13 @@ This module is the one place in the acquisition engine that shells out to
   component downloads are never used. There is no DRM or PO-token bypass: stock
   ``yt-dlp`` behaviour only.
 - ``yt-dlp`` stderr is captured solely to classify a failure and is never
-  echoed into an exception or a log line. A ``403``/login-only/unsupported-
-  client failure is ``provider-refused`` and is never retried.
+  echoed into an exception or a log line. A hard refusal (login-only, private,
+  members-only, bot-check, unsupported client) is ``provider-refused`` and is
+  never retried. The 403/CDN-data class is also ``provider-refused`` but is
+  retried a bounded number of times with backoff, because YouTube intermittently
+  returns 403 for a single stream while the same public URL succeeds moments
+  later. Retries reuse the identical anonymous request: no cookies, logins,
+  PO tokens, nsig extraction, or proxies are introduced.
 
 YouTube acquisition needs a current ``yt-dlp`` (``>= 2026.10``); older builds
 return HTTP 403 from YouTube's player even for public videos.
@@ -25,10 +30,13 @@ return HTTP 403 from YouTube's player even for public videos.
 from __future__ import annotations
 
 import json
+import random
 import re
+import shutil
 import subprocess
+import time
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Callable, Iterable
 from urllib.parse import parse_qs, urlsplit
 
 from .media import VIDEO_SUFFIXES, allowlisted_url
@@ -51,12 +59,10 @@ _ID_PATH = re.compile(r"/(?:shorts|embed)/([A-Za-z0-9_-]{11})")
 _METADATA_MAX_STDOUT = 8 * 1024 * 1024
 _STDERR_TAIL = 4096
 
-# Failures that mean "the provider refused us", not "the network wobbled".
-# They must never be retried and must surface as ``provider-refused``.
-_REFUSAL_MARKERS = (
-    "403 forbidden",
-    "http error 403",
-    "forbidden",
+# Failures that mean "the provider refused us for good", not "the network
+# wobbled": login/bot-check/private/members-only/unsupported-client. These are
+# never retried and surface as ``provider-refused``.
+_HARD_REFUSAL_MARKERS = (
     "sign in",
     "sign-in",
     "logged-in",
@@ -79,7 +85,24 @@ _REFUSAL_MARKERS = (
     "po token",
     "po_token",
 )
-_REFUSAL_PATTERNS = (re.compile(r"\b403\b"),)
+
+# The 403/CDN-data class: YouTube intermittently throttles or drops one stream
+# or fragment. The same public request can succeed moments later, so this class
+# is still ``provider-refused`` (public classification is unchanged) but gets a
+# bounded retry with backoff.
+_THROTTLE_MARKERS = (
+    "403 forbidden",
+    "http error 403",
+    "forbidden",
+    "unable to download video data",
+)
+_THROTTLE_PATTERNS = (re.compile(r"\b403\b"),)
+
+# Bounded retry policy. ``attempts`` includes the first attempt, so 1 disables
+# retrying. Both bounds are enforced in code, not just by documentation.
+_MIN_ATTEMPTS = 1
+_MAX_ATTEMPTS = 3
+_MAX_BACKOFF_SECONDS = 60.0
 
 
 class YtDlpError(ValueError):
@@ -169,13 +192,39 @@ def classify_ytdlp_failure(stderr: object) -> str:
 
     Only used for classification. The text itself is never returned, logged,
     or attached to an exception: it can contain URLs and local paths.
+
+    Both the hard refusal markers and the 403/CDN-data (throttle) markers map
+    to ``"provider-refused"``: that public vocabulary is unchanged. The two
+    classes differ only in whether a bounded retry is attempted; see
+    :func:`is_retryable_refusal`.
     """
     text = _stderr_text(stderr).lower()
-    if any(marker in text for marker in _REFUSAL_MARKERS):
+    if any(marker in text for marker in _HARD_REFUSAL_MARKERS):
         return "provider-refused"
-    if any(pattern.search(text) for pattern in _REFUSAL_PATTERNS):
+    if _is_throttle_text(text):
         return "provider-refused"
     return "transient"
+
+
+def _is_throttle_text(text: str) -> bool:
+    if any(marker in text for marker in _THROTTLE_MARKERS):
+        return True
+    return any(pattern.search(text) for pattern in _THROTTLE_PATTERNS)
+
+
+def is_retryable_refusal(stderr: object) -> bool:
+    """True only for the 403/CDN-data class, never for a hard refusal.
+
+    A hard marker wins even when the same stderr also mentions 403: a
+    bot-check, login wall, private or members-only video will fail identically
+    on every attempt, so it must not be retried. Purely transient failures
+    (connection reset, DNS) are not refusals and are also not "retryable" here;
+    the caller's batch layer owns those.
+    """
+    text = _stderr_text(stderr).lower()
+    if any(marker in text for marker in _HARD_REFUSAL_MARKERS):
+        return False
+    return _is_throttle_text(text)
 
 
 def _failure(stderr: object, *, label: str) -> YtDlpError:
@@ -223,6 +272,43 @@ def _checked_timeout(timeout: object, *, lower: float, upper: float) -> float:
     return float(timeout)
 
 
+def _checked_attempts(attempts: object) -> int:
+    """Clamp the attempt count into the documented ``1..3`` band.
+
+    A non-integer is a contract error. An out-of-range integer is clamped, not
+    rejected, so a caller that asks for "more retries" still gets a bounded run
+    instead of an unbounded one.
+    """
+    if isinstance(attempts, bool) or not isinstance(attempts, int):
+        raise ValueError("attempts must be an integer")
+    return max(_MIN_ATTEMPTS, min(_MAX_ATTEMPTS, attempts))
+
+
+def _checked_backoff(backoff_seconds: object) -> float:
+    if (isinstance(backoff_seconds, bool)
+            or not isinstance(backoff_seconds, (int, float))
+            or not 0.0 <= float(backoff_seconds) <= _MAX_BACKOFF_SECONDS):
+        raise ValueError("retry backoff is out of bounds")
+    return float(backoff_seconds)
+
+
+def _clear_partial_output(destination: Path) -> None:
+    """Remove everything a failed attempt may have left behind.
+
+    Only entries inside the caller-owned, engine-empty destination are touched.
+    Without this, a retry would see a non-empty directory and the "exactly one
+    file" contract after a successful retry would be violated by the leftovers.
+    """
+    for entry in destination.iterdir():
+        if entry.is_dir() and not entry.is_symlink():
+            shutil.rmtree(entry, ignore_errors=True)
+        else:
+            try:
+                entry.unlink()
+            except FileNotFoundError:
+                pass
+
+
 def _format_selector(max_height: int, *, prefer_h264: bool) -> str:
     """Prefer H.264/AAC at or below ``max_height``, then fall back wider.
 
@@ -247,6 +333,8 @@ def download_via_ytdlp(
     max_height: int = DEFAULT_YTDLP_MAX_HEIGHT, timeout_seconds: float = 300,
     prefer_h264: bool = True,
     allowed_hosts: Iterable[str] = DEFAULT_YOUTUBE_HOSTS,
+    attempts: int = 2, backoff_seconds: float = 6.0,
+    sleeper: Callable[[float], None] = time.sleep,
 ) -> Path:
     """Download one allowlisted public YouTube video into ``destination``.
 
@@ -255,6 +343,13 @@ def download_via_ytdlp(
     empty. Exactly one regular video file must appear, with a known suffix and
     a size in ``0 < size <= max_bytes``. Browser state is never read; there is
     no DRM or PO-token workaround.
+
+    ``attempts`` (clamped to ``1..3``) bounds how many identical anonymous
+    invocations may run. Only the 403/CDN-data class is retried: a hard refusal
+    (login, bot-check, private, members-only, unsupported client) raises on the
+    first attempt. Between retries the engine removes partial output and sleeps
+    ``backoff_seconds + uniform(0, backoff_seconds)``; ``sleeper`` is injectable
+    so tests stay offline and instant.
     """
     validated = allowlisted_youtube_url(url, allowed_hosts=allowed_hosts)
     if not isinstance(yt_dlp, str) or not yt_dlp.strip():
@@ -265,6 +360,10 @@ def download_via_ytdlp(
     timeout = _checked_timeout(timeout_seconds, lower=30.0, upper=900.0)
     if type(prefer_h264) is not bool:
         raise ValueError("prefer_h264 must be a boolean")
+    attempts = _checked_attempts(attempts)
+    backoff = _checked_backoff(backoff_seconds)
+    if not callable(sleeper):
+        raise ValueError("sleeper must be callable")
     if destination.is_symlink() or not destination.is_dir():
         raise ValueError("download directory is not a real directory")
     if any(destination.iterdir()):
@@ -290,12 +389,23 @@ def download_via_ytdlp(
         "--output", "source.%(ext)s",
         "--", validated,
     ]
-    result = _run_ytdlp(
-        args, cwd=destination, timeout=timeout, capture_stdout=False)
-    if result.returncode != 0:
+
+    for attempt in range(attempts):
+        result = _run_ytdlp(
+            args, cwd=destination, timeout=timeout, capture_stdout=False)
+        if result.returncode == 0:
+            break
         # stderr is used only to classify; it is never echoed (it can contain
         # signed URLs and local paths).
-        raise _failure(result.stderr, label="YouTube download")
+        error = _failure(result.stderr, label="YouTube download")
+        _clear_partial_output(destination)
+        retryable = (isinstance(error, YtDlpRefusedError)
+                     and is_retryable_refusal(result.stderr))
+        if not retryable or attempt + 1 >= attempts:
+            raise error
+        # Equal jitter, matching runner.run_batch: never a tight retry loop,
+        # never a synchronised burst of retries across workers.
+        sleeper(backoff + random.uniform(0.0, backoff))
 
     files = list(destination.iterdir())
     if len(files) != 1:

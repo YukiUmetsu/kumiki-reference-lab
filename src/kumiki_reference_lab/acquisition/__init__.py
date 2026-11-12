@@ -60,7 +60,7 @@ from .windows import (
 from .ytdlp import (
     DEFAULT_YOUTUBE_HOSTS, METHOD_YTDLP_MERGE, YOUTUBE, YtDlpError,
     YtDlpRefusedError, allowlisted_youtube_url, classify_ytdlp_failure,
-    download_via_ytdlp, youtube_source_metadata,
+    download_via_ytdlp, is_retryable_refusal, youtube_source_metadata,
 )
 
 __all__ = [
@@ -91,5 +91,5 @@ __all__ = [
     # ytdlp
     "DEFAULT_YOUTUBE_HOSTS", "METHOD_YTDLP_MERGE", "YOUTUBE", "YtDlpError",
     "YtDlpRefusedError", "allowlisted_youtube_url", "classify_ytdlp_failure",
-    "download_via_ytdlp", "youtube_source_metadata",
+    "download_via_ytdlp", "is_retryable_refusal", "youtube_source_metadata",
 ]
