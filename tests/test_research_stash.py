@@ -116,6 +116,15 @@ class ConfirmLinkTests(unittest.TestCase):
         self.assertEqual(post["provider"], "vimeo")
         self.assertEqual(check, {"checked": True, "mainVideoBlock": True, "provider": "vimeo"})
 
+    def test_gated_post_without_embed_stays_gated(self) -> None:
+        post = {"id": 3, "link": f"{SITE}/p/", "provider": "gated", "providers": [],
+                "embedHosts": [], "eligible": False, "eligibilityReason": "x",
+                "videoUrl": None, "gated": True}
+        stash.confirm_post_link(
+            post, fetch=lambda url: '<div class="postvid_single"><p>text</p></div>')
+        self.assertEqual(post["provider"], "gated")
+        self.assertTrue(post["gated"])
+
     def test_page_without_main_block_keeps_rest_classification(self) -> None:
         post = {"id": 2, "link": f"{SITE}/p/", "provider": "none", "providers": [],
                 "embedHosts": [], "eligible": False, "eligibilityReason": "x",

@@ -275,6 +275,8 @@ def confirm_post_link(post: dict[str, Any], *, fetch: Callable[[str], str]) -> d
     for key in LINK_FIELDS:
         if key in result:
             post[key] = result[key]
+    if post.get("gated") and result["provider"] == "none":
+        post["provider"] = "gated"  # keep the subscription marker when the block has no embed
     post["embedHosts"] = sorted(set(post.get("embedHosts") or []) | set(result["embedHosts"]))
     return {"checked": True, "mainVideoBlock": True, "provider": result["provider"]}
 
@@ -424,6 +426,7 @@ def _provider_counts(catalog: dict[str, Any]) -> dict[str, int]:
 
 def _write_outputs(out_dir: Path, catalog: dict[str, Any]) -> None:
     """Commit catalog.json, then index.json that pins the catalog's SHA-256."""
+    catalog["providerCounts"] = _provider_counts(catalog)
     catalog_path = out_dir / "catalog.json"
     write_json_atomic(catalog_path, _strip_private(catalog))
     catalog["_sha256"] = sha256_file(catalog_path)
