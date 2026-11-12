@@ -31,6 +31,21 @@ class BatchOutcome:
     index_path: Path
 
 
+class BatchSkip(Exception):
+    """Raised by a lane's ``run_one`` to record a skip row instead of a failure.
+
+    Lanes use this for post-retrieval policy decisions (for example a measured
+    still that turns out to be a placeholder): the item is counted in
+    ``skips`` with the supplied reason, never in ``failures``.
+    """
+
+    def __init__(self, reason: str) -> None:
+        if not isinstance(reason, str) or not reason.strip():
+            raise ValueError("skip reason must be a non-empty string")
+        super().__init__(reason)
+        self.reason = reason
+
+
 def safe_error(
     error: Exception, *, redact: Iterable[str] = (), limit: int = 300,
 ) -> str:
@@ -121,6 +136,13 @@ def run_batch(
         label = describe(item)
         try:
             record = run_one(item)
+        except BatchSkip as skip:
+            with lock:
+                skips.append(skip_row(item, skip.reason))
+                refresh()
+            if progress is not None:
+                progress(position, len(work), "skip", label, skip.reason)
+            return
         except Exception as error:  # one bad item must not abort the batch
             reason = error_fn(error)
             with lock:

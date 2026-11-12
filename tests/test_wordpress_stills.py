@@ -978,7 +978,7 @@ def build_video_record_for(
     row: dict, *, luma: float = 0.3, cuts: int = 2,
     generated_at: str = "2026-01-05T00:00:00Z",
 ) -> dict:
-    return wps.build_video_record(
+    record = wps.build_video_record(
         DL, row, source=synthetic_source(),
         coverage={
             "windowsMeasured": 1, "windowSeconds": 10, "sampledSeconds": 10.0,
@@ -990,6 +990,10 @@ def build_video_record_for(
         method="ytdlp-merge",
         video_url="https://www.youtube.com/watch?v=abcdefghijk",
         generated_at=generated_at)
+    # Distinct media per row so report dedupe does not collapse distinct test
+    # videos that happen to share the fixed synthetic source.
+    record["source"]["mediaSha256"] = f"{int(row.get('id') or 0):064x}"
+    return record
 
 
 class CollectLaneTests(unittest.TestCase):

@@ -966,7 +966,13 @@ class RecordParityTests(unittest.TestCase):
         rebuilt = mda.build_still_record(
             self.project(record["projectId"]), still=record["still"],
             generated_at=record["generatedAt"])
-        self.assertEqual(_dump(rebuilt), path.read_text(encoding="utf-8"))
+        # Schema addition: `still.qualityFlags` is now always present and `[]`
+        # for a clean still (see docs/motiondesignawards-video-research.md).
+        # Committed samples predate the key, so the expectation gains the
+        # empty default; every other byte and key order is still compared.
+        expected = json.loads(path.read_text(encoding="utf-8"))
+        expected["still"].setdefault("qualityFlags", [])
+        self.assertEqual(_dump(rebuilt), _dump(expected))
 
 
 if __name__ == "__main__":
