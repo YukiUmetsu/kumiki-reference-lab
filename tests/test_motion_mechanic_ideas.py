@@ -65,6 +65,42 @@ class OriginalMechanicIdeasTests(unittest.TestCase):
         self.assertNotIn("targetComponentApiVerified\": true", json.dumps(report))
         self.assertIn("not verified", report["uiRegistryFileAudit"]["meaning"])
 
+    def test_shipped_lane_swap_is_pinned_and_not_a_source_animation_spec(self):
+        temporal = observed_events()
+        report = propose_motion_mechanics(temporal)
+        swaps = [proposal for proposal in report["proposals"]
+                 if proposal["originalRecipe"] == "two-lane-swap"]
+        self.assertEqual(len(swaps), 1)
+        swap = swaps[0]
+        shipped = swap["availableOriginalImplementation"]
+        self.assertEqual(shipped["registryItem"], "two-lane-swap")
+        self.assertEqual(shipped["repository"], "YukiUmetsu/kumiki-ui")
+        self.assertEqual(shipped["commitSha"],
+                         "662f60704851c01c0e6ef58244132fe9f29896ac")
+        self.assertIn("registry/motion/two-lane-swap.ts",
+                      shipped["modules"])
+        self.assertIn("compileTwoLaneSwap", shipped["publicExports"])
+        self.assertIn("TwoLaneSwapSvg", shipped["publicExports"])
+        self.assertIn("visual-review-pending", shipped["status"])
+        self.assertFalse(shipped["sourceGeometryCanBeUsedAsExecutableSpec"])
+        self.assertTrue(shipped["requiresIndependentRenderedVisualApproval"])
+        self.assertTrue(swap["requiresOriginalArtAssets"])
+        self.assertFalse(swap["registryApiVerifiedForThisRecipe"])
+        self.assertTrue(all(p["availableOriginalImplementation"] is None
+                            for p in report["proposals"]
+                            if p["originalRecipe"] != "two-lane-swap"))
+        # Caller mutations must never change the static shipped registry map.
+        shipped["modules"].append("invented-add-on.ts")
+        shipped["publicExports"].clear()
+        again = propose_motion_mechanics(temporal)
+        available = next(p for p in again["proposals"] if
+                         p["originalRecipe"] == "two-lane-swap")[
+                             "availableOriginalImplementation"]
+        self.assertNotIn("invented-add-on.ts", available["modules"])
+        self.assertIn("TwoLaneSwapSvg", available["publicExports"])
+        self.assertEqual(again["proposals"][0]["id"],
+                         report["proposals"][0]["id"])
+
     def test_shared_background_motion_is_not_asserted_camera_pan(self):
         numeric = evidence()
         shots = build_shot_intelligence(numeric)
