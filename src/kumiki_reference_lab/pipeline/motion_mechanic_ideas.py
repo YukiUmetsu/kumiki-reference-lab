@@ -14,6 +14,27 @@ from typing import Any
 SCHEMA_VERSION = "kumiki.source-motion-mechanic-ideas.v1"
 _TEMPORAL = "kumiki.online-multi-region-temporal.v1"
 _UI_AUDIT_SHA = "ac5bf3988d4e5a74d792c2b36418512102d7b1b3"
+_SHIPPED_SWAP_SHA = "662f60704851c01c0e6ef58244132fe9f29896ac"
+
+# This is a pinned research-to-library bridge, not a source reconstruction.
+# The implementation accepts newly authored pixel-space stage/assets/timing;
+# source ROI boxes cannot be pasted directly into its validated public API.
+_SHIPPED_SWAP = {
+    "registryItem": "two-lane-swap",
+    "repository": "YukiUmetsu/kumiki-ui",
+    "commitSha": _SHIPPED_SWAP_SHA,
+    "modules": [
+        "registry/motion/two-lane-swap.ts",
+        "registry/motion/two-lane-swap-react.tsx",
+    ],
+    "publicExports": [
+        "compileTwoLaneSwap", "evaluateTwoLaneSwap", "TwoLaneSwapSvg",
+    ],
+    "status": "merged-and-structural-ci-passed-visual-review-pending",
+    "sourceGeometryCanBeUsedAsExecutableSpec": False,
+    "requiresOriginalAssetsAndAuthoredLayout": True,
+    "requiresIndependentRenderedVisualApproval": True,
+}
 _ORIGINS = {
     "operator-seeded-not-model-recognized",
     "auto-motion-proposal-not-semantic-identity",
@@ -109,6 +130,8 @@ _MECHANICS: dict[str, dict[str, Any]] = {
         "controls": ["targetA", "targetB", "startFrame", "durationFrames",
                      "pathA", "pathB", "laneGap", "staggerFrames"],
         "potentialRegistryModules": [
+            "registry/motion/two-lane-swap.ts",
+            "registry/motion/two-lane-swap-react.tsx",
             "registry/motion/paths.ts",
             "registry/motion/motion-director.ts"],
         "notInferred": ["actor identity crossing", "physical collision", "3D depth"],
@@ -310,6 +333,17 @@ def propose_motion_mechanics(
             "authoringControlNames": spec["controls"],
             "candidateRegistryModuleFiles": spec["potentialRegistryModules"],
             "registryApiVerifiedForThisRecipe": False,
+            # A tested, installable implementation exists only for the lane
+            # swap. There is still no direct source-metrics-to-animation
+            # adapter, so the per-recipe API mapping remains unverified.
+            "availableOriginalImplementation": (
+                {
+                    **_SHIPPED_SWAP,
+                    "modules": list(_SHIPPED_SWAP["modules"]),
+                    "publicExports": list(_SHIPPED_SWAP["publicExports"]),
+                }
+                if name == "horizontal-image-order-reversal" else None
+            ),
             "sourceDoesNotProve": spec["notInferred"],
             "requiresOriginalArtAssets": True,
             "status": "unreviewed-original-animation-mechanic-proposal",
@@ -337,9 +371,10 @@ def propose_motion_mechanics(
         "limitations": [
             "All recipes are original creative design suggestions, never recovered source animation.",
             "Screen-region geometry does not prove contact, pose, intent or a real camera move.",
-            "The proposed module files existed at a dated kumiki-ui commit, not verified APIs.",
+            "Related old primitives existed at the audit commit; source-metric API mapping remains unverified.",
+            "A shipped two-lane-swap implementation is listed separately from all other research ideas.",
             "The system does not assume any component is missing from kumiki-ui.",
-            "No executable animation, exact keyframe schedule, original artwork or video is emitted.",
+            "No executable animation specification, exact source keyframes, original artwork or video is emitted.",
             "Review generated visual work against high-quality references with independent assets.",
         ],
     }

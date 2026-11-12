@@ -145,6 +145,17 @@ physical contact or true camera move is claimed. Candidate registry
 APIs and rendered quality remain unverified until separately tested.
 See [source-grounded animation mechanics](docs/source-to-original-animation-mechanics.md).
 
+### Research-to-installed cinematic animation
+
+A measured `horizontal-image-order-reversal` event now links its
+`two-lane-swap` proposal to the
+[actual merged Kumiki UI motion component](https://github.com/YukiUmetsu/kumiki-ui/blob/main/docs/component-specs/two-lane-swap.md).
+The source-hashed `originalMotionMechanicIdeas` report records the
+pinned implementation and honest remaining gates: original artwork,
+authored stage and timing, no source-frame reproduction, and pending
+human visual approval. Other animation ideas are still proposals.
+See [source-grounded animation mechanics](docs/source-to-original-animation-mechanics.md).
+
 ## Why this exists
 
 Professional motion graphics depend on more than shaders and easing presets:
