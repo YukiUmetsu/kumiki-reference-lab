@@ -55,22 +55,36 @@ def _freeze_hosts(allowed_hosts: Iterable[str]) -> Iterable[str]:
     return tuple(allowed_hosts)
 
 
-def _split_allowlist(allowed_hosts: Iterable[str]) -> tuple[frozenset[str], tuple[str, ...]]:
-    """Return (exact hosts, subdomain suffixes) from caller-supplied entries.
+ANY_PUBLIC_HOST = "*"
+
+
+def _split_allowlist(
+    allowed_hosts: Iterable[str],
+) -> tuple[frozenset[str], tuple[str, ...], bool]:
+    """Return (exact hosts, subdomain suffixes, any-public-host flag).
 
     An entry without a leading dot matches that host exactly. An entry with a
     leading dot (``".cdn.example"``) matches subdomains of that host only; it
     never matches the bare host itself, so subdomain access is always an
     explicit, documented opt-in rather than an implicit wildcard.
+
+    The entry ``"*"`` admits any public DNS name. It relaxes only the host
+    check: HTTPS, no credentials, default port, no fragment, no IP literal, and
+    no loopback name still apply to every URL. A query string is refused unless
+    the caller passes ``allow_query=True``.
     """
     if isinstance(allowed_hosts, (str, bytes)):
         raise ValueError("allowed hosts must be an iterable of host names, not a single string")
     exact: set[str] = set()
     suffixes: set[str] = set()
+    any_host = False
     for entry in allowed_hosts:
         if not isinstance(entry, str) or not entry.strip():
             raise ValueError("allowlist entries must be non-empty host names")
         value = entry.strip().lower()
+        if value == ANY_PUBLIC_HOST:
+            any_host = True
+            continue
         if value.startswith("."):
             value = value[1:]
             if not _HOST_NAME.match(value):
@@ -80,9 +94,9 @@ def _split_allowlist(allowed_hosts: Iterable[str]) -> tuple[frozenset[str], tupl
             if not _HOST_NAME.match(value):
                 raise ValueError("allowlist entry is not a valid host name")
             exact.add(value)
-    if not exact and not suffixes:
+    if not exact and not suffixes and not any_host:
         raise ValueError("allowlist must contain at least one host")
-    return frozenset(exact), tuple(sorted(suffixes))
+    return frozenset(exact), tuple(sorted(suffixes)), any_host
 
 
 def _checked_host(host: str, *, label: str) -> str:
@@ -103,12 +117,19 @@ def _checked_host(host: str, *, label: str) -> str:
 
 def allowlisted_url(
     url: object, *, allowed_hosts: Iterable[str], label: str = "media source URL",
+    allow_query: bool = False,
 ) -> str:
     """Validate one public HTTPS URL against a caller-supplied host allowlist.
 
     Rejects non-HTTPS schemes, credentials, non-default ports, fragments,
     query strings, IP literals, loopback names, and any host that is not an
     exact allowlist entry (or an explicitly permitted subdomain).
+
+    ``allow_query`` admits a query string for signed, cookie-free CDN URLs
+    (for example CloudFront ``?AWSAccessKeyId=…&Expires=…&Signature=…``). It
+    relaxes only the query check: a fragment is still refused and every other
+    invariant, including the exact host allowlist, still applies. The default
+    is ``False``, so generic scraping policy is unchanged.
     """
     if not isinstance(url, str) or not url.strip():
         raise ValueError(f"{label} is absent")
@@ -128,11 +149,11 @@ def allowlisted_url(
         raise ValueError(f"{label} must not carry a custom port")
     if parsed.fragment:
         raise ValueError(f"{label} must not carry a fragment")
-    if parsed.query:
+    if parsed.query and not allow_query:
         raise ValueError(f"{label} must not carry a query string")
     host = _checked_host((parsed.hostname or "").lower(), label=label)
-    exact, suffixes = _split_allowlist(allowed_hosts)
-    if host in exact:
+    exact, suffixes, any_host = _split_allowlist(allowed_hosts)
+    if any_host or host in exact:
         return url
     for suffix in suffixes:
         if host.endswith("." + suffix):
@@ -140,14 +161,22 @@ def allowlisted_url(
     raise ValueError(f"{label} host is not allowlisted")
 
 
-def allowlisted_video_url(url: object, *, allowed_hosts: Iterable[str]) -> str:
+def allowlisted_video_url(
+    url: object, *, allowed_hosts: Iterable[str], allow_query: bool = False,
+) -> str:
     """Thin video-source policy wrapper around :func:`allowlisted_url`."""
-    return allowlisted_url(url, allowed_hosts=allowed_hosts, label="video source URL")
+    return allowlisted_url(
+        url, allowed_hosts=allowed_hosts, label="video source URL",
+        allow_query=allow_query)
 
 
-def allowlisted_image_url(url: object, *, allowed_hosts: Iterable[str]) -> str:
+def allowlisted_image_url(
+    url: object, *, allowed_hosts: Iterable[str], allow_query: bool = False,
+) -> str:
     """Thin still-image policy wrapper around :func:`allowlisted_url`."""
-    return allowlisted_url(url, allowed_hosts=allowed_hosts, label="still image URL")
+    return allowlisted_url(
+        url, allowed_hosts=allowed_hosts, label="still image URL",
+        allow_query=allow_query)
 
 
 # ---------------------------------------------------------------------------
@@ -194,16 +223,17 @@ def fetch_bytes(
     url: str, *, allowed_hosts: Iterable[str], max_bytes: int,
     timeout: float = 30.0, accept: str | None = None,
     headers: dict[str, str] | None = None, user_agent: str = USER_AGENT,
-    chunk_size: int = 256 * 1024,
+    chunk_size: int = 256 * 1024, allow_query: bool = False,
 ) -> bytes:
     """Read at most ``max_bytes`` from one allowlisted HTTPS URL.
 
     The byte budget truncates instead of raising; this is the metadata-read
     primitive (playlists, ranged probes), not the media download path.
+    Redirect targets are re-validated with the same ``allow_query`` setting.
     """
     _checked_budget(max_bytes, label="read byte budget")
     allowed_hosts = _freeze_hosts(allowed_hosts)
-    allowlisted_url(url, allowed_hosts=allowed_hosts)
+    allowlisted_url(url, allowed_hosts=allowed_hosts, allow_query=allow_query)
     request_headers = {"User-Agent": user_agent}
     if accept is not None:
         request_headers["Accept"] = accept
@@ -213,7 +243,8 @@ def fetch_bytes(
     chunks: list[bytes] = []
     total = 0
     with urlopen(request, timeout=timeout) as response:
-        allowlisted_url(response.geturl(), allowed_hosts=allowed_hosts)
+        allowlisted_url(response.geturl(), allowed_hosts=allowed_hosts,
+                        allow_query=allow_query)
         while total < max_bytes:
             chunk = response.read(min(chunk_size, max_bytes - total))
             if not chunk:
@@ -225,11 +256,12 @@ def fetch_bytes(
 
 def fetch_text(
     url: str, *, allowed_hosts: Iterable[str], timeout: float = 30.0,
-    limit: int = DEFAULT_TEXT_LIMIT,
+    limit: int = DEFAULT_TEXT_LIMIT, allow_query: bool = False,
 ) -> str:
     """Read at most ``limit`` bytes of UTF-8 text from one allowlisted URL."""
     return fetch_bytes(
         url, allowed_hosts=allowed_hosts, max_bytes=limit, timeout=timeout,
+        allow_query=allow_query,
     ).decode("utf-8", "replace")
 
 
@@ -237,19 +269,22 @@ def download_http(
     url: str, destination: Path, *, allowed_hosts: Iterable[str], max_bytes: int,
     timeout: float = 120.0, accept: str = "video/*", label: str = "source",
     user_agent: str = USER_AGENT, chunk_size: int = _DEFAULT_CHUNK,
+    allow_query: bool = False,
 ) -> Path:
     """Stream one allowlisted HTTPS URL into ``destination`` under a hard cap.
 
     Exceeding ``max_bytes`` raises instead of truncating: a partial media file
-    is never accepted as evidence. Redirect targets are re-validated.
+    is never accepted as evidence. Redirect targets are re-validated with the
+    same ``allow_query`` setting, and their query string is preserved.
     """
     _checked_budget(max_bytes, label="download byte budget")
     allowed_hosts = _freeze_hosts(allowed_hosts)
-    allowlisted_url(url, allowed_hosts=allowed_hosts)
+    allowlisted_url(url, allowed_hosts=allowed_hosts, allow_query=allow_query)
     request = Request(url, headers={"Accept": accept, "User-Agent": user_agent})
     total = 0
     with urlopen(request, timeout=timeout) as response:
-        allowlisted_url(response.geturl(), allowed_hosts=allowed_hosts)
+        allowlisted_url(response.geturl(), allowed_hosts=allowed_hosts,
+                        allow_query=allow_query)
         with destination.open("wb") as outfile:
             while chunk := response.read(chunk_size):
                 total += len(chunk)
@@ -278,6 +313,7 @@ def _parse_attributes(line: str) -> dict[str, str]:
 def plan_hls_download(
     master_url: str, *, allowed_hosts: Iterable[str], max_width: int = 1280,
     master_text: str | None = None, timeout: float = 30.0,
+    allow_query: bool = False,
 ) -> dict[str, Any]:
     """Choose one bounded rendition from an HLS master playlist.
 
@@ -288,14 +324,17 @@ def plan_hls_download(
     dimensions; the caller builds the ffmpeg invocation.
 
     ``master_text`` lets a caller that already fetched the playlist (or an
-    offline test) skip the network read.
+    offline test) skip the network read. ``allow_query`` applies to the master,
+    variant, and audio URLs alike.
     """
     allowed_hosts = _freeze_hosts(allowed_hosts)
-    allowlisted_url(master_url, allowed_hosts=allowed_hosts, label="HLS master URL")
+    allowlisted_url(master_url, allowed_hosts=allowed_hosts,
+                    label="HLS master URL", allow_query=allow_query)
     if type(max_width) is not int or max_width < 1:
         raise ValueError("HLS max width must be a positive integer")
     text = (master_text if master_text is not None else fetch_text(
-        master_url, allowed_hosts=allowed_hosts, timeout=timeout))
+        master_url, allowed_hosts=allowed_hosts, timeout=timeout,
+        allow_query=allow_query))
     if "#EXTM3U" not in text:
         raise ValueError("HLS master playlist was not returned")
 
@@ -336,10 +375,10 @@ def plan_hls_download(
               else min(variants, key=lambda variant: variant["width"] or 10 ** 6))
     audio_url = audio_by_group.get(chosen["audioGroup"]) or first_audio_url
     allowlisted_url(chosen["url"], allowed_hosts=allowed_hosts,
-                    label="HLS variant URL")
+                    label="HLS variant URL", allow_query=allow_query)
     if audio_url:
         allowlisted_url(audio_url, allowed_hosts=allowed_hosts,
-                        label="HLS audio URL")
+                        label="HLS audio URL", allow_query=allow_query)
     return {
         "variantUrl": chosen["url"], "audioUrl": audio_url,
         "width": chosen["width"] or None, "height": chosen["height"] or None,
@@ -366,7 +405,7 @@ def download_media(
     max_bytes: int, ffmpeg: str = "ffmpeg", ffprobe: str = "ffprobe",
     timeout: float = 360.0, max_width: int = 1280,
     max_duration_seconds: float | None = None,
-    log: Callable[[str], None] | None = None,
+    log: Callable[[str], None] | None = None, allow_query: bool = False,
 ) -> tuple[Path, str]:
     """Download one allowlisted public video into ``directory``.
 
@@ -375,13 +414,17 @@ def download_media(
     direct sources use urllib. Oversized or duration-exceeding sources are
     rejected from remote metadata before bytes are written. Never
     authenticates. Returns ``(local path, method label)``.
+
+    ``allow_query`` admits signed query-string URLs (and signed redirects) and
+    is threaded through playlist resolution, probing, and the download itself.
     """
     # Local import: probe adapters themselves depend on this module's
     # allowlisting and bounded-read primitives.
     from . import probe as probe_adapter
 
     allowed_hosts = _freeze_hosts(allowed_hosts)
-    allowlisted_url(url, allowed_hosts=allowed_hosts, label="video source URL")
+    allowlisted_url(url, allowed_hosts=allowed_hosts, label="video source URL",
+                    allow_query=allow_query)
     if provider not in (HLS, DIRECT):
         raise ValueError("provider is not downloadable by design")
     if directory.is_symlink() or not directory.is_dir():
@@ -390,10 +433,11 @@ def download_media(
 
     if provider == HLS:
         plan = plan_hls_download(url, allowed_hosts=allowed_hosts,
-                                 max_width=max_width)
+                                 max_width=max_width, allow_query=allow_query)
         variant = plan["variantUrl"]
         remote = probe_adapter.remote_source_metadata(
-            variant, allowed_hosts=allowed_hosts, ffprobe=ffprobe)
+            variant, allowed_hosts=allowed_hosts, ffprobe=ffprobe,
+            allow_query=allow_query)
         _reject_excess_duration(remote, max_duration_seconds)
         args = [ffmpeg, "-hide_banner", "-v", "error", "-y", "-i", variant]
         if plan["audioUrl"]:
@@ -411,14 +455,16 @@ def download_media(
 
     try:
         remote = probe_adapter.remote_source_metadata(
-            url, allowed_hosts=allowed_hosts, ffprobe=ffprobe)
+            url, allowed_hosts=allowed_hosts, ffprobe=ffprobe,
+            allow_query=allow_query)
     except ValueError as probe_error:
         if log is not None:
             log(f"direct download remote probe failed ({probe_error}); "
                 "falling back to a bounded ranged read")
         try:
             remote = probe_adapter.ranged_source_metadata(
-                url, allowed_hosts=allowed_hosts, ffprobe=ffprobe)
+                url, allowed_hosts=allowed_hosts, ffprobe=ffprobe,
+                allow_query=allow_query)
         except ValueError as ranged_error:
             raise ValueError(
                 "source could not be characterised: "
@@ -432,7 +478,7 @@ def download_media(
         log("remote metadata estimates this source exceeds the local size cap; "
             "streaming until the cap is enforced")
     downloaded = download_http(url, target, allowed_hosts=allowed_hosts,
-                               max_bytes=max_bytes)
+                               max_bytes=max_bytes, allow_query=allow_query)
     return downloaded, METHOD_HTTP_DOWNLOAD
 
 

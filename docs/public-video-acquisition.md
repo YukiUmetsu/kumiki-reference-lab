@@ -14,14 +14,22 @@ adapter is `scripts/research_motiondesignawards.py`
 
 Enforced once, for every caller:
 
-- HTTPS only, exact-host allowlist passed by the caller. No credentials, custom
-  ports, query strings, fragments, IP literals, or implicit subdomains; every
-  redirect is re-validated against the same allowlist.
+- HTTPS only, host allowlist passed by the caller. Entries are exact hosts
+  (`media.example`), explicit subdomain suffixes (`.cdn.example`), or the
+  wildcard `"*"`, which admits any public DNS name. The wildcard is the current
+  project-wide policy for research adapters. It relaxes only the host check. No
+  credentials, custom ports, fragments, IP literals, loopback or single-label
+  names, or implicit subdomains. Query strings are refused by default; a
+  caller can opt in per URL-operation with `allow_query=True` for signed,
+  cookie-free CDN URLs (see below). Every redirect is re-validated with the
+  same allowlist and the same `allow_query` setting.
 - Byte- and duration-capped retrieval. Media lands only in a directory the
   caller owns.
-- No cookies, logins, tokens, DRM circumvention, or access-control bypass.
-  Public availability is not a licence: the caller supplies its own rights
-  basis and attestation text, and records keep `rightsStatus: review-required`.
+- No cookies, logins, tokens, DRM circumvention, or access-control bypass. A
+  signed URL is not a token login: it is a public, cryptographically scoped CDN
+  grant. Public availability is not a licence: the caller supplies its own
+  rights basis and attestation text, and records keep
+  `rightsStatus: review-required`.
 - The package never deletes your files. Ephemeral deletion is the caller's job
   (`TemporaryDirectory` around the whole acquire → measure → record cycle, so
   partial downloads are removed on failure too).
@@ -33,7 +41,7 @@ Enforced once, for every caller:
 
 | module | what it gives you |
 | --- | --- |
-| `media` | `allowlisted_url` / `allowlisted_video_url` / `allowlisted_image_url`, `fetch_bytes`, `fetch_text`, `download_http`, `plan_hls_download`, `download_media` (HLS stream-copy remux or direct GET), `media_target`, `image_target`, `check_downloaded` |
+| `media` | `allowlisted_url` / `allowlisted_video_url` / `allowlisted_image_url` (all accept `allow_query`), `fetch_bytes`, `fetch_text`, `download_http`, `plan_hls_download`, `download_media` (HLS stream-copy remux or direct GET), `media_target`, `image_target`, `check_downloaded` |
 | `probe` | `run_ffprobe_json` (retry/backoff), `remote_source_metadata`, `ranged_source_metadata` (bounded `Range` fallback for flaky hosts), `source_metadata`, `probe_image_dimensions`, `metadata_from_probe`, `finite_float` / `as_int` / `as_text` |
 | `windows` | `plan_windows`, `measure_windows`, `summarize_probes`, `build_video_evidence` |
 | `stills` | `measure_still`, `compute_still_metrics`, `dominant_hue_family`, `decode_still_rgb`, `infer_decoded_dimensions`, `still_image_format`, `build_still_evidence` |
@@ -42,6 +50,44 @@ Enforced once, for every caller:
 
 Provider constants: `HLS`, `DIRECT`; method labels: `METHOD_HLS_REMUX`,
 `METHOD_HTTP_DOWNLOAD`.
+
+### Signed URLs: `allow_query`
+
+Generic scraping policy refuses a query string because it often carries
+session state or an opaque token that the engine must not replay. Some public
+CDNs instead hand out *signed* URLs — CloudFront `AWSAccessKeyId` / `Expires` /
+`Signature`, or an origin such as `app.extremereach.com/...?profile=…&useCDN=true`
+that 302s to one. Those URLs are cookie-free and cryptographically scoped, so
+they are safe to fetch when the caller explicitly opts in:
+
+```python
+download_media(url, DIRECT, directory, allowed_hosts=MEDIA_HOSTS,
+               max_bytes=..., allow_query=True)
+```
+
+The opt-in is per call and defaults to `False`, so existing callers keep the
+strict policy byte-for-byte. It is threaded through `allowlisted_url`,
+`allowlisted_video_url`, `allowlisted_image_url`, `fetch_bytes`, `fetch_text`,
+`download_http`, `plan_hls_download` (master, variant, and audio URLs),
+`ffprobe_remote_json`, `remote_source_metadata`, `ranged_source_metadata`, and
+`download_media`.
+
+What does **not** change:
+
+- The scheme must still be `https`.
+- The host must still match the caller's allowlist exactly, including the
+  leading-dot subdomain rule.
+- Credentials, custom ports, IP literals, loopback names, leading/trailing-dot
+  host tricks, and fragments are still refused.
+- Redirects are re-validated against the same allowlist **and** the same
+  `allow_query` setting, and the redirect target's query string is preserved.
+- A signed URL is never cached across calls; it expires. Error text is
+  redacted by `safe_error`, which strips `Signature=`, `AWSAccessKeyId=`, and
+  related signing values in addition to full URLs.
+
+Enable it for one adapter's media allowlist only when that host actually
+requires signed delivery. Keep it off for poster/image lanes unless a signed
+poster is the only published URL.
 
 ## Adapter recipe
 
@@ -53,11 +99,13 @@ A new site needs only this:
    (`HLS` or `DIRECT`), schema strings, evidence-status strings, `limits` text,
    rights basis/note, and the identity field `--resume` matches on.
 3. **Write `run_one(candidate)`** as
-   `TemporaryDirectory` → `allowlisted_video_url` → `remote_source_metadata`
-   (reject duration/size before download) → `download_media` →
-   `source_metadata` → `measure_windows` → `build_video_evidence` (+ your
-   identity fields and schema) → `write_json_atomic`. Deletion happens in the
-   `finally` of the context manager.
+   `TemporaryDirectory` → `allowlisted_video_url` (`allow_query=True` only when
+   the host requires signed URLs) → `remote_source_metadata` (reject
+   duration/size before download) → `download_media(...,
+   allow_query=...)` → `source_metadata` → `measure_windows` →
+   `build_video_evidence` (+ your identity fields and schema) →
+   `write_json_atomic`. Deletion happens in the `finally` of the context
+   manager.
 4. **Drive the batch** with `run_batch(items, run_one=..., index_path=...,
    build_index=..., summary_row=..., skip_row=..., jobs=..., delay_seconds=...)`.
 

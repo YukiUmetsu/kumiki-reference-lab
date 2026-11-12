@@ -37,6 +37,14 @@ def safe_error(
     """Render an exception as bounded text with URLs, paths, and secrets gone."""
     text = f"{type(error).__name__}: {error}"
     text = re.sub(r"https?://\S+", "[redacted-url]", text)
+    # Signed-URL material can survive outside a full URL (for example when a
+    # transport error quotes only the query). Never let a credential value
+    # reach an index row or a log line.
+    text = re.sub(
+        r"(?i)\b((?:AWSAccessKeyId|AWSSAKAccessKeyId|Signature|"
+        r"X-Amz-Signature|X-Amz-Credential|X-Amz-Security-Token|"
+        r"Key-Pair-Id|Policy)=)[^&\s'\"]+",
+        r"\1[redacted]", text)
     for value in redact:
         if isinstance(value, str) and value:
             text = text.replace(value, "[redacted]")

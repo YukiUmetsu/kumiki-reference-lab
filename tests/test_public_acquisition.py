@@ -140,6 +140,85 @@ class AllowlistTests(unittest.TestCase):
                 acq.allowlisted_url(
                     "https://media.example/clip.mp4", allowed_hosts=hosts)
 
+    def test_any_public_host_wildcard_admits_every_public_dns_name(self) -> None:
+        for url in ("https://media.example/clip.mp4",
+                    "https://cdn.other-site.test/a/b.mp4",
+                    "https://vimeo.com/123456"):
+            with self.subTest(url=url):
+                self.assertEqual(
+                    acq.allowlisted_url(url, allowed_hosts=("*",)), url)
+
+    def test_any_public_host_wildcard_keeps_every_other_guard(self) -> None:
+        for url in ("http://media.example/clip.mp4",
+                    "https://user:pw@media.example/clip.mp4",
+                    "https://media.example:8443/clip.mp4",
+                    "https://media.example/clip.mp4?token=1",
+                    "https://media.example/clip.mp4#frag",
+                    "https://192.0.2.10/clip.mp4",
+                    "https://[2001:db8::1]/clip.mp4",
+                    "https://localhost/clip.mp4",
+                    "https://intranet/clip.mp4"):
+            with self.subTest(url=url), self.assertRaises(ValueError):
+                acq.allowlisted_url(url, allowed_hosts=("*",))
+
+    def test_wildcard_mixes_with_explicit_entries(self) -> None:
+        self.assertEqual(
+            acq.allowlisted_url("https://a.test/x.mp4",
+                                allowed_hosts=("media.example", "*")),
+            "https://a.test/x.mp4")
+
+    def test_query_is_rejected_by_default_and_admitted_only_on_opt_in(self) -> None:
+        signed = ("https://media.example/clip.mp4?"
+                  "AWSAccessKeyId=AKIAEXAMPLE&Expires=1&Signature=abc")
+        with self.assertRaisesRegex(ValueError, "query string"):
+            acq.allowlisted_url(signed, allowed_hosts=ALLOWED_HOSTS)
+        self.assertEqual(
+            acq.allowlisted_url(
+                signed, allowed_hosts=ALLOWED_HOSTS, allow_query=True),
+            signed)
+        self.assertEqual(
+            acq.allowlisted_url(
+                "https://edge.cdn.example/clip.mp4?profile=1&useCDN=true",
+                allowed_hosts=ALLOWED_HOSTS, allow_query=True),
+            "https://edge.cdn.example/clip.mp4?profile=1&useCDN=true")
+
+    def test_query_opt_in_keeps_every_other_invariant(self) -> None:
+        for url in (
+            "http://media.example/clip.mp4?Signature=x",
+            "https://user:pass@media.example/clip.mp4?Signature=x",
+            "https://user@media.example/clip.mp4?Signature=x",
+            "https://media.example:8443/clip.mp4?Signature=x",
+            "https://media.example/clip.mp4?Signature=x#frag",
+            "https://evil.example/clip.mp4?Signature=x",
+            "https://media.example.evil.example/clip.mp4?Signature=x",
+            "https://sub.media.example/clip.mp4?Signature=x",
+            "https://cdn.example/clip.mp4?Signature=x",
+            "https://media.example./clip.mp4?Signature=x",
+            "https://127.0.0.1/clip.mp4?Signature=x",
+            "https://[::1]/clip.mp4?Signature=x",
+            "https://localhost/clip.mp4?Signature=x",
+            "",
+            None,
+            42,
+        ):
+            with self.subTest(url=url), self.assertRaises(ValueError):
+                acq.allowlisted_url(
+                    url, allowed_hosts=ALLOWED_HOSTS, allow_query=True)
+
+    def test_thin_helpers_thread_the_query_opt_in(self) -> None:
+        signed = "https://media.example/clip.mp4?Signature=x"
+        self.assertEqual(
+            acq.allowlisted_video_url(
+                signed, allowed_hosts=ALLOWED_HOSTS, allow_query=True),
+            signed)
+        self.assertEqual(
+            acq.allowlisted_image_url(
+                "https://media.example/poster.png?Signature=x",
+                allowed_hosts=ALLOWED_HOSTS, allow_query=True),
+            "https://media.example/poster.png?Signature=x")
+        with self.assertRaisesRegex(ValueError, "query string"):
+            acq.allowlisted_video_url(signed, allowed_hosts=ALLOWED_HOSTS)
+
 
 class BoundedFetchTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -175,6 +254,48 @@ class BoundedFetchTests(unittest.TestCase):
                 acq.download_http(
                     "https://media.example/clip.mp4", target,
                     allowed_hosts=ALLOWED_HOSTS, max_bytes=1024)
+        self.assertFalse(target.exists())
+
+    def test_signed_redirect_is_followed_and_its_query_preserved(self) -> None:
+        target = self.root / "source.mp4"
+        initial = ("https://media.example/download?profile=1&useCDN=true")
+        signed = ("https://edge.cdn.example/clip.mp4?"
+                  "AWSAccessKeyId=AKIAEXAMPLE&Expires=1&Signature=abc")
+        seen: list[str] = []
+
+        def fake_urlopen(request, timeout=None):  # noqa: ANN001
+            seen.append(request.full_url)
+            return _FakeResponse(b"payload", signed)
+
+        with patch.object(acq.media, "urlopen", side_effect=fake_urlopen):
+            result = acq.download_http(
+                initial, target, allowed_hosts=ALLOWED_HOSTS,
+                max_bytes=1024, allow_query=True)
+        self.assertEqual(result, target)
+        self.assertEqual(target.read_bytes(), b"payload")
+        self.assertEqual(seen, [initial])
+        self.assertIn("AWSAccessKeyId=AKIAEXAMPLE", signed)
+
+    def test_signed_redirect_is_refused_without_the_opt_in(self) -> None:
+        target = self.root / "source.mp4"
+        signed = ("https://edge.cdn.example/clip.mp4?"
+                  "AWSAccessKeyId=AKIAEXAMPLE&Expires=1&Signature=abc")
+        with patched_urlopen(b"payload", signed):
+            with self.assertRaisesRegex(ValueError, "query string"):
+                acq.download_http(
+                    "https://media.example/clip.mp4", target,
+                    allowed_hosts=ALLOWED_HOSTS, max_bytes=1024)
+        self.assertFalse(target.exists())
+
+    def test_signed_redirect_to_a_non_allowlisted_host_is_still_refused(self) -> None:
+        target = self.root / "source.mp4"
+        with patched_urlopen(
+                b"payload", "https://evil.example/clip.mp4?Signature=abc"):
+            with self.assertRaisesRegex(ValueError, "not allowlisted"):
+                acq.download_http(
+                    "https://media.example/clip.mp4", target,
+                    allowed_hosts=ALLOWED_HOSTS, max_bytes=1024,
+                    allow_query=True)
         self.assertFalse(target.exists())
 
     def test_fetch_bytes_truncates_and_fetch_text_decodes(self) -> None:
@@ -305,6 +426,20 @@ class HlsPlanTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "variant URL"):
             acq.plan_hls_download(
                 self.master, allowed_hosts=ALLOWED_HOSTS, master_text=rogue)
+
+    def test_query_bearing_variants_need_the_opt_in(self) -> None:
+        text = (
+            '#EXTM3U\n#EXT-X-STREAM-INF:RESOLUTION=640x360\n'
+            'low/index.m3u8?AWSAccessKeyId=x&Signature=y\n')
+        with self.assertRaisesRegex(ValueError, "query string"):
+            acq.plan_hls_download(
+                self.master, allowed_hosts=ALLOWED_HOSTS, master_text=text)
+        plan = acq.plan_hls_download(
+            self.master, allowed_hosts=ALLOWED_HOSTS, master_text=text,
+            allow_query=True)
+        self.assertEqual(
+            plan["variantUrl"],
+            "https://edge.cdn.example/low/index.m3u8?AWSAccessKeyId=x&Signature=y")
 
 
 class WindowAndSummaryTests(unittest.TestCase):
@@ -714,6 +849,16 @@ class BatchRunnerTests(unittest.TestCase):
         self.assertNotIn("secret.example", message)
         self.assertNotIn("kumiki-acquire", message)
         self.assertLessEqual(len(message), 300)
+
+    def test_safe_error_redacts_signed_query_material(self) -> None:
+        message = acq.safe_error(ValueError(
+            "GET failed: AWSAccessKeyId=AKIAEXAMPLE&Expires=1"
+            "&Signature=abc%2Fdef and Signature=deadbeef&x=1"))
+        self.assertNotIn("AKIAEXAMPLE", message)
+        self.assertNotIn("abc%2Fdef", message)
+        self.assertNotIn("deadbeef", message)
+        self.assertIn("AWSAccessKeyId=[redacted]", message)
+        self.assertIn("Signature=[redacted]", message)
 
 
 if __name__ == "__main__":
