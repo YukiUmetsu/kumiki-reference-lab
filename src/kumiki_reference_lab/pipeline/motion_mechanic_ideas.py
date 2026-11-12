@@ -337,7 +337,11 @@ def propose_motion_mechanics(
             # swap. There is still no direct source-metrics-to-animation
             # adapter, so the per-recipe API mapping remains unverified.
             "availableOriginalImplementation": (
-                dict(_SHIPPED_SWAP)
+                {
+                    **_SHIPPED_SWAP,
+                    "modules": list(_SHIPPED_SWAP["modules"]),
+                    "publicExports": list(_SHIPPED_SWAP["publicExports"]),
+                }
                 if name == "horizontal-image-order-reversal" else None
             ),
             "sourceDoesNotProve": spec["notInferred"],
