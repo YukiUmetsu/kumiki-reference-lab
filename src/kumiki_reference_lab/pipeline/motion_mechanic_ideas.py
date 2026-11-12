@@ -15,6 +15,7 @@ SCHEMA_VERSION = "kumiki.source-motion-mechanic-ideas.v1"
 _TEMPORAL = "kumiki.online-multi-region-temporal.v1"
 _UI_AUDIT_SHA = "ac5bf3988d4e5a74d792c2b36418512102d7b1b3"
 _SHIPPED_SWAP_SHA = "662f60704851c01c0e6ef58244132fe9f29896ac"
+_SHIPPED_PAIR_SHA = "71ab08fcb014959016304c2eb158acf6ddb70283"
 
 # This is a pinned research-to-library bridge, not a source reconstruction.
 # The implementation accepts newly authored pixel-space stage/assets/timing;
@@ -35,6 +36,28 @@ _SHIPPED_SWAP = {
     "requiresOriginalAssetsAndAuthoredLayout": True,
     "requiresIndependentRenderedVisualApproval": True,
 }
+# Both closer and farther screen-space measurements can inspire one
+# specifically authored, checked paired-focus motion component.
+_SHIPPED_PAIR = {
+    "registryItem": "paired-focus",
+    "repository": "YukiUmetsu/kumiki-ui",
+    "commitSha": _SHIPPED_PAIR_SHA,
+    "modules": [
+        "registry/motion/paired-focus.ts",
+        "registry/motion/paired-focus-react.tsx",
+    ],
+    "publicExports": [
+        "compilePairedFocus", "evaluatePairedFocus", "PairedFocusSvg",
+    ],
+    "supportedOriginalModes": [
+        "converge", "diverge", "converge-then-diverge",
+    ],
+    "status": "merged-and-structural-ci-passed-visual-review-pending",
+    "sourceGeometryCanBeUsedAsExecutableSpec": False,
+    "requiresOriginalAssetsAndAuthoredLayout": True,
+    "requiresIndependentRenderedVisualApproval": True,
+}
+
 _ORIGINS = {
     "operator-seeded-not-model-recognized",
     "auto-motion-proposal-not-semantic-identity",
@@ -83,6 +106,8 @@ _MECHANICS: dict[str, dict[str, Any]] = {
         "controls": ["targetA", "targetB", "startFrame", "durationFrames",
                      "convergencePoint", "staggerFrames", "easing"],
         "potentialRegistryModules": [
+            "registry/motion/paired-focus.ts",
+            "registry/motion/paired-focus-react.tsx",
             "registry/motion/shared-element.ts",
             "registry/motion/motion-director.ts"],
         "notInferred": ["contact", "conversation", "one actor pursuing another"],
@@ -99,6 +124,8 @@ _MECHANICS: dict[str, dict[str, Any]] = {
         "controls": ["targetA", "targetB", "startFrame", "durationFrames",
                      "leftAnchor", "rightAnchor", "easing"],
         "potentialRegistryModules": [
+            "registry/motion/paired-focus.ts",
+            "registry/motion/paired-focus-react.tsx",
             "registry/motion/motion-director.ts",
             "registry/visual/comparison-stage-react.tsx"],
         "notInferred": ["physical separation", "emotional disagreement"],
@@ -333,16 +360,30 @@ def propose_motion_mechanics(
             "authoringControlNames": spec["controls"],
             "candidateRegistryModuleFiles": spec["potentialRegistryModules"],
             "registryApiVerifiedForThisRecipe": False,
-            # A tested, installable implementation exists only for the lane
-            # swap. There is still no direct source-metrics-to-animation
-            # adapter, so the per-recipe API mapping remains unverified.
+            # Shipped source-independent implementations are pinned. They
+            # require newly authored art/staging and are NOT automatic mappings
+            # from normalized tracked boxes to executable animation.
             "availableOriginalImplementation": (
                 {
                     **_SHIPPED_SWAP,
                     "modules": list(_SHIPPED_SWAP["modules"]),
                     "publicExports": list(_SHIPPED_SWAP["publicExports"]),
                 }
-                if name == "horizontal-image-order-reversal" else None
+                if name == "horizontal-image-order-reversal" else (
+                    {
+                        **_SHIPPED_PAIR,
+                        "modules": list(_SHIPPED_PAIR["modules"]),
+                        "publicExports": list(_SHIPPED_PAIR["publicExports"]),
+                        "supportedOriginalModes": list(
+                            _SHIPPED_PAIR["supportedOriginalModes"]),
+                        "suggestedAuthoredMode": (
+                            "converge" if name == "screen-centers-closer"
+                            else "diverge"),
+                    }
+                    if name in {
+                        "screen-centers-closer", "screen-centers-farther",
+                    } else None
+                )
             ),
             "sourceDoesNotProve": spec["notInferred"],
             "requiresOriginalArtAssets": True,
@@ -372,7 +413,8 @@ def propose_motion_mechanics(
             "All recipes are original creative design suggestions, never recovered source animation.",
             "Screen-region geometry does not prove contact, pose, intent or a real camera move.",
             "Related old primitives existed at the audit commit; source-metric API mapping remains unverified.",
-            "A shipped two-lane-swap implementation is listed separately from all other research ideas.",
+            "Two shipped UI packs cover horizontal order reversal, paired convergence and paired divergence; other research ideas remain unimplemented.",
+            "No automatic source-metric to shipped component authoring API converter is supplied.",
             "The system does not assume any component is missing from kumiki-ui.",
             "No executable animation specification, exact source keyframes, original artwork or video is emitted.",
             "Review generated visual work against high-quality references with independent assets.",
