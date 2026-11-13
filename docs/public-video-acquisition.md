@@ -53,6 +53,7 @@ Enforced once, for every caller:
 | `ytdlp` | `allowlisted_youtube_url` (single-video URL policy), `download_via_ytdlp` (bounded 403 retry), `youtube_source_metadata` (`--dump-single-json --skip-download`), `classify_ytdlp_failure`, `is_retryable_refusal`, `YtDlpError` / `YtDlpRefusedError` |
 | `probe` | `run_ffprobe_json` (retry/backoff), `remote_source_metadata`, `ranged_source_metadata` (bounded `Range` fallback for flaky hosts), `source_metadata`, `probe_image_dimensions`, `metadata_from_probe`, `finite_float` / `as_int` / `as_text` |
 | `windows` | `plan_windows`, `measure_windows`, `summarize_probes`, `cut_validity`, `build_video_evidence` |
+| `census` | `scan_full_runtime` (two whole-file ffmpeg passes: scene candidates with source PTS, then a fixed-cadence 160×90 appearance series), `build_census_evidence`, `CENSUS_SCHEMA` (see `docs/full-film-census.md`) |
 | `reporting` | `cut_columns`, `coverage_distribution`, `comparability_block`, `duplicate_summary`, `unique_media_rows`, `aggregate_extremes`, `still_decode_dimensions` |
 | `stills` | `measure_still`, `compute_still_metrics`, `dominant_hue_family`, `decode_still_rgb`, `infer_decoded_dimensions`, `still_image_format`, `build_still_evidence`, `still_quality_flags` (plus `still_record_flags` / `still_has_quality_flags` / `still_quality_counts` / `still_quality_summary` for report consumers) |
 | `store` | `write_json_atomic`, `safe_slug`, `resume_matches`, `build_index`, `utc_now` |
