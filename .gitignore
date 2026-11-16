@@ -19,3 +19,42 @@ models/
 *.mov
 *.webm
 *.mkv
+
+# Research evidence snapshot: raw record trees stay local, while the packaged
+# dataset/ trees, report.md, aggregate.json and README.md are committed.
+# Rules are site-scoped so the already-tracked whatships/ and movie-promotions/
+# trees are never ignored.
+research/analysis/aicp/videos/
+research/analysis/aicp/census/
+research/analysis/directorslibrary/videos/
+research/analysis/directorslibrary/stills/
+research/analysis/directorslibrary/census/
+research/analysis/motiondesignawards/videos/
+research/analysis/motiondesignawards/stills/
+research/analysis/motiondesignawards/census/
+research/analysis/promonews/videos/
+research/analysis/promonews/stills/
+research/analysis/promonews/census/
+research/analysis/shots/videos/
+research/analysis/shots/stills/
+research/analysis/shots/census/
+research/analysis/stash/stills/
+research/analysis/aicp/catalog*.json
+research/analysis/directorslibrary/catalog*.json
+research/analysis/motiondesignawards/catalog*.json
+research/analysis/promonews/catalog*.json
+research/analysis/shots/catalog*.json
+research/analysis/stash/catalog*.json
+research/analysis/aicp/*index.json
+research/analysis/directorslibrary/*index.json
+research/analysis/motiondesignawards/*index.json
+research/analysis/promonews/*index.json
+research/analysis/shots/*index.json
+research/analysis/stash/*index.json
+# Aggregates are machine-readable companions; the committed copy is dataset/aggregate.json.gz.
+research/analysis/aicp/aggregate.json
+research/analysis/directorslibrary/aggregate.json
+research/analysis/motiondesignawards/aggregate.json
+research/analysis/promonews/aggregate.json
+research/analysis/shots/aggregate.json
+research/analysis/stash/aggregate.json
