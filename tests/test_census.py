@@ -7,7 +7,9 @@ the scanner are patched. The live smoke is a separate, explicitly approved run.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import importlib.util
+import io
 import json
 import subprocess
 import tempfile
@@ -460,6 +462,161 @@ class ScriptBatchTests(unittest.TestCase):
             self.assertEqual(index["counts"]["failed"], 1)
             self.assertEqual(index["failures"][0]["reason"], "media-changed")
             self.assertFalse(created[0].exists())
+
+
+class ScriptCatalogFallbackTests(unittest.TestCase):
+    def test_catalog_urls_index_every_adapter_id_shape(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "catalog.json"
+            path.write_text(json.dumps({"entries": [
+                {"id": "101", "videoUrl": "https://cdn.test/a.mp4"},
+                {"nid": 202, "videoUrl": "https://cdn.test/b.mp4"},
+                {"projectId": "303", "videoUrl": "https://cdn.test/c.mp4"},
+                {"catalogId": "404", "videoUrl": "https://cdn.test/d.mp4"},
+                {"id": "505", "posterUrl": "https://cdn.test/poster.png"},
+            ]}), encoding="utf-8")
+            urls = census_script.load_catalog_urls([path])
+            self.assertEqual(urls["101"], "https://cdn.test/a.mp4")
+            self.assertEqual(urls["202"], "https://cdn.test/b.mp4")
+            self.assertEqual(urls["303"], "https://cdn.test/c.mp4")
+            self.assertEqual(urls["404"], "https://cdn.test/d.mp4")
+            self.assertNotIn("505", urls)
+
+    def test_catalog_row_container_shapes(self) -> None:
+        rows = {"id": "7", "videoUrl": "https://cdn.test/7.mp4"}
+        for key in ("entries", "videos", "projects", "clips", "items",
+                    "records"):
+            with self.subTest(key=key), tempfile.TemporaryDirectory() as directory:
+                path = Path(directory) / "catalog.json"
+                path.write_text(json.dumps({key: [rows]}), encoding="utf-8")
+                self.assertEqual(census_script.load_catalog_urls([path])["7"],
+                                 "https://cdn.test/7.mp4")
+
+    def test_absent_catalog_keeps_missing_url_skip(self) -> None:
+        self.assertEqual(census_script.load_catalog_urls([]), {})
+
+    def test_stale_record_url_falls_back_and_records_catalog_source(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            videos = root / "shots" / "videos"
+            videos.mkdir(parents=True)
+            record = {
+                "id": "123", "slug": "clip", "provider": "direct-mp4",
+                "videoUrl": "https://d1ko11x0ybxl0h.cloudfront.net/old.mp4",
+                "source": {"mediaSha256": "a" * 64},
+            }
+            (videos / "123-clip.json").write_text(
+                json.dumps(record), encoding="utf-8")
+            catalog = root / "shots" / "catalog.json"
+            catalog.write_text(json.dumps({"clips": [{
+                "id": 123,
+                "videoUrl": "https://d1ko11x0ybxl0h.cloudfront.net/new.mp4",
+            }]}), encoding="utf-8")
+            calls: list[str] = []
+
+            def download(url, delivery, directory, **kwargs):  # noqa: ANN001
+                calls.append(url)
+                if "old.mp4" in url:
+                    raise ValueError(
+                        "remote probe failed after 3 attempts: "
+                        "[redacted-url] Server returned 404 Not Found")
+                path = Path(directory) / "source.mp4"
+                path.write_bytes(b"media")
+                return path, "http-download"
+
+            with patch.object(census_script, "download_media", side_effect=download), \
+                 patch.object(census_script, "source_metadata",
+                              return_value={"mediaSha256": "a" * 64}), \
+                 patch.object(census_script, "scan_full_runtime",
+                              return_value=_scan_payload()), \
+                 contextlib.redirect_stdout(io.StringIO()) as stdout:
+                code = census_script.main([
+                    "--root", str(root), "--site", "shots",
+                    "--catalog", str(catalog),
+                    "--acknowledge-rights", "--limit", "1",
+                    "--delay-seconds", "0"])
+            self.assertEqual(code, 0)
+            self.assertEqual(calls, [
+                "https://d1ko11x0ybxl0h.cloudfront.net/old.mp4",
+                "https://d1ko11x0ybxl0h.cloudfront.net/new.mp4",
+            ])
+            self.assertIn("url-from-catalog", stdout.getvalue())
+            index = json.loads(
+                (root / "shots" / "census-index.json").read_text(
+                    encoding="utf-8"))
+            self.assertEqual(index["counts"]["measured"], 1)
+            self.assertEqual(index["records"][0]["urlSource"], "catalog")
+            evidence = json.loads(
+                (root / "shots" / "census" / "123-clip.json").read_text(
+                    encoding="utf-8"))
+            self.assertEqual(evidence["acquisition"]["urlSource"], "catalog")
+            self.assertEqual(evidence["record"]["urlSource"], "catalog")
+            self.assertEqual(
+                evidence["acquisition"]["videoUrl"],
+                "https://d1ko11x0ybxl0h.cloudfront.net/new.mp4")
+
+    def test_persistent_4xx_is_stale_signed_url(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            item = _item(root)
+            item.update({
+                "videoUrl": "https://cdn.test/old.mp4",
+                "catalogUrl": "https://cdn.test/new.mp4",
+                "urlSource": "record", "allowQuery": True,
+                "hosts": ("cdn.test",), "storedProvider": "direct-mp4",
+                "delivery": "direct",
+            })
+            calls: list[str] = []
+
+            def download(url, delivery, directory, **kwargs):  # noqa: ANN001
+                calls.append(url)
+                raise ValueError("Server returned 404 Not Found")
+
+            with patch.object(census_script, "download_media", side_effect=download):
+                with self.assertRaises(census_script.StaleSignedUrl) as raised:
+                    census_script.run_census_item(
+                        item, site="promonews", options=_Options(root))
+            self.assertEqual(raised.exception.reason, "stale-signed-url")
+            self.assertEqual(calls, [
+                "https://cdn.test/old.mp4",
+                "https://cdn.test/new.mp4",
+            ])
+            self.assertEqual(census_script._error_text(raised.exception),
+                             "stale-signed-url")
+
+    def test_catalog_fallback_with_different_hash_is_media_changed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            item = _item(root)
+            item.update({
+                "videoUrl": "https://cdn.test/old.mp4",
+                "catalogUrl": "https://cdn.test/new.mp4",
+                "urlSource": "record", "allowQuery": True,
+                "hosts": ("cdn.test",), "storedProvider": "direct-mp4",
+                "delivery": "direct",
+            })
+            calls: list[str] = []
+
+            def download(url, delivery, directory, **kwargs):  # noqa: ANN001
+                calls.append(url)
+                if "old.mp4" in url:
+                    raise ValueError("HTTP Error 404: Not Found")
+                path = Path(directory) / "source.mp4"
+                path.write_bytes(b"media")
+                return path, "http-download"
+
+            with patch.object(census_script, "download_media", side_effect=download), \
+                 patch.object(census_script, "source_metadata",
+                              return_value={"mediaSha256": "c" * 64}), \
+                 patch.object(census_script, "scan_full_runtime") as scan:
+                with self.assertRaises(census_script.MediaChanged):
+                    census_script.run_census_item(
+                        item, site="promonews", options=_Options(root))
+            scan.assert_not_called()
+            self.assertEqual(calls, [
+                "https://cdn.test/old.mp4",
+                "https://cdn.test/new.mp4",
+            ])
 
 
 if __name__ == "__main__":

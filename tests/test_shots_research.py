@@ -922,6 +922,7 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(aggregate["stills"]["n"], 0)
         self.assertIn("No video-measured records.", report)
         self.assertIn("None.", report)
+        self.assertIn("census: not present", report)
         self.assertEqual(sorted(path.name for path in out_dir.iterdir()),
                          ["aggregate.json", "report.md"])
 
@@ -933,6 +934,20 @@ class ReportTests(unittest.TestCase):
             catalog_row(id=2, urlname="b"), luma=0.6))
         self.write_still(out_dir, synthetic_still_record(
             catalog_row(id=3, urlname="c"), luma=0.9))
+        acq.write_json_atomic(out_dir / "census" / "1-a.json", {
+            "schemaVersion": "kumiki.shots-census-evidence.v1",
+            "coverage": {"decodeCoverageFraction": 1.0},
+            "census": {
+                "cutCount": 8, "cutsPerMinute": 24.0,
+                "medianCutGapFrames": 40.0, "burstFraction": 0.0,
+                "strobe": False,
+                "seriesSummary": {"meanDisplayLuma": 0.2,
+                                  "meanSaturation": 0.1,
+                                  "decodeCoverageFraction": 1.0},
+                "fullRuntimeDecoded": True,
+            },
+            "record": {"id": 1, "slug": "a"},
+        })
 
         shots.run_report(out_dir, top=2, log=lambda _s: None)
         first_report = (out_dir / "report.md").read_bytes()
@@ -941,6 +956,54 @@ class ReportTests(unittest.TestCase):
 
         self.assertEqual((out_dir / "report.md").read_bytes(), first_report)
         self.assertEqual((out_dir / "aggregate.json").read_bytes(), first_aggregate)
+
+    def test_census_record_adds_full_film_columns_and_sections(self) -> None:
+        out_dir = self.root / "out"
+        row = catalog_row(id=1, urlname="a")
+        self.write_video(out_dir, synthetic_video_record(row))
+        acq.write_json_atomic(out_dir / "census" / "1-a.json", {
+            "schemaVersion": "kumiki.shots-census-evidence.v1",
+            "coverage": {"decodeCoverageFraction": 1.0},
+            "census": {
+                "cutCount": 16, "cutsPerMinute": 48.0,
+                "medianCutGapFrames": 20.0, "burstFraction": 0.1,
+                "strobe": False,
+                "seriesSummary": {"meanDisplayLuma": 0.2,
+                                  "meanSaturation": 0.1,
+                                  "decodeCoverageFraction": 1.0},
+                "fullRuntimeDecoded": True,
+            },
+            "record": {"id": 1, "slug": "a"},
+        })
+        acq.write_json_atomic(out_dir / "census-index.json", {
+            "schemaVersion": "kumiki.shots-census-index.v1",
+            "counts": {"measured": 1, "skipped": 0, "failed": 0},
+        })
+
+        shots.run_report(out_dir, log=lambda _s: None)
+        report = (out_dir / "report.md").read_text(encoding="utf-8")
+        aggregate = json.loads(
+            (out_dir / "aggregate.json").read_text(encoding="utf-8"))
+        self.assertIn("## Full-film census", report)
+        self.assertIn("## Census reconciliation", report)
+        self.assertIn("film-level", report)
+        self.assertIn("not comparable to a cut rate", report)
+        self.assertIn("decodeCoverageFraction", report)
+        self.assertIn("full_cuts_per_min", report)
+        self.assertIn("full_vs_window", report)
+        self.assertIn("| 48.00 |", report)
+        # The synthetic window probe records no distinct cut candidates, so the
+        # window rate is zero against the film's 48/min: a -100% difference.
+        self.assertIn("-100%", report)
+        self.assertEqual(aggregate["census"]["coverage"]["records"], 1)
+        self.assertEqual(aggregate["census"]["coverage"]["videoRecords"], 1)
+        self.assertEqual(aggregate["census"]["aggregate"]["n"], 1)
+        self.assertEqual(aggregate["census"]["aggregate"]["median"], 48.0)
+        self.assertEqual(
+            aggregate["census"]["reconciliation"]["median_abs_relative_error"],
+            1.0)
+        self.assertEqual(aggregate["videos"][0]["fullCutsPerMinute"], 48.0)
+        self.assertEqual(aggregate["videos"][0]["fullVsWindow"], "-100%")
 
     def test_still_only_records_never_enter_motion_aggregates(self) -> None:
         out_dir = self.root / "out"

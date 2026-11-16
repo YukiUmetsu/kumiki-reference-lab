@@ -805,8 +805,51 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(aggregate["stills"]["n"], 0)
         self.assertIn("No video-measured records.", report)
         self.assertIn("None.", report)
+        self.assertIn("census: not present", report)
         self.assertEqual(sorted(path.name for path in out_dir.iterdir()),
                          ["aggregate.json", "report.md"])
+
+    def test_census_records_keep_strobes_out_of_the_cut_rate_range(self) -> None:
+        out_dir = self.root / "out"
+        self.write_video(out_dir, synthetic_video_record(
+            slug="clean", project_id="1"))
+        self.write_video(out_dir, synthetic_video_record(
+            slug="strobe", project_id="2"))
+        for slug, project_id, rate, strobe, gap, burst in (
+                ("clean", "1", 30.0, False, 40.0, 0.0),
+                ("strobe", "2", 300.0, True, 1.0, 0.9)):
+            acq.write_json_atomic(out_dir / "census" / f"{project_id}-{slug}.json", {
+                "schemaVersion": "kumiki.motiondesignawards-census-evidence.v1",
+                "coverage": {"decodeCoverageFraction": 1.0},
+                "census": {
+                    "cutCount": 60, "cutsPerMinute": rate,
+                    "medianCutGapFrames": gap, "burstFraction": burst,
+                    "strobe": strobe,
+                    "seriesSummary": {"meanDisplayLuma": 0.4,
+                                      "meanSaturation": 0.3,
+                                      "decodeCoverageFraction": 1.0},
+                    "fullRuntimeDecoded": True,
+                },
+                "record": {"id": project_id, "slug": slug},
+            })
+
+        mda.run_report(out_dir, log=lambda _: None)
+        report = (out_dir / "report.md").read_text(encoding="utf-8")
+        aggregate = json.loads(
+            (out_dir / "aggregate.json").read_text(encoding="utf-8"))
+        self.assertIn("## Full-film census", report)
+        self.assertIn("Strobe block", report)
+        self.assertIn("| strobe | 300.00 |", report)
+        self.assertIn("not comparable to a cut rate", report)
+        self.assertEqual(aggregate["census"]["coverage"]["records"], 2)
+        self.assertEqual(aggregate["census"]["aggregate"]["n"], 1)
+        self.assertEqual(aggregate["census"]["aggregate"]["median"], 30.0)
+        self.assertEqual(aggregate["census"]["aggregate"]["strobe_count"], 1)
+        self.assertEqual(aggregate["census"]["aggregate"]["strobe_ids"],
+                         ["strobe"])
+        by_slug = {row["slug"]: row for row in aggregate["videos"]}
+        self.assertEqual(by_slug["clean"]["fullCutsPerMinute"], 30.0)
+        self.assertEqual(by_slug["strobe"]["fullCutsPerMinute"], 300.0)
 
     def test_still_only_records_never_enter_motion_aggregates(self) -> None:
         out_dir = self.root / "out"

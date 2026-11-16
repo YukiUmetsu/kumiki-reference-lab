@@ -30,7 +30,10 @@ from .probe import as_int, as_text, finite_float
 from .windows import cut_validity
 
 __all__ = [
-    "RANKABILITY_FLAGS", "aggregate_extremes", "comparability_block",
+    "RANKABILITY_FLAGS", "aggregate_extremes", "census_aggregate",
+    "census_annotate_rows", "census_columns", "census_context_lines",
+    "census_delta_text", "census_for", "census_lookup",
+    "census_reconciliation", "census_section_lines", "comparability_block",
     "coverage_distribution", "cut_columns", "duplicate_summary",
     "still_decode_counts", "still_decode_dimensions", "unique_media_rows",
 ]
@@ -48,7 +51,8 @@ COMPARABLE_WITHIN = [
     "non-burst",
     ">=25% coverage",
 ]
-NOT_COMPARABLE_TO = ["other sites", "other renditions", "full-film claims"]
+NOT_COMPARABLE_TO = ["other sites", "other renditions",
+                     "full-film claims derived from window rates"]
 
 _DEFAULT_DECODE_WIDTH = 160
 _DEFAULT_DECODE_HEIGHT = 90
@@ -303,12 +307,14 @@ def comparability_block(
             "so no sampled fraction or window gap exists.")
     else:
         caveats.append(
-            "Coverage is sampled, not full-film: median "
+            "Window coverage is sampled, not full-film: median "
             f"{coverage.get('median')}% per record, p10 {coverage.get('p10')}%, "
             f"p90 {coverage.get('p90')}%; "
             f"{coverage.get('below20Pct')}% of rows are below 20% and "
             f"{coverage.get('below10Pct')}% below 10%; median unobserved gap "
-            f"between windows is {coverage.get('gapSecondsMedian')} s.")
+            f"between windows is {coverage.get('gapSecondsMedian')} s. Window "
+            "rates describe those windows; a full-film census, when present, "
+            "is reported separately.")
     caveats.append(
         f"{duplicate_groups.get('extraRecords', 0)} extra record(s) in "
         f"{duplicate_groups.get('groups', 0)} duplicate group(s) share media; "
@@ -564,3 +570,457 @@ def still_decode_dimensions(
     width = max(2, min(max_width, int(source_width * scale + 0.5)))
     height = max(2, min(max_height, int(source_height * scale + 0.5)))
     return {"width": width, "height": height, "derived": True}
+
+
+# ---------------------------------------------------------------------------
+# full-film census columns, reconciliation and aggregation
+# ---------------------------------------------------------------------------
+
+_WINDOW_RATE_KEYS = (
+    "windowRate", "sampledCutCandidatesPerMinute", "cutsPerMinute",
+    "windowCutsPerMinute", "cutCandidateRatePerMinute",
+)
+_CENSUS_ID_KEYS = ("id", "slug", "clipId", "nid", "postId", "projectId")
+_OVER_25 = 0.25
+_RANK_CHANGE_THRESHOLD = 5
+
+
+def census_columns(record: Mapping[str, Any]) -> dict[str, Any]:
+    """Report columns for one full-runtime census record.
+
+    The census evidence shape nests the scan under ``census``; a bare scan
+    block (or an already flattened row) is accepted as well. ``evidence`` is
+    always ``"full-film"`` so a consumer can tell these values apart from the
+    window-sampled columns without inferring it from a key name.
+    """
+    record = _mapping(record)
+    scan = _mapping(record.get("census"))
+    if not scan:
+        scan = record
+    summary = _mapping(scan.get("seriesSummary"))
+    coverage = _mapping(record.get("coverage"))
+    decoded = finite_float(coverage.get("decodeCoverageFraction"))
+    if decoded is None:
+        decoded = finite_float(summary.get("decodeCoverageFraction"))
+    return {
+        "full_cut_count": as_int(scan.get("cutCount")),
+        "full_cuts_per_min": finite_float(scan.get("cutsPerMinute")),
+        "median_gap_frames": finite_float(scan.get("medianCutGapFrames")),
+        "burst_fraction": finite_float(scan.get("burstFraction")),
+        "strobe": scan.get("strobe") is True,
+        "mean_luma": finite_float(summary.get("meanDisplayLuma")),
+        "mean_saturation": finite_float(summary.get("meanSaturation")),
+        "decoded_fraction": decoded,
+        "evidence": "full-film",
+    }
+
+
+def census_for(
+    row: Mapping[str, Any], lookup: Mapping[str, Mapping[str, Any]],
+) -> Mapping[str, Any] | None:
+    """Resolve a row's census record through every adapter identity field."""
+    if not lookup or not isinstance(row, Mapping):
+        return None
+    for key in _CENSUS_ID_KEYS:
+        value = row.get(key)
+        if value is None:
+            continue
+        record = lookup.get(str(value))
+        if record is not None:
+            return record
+    return None
+
+
+def census_lookup(
+    records: Iterable[Mapping[str, Any]],
+) -> dict[str, Mapping[str, Any]]:
+    """Index census records by their recorded id and slug, first one wins."""
+    lookup: dict[str, Mapping[str, Any]] = {}
+    for record in records:
+        if not isinstance(record, Mapping):
+            continue
+        inner = _mapping(record.get("record"))
+        for value in (inner.get("id"), inner.get("slug"),
+                      record.get("id"), record.get("slug")):
+            text = as_text(value)
+            if text is not None:
+                lookup.setdefault(text, record)
+    return lookup
+
+
+def census_delta_text(
+    window_rate: object, full_rate: object,
+) -> str:
+    """Render a window rate against a film rate as ``+12%`` style text."""
+    window = finite_float(window_rate)
+    full = finite_float(full_rate)
+    if window is None or full is None or full == 0:
+        return "—"
+    return f"{int(round((window - full) / full * 100.0)):+d}%"
+
+
+def census_annotate_rows(
+    rows: Iterable[dict[str, Any]],
+    lookup: Mapping[str, Mapping[str, Any]],
+    *, window_key: str = "sampledCutCandidatesPerMinute",
+) -> None:
+    """Add ``fullCutsPerMinute`` and ``fullVsWindow`` to per-video rows.
+
+    Rows without a census record keep explicit ``None``/``—`` values, so a
+    report never implies film-level evidence it does not have.
+    """
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        record = census_for(row, lookup)
+        if record is None:
+            row["fullCutsPerMinute"] = None
+            row["fullVsWindow"] = "—"
+            continue
+        columns = census_columns(record)
+        row.update(columns)
+        row["fullCutsPerMinute"] = columns["full_cuts_per_min"]
+        row["fullVsWindow"] = census_delta_text(
+            row.get(window_key), columns["full_cuts_per_min"])
+
+
+def census_reconciliation(
+    window_rows: Iterable[Mapping[str, Any]],
+    census_by_id: Mapping[str, Mapping[str, Any]],
+) -> dict[str, Any]:
+    """Compare window-sampled rates with full-film census rates.
+
+    Relative error is ``(window_rate - full_rate) / full_rate`` per record: a
+    positive value means the window estimate overstates the film rate. Records
+    whose full-film rate is zero are not comparable and are counted separately.
+    ``rank_changes`` lists records whose position changes by more than five
+    places when the same records are ranked by each rate in turn.
+    """
+    pairs: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    skipped_zero = 0
+    for index, row in enumerate(window_rows or []):
+        if not isinstance(row, Mapping):
+            continue
+        census = census_for(row, census_by_id)
+        if census is None:
+            continue
+        columns = census_columns(census)
+        full_rate = finite_float(columns.get("full_cuts_per_min"))
+        window_rate = finite_float(
+            next((value for value in (
+                row.get(key) for key in _WINDOW_RATE_KEYS)
+                if finite_float(value) is not None), None))
+        if full_rate is None or window_rate is None:
+            continue
+        identifier = _record_id(row, index)
+        if identifier in seen:
+            continue
+        seen.add(identifier)
+        if full_rate == 0:
+            skipped_zero += 1
+            continue
+        error = (window_rate - full_rate) / full_rate
+        pairs.append({
+            "id": identifier,
+            "window_rate": _round(window_rate),
+            "full_rate": _round(full_rate),
+            "relative_error": _round(error),
+            "abs_relative_error": _round(abs(error)),
+            "direction": ("window higher" if error > 0
+                          else ("window lower" if error < 0 else "equal")),
+        })
+
+    pairs.sort(key=lambda entry: entry["id"])
+    window_order = sorted(
+        pairs, key=lambda entry: (-entry["window_rate"], entry["id"]))
+    full_order = sorted(
+        pairs, key=lambda entry: (-entry["full_rate"], entry["id"]))
+    window_rank = {entry["id"]: position
+                   for position, entry in enumerate(window_order, start=1)}
+    full_rank = {entry["id"]: position
+                 for position, entry in enumerate(full_order, start=1)}
+    rank_changes = []
+    for entry in pairs:
+        change = window_rank[entry["id"]] - full_rank[entry["id"]]
+        if abs(change) > _RANK_CHANGE_THRESHOLD:
+            rank_changes.append({
+                "id": entry["id"],
+                "window_rank": window_rank[entry["id"]],
+                "full_rank": full_rank[entry["id"]],
+                "position_change": change,
+                "window_rate": entry["window_rate"],
+                "full_rate": entry["full_rate"],
+                "relative_error": entry["relative_error"],
+            })
+    rank_changes.sort(key=lambda entry: (-abs(entry["position_change"]),
+                                         entry["id"]))
+
+    abs_errors = sorted(entry["abs_relative_error"] for entry in pairs)
+    over_25 = sorted(
+        (entry for entry in pairs
+         if entry["abs_relative_error"] > _OVER_25),
+        key=lambda entry: (-entry["abs_relative_error"], entry["id"]))
+    improved_share = (round(len(over_25) / len(pairs), 6) if pairs else None)
+    return {
+        "n": len(pairs),
+        "skipped_zero_full_rate": skipped_zero,
+        "median_abs_relative_error": _round(
+            statistics.median(abs_errors) if abs_errors else None),
+        "p90_abs_relative_error": _round(_percentile(abs_errors, 0.90)),
+        "max_abs_relative_error": (_round(abs_errors[-1]) if abs_errors else None),
+        "improved": len(over_25),
+        "improved_share": improved_share,
+        "direction_counts": {
+            "window_higher": sum(1 for entry in pairs
+                                 if entry["relative_error"] > 0),
+            "window_lower": sum(1 for entry in pairs
+                                if entry["relative_error"] < 0),
+        },
+        "over_25pct": over_25,
+        "rank_changes": rank_changes,
+    }
+
+
+def _rate_range(entries: list[tuple[str, float]]) -> dict[str, Any]:
+    values = sorted(value for _, value in entries)
+    if not values:
+        return {"n": 0, "min": None, "p10": None, "median": None,
+                "p90": None, "max": None, "min_id": None, "max_id": None}
+    low = min(entries, key=lambda item: (item[1], item[0]))
+    high = max(entries, key=lambda item: (item[1], item[0]))
+    return {
+        "n": len(values),
+        "min": _round(values[0]),
+        "p10": _round(_percentile(values, 0.10)),
+        "median": _round(statistics.median(values)),
+        "p90": _round(_percentile(values, 0.90)),
+        "max": _round(values[-1]),
+        "min_id": low[0],
+        "max_id": high[0],
+    }
+
+
+def census_aggregate(rows: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
+    """Summarise full-film cut rates, never pooling strobe and non-strobe.
+
+    Only rows carrying ``evidence == "full-film"`` (or rows built by
+    :func:`census_columns`, where the key is present) enter the aggregate. The
+    main range is computed over non-strobe records only; strobe records get
+    their own block and are cited by id.
+    """
+    plain: list[tuple[str, float]] = []
+    strobe: list[tuple[str, float]] = []
+    strobe_rows: list[dict[str, Any]] = []
+    for index, row in enumerate(rows or []):
+        if not isinstance(row, Mapping):
+            continue
+        if row.get("evidence") not in (None, "full-film"):
+            continue
+        rate = finite_float(row.get("full_cuts_per_min"))
+        if rate is None:
+            continue
+        identifier = _record_id(row, index)
+        if row.get("strobe") is True:
+            strobe.append((identifier, rate))
+            strobe_rows.append({
+                "id": identifier,
+                "full_cuts_per_min": _round(rate),
+                "median_gap_frames": finite_float(row.get("median_gap_frames")),
+                "burst_fraction": finite_float(row.get("burst_fraction")),
+            })
+        else:
+            plain.append((identifier, rate))
+    strobe_rows.sort(key=lambda entry: entry["id"])
+    return {
+        **_rate_range(plain),
+        "strobe_count": len(strobe),
+        "strobe_ids": sorted(identifier for identifier, _ in strobe),
+        "strobe": _rate_range(strobe),
+        "strobe_rows": strobe_rows,
+        "n_all": len(plain) + len(strobe),
+    }
+
+
+def _fmt(value: object, digits: int = 2) -> str:
+    number = finite_float(value)
+    return "—" if number is None else f"{number:.{digits}f}"
+
+
+def census_context_lines(
+    context: Mapping[str, Any], *, site: str, digits: int = 2,
+) -> list[str]:
+    """Render the two census sections from an adapter's ``census`` block."""
+    context = _mapping(context)
+    coverage = _mapping(context.get("coverage"))
+    counts = _mapping(context.get("indexCounts"))
+    index_counts = None
+    if counts:
+        index_counts = (as_int(counts.get("measured")) or 0,
+                        as_int(counts.get("failed")) or 0)
+    return census_section_lines(
+        _mapping(context.get("aggregate")),
+        _mapping(context.get("reconciliation")),
+        coverage_n=as_int(coverage.get("records")) or 0,
+        coverage_m=as_int(coverage.get("videoRecords")) or 0,
+        site=site,
+        decode_fraction=finite_float(coverage.get("decodeFraction")),
+        index_counts=index_counts, digits=digits)
+
+
+def census_section_lines(
+    aggregate: Mapping[str, Any],
+    reconciliation: Mapping[str, Any],
+    *, coverage_n: int, coverage_m: int, site: str,
+    decode_fraction: float | None = 1.0,
+    index_counts: tuple[int, int] | None = None,
+    digits: int = 2,
+) -> list[str]:
+    """Markdown lines for the two census sections every adapter report renders.
+
+    ``coverage_n`` is the number of census records and ``coverage_m`` the
+    number of video-measured records in the same tree. With no census records
+    the helper still emits both headings and an explicit ``census: not
+    present`` line, so a window-only report degrades visibly rather than
+    silently.
+    """
+    lines: list[str] = []
+    if not coverage_n:
+        lines.append("## Full-film census")
+        lines.append("")
+        detail = (f"census: not present (0 of {coverage_m} video-measured "
+                  "records have a census record)")
+        if index_counts is not None:
+            measured, failed = index_counts
+            detail += (f"; `census-index.json` reports {measured} measured "
+                       f"and {failed} failed")
+        lines.append(detail + ".")
+        lines.append("")
+        lines.append("## Census reconciliation")
+        lines.append("")
+        lines.append("census: not present (reconciliation needs at least one "
+                     "full-film census record).")
+        lines.append("")
+        return lines
+
+    share = (100.0 * coverage_n / coverage_m) if coverage_m else 0.0
+    lines.append("## Full-film census")
+    lines.append("")
+    lines.append(
+        f"Film-level evidence: {coverage_n} of {coverage_m} video-measured "
+        f"records ({share:.1f}%) on {site} have a full-runtime census record. "
+        "Census values are **film-level**: every cut candidate in the file was "
+        "counted and the appearance series is time-weighted over the whole "
+        "runtime, so `decodeCoverageFraction` is "
+        f"{_fmt(decode_fraction, 6)}. The `full_cuts_per_min` column is that "
+        "film-level rate; every `sampled_cut_candidates_per_min` value remains "
+        "a sample of its windows.")
+    lines.append("")
+    lines.append(
+        "Census cut candidates are still ffmpeg scene-score exceedances, not "
+        "verified edits; fast movement, flashes, transitions and compression "
+        "can exceed the threshold. A `strobe` record's rate describes "
+        "strobe-like candidate density and is **not comparable to a cut "
+        "rate**, so strobe records are excluded from the range below and "
+        "reported separately.")
+    lines.append("")
+    lines.append("| statistic | full_cuts_per_min (non-strobe) |")
+    lines.append("| --- | --- |")
+    for label in ("n", "min", "p10", "median", "p90", "max"):
+        value = aggregate.get(label)
+        rendered = str(value) if label == "n" else _fmt(value, digits)
+        lines.append(f"| {label} | {rendered} |")
+    lines.append("")
+    if aggregate.get("n"):
+        lines.append(
+            "Range endpoints: min "
+            f"{_fmt(aggregate.get('min'), digits)} "
+            f"(`{aggregate.get('min_id')}`), max "
+            f"{_fmt(aggregate.get('max'), digits)} "
+            f"(`{aggregate.get('max_id')}`); n counts non-strobe records "
+            "only.")
+        lines.append("")
+    strobe = aggregate.get("strobe") or {}
+    if aggregate.get("strobe_count"):
+        lines.append(
+            f"Strobe block (never pooled with the cut-rate range above): "
+            f"{aggregate.get('strobe_count')} record(s), listed by id below. "
+            f"Its own range is min {_fmt(strobe.get('min'), digits)}, median "
+            f"{_fmt(strobe.get('median'), digits)}, max "
+            f"{_fmt(strobe.get('max'), digits)}.")
+        lines.append("")
+        lines.append("| strobe id | full_cuts_per_min | median_gap_frames | "
+                     "burst_fraction |")
+        lines.append("| --- | --- | --- | --- |")
+        for entry in aggregate.get("strobe_rows") or []:
+            lines.append(
+                f"| {entry.get('id')} | "
+                f"{_fmt(entry.get('full_cuts_per_min'), digits)} | "
+                f"{_fmt(entry.get('median_gap_frames'), 1)} | "
+                f"{_fmt(entry.get('burst_fraction'), 3)} |")
+    else:
+        lines.append("No record met the `strobe` threshold.")
+    lines.append("")
+
+    lines.append("## Census reconciliation")
+    lines.append("")
+    lines.append(
+        "Window values are samples of the runtime; census values cover the "
+        "film. Relative error is `(window_rate - full_rate) / full_rate`, so a "
+        "positive value means the window sample overestimated the film and a "
+        "negative value means it underestimated it.")
+    lines.append("")
+    lines.append(
+        f"- comparable records: {reconciliation.get('n', 0)}; "
+        f"skipped for a zero full-film rate: "
+        f"{reconciliation.get('skipped_zero_full_rate', 0)}")
+    lines.append(
+        "- median |relative error|: "
+        f"{_fmt(reconciliation.get('median_abs_relative_error'), 3)}; "
+        "p90 |relative error|: "
+        f"{_fmt(reconciliation.get('p90_abs_relative_error'), 3)}; "
+        "max |relative error|: "
+        f"{_fmt(reconciliation.get('max_abs_relative_error'), 3)}")
+    share_text = _fmt(
+        (reconciliation.get("improved_share") or 0.0) * 100.0, 1)
+    lines.append(
+        "- window estimate off by more than 25%: "
+        f"{reconciliation.get('improved', 0)} of "
+        f"{reconciliation.get('n', 0)} ({share_text}%); window higher on "
+        f"{(reconciliation.get('direction_counts') or {}).get('window_higher', 0)} "
+        "record(s), lower on "
+        f"{(reconciliation.get('direction_counts') or {}).get('window_lower', 0)}")
+    lines.append(
+        "- ordering changes beyond five positions when ranked by each rate: "
+        f"{len(reconciliation.get('rank_changes') or [])}")
+    lines.append("")
+    over = reconciliation.get("over_25pct") or []
+    if over:
+        lines.append("| id | window_cuts_per_min | full_cuts_per_min | "
+                     "relative_error | direction |")
+        lines.append("| --- | --- | --- | --- | --- |")
+        for entry in over:
+            lines.append(
+                f"| {entry.get('id')} | {_fmt(entry.get('window_rate'), digits)} | "
+                f"{_fmt(entry.get('full_rate'), digits)} | "
+                f"{_fmt(entry.get('relative_error'), 3)} | "
+                f"{entry.get('direction')} |")
+    else:
+        lines.append("No record's window estimate was off by more than 25%.")
+    lines.append("")
+    changes = reconciliation.get("rank_changes") or []
+    if changes:
+        lines.append("| id | window_rank | full_rank | position_change | "
+                     "window_cuts_per_min | full_cuts_per_min |")
+        lines.append("| --- | --- | --- | --- | --- | --- |")
+        for entry in changes[:20]:
+            lines.append(
+                f"| {entry.get('id')} | {entry.get('window_rank')} | "
+                f"{entry.get('full_rank')} | {entry.get('position_change')} | "
+                f"{_fmt(entry.get('window_rate'), digits)} | "
+                f"{_fmt(entry.get('full_rate'), digits)} |")
+        if len(changes) > 20:
+            lines.append(f"| (+{len(changes) - 20} more rank changes in "
+                         "`aggregate.json`) | | | | | |")
+        lines.append("")
+    return lines

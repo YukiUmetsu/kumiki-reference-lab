@@ -57,16 +57,19 @@ from kumiki_reference_lab.acquisition import (  # noqa: E402
     STILL_METHOD, USER_AGENT, YOUTUBE, YtDlpError, YtDlpRefusedError,
     aggregate_extremes, allowlisted_image_url, allowlisted_url,
     allowlisted_youtube_url, as_int, as_text, build_index,
-    build_still_evidence, build_video_evidence, comparability_block,
-    coverage_distribution, cut_columns, download_http, download_media,
-    duplicate_summary, fetch_text, finite_float, image_target, measure_still,
-    measure_windows, resume_matches as _resume_matches, run_batch, safe_error,
-    safe_slug, source_metadata, still_decode_dimensions,
-    still_has_quality_flags, still_image_format, still_quality_summary,
-    unique_media_rows, utc_now, write_json_atomic,
+    build_still_evidence, build_video_evidence, census_aggregate,
+    census_annotate_rows, census_columns, census_lookup,
+    census_reconciliation, comparability_block, coverage_distribution,
+    cut_columns, download_http, download_media, duplicate_summary, fetch_text,
+    finite_float, image_target, measure_still, measure_windows,
+    resume_matches as _resume_matches, run_batch, safe_error, safe_slug,
+    source_metadata, still_decode_dimensions, still_has_quality_flags,
+    still_image_format, still_quality_summary, unique_media_rows, utc_now,
+    write_json_atomic,
 )
 from kumiki_reference_lab.acquisition.reporting import (  # noqa: E402
-    comparability_lines, coverage_lines, excluded_leaders_lines, extreme_text,
+    census_context_lines, comparability_lines, coverage_lines,
+    excluded_leaders_lines, extreme_text,
 )
 from kumiki_reference_lab.analyzers.media.inspect import sha256_file  # noqa: E402
 
@@ -1630,6 +1633,65 @@ def _load_json_context(
     return payload, []
 
 
+def _load_census(
+    out_dir: Path,
+) -> tuple[list[dict[str, Any]], dict[str, Any] | None, list[dict[str, str]]]:
+    """Read ``census/*.json`` and ``census-index.json`` read-only."""
+    records: list[dict[str, Any]] = []
+    problems: list[dict[str, str]] = []
+    directory = Path(out_dir) / "census"
+    if directory.is_dir():
+        for path in sorted(directory.glob("*.json")):
+            relative = f"census/{path.name}"
+            try:
+                payload = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, ValueError) as error:
+                problems.append({"file": relative,
+                                 "reason": f"{type(error).__name__}: {error}"})
+                continue
+            if not isinstance(payload, dict):
+                problems.append({"file": relative,
+                                 "reason": "record is not a JSON object"})
+                continue
+            if not isinstance(payload.get("census"), dict):
+                problems.append({"file": relative,
+                                 "reason": "record has no census block"})
+                continue
+            records.append(payload)
+    index, index_problems = _load_json_context(
+        Path(out_dir) / "census-index.json", prefix="census-index.json")
+    problems.extend(index_problems)
+    return records, index, problems
+
+
+def _census_context(
+    out_dir: Path, rows: list[dict[str, Any]],
+    reconcile_rows: list[dict[str, Any]],
+) -> tuple[dict[str, Any], list[dict[str, str]]]:
+    """Build the aggregate-ready census block for one report."""
+    records, index, problems = _load_census(out_dir)
+    lookup = census_lookup(records)
+    census_annotate_rows(rows, lookup)
+    decoded = [census_columns(record)["decoded_fraction"] for record in records]
+    decoded = [value for value in decoded if value is not None]
+    counts = (index.get("counts") if isinstance(index, dict)
+              and isinstance(index.get("counts"), dict) else {})
+    context = {
+        "coverage": {
+            "records": len(records),
+            "videoRecords": len(rows),
+            "decodeFraction": min(decoded) if decoded else None,
+        },
+        "aggregate": census_aggregate(rows),
+        "reconciliation": census_reconciliation(reconcile_rows, lookup),
+        "indexCounts": (None if not counts else {
+            "measured": as_int(counts.get("measured")) or 0,
+            "failed": as_int(counts.get("failed")) or 0,
+        }),
+    }
+    return context, problems
+
+
 def _term_pairs(record: Mapping[str, Any]) -> list[tuple[str, int, str | None]]:
     term_ids = record.get("termIds")
     terms = record.get("terms")
@@ -2006,7 +2068,8 @@ def _render_report(
         video_columns = (
             "post_id", "slug", "title", "provider", "published", "duration_s",
             "resolution", "download_mb", "windows", "coverage_pct",
-            "candidates_n", "sampled_cut_candidates_per_min", "ci95", "burst",
+            "candidates_n", "sampled_cut_candidates_per_min",
+            "full_cuts_per_min", "full_vs_window", "ci95", "burst",
             "gap_frames", "within_shot_pairs", "cut_sep_pairs",
             "delta_basis_pairs", "validity", "mean_luma", "mean_sat",
             "delta_per_s")
@@ -2021,6 +2084,8 @@ def _render_report(
                 _int(row["windowsMeasured"]), _num(row["coveragePercent"], 1),
                 _int(row["candidateCount"]),
                 _num(row["sampledCutCandidatesPerMinute"], 2),
+                _num(row.get("fullCutsPerMinute"), 2),
+                row.get("fullVsWindow") or "—",
                 (f"{_num(ci[0], 2)}-{_num(ci[1], 2)}" if ci else None),
                 _num(row["burstFraction"], 3),
                 _num(row["medianGapFrames"], 1),
@@ -2095,7 +2160,10 @@ def _render_report(
             f"cover {_num(coverage.get('totalRuntimeSeconds'), 1)} runtime "
             "seconds "
             f"({_num((coverage.get('sampledFractionOfTotalRuntime') or 0) * 100, 1)}%). "
-            "Aggregates describe the sampled windows, not the full films.")
+            "Aggregates describe the sampled windows, not the full films. Where "
+            "a full-film census record exists, `full_cuts_per_min` is "
+            "film-level and `full_vs_window` states the difference (see "
+            "`## Full-film census`).")
         add()
 
         add("## Comparability")
@@ -2115,6 +2183,10 @@ def _render_report(
                 video_aggregates.get("coverageDistribution") or {}):
             add(line)
         add()
+
+        for line in census_context_lines(
+                aggregate.get("census") or {}, site=site["label"]):
+            add(line)
 
     add("## Measured stills")
     add()
@@ -2239,6 +2311,10 @@ def _render_report(
             add(line)
         add()
 
+        for line in census_context_lines(
+                aggregate.get("census") or {}, site=site["label"]):
+            add(line)
+
     add("## Explicit non-claims")
     add()
     claims = [
@@ -2248,6 +2324,9 @@ def _render_report(
         "No style, aesthetic quality, mood, lighting, camera/lens, "
         "editorial intent, authorship, identity, or creative-origin "
         "inference is made from these numbers.",
+        "Window values are samples; a full-film census value is film-level. "
+        "Census cut candidates are still scene-score exceedances, not verified "
+        "edits, and a strobe record's rate is not a cut rate.",
         "The poster is prepared by the site/CMS, not necessarily by the "
         "work's author; for STASH it may be a gallery image.",
         "Public availability is not a licence: `rightsStatus` remains "
@@ -2331,6 +2410,10 @@ def run_report(
     video_dedupe = duplicate_summary(
         [{"id": row["slug"], "mediaSha256": row["mediaSha256"]}
          for row in video_rows], "mediaSha256")
+    census_context, census_problems = _census_context(
+        out_dir, video_rows, unique_video_rows)
+    problems.extend(census_problems)
+    problems.sort(key=lambda item: (item["file"], item["reason"]))
     still_dedupe = duplicate_summary(
         [{"id": row["slug"], "still": {"imageSha256": row["imageSha256"]}}
          for row in rows], "still.imageSha256")
@@ -2360,6 +2443,7 @@ def run_report(
         "site": site["key"],
         "generatedAt": generated_at,
         "evidence": evidence,
+        "census": census_context,
         "counts": {
             "catalogItems": catalog_items,
             "videoMeasured": len(video_rows),

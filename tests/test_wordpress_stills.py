@@ -787,6 +787,7 @@ class ReportTests(unittest.TestCase):
         self.assertIn("| one |", report)
         self.assertIn("| 0.2000 |", report)
         self.assertIn("## Explicit non-claims", report)
+        self.assertIn("census: not present", report)
 
     def test_top_truncates_the_table_but_not_the_aggregate(self) -> None:
         out_dir = self.build_out_dir()
@@ -1307,6 +1308,38 @@ class VideoReportTests(unittest.TestCase):
         self.assertIn("still-only rows, never enter", report)
         self.assertIn("platform-encoded YouTube rendition", report)
         self.assertIn("## Measured stills", report)
+        self.assertIn("census: not present", report)
+
+    def test_census_record_adds_film_columns_and_sections(self) -> None:
+        out_dir = self.build_out_dir()
+        acq.write_json_atomic(out_dir / "census" / "1-one.json", {
+            "schemaVersion": "kumiki.directorslibrary-census-evidence.v1",
+            "coverage": {"decodeCoverageFraction": 1.0},
+            "census": {
+                "cutCount": 60, "cutsPerMinute": 30.0,
+                "medianCutGapFrames": 50.0, "burstFraction": 0.0,
+                "strobe": False,
+                "seriesSummary": {"meanDisplayLuma": 0.5,
+                                  "meanSaturation": 0.3,
+                                  "decodeCoverageFraction": 1.0},
+                "fullRuntimeDecoded": True,
+            },
+            "record": {"id": 1, "slug": "one"},
+        })
+        wps.run_report(DL, out_dir, top=10, log=lambda _: None)
+        report = (out_dir / "report.md").read_text(encoding="utf-8")
+        aggregate = json.loads(
+            (out_dir / "aggregate.json").read_text(encoding="utf-8"))
+        self.assertIn("## Full-film census", report)
+        self.assertIn("## Census reconciliation", report)
+        self.assertIn("full_cuts_per_min", report)
+        self.assertIn("| 30.00 |", report)
+        self.assertEqual(aggregate["census"]["coverage"]["records"], 1)
+        self.assertEqual(aggregate["census"]["coverage"]["videoRecords"], 2)
+        self.assertEqual(aggregate["census"]["aggregate"]["median"], 30.0)
+        by_slug = {row["slug"]: row for row in aggregate["videos"]}
+        self.assertEqual(by_slug["one"]["fullCutsPerMinute"], 30.0)
+        self.assertIsNone(by_slug["two"]["fullCutsPerMinute"])
 
 
 class SchemaAndConfigTests(unittest.TestCase):

@@ -60,7 +60,9 @@ from .stills import (
     still_quality_flags, still_quality_summary, still_record_flags,
 )
 from .reporting import (
-    aggregate_extremes, comparability_block, coverage_distribution, cut_columns,
+    aggregate_extremes, census_aggregate, census_annotate_rows, census_columns,
+    census_delta_text, census_for, census_lookup, census_reconciliation,
+    comparability_block, coverage_distribution, cut_columns,
     duplicate_summary, still_decode_counts, still_decode_dimensions,
     unique_media_rows,
 )
@@ -99,7 +101,9 @@ __all__ = [
     "still_quality_counts", "still_quality_flags", "still_quality_summary",
     "still_record_flags",
     # reporting
-    "aggregate_extremes", "comparability_block", "coverage_distribution",
+    "aggregate_extremes", "census_aggregate", "census_annotate_rows",
+    "census_columns", "census_delta_text", "census_for", "census_lookup",
+    "census_reconciliation", "comparability_block", "coverage_distribution",
     "cut_columns", "duplicate_summary", "still_decode_counts",
     "still_decode_dimensions", "unique_media_rows",
     # store

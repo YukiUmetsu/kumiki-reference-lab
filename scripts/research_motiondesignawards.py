@@ -45,16 +45,18 @@ from kumiki_reference_lab.acquisition import (  # noqa: E402
     DIRECT, HLS, MAX_WINDOWS, MAX_WINDOW_SECONDS, STILL_MAX_BYTES, USER_AGENT,
     VIDEO_SUFFIXES, aggregate_extremes, allowlisted_image_url,
     allowlisted_video_url, as_int, as_text, build_index, build_still_evidence,
-    build_video_evidence, comparability_block, coverage_distribution,
-    cut_columns, download_http, download_media, duplicate_summary,
-    finite_float, image_target, measure_still, measure_windows,
-    resume_matches as _resume_matches, run_batch, safe_error, safe_slug,
-    source_metadata, still_decode_counts, still_decode_dimensions,
-    still_has_quality_flags, still_image_format, still_quality_summary,
-    unique_media_rows, utc_now, write_json_atomic,
+    build_video_evidence, census_aggregate, census_annotate_rows,
+    census_columns, census_lookup, census_reconciliation,
+    comparability_block, coverage_distribution, cut_columns, download_http,
+    download_media, duplicate_summary, finite_float, image_target,
+    measure_still, measure_windows, resume_matches as _resume_matches,
+    run_batch, safe_error, safe_slug, source_metadata, still_decode_counts,
+    still_decode_dimensions, still_has_quality_flags, still_image_format,
+    still_quality_summary, unique_media_rows, utc_now, write_json_atomic,
 )
 from kumiki_reference_lab.acquisition.reporting import (  # noqa: E402
-    comparability_lines, coverage_lines, excluded_leaders_lines, extreme_text,
+    census_context_lines, comparability_lines, coverage_lines,
+    excluded_leaders_lines, extreme_text,
 )
 from kumiki_reference_lab.analyzers.media.inspect import sha256_file  # noqa: E402
 
@@ -723,6 +725,65 @@ def _load_json_context(path: Path | None, *, prefix: str,
     return payload, []
 
 
+def _load_census(
+    out_dir: Path,
+) -> tuple[list[dict[str, Any]], dict[str, Any] | None, list[dict[str, str]]]:
+    """Read ``census/*.json`` and ``census-index.json`` read-only."""
+    records: list[dict[str, Any]] = []
+    problems: list[dict[str, str]] = []
+    directory = Path(out_dir) / "census"
+    if directory.is_dir():
+        for path in sorted(directory.glob("*.json")):
+            relative = f"census/{path.name}"
+            try:
+                payload = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, ValueError) as error:
+                problems.append({"file": relative,
+                                 "reason": f"{type(error).__name__}: {error}"})
+                continue
+            if not isinstance(payload, dict):
+                problems.append({"file": relative,
+                                 "reason": "record is not a JSON object"})
+                continue
+            if not isinstance(payload.get("census"), dict):
+                problems.append({"file": relative,
+                                 "reason": "record has no census block"})
+                continue
+            records.append(payload)
+    index, index_problems = _load_json_context(
+        Path(out_dir) / "census-index.json", prefix="census-index.json")
+    problems.extend(index_problems)
+    return records, index, problems
+
+
+def _census_context(
+    out_dir: Path, rows: list[dict[str, Any]],
+    reconcile_rows: list[dict[str, Any]],
+) -> tuple[dict[str, Any], list[dict[str, str]]]:
+    """Build the aggregate-ready census block for one report."""
+    records, index, problems = _load_census(out_dir)
+    lookup = census_lookup(records)
+    census_annotate_rows(rows, lookup)
+    decoded = [census_columns(record)["decoded_fraction"] for record in records]
+    decoded = [value for value in decoded if value is not None]
+    counts = (index.get("counts") if isinstance(index, dict)
+              and isinstance(index.get("counts"), dict) else {})
+    context = {
+        "coverage": {
+            "records": len(records),
+            "videoRecords": len(rows),
+            "decodeFraction": min(decoded) if decoded else None,
+        },
+        "aggregate": census_aggregate(rows),
+        "reconciliation": census_reconciliation(reconcile_rows, lookup),
+        "indexCounts": (None if not counts else {
+            "measured": as_int(counts.get("measured")) or 0,
+            "failed": as_int(counts.get("failed")) or 0,
+        }),
+    }
+    return context, problems
+
+
 def _record_key(record: dict[str, Any]) -> tuple[str, str]:
     project_id = as_text(record.get("projectId"))
     if project_id is not None:
@@ -1056,7 +1117,9 @@ def _render_report(aggregate: dict[str, Any], *,
         f"{_num(video_aggregates['coverage']['totalRuntimeSeconds'], 1)} s of "
         "runtime were measured "
         f"({_num((video_aggregates['coverage']['sampledFractionOfTotalRuntime'] or 0) * 100, 1)}%). "
-        "Per-record coverage percentages appear in the table below.")
+        "Window values are samples; where present, `full_cuts_per_min` is "
+        "film-level and `full_vs_window` states the difference (see "
+        "`## Full-film census`).")
     add()
 
     add("## Per-video analysis")
@@ -1070,7 +1133,8 @@ def _render_report(aggregate: dict[str, Any], *,
         "slug", "title", "studio", "category", "awards", "wa_overall",
         "provider", "runtime_s", "resolution", "fps", "bitrate_mbps",
         "download_mb", "windows", "coverage_pct", "candidates_n",
-        "sampled_cut_candidates_per_min", "ci95", "burst", "gap_frames",
+        "sampled_cut_candidates_per_min", "full_cuts_per_min",
+        "full_vs_window", "ci95", "burst", "gap_frames",
         "within_shot_pairs", "cut_sep_pairs", "delta_basis_pairs", "validity",
         "mean_luma", "mean_sat", "delta_per_s")
     add("| " + " | ".join(columns) + " |")
@@ -1085,6 +1149,8 @@ def _render_report(aggregate: dict[str, Any], *,
             _num(row["downloadMb"], 1), _int(row["windowsMeasured"]),
             _num(row["coveragePercent"], 1), _int(row["candidateCount"]),
             _num(row["sampledCutCandidatesPerMinute"], 2),
+            _num(row.get("fullCutsPerMinute"), 2),
+            row.get("fullVsWindow") or "—",
             (f"{_num(ci[0], 2)}-{_num(ci[1], 2)}" if ci else None),
             _num(row["burstFraction"], 3), _num(row["medianGapFrames"], 1),
             _int(row["withinShotPairs"]), _int(row["cutSeparatedPairs"]),
@@ -1239,6 +1305,10 @@ def _render_report(aggregate: dict[str, Any], *,
         add(line)
     add()
 
+    for line in census_context_lines(
+            aggregate.get("census") or {}, site="Motion Design Awards"):
+        add(line)
+
     add("## Published-still evidence (single-frame only)")
     add()
     add("Separate lane. A published poster still is not a video frame: these "
@@ -1294,8 +1364,9 @@ def _render_report(aggregate: dict[str, Any], *,
             "inference is made from these numbers.",
             "Display-RGB luma/saturation and cut candidates are numeric proxies "
             "only, not semantic labels.",
-            "Windows are sampled; `fullRuntimeMeasured` is false for every video "
-            "record, so nothing here is a full-film review.",
+            "Windows are sampled and census values are film-level; a window "
+            "rate is a sample, not a film rate, and census cut candidates are "
+            "still scene-score exceedances rather than verified edits.",
             "Public availability is not a licence: `rightsStatus` remains "
             "`review-required`, and reuse needs its own review.",
             "Vimeo-derived rows are single published poster stills, not video "
@@ -1348,6 +1419,10 @@ def run_report(
 
     rows = sorted((_video_row(record) for record in video_records), key=_video_order)
     measured_total = len(rows)
+    census_context, census_problems = _census_context(
+        out_dir, rows, list(unique_media_rows(rows)))
+    problems.extend(census_problems)
+    problems.sort(key=lambda item: (item["file"], item["reason"]))
     if limit is not None:
         rows = rows[:limit]
     details = [{"slug": row["slug"], "windows": row["windowRows"]}
@@ -1375,6 +1450,7 @@ def run_report(
     aggregate = {
         "schemaVersion": AGGREGATE_SCHEMA,
         "generatedAt": generated_at,
+        "census": census_context,
         "counts": {
             "catalogProjects": (as_int(catalog.get("totalProjects"))
                                 if isinstance(catalog, dict) else None),

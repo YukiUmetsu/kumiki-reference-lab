@@ -729,6 +729,7 @@ class ReportTests(unittest.TestCase):
         self.assertIn("Vimeo", report)
         self.assertIn("Explicit non-claims", report)
         self.assertIn("still-only", report)
+        self.assertIn("census: not present", report)
         self.assertEqual(sorted(path.name for path in out_dir.iterdir()),
                          ["aggregate.json", "report.md"])
 
@@ -1111,6 +1112,43 @@ class VideoReportTests(unittest.TestCase):
         self.assertIn("median unobserved gap between windows", report)
         self.assertIn("ytdlp-merge", report)
         self.assertNotIn("Why there is no motion evidence", report)
+        self.assertIn("census: not present", report)
+
+    def test_census_record_adds_film_columns_and_sections(self) -> None:
+        out_dir = self.root / "out"
+        source = row(nid=1)
+        video = synthetic_video_record(source)
+        self.write_video(out_dir, video)
+        acq.write_json_atomic(out_dir / "census" / "1-x.json", {
+            "schemaVersion": "kumiki.promonews-census-evidence.v1",
+            "coverage": {"decodeCoverageFraction": 1.0},
+            "census": {
+                "cutCount": 40, "cutsPerMinute": 20.0,
+                "medianCutGapFrames": 60.0, "burstFraction": 0.05,
+                "strobe": False,
+                "seriesSummary": {"meanDisplayLuma": 0.3,
+                                  "meanSaturation": 0.2,
+                                  "decodeCoverageFraction": 1.0},
+                "fullRuntimeDecoded": True,
+            },
+            "record": {"id": 1, "slug": video["slug"]},
+        })
+
+        pnm.run_report(out_dir, log=lambda _s: None)
+        report = (out_dir / "report.md").read_text(encoding="utf-8")
+        aggregate = json.loads(
+            (out_dir / "aggregate.json").read_text(encoding="utf-8"))
+        self.assertIn("## Full-film census", report)
+        self.assertIn("## Census reconciliation", report)
+        self.assertIn("full_cuts_per_min", report)
+        self.assertIn("| 20.00 |", report)
+        self.assertEqual(aggregate["census"]["coverage"]["records"], 1)
+        self.assertEqual(aggregate["census"]["aggregate"]["n"], 1)
+        self.assertEqual(aggregate["census"]["aggregate"]["median"], 20.0)
+        self.assertEqual(aggregate["videos"][0]["fullCutsPerMinute"], 20.0)
+        # A census is knowledge of a different basis, not a motion claim.
+        self.assertIn("film-level", report)
+        self.assertIn("not comparable to a cut rate", report)
 
     def test_report_with_videos_is_byte_identical_across_runs(self) -> None:
         out_dir = self.root / "out"
