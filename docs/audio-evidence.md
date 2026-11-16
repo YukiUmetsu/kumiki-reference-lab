@@ -95,6 +95,12 @@ representable without dominating a least-squares fit.
 | `loudnessSlopeR2` | coefficient of determination of that fit; `null` when the series has no variance |
 | `firstHalfVsSecondHalfLu` | mean of the second half of reported values minus the first half; signed |
 
+Because the -70 LUFS floor is included, a silent head or tail contributes a
+very low value. A clip that fades to silence can therefore show
+`shortTermRangeLu` near 60-70 LU and a large negative
+`loudnessSlopeLuPerMinute`; both are descriptions of the stored series, not
+judgements about a fade.
+
 ### Temporal structure
 
 The PCM is cut into consecutive non-overlapping 20 ms frames (160 samples at
@@ -123,7 +129,7 @@ tracker.
 | `medianOnsetGapSeconds` | median inter-onset interval; `null` under two onsets |
 | `regularityIndex` | `1 - (population SD of inter-onset intervals / mean interval)`, clamped to [0, 1]; `null` under 8 onsets |
 | `tempoHypothesisBpm` | periodicity hypothesis from onset-envelope autocorrelation, 60–200 BPM search |
-| `tempoConfidence` | normalized autocorrelation coefficient at the reported lag, clamped to [0, 1] |
+| `tempoConfidence` | normalized autocorrelation coefficient at the reported lag, clamped to [0, 1]; not a probability |
 
 ### Tempo caveat
 
