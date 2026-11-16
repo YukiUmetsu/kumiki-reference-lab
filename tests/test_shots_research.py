@@ -947,6 +947,12 @@ class ReportTests(unittest.TestCase):
                 "fullRuntimeDecoded": True,
             },
             "record": {"id": 1, "slug": "a"},
+            "editorial": {
+                "shotCount": 8, "medianShotSeconds": 3.0,
+                "shotsUnderHalfSecondFraction": 0.0,
+                "paceTrend": "steady", "paceDriftRatio": 1.0,
+                "flickerLumaPerSecond": 0.01, "strobeFlag": False,
+            },
         })
 
         shots.run_report(out_dir, top=2, log=lambda _s: None)
@@ -974,6 +980,12 @@ class ReportTests(unittest.TestCase):
                 "fullRuntimeDecoded": True,
             },
             "record": {"id": 1, "slug": "a"},
+            "editorial": {
+                "shotCount": 4, "medianShotSeconds": 1.5,
+                "shotsUnderHalfSecondFraction": 0.25,
+                "paceTrend": "accelerating", "paceDriftRatio": 3.0,
+                "flickerLumaPerSecond": 0.02, "strobeFlag": False,
+            },
         })
         acq.write_json_atomic(out_dir / "census-index.json", {
             "schemaVersion": "kumiki.shots-census-index.v1",
@@ -991,6 +1003,9 @@ class ReportTests(unittest.TestCase):
         self.assertIn("decodeCoverageFraction", report)
         self.assertIn("full_cuts_per_min", report)
         self.assertIn("full_vs_window", report)
+        self.assertIn("median_shot_s", report)
+        self.assertIn("pace_trend", report)
+        self.assertIn("## Editorial structure", report)
         self.assertIn("| 48.00 |", report)
         # The synthetic window probe records no distinct cut candidates, so the
         # window rate is zero against the film's 48/min: a -100% difference.
@@ -1004,6 +1019,11 @@ class ReportTests(unittest.TestCase):
             1.0)
         self.assertEqual(aggregate["videos"][0]["fullCutsPerMinute"], 48.0)
         self.assertEqual(aggregate["videos"][0]["fullVsWindow"], "-100%")
+        self.assertEqual(aggregate["videos"][0]["median_shot_s"], 1.5)
+        self.assertEqual(aggregate["videos"][0]["pace_trend"], "accelerating")
+        self.assertEqual(aggregate["census"]["editorial"]["n"], 1)
+        self.assertEqual(
+            aggregate["census"]["editorial"]["shot_length"]["median"], 1.5)
 
     def test_still_only_records_never_enter_motion_aggregates(self) -> None:
         out_dir = self.root / "out"

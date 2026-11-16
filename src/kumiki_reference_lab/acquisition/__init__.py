@@ -59,11 +59,16 @@ from .stills import (
     still_has_quality_flags, still_image_format, still_quality_counts,
     still_quality_flags, still_quality_summary, still_record_flags,
 )
+from .editorial import (
+    EDITORIAL_LIMITS, FLICKER_OUTLIER_PER_SECOND, STATIC_RGB_DELTA,
+    derive_editorial,
+)
 from .reporting import (
     aggregate_extremes, census_aggregate, census_annotate_rows, census_columns,
     census_delta_text, census_for, census_lookup, census_reconciliation,
     comparability_block, coverage_distribution, cut_columns,
-    duplicate_summary, still_decode_counts, still_decode_dimensions,
+    duplicate_summary, editorial_aggregate, editorial_columns,
+    editorial_section_lines, still_decode_counts, still_decode_dimensions,
     unique_media_rows,
 )
 from .store import build_index, resume_matches, safe_slug, utc_now, write_json_atomic
@@ -80,6 +85,9 @@ from .ytdlp import (
 __all__ = [
     # census
     "CENSUS_SCHEMA", "build_census_evidence", "scan_full_runtime",
+    # editorial
+    "EDITORIAL_LIMITS", "FLICKER_OUTLIER_PER_SECOND", "STATIC_RGB_DELTA",
+    "derive_editorial",
     # media
     "DEFAULT_TEXT_LIMIT", "DIRECT", "HLS", "IMAGE_SUFFIXES",
     "METHOD_HLS_REMUX", "METHOD_HTTP_DOWNLOAD", "USER_AGENT", "VIDEO_SUFFIXES",
@@ -104,7 +112,8 @@ __all__ = [
     "aggregate_extremes", "census_aggregate", "census_annotate_rows",
     "census_columns", "census_delta_text", "census_for", "census_lookup",
     "census_reconciliation", "comparability_block", "coverage_distribution",
-    "cut_columns", "duplicate_summary", "still_decode_counts",
+    "cut_columns", "duplicate_summary", "editorial_aggregate",
+    "editorial_columns", "editorial_section_lines", "still_decode_counts",
     "still_decode_dimensions", "unique_media_rows",
     # store
     "build_index", "resume_matches", "safe_slug", "utc_now",

@@ -5,21 +5,21 @@ This deliverable tabulates only what the committed evidence records contain: Wor
 ## Provenance
 
 - Catalog items: 5412
-- Video-measured records: 143
-- Unique video media after dedupe: 143 (0 extra record(s) in 0 duplicate group(s))
+- Video-measured records: 160
+- Unique video media after dedupe: 160 (0 extra record(s) in 0 duplicate group(s))
 - Still-measured records: 5348
-- Still-only records (no matching video record): 5210
+- Still-only records (no matching video record): 5193
 - Skipped rows (stills index context): 0
 - Failed acquisitions (stills index context): 64
-- Skipped rows (video index context): 323
-- Failed acquisitions (video index context): 6
+- Skipped rows (video index context): 211
+- Failed acquisitions (video index context): 2
 - Catalogue items without a usable poster: 0
 - Unreadable records: 0
-- generatedAt: 2026-11-12T19:05:04.872719Z
-- Skip reasons (video index): provider-refused x 51, resume-existing-record x 106, unsupported-vimeo x 166
+- generatedAt: 2026-11-16T16:19:55.996249Z
+- Skip reasons (video index): resume-existing-record x 143, unsupported-vimeo x 68
 - Per-row provider labels: unsupported-embed x 5348
-- Provider split (measured videos): youtube x 143
-- `--top 50` applied: the first 50 of 143 video-measured rows are tabulated below; `aggregate.json` holds all.
+- Provider split (measured videos): youtube x 160
+- `--top 50` applied: the first 50 of 160 video-measured rows are tabulated below; `aggregate.json` holds all.
 - `--top 50` applied: the first 50 of 5348 measured stills are tabulated below; `aggregate.json` holds all.
 
 The catalogue is the site's WordPress video post type. No ACF director/duration/brand fields are exposed by the REST API, so those fields stay null rather than being invented.
@@ -35,60 +35,60 @@ python scripts/research_wordpress_stills.py report --site directorslibrary --out
 
 ## Per-video analysis
 
-143 video-measured record(s), newest catalogue row first. All columns are numeric record fields from the sampled source-PTS windows of the public YouTube rendition; `duration_s` is the decoded local source duration, not a catalogue value.
+160 video-measured record(s), newest catalogue row first. All columns are numeric record fields from the sampled source-PTS windows of the public YouTube rendition; `duration_s` is the decoded local source duration, not a catalogue value.
 
-| post_id | slug | title | provider | published | duration_s | resolution | download_mb | windows | coverage_pct | candidates_n | sampled_cut_candidates_per_min | full_cuts_per_min | full_vs_window | ci95 | burst | gap_frames | within_shot_pairs | cut_sep_pairs | delta_basis_pairs | validity | mean_luma | mean_sat | delta_per_s |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 82133 | tender-loving-care-2 | Tender Loving Care | youtube | 2026-11-05T12:05:25 | 153.27 | 1280x720 | 8.1 | 4 | 26.1 | 10 | 15.00 | 22.31 | -33% | 7.19-27.59 | 0.000 | 86.0 | 34 | 10 | 34 | — | 0.1938 | 0.4597 | 0.0599 |
-| 81873 | nuisance-bear | Nuisance Bear | youtube | 2026-11-11T04:00:00 | 133.14 | 1280x720 | 8.3 | 4 | 30.0 | 9 | 13.50 | 20.73 | -35% | 4.25-28.80 | 0.000 | 74.5 | 35 | 9 | 35 | — | 0.1918 | 0.2079 | 0.0314 |
-| 81855 | the-siege-of-paradise | The Siege of Paradise | youtube | 2026-11-08T04:21:00 | 125.16 | 1280x720 | 14.4 | 4 | 32.0 | 35 | 52.50 | 42.19 | +24% | 27.87-84.22 | 0.000 | 23.5 | 14 | 30 | 14 | — | 0.2906 | 0.3631 | 0.0627 |
-| 81849 | ah-girl | Ah Girl | youtube | 2026-11-04T04:10:00 | 203.89 | 1280x720 | 17.7 | 4 | 19.6 | 7 | 10.50 | 7.36 | +43% | 4.22-21.63 | 0.000 | 669.0 | 37 | 7 | 37 | low-coverage | 0.1617 | 0.2806 | 0.0406 |
-| 81810 | tarantino-lisa | ‘Tarantino’ LISA | youtube | 2026-11-05T12:21:17 | 217.04 | 1280x720 | 24.1 | 4 | 18.4 | 9 | 13.50 | — | — | 6.17-25.63 | 0.000 | 114.0 | 35 | 9 | 35 | low-coverage | 0.2007 | 0.3283 | 0.0776 |
-| 81538 | is-it-that-deep-cat-burns | ‘Is it That Deep?’ Cat Burns | youtube | 2026-10-30T09:00:00 | 172.78 | 1280x720 | 25.2 | 4 | 23.2 | 2 | 3.00 | 1.39 | +116% | 0.36-10.84 | 0.000 | 1398.0 | 42 | 2 | 42 | low-coverage | 0.2877 | 0.3881 | 0.1409 |
-| 81536 | gas-bicep | ‘Gas’ Bicep | youtube | 2026-10-29T09:00:00 | 253.31 | 960x720 | 25.2 | 4 | 15.8 | 13 | 19.50 | 18.95 | +3% | 10.38-33.35 | 0.000 | 107.5 | 32 | 12 | 32 | low-coverage | 0.2297 | 0.2456 | 0.0997 |
-| 81534 | dead-hand-freestyle-irko | ‘Dead Hand Freestyle’ Irko | youtube | 2026-10-26T22:10:31 | 177.63 | 1280x720 | 18.2 | 4 | 22.5 | 19 | 28.50 | 34.79 | -18% | 6.27-59.87 | 0.000 | 28.0 | 25 | 19 | 25 | low-coverage | 0.6143 | 0.0266 | 0.0792 |
-| 81514 | mexicanamerican | Mexicanamerican | youtube | 2026-10-25T19:16:44 | 127.48 | 1280x720 | 30.6 | 4 | 31.4 | 7 | 10.50 | 11.77 | -11% | 2.39-24.87 | 0.000 | 78.0 | 37 | 7 | 37 | — | 0.2310 | 0.2230 | 0.1260 |
-| 81344 | coda-dpat | ‘Coda’ Dpat | youtube | 2026-10-21T11:00:00 | 238.52 | 960x720 | 27.0 | 4 | 16.8 | 10 | 15.00 | 24.15 | -38% | 7.19-27.59 | 0.300 | 69.0 | 36 | 8 | 36 | low-coverage | 0.2489 | 0.3726 | 0.0256 |
-| 81251 | hearing | Hearing | youtube | 2026-10-19T06:43:00 | 146.26 | 1280x720 | 15.8 | 4 | 27.3 | 5 | 7.50 | 5.33 | +41% | 1.80-18.76 | 0.000 | 442.0 | 39 | 5 | 39 | — | 0.1347 | 0.3493 | 0.0209 |
-| 81244 | i-see-buildings-fall-like-lightning | I See Buildings Fall Like Lightning | youtube | 2026-10-15T18:34:32 | 126.80 | 1280x720 | 15.3 | 4 | 31.5 | 38 | 57.00 | 53.47 | +7% | 40.34-78.24 | 0.000 | 16.0 | 15 | 29 | 15 | — | 0.2677 | 0.3466 | 0.1464 |
-| 81233 | curiosity-equinor | ‘Curiosity’ Equinor | youtube | 2026-10-19T15:00:33 | 90.09 | 1280x720 | 14.1 | 4 | 44.4 | 25 | 37.50 | 34.63 | +8% | 19.49-61.81 | 0.240 | 42.0 | 25 | 19 | 25 | — | 0.2028 | 0.3706 | 0.0727 |
-| 81181 | blue-girl-in-red | ‘blue’ girl in red | youtube | 2026-10-16T13:14:13 | 249.78 | 1080x720 | 21.1 | 4 | 16.0 | 15 | 22.50 | 86.96 | -74% | 6.12-46.65 | 0.000 | 40.0 | 30 | 14 | 30 | low-coverage | 0.1913 | 0.3615 | 0.0575 |
-| 81129 | straight-circle | Straight Circle | youtube | 2026-09-08T23:41:44 | 133.98 | 1280x720 | 9.3 | 4 | 29.9 | 22 | 33.00 | 26.42 | +25% | 13.58-59.74 | 0.000 | 29.0 | 26 | 18 | 26 | — | 0.2816 | 0.3732 | 0.0720 |
-| 81104 | 9-temples-to-heaven | 9 Temples to Heaven | youtube | 2026-09-05T23:32:07 | 125.53 | 1280x720 | 13.6 | 4 | 31.9 | 14 | 21.00 | 21.99 | -4% | 11.26-35.57 | 0.000 | 50.0 | 31 | 13 | 31 | — | 0.3693 | 0.3482 | 0.0260 |
-| 81096 | minotaur | Minotaur | youtube | 2026-10-12T05:00:00 | 108.65 | 1280x720 | 7.3 | 4 | 36.8 | 19 | 28.50 | 25.96 | +10% | 7.10-58.71 | 0.000 | 27.0 | 28 | 16 | 28 | — | 0.1321 | 0.3413 | 0.0485 |
-| 81087 | forever-your-maternal-animal | Forever Your Maternal Animal | youtube | 2026-05-22T22:59:00 | 105.72 | 1280x720 | 15.8 | 4 | 37.8 | 16 | 24.00 | 23.27 | +3% | 12.89-40.17 | 0.000 | 49.0 | 28 | 16 | 28 | — | 0.1815 | 0.3172 | 0.1071 |
-| 80878 | paper-tiger | Paper Tiger | youtube | 2026-09-22T18:16:00 | 129.17 | 1280x720 | 7.5 | 4 | 31.0 | 11 | 16.50 | 15.79 | +4% | 8.24-29.52 | 0.000 | 80.5 | 34 | 10 | 34 | — | 0.1293 | 0.3187 | 0.0519 |
-| 80875 | the-further-mis-adventures-of-cliff-booth | The Further Mis-Adventures of Cliff Booth | youtube | 2026-09-21T18:12:58 | 90.05 | 1280x676 | 7.9 | 4 | 44.4 | 15 | 22.50 | 19.32 | +16% | 5.09-48.18 | 0.400 | 27.5 | 34 | 10 | 34 | — | 0.1388 | 0.4602 | 0.0710 |
-| 80862 | all-of-a-sudden | All of a Sudden | youtube | 2026-09-10T17:33:00 | 126.43 | 1280x720 | 19.7 | 4 | 31.6 | 21 | 31.50 | 20.41 | +54% | 10.82-60.19 | 0.000 | 34.0 | 24 | 20 | 24 | — | 0.2341 | 0.3528 | 0.0356 |
-| 80821 | cant-wait-andy | ‘Can’t Wait’ ANDY | youtube | 2026-10-08T06:00:00 | 228.90 | 1280x720 | 26.8 | 4 | 17.5 | 8 | 12.00 | 22.28 | -46% | 1.58-29.79 | 0.000 | 53.0 | 36 | 8 | 36 | low-coverage | 0.1596 | 0.3021 | 0.0930 |
-| 80790 | small-world-mette | ‘Small World’ METTE | youtube | 2026-10-08T18:00:00 | 174.94 | 960x720 | 23.8 | 4 | 22.9 | 12 | 18.00 | 18.86 | -5% | 3.21-40.85 | 0.167 | 49.0 | 34 | 10 | 34 | low-coverage | 0.2243 | 0.3592 | 0.1073 |
-| 80783 | painkiller-joy-crookes | ‘Painkiller’ Joy Crookes | youtube | 2026-10-07T06:00:00 | 253.93 | 1198x720 | 28.3 | 4 | 15.8 | 19 | 28.50 | 28.12 | +1% | 16.96-44.78 | 0.000 | 40.5 | 26 | 18 | 26 | low-coverage | 0.2044 | 0.4630 | 0.1198 |
-| 80727 | already-gone-orville-peck | ‘Already Gone’ Orville Peck | youtube | 2026-10-10T18:00:00 | 192.73 | 1280x720 | 21.2 | 4 | 20.8 | 25 | 37.50 | 33.00 | +14% | 11.08-73.16 | 0.000 | 18.0 | 26 | 18 | 26 | low-coverage | 0.2987 | 0.3089 | 0.0734 |
-| 80725 | innocent-smile-skepta | ‘Innocent Smile’ Skepta | youtube | 2026-10-06T18:00:00 | 158.96 | 1200x720 | 19.1 | 4 | 25.2 | 34 | 51.00 | 43.78 | +16% | 35.32-71.27 | 0.176 | 20.0 | 21 | 23 | 21 | — | 0.1507 | 0.3654 | 0.0854 |
-| 80692 | air-lemonder-viper-bicep | ‘Air’ ‘Lemonder’ & ‘Viper’ BICEP | youtube | 2026-10-05T06:00:00 | 285.09 | 1280x720 | 32.8 | 4 | 14.0 | 7 | 10.50 | 18.31 | -43% | 4.22-21.63 | 0.571 | 108.5 | 39 | 5 | 39 | burst-heavy, low-coverage | 0.1684 | 0.4491 | 0.1151 |
-| 80688 | tiramisu-oat-cult | ‘Tiramisù’ Oat Cult | youtube | 2026-10-06T06:00:00 | 110.06 | 960x720 | 10.7 | 4 | 36.3 | 26 | 39.00 | 35.98 | +8% | 4.76-84.94 | 0.000 | 19.0 | 25 | 19 | 25 | — | 0.2267 | 0.0000 | 0.0480 |
-| 80677 | a24-meets-dior | A24 Meets Dior | youtube | 2026-10-11T18:00:00 | 141.39 | 1280x720 | 15.0 | 4 | 28.3 | 27 | 40.50 | 35.65 | +14% | 19.07-69.09 | 0.222 | 20.5 | 24 | 20 | 24 | — | 0.3380 | 0.4489 | 0.0627 |
-| 80582 | union-county | Union County | youtube | 2026-07-01T01:38:10 | 147.63 | 1280x720 | 8.4 | 4 | 27.1 | 11 | 16.50 | 16.26 | +1% | 4.04-36.13 | 0.182 | 62.5 | 34 | 10 | 34 | — | 0.2104 | 0.2116 | 0.0427 |
-| 80559 | teenage-sex-and-death-at-camp-miasma | Teenage Sex and Death at Camp Miasma | youtube | 2026-05-27T00:51:00 | 130.52 | 1280x720 | 10.5 | 4 | 30.6 | 12 | 18.00 | 17.93 | +0% | 7.15-34.77 | 0.167 | 45.0 | 35 | 9 | 35 | — | 0.1380 | 0.4397 | 0.0609 |
-| 80548 | parallel-tales | Parallel Tales | youtube | 2026-04-23T00:42:11 | 96.60 | 1280x720 | 12.1 | 4 | 41.4 | 21 | 31.50 | 35.41 | -11% | 17.73-50.61 | 0.000 | 27.0 | 23 | 21 | 23 | — | 0.1607 | 0.3195 | 0.1237 |
-| 80539 | fatherland | Fatherland | youtube | 2026-05-28T00:31:05 | 130.05 | 1280x720 | 16.3 | 4 | 30.8 | 9 | 13.50 | 16.61 | -19% | 6.17-25.63 | 0.000 | 107.5 | 35 | 9 | 35 | — | 0.1515 | 0.0000 | 0.0451 |
-| 80532 | hope | Hope | youtube | 2026-06-24T00:27:17 | 100.17 | 1280x720 | 10.3 | 4 | 39.9 | 9 | 13.50 | 15.57 | -13% | 0.65-34.76 | 0.000 | 45.0 | 35 | 9 | 35 | — | 0.1660 | 0.2482 | 0.0842 |
-| 80501 | digger | Digger | youtube | 2026-07-13T23:50:17 | 158.22 | 1080x720 | 13.1 | 4 | 25.3 | 25 | 37.50 | 45.51 | -18% | 23.58-56.29 | 0.000 | 32.5 | 21 | 23 | 21 | — | 0.2208 | 0.3823 | 0.0237 |
-| 80494 | fjord | Fjord | youtube | 2026-08-27T23:46:00 | 118.40 | 1280x720 | 9.5 | 4 | 33.8 | 14 | 21.00 | 19.26 | +9% | 11.48-35.23 | 0.000 | 48.0 | 30 | 14 | 30 | — | 0.2286 | 0.2819 | 0.0744 |
-| 80490 | artificial | Artificial | youtube | 2026-09-08T23:12:25 | 76.86 | 1280x720 | 6.1 | 4 | 52.0 | 15 | 22.50 | 14.83 | +52% | 1.05-54.14 | 0.000 | 8.5 | 35 | 9 | 35 | — | 0.1717 | 0.3689 | 0.0898 |
-| 80487 | you-can-see-everything | You Can See Everything | youtube | 2026-09-23T23:07:41 | 148.33 | 960x720 | 10.5 | 4 | 27.0 | 16 | 24.00 | 25.48 | -6% | 13.72-38.97 | 0.125 | 57.0 | 28 | 16 | 28 | — | 0.2745 | 0.3970 | 0.0569 |
-| 80377 | permanence-veritus-miller-ronnie-heard-iii | ‘Permanence’ Veritus Miller & Ronnie Heard III | youtube | 2026-10-01T16:00:00 | 388.40 | 1280x720 | 41.4 | 4 | 10.3 | 6 | 9.00 | 10.66 | -16% | 2.99-20.16 | 0.000 | 95.0 | 38 | 6 | 38 | low-coverage | 0.2137 | 0.2830 | 0.0620 |
-| 80290 | down-with-heaven-art-feynman | ‘Down With Heaven’ Art Feynman | youtube | 2026-10-02T19:52:04 | 323.66 | 1194x720 | 76.5 | 4 | 12.4 | 0 | 0.00 | 0.00 | — | 0.00-5.53 | — | — | 44 | 0 | 44 | low-coverage, no-cuts-observed | 0.0365 | 0.3799 | 0.0228 |
-| 80159 | party-troye-sivan | ‘Party’ Troye Sivan | youtube | 2026-09-25T17:29:30 | 244.25 | 960x720 | 24.8 | 4 | 16.4 | 32 | 48.00 | 33.90 | +42% | 32.21-68.57 | 0.000 | 25.0 | 14 | 30 | 14 | low-coverage | 0.2189 | 0.3884 | 0.1053 |
-| 80157 | big-beautiful-sound-dana-margolin | ‘Big Beautiful Sound’ Dana Margolin | youtube | 2026-09-28T16:29:58 | 243.72 | 1280x720 | 28.6 | 4 | 16.4 | 6 | 9.00 | 11.08 | -19% | 3.30-19.59 | 0.000 | 1465.0 | 38 | 6 | 38 | low-coverage | 0.2495 | 0.0000 | 0.0599 |
-| 80153 | automatic | AUTOMATIC | youtube | 2026-09-27T15:23:01 | 175.54 | 1280x720 | 21.8 | 4 | 22.8 | 20 | 30.00 | 24.61 | +22% | 0.00-88.43 | 0.850 | 3.0 | 37 | 7 | 37 | burst-heavy, low-coverage | 0.2098 | 0.2940 | 0.0803 |
-| 80017 | devils-advocate-pink-siifu | ‘Devil’s Advocate‘ Pink Siifu | youtube | 2026-09-21T01:10:07 | 253.98 | 1046x720 | 41.3 | 4 | 15.7 | 14 | 21.00 | 13.94 | +51% | 7.54-41.13 | 0.143 | 39.0 | 31 | 13 | 31 | low-coverage | 0.1281 | 0.1286 | 0.0642 |
-| 79595 | introducing-the-dyson-camerajet | Introducing the Dyson CameraJet™ | youtube | 2026-09-09T14:57:06 | 135.07 | 1280x720 | 17.3 | 4 | 29.6 | 36 | 54.00 | 66.63 | -19% | 13.40-106.09 | 0.417 | 11.0 | 25 | 19 | 25 | — | 0.2546 | 0.3468 | 0.0685 |
-| 79588 | neram-gokul-krishna | ‘Neram’ Gokul Krishna | youtube | 2026-09-15T11:26:54 | 279.08 | 1280x720 | 40.6 | 4 | 14.3 | 4 | 6.00 | 13.54 | -56% | 0.00-19.24 | 0.000 | 123.0 | 40 | 4 | 40 | low-coverage | 0.1624 | 0.1391 | 0.0363 |
-| 79538 | in-the-night-beck | ‘In The Night’ Beck | youtube | 2026-09-07T21:53:37 | 220.47 | 1280x720 | 8.8 | 4 | 18.1 | 0 | 0.00 | 1.09 | -100% | 0.00-5.53 | — | — | 44 | 0 | 44 | low-coverage, no-cuts-observed | 0.0960 | 0.2608 | 0.0441 |
-| 79531 | a-personal-appeal-alzheimers-society | ‘A Personal Appeal’ Alzheimer’s Society | youtube | 2026-09-13T16:04:07 | 60.12 | 1280x720 | 6.7 | 4 | 66.5 | 10 | 15.00 | 16.97 | -12% | 0.19-38.88 | 0.000 | 42.0 | 34 | 10 | 34 | — | 0.2509 | 0.2861 | 0.0423 |
-| 79443 | easy-street-queens-of-the-stone-age | ‘Easy Street’ Queens of the Stone Age | youtube | 2026-09-02T14:27:26 | 292.64 | 1280x720 | 35.3 | 4 | 13.7 | 5 | 7.50 | 14.97 | -50% | 2.44-17.50 | 0.000 | 1047.0 | 39 | 5 | 39 | low-coverage | 0.2882 | 0.1551 | 0.1019 |
-| 79409 | odor-enis | ‘ODOR’ Enis | youtube | 2026-09-03T19:31:49 | 258.02 | 1280x720 | 42.7 | 4 | 15.5 | 8 | 12.00 | 17.67 | -32% | 5.18-23.64 | 0.000 | 64.0 | 36 | 8 | 36 | low-coverage | 0.2862 | 0.0004 | 0.0499 |
+| post_id | slug | title | provider | published | duration_s | resolution | download_mb | windows | coverage_pct | candidates_n | sampled_cut_candidates_per_min | full_cuts_per_min | full_vs_window | median_shot_s | shots_lt_0_5s_pct | pace_trend | flicker | ci95 | burst | gap_frames | within_shot_pairs | cut_sep_pairs | delta_basis_pairs | validity | mean_luma | mean_sat | delta_per_s |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 82133 | tender-loving-care-2 | Tender Loving Care | youtube | 2026-11-05T12:05:25 | 153.27 | 1280x720 | 8.1 | 4 | 26.1 | 10 | 15.00 | 22.31 | -33% | 1.83 | 0.0 | decelerating | 0.012 | 7.19-27.59 | 0.000 | 86.0 | 34 | 10 | 34 | — | 0.1938 | 0.4597 | 0.0599 |
+| 81873 | nuisance-bear | Nuisance Bear | youtube | 2026-11-11T04:00:00 | 133.14 | 1280x720 | 8.3 | 4 | 30.0 | 9 | 13.50 | 20.73 | -35% | 2.04 | 0.0 | accelerating | 0.010 | 4.25-28.80 | 0.000 | 74.5 | 35 | 9 | 35 | — | 0.1918 | 0.2079 | 0.0314 |
+| 81855 | the-siege-of-paradise | The Siege of Paradise | youtube | 2026-11-08T04:21:00 | 125.16 | 1280x720 | 14.4 | 4 | 32.0 | 35 | 52.50 | 42.19 | +24% | 1.20 | 12.4 | steady | 0.037 | 27.87-84.22 | 0.000 | 23.5 | 14 | 30 | 14 | — | 0.2906 | 0.3631 | 0.0627 |
+| 81849 | ah-girl | Ah Girl | youtube | 2026-11-04T04:10:00 | 203.89 | 1280x720 | 17.7 | 4 | 19.6 | 7 | 10.50 | 7.36 | +43% | 6.19 | 0.0 | steady | 0.009 | 4.22-21.63 | 0.000 | 669.0 | 37 | 7 | 37 | low-coverage | 0.1617 | 0.2806 | 0.0406 |
+| 81843 | the-quiet-beekeeper | The Quiet Beekeeper | youtube | 2026-11-01T04:00:00 | 91.74 | 1280x720 | 14.7 | 4 | 43.6 | 15 | 22.50 | — | — | — | — | — | — | 12.59-37.11 | 0.133 | 71.0 | 31 | 13 | 31 | — | 0.1749 | 0.4279 | 0.0558 |
+| 81810 | tarantino-lisa | ‘Tarantino’ LISA | youtube | 2026-11-05T12:21:17 | 217.04 | 1280x720 | 24.1 | 4 | 18.4 | 9 | 13.50 | — | — | — | — | — | — | 6.17-25.63 | 0.000 | 114.0 | 35 | 9 | 35 | low-coverage | 0.2007 | 0.3283 | 0.0776 |
+| 81538 | is-it-that-deep-cat-burns | ‘Is it That Deep?’ Cat Burns | youtube | 2026-10-30T09:00:00 | 172.78 | 1280x720 | 25.2 | 4 | 23.2 | 2 | 3.00 | 1.39 | +116% | 36.52 | 40.0 | steady | 0.013 | 0.36-10.84 | 0.000 | 1398.0 | 42 | 2 | 42 | low-coverage | 0.2877 | 0.3881 | 0.1409 |
+| 81536 | gas-bicep | ‘Gas’ Bicep | youtube | 2026-10-29T09:00:00 | 253.31 | 960x720 | 25.2 | 4 | 15.8 | 13 | 19.50 | 18.95 | +3% | 2.20 | 17.3 | accelerating | 0.035 | 10.38-33.35 | 0.000 | 107.5 | 32 | 12 | 32 | low-coverage | 0.2297 | 0.2456 | 0.0997 |
+| 81534 | dead-hand-freestyle-irko | ‘Dead Hand Freestyle’ Irko | youtube | 2026-10-26T22:10:31 | 177.63 | 1280x720 | 18.2 | 4 | 22.5 | 19 | 28.50 | 34.79 | -18% | 1.19 | 6.7 | accelerating | 0.021 | 6.27-59.87 | 0.000 | 28.0 | 25 | 19 | 25 | low-coverage | 0.6143 | 0.0266 | 0.0792 |
+| 81514 | mexicanamerican | Mexicanamerican | youtube | 2026-10-25T19:16:44 | 127.48 | 1280x720 | 30.6 | 4 | 31.4 | 7 | 10.50 | 11.77 | -11% | 3.34 | 0.0 | accelerating | 0.034 | 2.39-24.87 | 0.000 | 78.0 | 37 | 7 | 37 | — | 0.2310 | 0.2230 | 0.1260 |
+| 81344 | coda-dpat | ‘Coda’ Dpat | youtube | 2026-10-21T11:00:00 | 238.52 | 960x720 | 27.0 | 4 | 16.8 | 10 | 15.00 | 24.15 | -38% | 1.38 | 20.6 | decelerating | 0.013 | 7.19-27.59 | 0.300 | 69.0 | 36 | 8 | 36 | low-coverage | 0.2489 | 0.3726 | 0.0256 |
+| 81251 | hearing | Hearing | youtube | 2026-10-19T06:43:00 | 146.26 | 1280x720 | 15.8 | 4 | 27.3 | 5 | 7.50 | 5.33 | +41% | 7.92 | 0.0 | accelerating | 0.001 | 1.80-18.76 | 0.000 | 442.0 | 39 | 5 | 39 | — | 0.1347 | 0.3493 | 0.0209 |
+| 81244 | i-see-buildings-fall-like-lightning | I See Buildings Fall Like Lightning | youtube | 2026-10-15T18:34:32 | 126.80 | 1280x720 | 15.3 | 4 | 31.5 | 38 | 57.00 | 53.47 | +7% | 0.92 | 9.6 | accelerating | 0.084 | 40.34-78.24 | 0.000 | 16.0 | 15 | 29 | 15 | — | 0.2677 | 0.3466 | 0.1464 |
+| 81235 | congo-boy | Congo Boy | youtube | 2026-08-04T16:57:27 | 91.32 | 1280x720 | 18.1 | 4 | 43.8 | 17 | 25.50 | — | — | — | — | — | — | 14.85-40.83 | 0.000 | 51.0 | 27 | 17 | 27 | — | 0.2094 | 0.3753 | 0.0923 |
+| 81233 | curiosity-equinor | ‘Curiosity’ Equinor | youtube | 2026-10-19T15:00:33 | 90.09 | 1280x720 | 14.1 | 4 | 44.4 | 25 | 37.50 | 34.63 | +8% | 1.28 | 18.9 | decelerating | 0.029 | 19.49-61.81 | 0.240 | 42.0 | 25 | 19 | 25 | — | 0.2028 | 0.3706 | 0.0727 |
+| 81181 | blue-girl-in-red | ‘blue’ girl in red | youtube | 2026-10-16T13:14:13 | 249.78 | 1080x720 | 21.1 | 4 | 16.0 | 15 | 22.50 | 86.96 | -74% | 0.08 | 77.7 | accelerating | 0.018 | 6.12-46.65 | 0.000 | 40.0 | 30 | 14 | 30 | low-coverage | 0.1913 | 0.3615 | 0.0575 |
+| 81129 | straight-circle | Straight Circle | youtube | 2026-09-08T23:41:44 | 133.98 | 1280x720 | 9.3 | 4 | 29.9 | 22 | 33.00 | 26.42 | +25% | 1.71 | 3.3 | accelerating | 0.009 | 13.58-59.74 | 0.000 | 29.0 | 26 | 18 | 26 | — | 0.2816 | 0.3732 | 0.0720 |
+| 81120 | queen-at-sea | Queen at Sea | youtube | 2026-08-27T23:36:43 | 118.31 | 1280x720 | 12.9 | 4 | 33.8 | 12 | 18.00 | — | — | — | — | — | — | 9.30-31.44 | 0.000 | 106.0 | 32 | 12 | 32 | — | 0.2344 | 0.3587 | 0.0342 |
+| 81104 | 9-temples-to-heaven | 9 Temples to Heaven | youtube | 2026-09-05T23:32:07 | 125.53 | 1280x720 | 13.6 | 4 | 31.9 | 14 | 21.00 | 21.99 | -4% | 1.96 | 0.0 | accelerating | 0.010 | 11.26-35.57 | 0.000 | 50.0 | 31 | 13 | 31 | — | 0.3693 | 0.3482 | 0.0260 |
+| 81096 | minotaur | Minotaur | youtube | 2026-10-12T05:00:00 | 108.65 | 1280x720 | 7.3 | 4 | 36.8 | 19 | 28.50 | 25.96 | +10% | 1.33 | 4.2 | accelerating | 0.017 | 7.10-58.71 | 0.000 | 27.0 | 28 | 16 | 28 | — | 0.1321 | 0.3413 | 0.0485 |
+| 81087 | forever-your-maternal-animal | Forever Your Maternal Animal | youtube | 2026-05-22T22:59:00 | 105.72 | 1280x720 | 15.8 | 4 | 37.8 | 16 | 24.00 | 23.27 | +3% | 2.04 | 2.4 | decelerating | 0.028 | 12.89-40.17 | 0.000 | 49.0 | 28 | 16 | 28 | — | 0.1815 | 0.3172 | 0.1071 |
+| 81067 | club-kid | Club Kid | youtube | 2026-08-19T22:40:00 | 131.94 | 1280x720 | 11.8 | 4 | 30.3 | 6 | 9.00 | — | — | — | — | — | — | 2.99-20.16 | 0.000 | 130.0 | 38 | 6 | 38 | — | 0.1557 | 0.4177 | 0.0833 |
+| 80878 | paper-tiger | Paper Tiger | youtube | 2026-09-22T18:16:00 | 129.17 | 1280x720 | 7.5 | 4 | 31.0 | 11 | 16.50 | 15.79 | +4% | 1.92 | 0.0 | accelerating | 0.027 | 8.24-29.52 | 0.000 | 80.5 | 34 | 10 | 34 | — | 0.1293 | 0.3187 | 0.0519 |
+| 80875 | the-further-mis-adventures-of-cliff-booth | The Further Mis-Adventures of Cliff Booth | youtube | 2026-09-21T18:12:58 | 90.05 | 1280x676 | 7.9 | 4 | 44.4 | 15 | 22.50 | 19.32 | +16% | 1.44 | 26.7 | decelerating | 0.030 | 5.09-48.18 | 0.400 | 27.5 | 34 | 10 | 34 | — | 0.1388 | 0.4602 | 0.0710 |
+| 80862 | all-of-a-sudden | All of a Sudden | youtube | 2026-09-10T17:33:00 | 126.43 | 1280x720 | 19.7 | 4 | 31.6 | 21 | 31.50 | 20.41 | +54% | 1.62 | 0.0 | accelerating | 0.014 | 10.82-60.19 | 0.000 | 34.0 | 24 | 20 | 24 | — | 0.2341 | 0.3528 | 0.0356 |
+| 80821 | cant-wait-andy | ‘Can’t Wait’ ANDY | youtube | 2026-10-08T06:00:00 | 228.90 | 1280x720 | 26.8 | 4 | 17.5 | 8 | 12.00 | 22.28 | -46% | 1.66 | 10.5 | accelerating | 0.029 | 1.58-29.79 | 0.000 | 53.0 | 36 | 8 | 36 | low-coverage | 0.1596 | 0.3021 | 0.0930 |
+| 80790 | small-world-mette | ‘Small World’ METTE | youtube | 2026-10-08T18:00:00 | 174.94 | 960x720 | 23.8 | 4 | 22.9 | 12 | 18.00 | 18.86 | -5% | 1.71 | 3.6 | steady | 0.026 | 3.21-40.85 | 0.167 | 49.0 | 34 | 10 | 34 | low-coverage | 0.2243 | 0.3592 | 0.1073 |
+| 80783 | painkiller-joy-crookes | ‘Painkiller’ Joy Crookes | youtube | 2026-10-07T06:00:00 | 253.93 | 1198x720 | 28.3 | 4 | 15.8 | 19 | 28.50 | 28.12 | +1% | 1.61 | 5.0 | decelerating | 0.045 | 16.96-44.78 | 0.000 | 40.5 | 26 | 18 | 26 | low-coverage | 0.2044 | 0.4630 | 0.1198 |
+| 80727 | already-gone-orville-peck | ‘Already Gone’ Orville Peck | youtube | 2026-10-10T18:00:00 | 192.73 | 1280x720 | 21.2 | 4 | 20.8 | 25 | 37.50 | 33.00 | +14% | 0.88 | 15.9 | accelerating | 0.019 | 11.08-73.16 | 0.000 | 18.0 | 26 | 18 | 26 | low-coverage | 0.2987 | 0.3089 | 0.0734 |
+| 80725 | innocent-smile-skepta | ‘Innocent Smile’ Skepta | youtube | 2026-10-06T18:00:00 | 158.96 | 1200x720 | 19.1 | 4 | 25.2 | 34 | 51.00 | 43.78 | +16% | 0.62 | 39.3 | steady | 0.021 | 35.32-71.27 | 0.176 | 20.0 | 21 | 23 | 21 | — | 0.1507 | 0.3654 | 0.0854 |
+| 80692 | air-lemonder-viper-bicep | ‘Air’ ‘Lemonder’ & ‘Viper’ BICEP | youtube | 2026-10-05T06:00:00 | 285.09 | 1280x720 | 32.8 | 4 | 14.0 | 7 | 10.50 | 18.31 | -43% | 0.58 | 44.3 | accelerating | 0.028 | 4.22-21.63 | 0.571 | 108.5 | 39 | 5 | 39 | burst-heavy, low-coverage | 0.1684 | 0.4491 | 0.1151 |
+| 80688 | tiramisu-oat-cult | ‘Tiramisù’ Oat Cult | youtube | 2026-10-06T06:00:00 | 110.06 | 960x720 | 10.7 | 4 | 36.3 | 26 | 39.00 | 35.98 | +8% | 0.80 | 28.4 | accelerating | 0.012 | 4.76-84.94 | 0.000 | 19.0 | 25 | 19 | 25 | — | 0.2267 | 0.0000 | 0.0480 |
+| 80677 | a24-meets-dior | A24 Meets Dior | youtube | 2026-10-11T18:00:00 | 141.39 | 1280x720 | 15.0 | 4 | 28.3 | 27 | 40.50 | 35.65 | +14% | 0.84 | 35.3 | accelerating | 0.019 | 19.07-69.09 | 0.222 | 20.5 | 24 | 20 | 24 | — | 0.3380 | 0.4489 | 0.0627 |
+| 80582 | union-county | Union County | youtube | 2026-07-01T01:38:10 | 147.63 | 1280x720 | 8.4 | 4 | 27.1 | 11 | 16.50 | 16.26 | +1% | 2.21 | 2.4 | decelerating | 0.005 | 4.04-36.13 | 0.182 | 62.5 | 34 | 10 | 34 | — | 0.2104 | 0.2116 | 0.0427 |
+| 80572 | american-doctor | American Doctor | youtube | 2026-08-05T01:35:54 | 143.29 | 1280x720 | 28.0 | 4 | 27.9 | 24 | 36.00 | — | — | — | — | — | — | 23.07-53.57 | 0.000 | 36.0 | 22 | 22 | 22 | — | 0.3815 | 0.2718 | 0.0967 |
+| 80564 | the-only-living-pickpocket-in-new-york | The Only Living Pickpocket in New York | youtube | 2026-08-06T01:20:10 | 137.56 | 1280x720 | 22.8 | 4 | 29.1 | 27 | 40.50 | — | — | — | — | — | — | 26.69-58.93 | 0.000 | 34.5 | 18 | 26 | 18 | — | 0.2596 | 0.4364 | 0.0651 |
+| 80559 | teenage-sex-and-death-at-camp-miasma | Teenage Sex and Death at Camp Miasma | youtube | 2026-05-27T00:51:00 | 130.52 | 1280x720 | 10.5 | 4 | 30.6 | 12 | 18.00 | 17.93 | +0% | 1.62 | 5.0 | accelerating | 0.024 | 7.15-34.77 | 0.167 | 45.0 | 35 | 9 | 35 | — | 0.1380 | 0.4397 | 0.0609 |
+| 80548 | parallel-tales | Parallel Tales | youtube | 2026-04-23T00:42:11 | 96.60 | 1280x720 | 12.1 | 4 | 41.4 | 21 | 31.50 | 35.41 | -11% | 1.21 | 5.2 | steady | 0.057 | 17.73-50.61 | 0.000 | 27.0 | 23 | 21 | 23 | — | 0.1607 | 0.3195 | 0.1237 |
+| 80539 | fatherland | Fatherland | youtube | 2026-05-28T00:31:05 | 130.05 | 1280x720 | 16.3 | 4 | 30.8 | 9 | 13.50 | 16.61 | -19% | 2.12 | 5.4 | steady | 0.009 | 6.17-25.63 | 0.000 | 107.5 | 35 | 9 | 35 | — | 0.1515 | 0.0000 | 0.0451 |
+| 80532 | hope | Hope | youtube | 2026-06-24T00:27:17 | 100.17 | 1280x720 | 10.3 | 4 | 39.9 | 9 | 13.50 | 15.57 | -13% | 2.34 | 0.0 | decelerating | 0.019 | 0.65-34.76 | 0.000 | 45.0 | 35 | 9 | 35 | — | 0.1660 | 0.2482 | 0.0842 |
+| 80527 | behemoth | Behemoth! | youtube | 2026-08-14T00:21:05 | 100.17 | 1280x720 | 9.4 | 4 | 39.9 | 7 | 10.50 | — | — | — | — | — | — | 4.22-21.63 | 0.000 | 101.5 | 38 | 6 | 38 | — | 0.1486 | 0.2396 | 0.0650 |
+| 80503 | primetime | Primetime | youtube | 2026-08-06T23:54:15 | 136.23 | 1080x720 | 13.2 | 4 | 29.4 | 42 | 63.00 | — | — | — | — | — | — | 26.31-109.21 | 0.429 | 19.0 | 18 | 26 | 18 | — | 0.1744 | 0.5724 | 0.0763 |
+| 80501 | digger | Digger | youtube | 2026-07-13T23:50:17 | 158.22 | 1080x720 | 13.1 | 4 | 25.3 | 25 | 37.50 | 45.51 | -18% | 1.00 | 9.1 | accelerating | 0.038 | 23.58-56.29 | 0.000 | 32.5 | 21 | 23 | 21 | — | 0.2208 | 0.3823 | 0.0237 |
+| 80494 | fjord | Fjord | youtube | 2026-08-27T23:46:00 | 118.40 | 1280x720 | 9.5 | 4 | 33.8 | 14 | 21.00 | 19.26 | +9% | 2.46 | 0.0 | accelerating | 0.021 | 11.48-35.23 | 0.000 | 48.0 | 30 | 14 | 30 | — | 0.2286 | 0.2819 | 0.0744 |
+| 80490 | artificial | Artificial | youtube | 2026-09-08T23:12:25 | 76.86 | 1280x720 | 6.1 | 4 | 52.0 | 15 | 22.50 | 14.83 | +52% | 0.40 | 55.0 | accelerating | 0.010 | 1.05-54.14 | 0.000 | 8.5 | 35 | 9 | 35 | — | 0.1717 | 0.3689 | 0.0898 |
+| 80487 | you-can-see-everything | You Can See Everything | youtube | 2026-09-23T23:07:41 | 148.33 | 960x720 | 10.5 | 4 | 27.0 | 16 | 24.00 | 25.48 | -6% | 1.81 | 6.2 | steady | 0.013 | 13.72-38.97 | 0.125 | 57.0 | 28 | 16 | 28 | — | 0.2745 | 0.3970 | 0.0569 |
+| 80485 | josephine | Josephine | youtube | 2026-08-11T23:03:00 | 92.07 | 1280x720 | 7.4 | 4 | 43.4 | 19 | 28.50 | — | — | — | — | — | — | 7.10-58.71 | 0.000 | 28.0 | 27 | 17 | 27 | — | 0.2007 | 0.3328 | 0.0543 |
+| 80377 | permanence-veritus-miller-ronnie-heard-iii | ‘Permanence’ Veritus Miller & Ronnie Heard III | youtube | 2026-10-01T16:00:00 | 388.40 | 1280x720 | 41.4 | 4 | 10.3 | 6 | 9.00 | 10.66 | -16% | 3.92 | 22.9 | accelerating | 0.005 | 2.99-20.16 | 0.000 | 95.0 | 38 | 6 | 38 | low-coverage | 0.2137 | 0.2830 | 0.0620 |
+| 80290 | down-with-heaven-art-feynman | ‘Down With Heaven’ Art Feynman | youtube | 2026-10-02T19:52:04 | 323.66 | 1194x720 | 76.5 | 4 | 12.4 | 0 | 0.00 | 0.00 | — | 323.66 | 0.0 | — | 0.002 | 0.00-5.53 | — | — | 44 | 0 | 44 | low-coverage, no-cuts-observed | 0.0365 | 0.3799 | 0.0228 |
+| 80159 | party-troye-sivan | ‘Party’ Troye Sivan | youtube | 2026-09-25T17:29:30 | 244.25 | 960x720 | 24.8 | 4 | 16.4 | 32 | 48.00 | 33.90 | +42% | 1.00 | 5.8 | accelerating | 0.049 | 32.21-68.57 | 0.000 | 25.0 | 14 | 30 | 14 | low-coverage | 0.2189 | 0.3884 | 0.1053 |
 
 | download_method | provider | video_url |
 | --- | --- | --- |
@@ -96,6 +96,7 @@ python scripts/research_wordpress_stills.py report --site directorslibrary --out
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=dL4lFKY8Cy4 |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=HdrkOFVBM70 |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=o-LkpJ4ACxk |
+| ytdlp-merge | youtube | https://www.youtube.com/watch?v=kL9EIAx6EPQ |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=-5ZXrO_lYSA |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=U_k0BHVD4QY |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=ydRyOr3KYD0 |
@@ -104,12 +105,15 @@ python scripts/research_wordpress_stills.py report --site directorslibrary --out
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=qsh2di5c-nI |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=YPI8tDWHIAE |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=sk7NF_LWhLs |
+| ytdlp-merge | youtube | https://www.youtube.com/watch?v=MZIcLNFK4rU |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=FND0AVr_68s |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=p0-pdE1GmUA |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=rv5FRyz3DXE |
+| ytdlp-merge | youtube | https://www.youtube.com/watch?v=UVyH8QYENxI |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=4ZlZcBX2xiw |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=hTHeFP0mcuk |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=Xmz12Rt2P9U |
+| ytdlp-merge | youtube | https://www.youtube.com/watch?v=guKEdb_iRXw |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=MLwTyQOhBkw |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=RjEZaUBbUvU |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=2AxtdPvDojA |
@@ -122,26 +126,22 @@ python scripts/research_wordpress_stills.py report --site directorslibrary --out
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=dI7s0dn4qB4 |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=LutBUtHdxKM |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=uA6Fnr2VXkw |
+| ytdlp-merge | youtube | https://www.youtube.com/watch?v=tDdX1XoJVKA |
+| ytdlp-merge | youtube | https://www.youtube.com/watch?v=By5Yh0Y_h_M |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=dimCiC_hdoA |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=y3BV9KeJzGM |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=-I2-X9v-ogs |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=bC1Wptb4cT4 |
+| ytdlp-merge | youtube | https://www.youtube.com/watch?v=TrMGdrCJ5Ck |
+| ytdlp-merge | youtube | https://www.youtube.com/watch?v=5fHXyqQOKL8 |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=qORTe1wW3Wg |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=frg59VOungA |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=rDZplZFnbOk |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=HvW_N5p1q44 |
+| ytdlp-merge | youtube | https://www.youtube.com/watch?v=K32NPBLpqZI |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=cOc9sMssvWI |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=HfdomXUgvpc |
 | ytdlp-merge | youtube | https://www.youtube.com/watch?v=Yvl4QSAyWR4 |
-| ytdlp-merge | youtube | https://www.youtube.com/watch?v=Xn7agpjQO5w |
-| ytdlp-merge | youtube | https://www.youtube.com/watch?v=OLpR1RiucyA |
-| ytdlp-merge | youtube | https://www.youtube.com/watch?v=b6jvzFrGWdI |
-| ytdlp-merge | youtube | https://www.youtube.com/watch?v=tF2piG0N5gg |
-| ytdlp-merge | youtube | https://www.youtube.com/watch?v=fHD_BCBkvhI |
-| ytdlp-merge | youtube | https://www.youtube.com/watch?v=XNYj8R1Aq3s |
-| ytdlp-merge | youtube | https://www.youtube.com/watch?v=G1JxcHRJsuw |
-| ytdlp-merge | youtube | https://www.youtube.com/watch?v=6gm9IWUuus0 |
-| ytdlp-merge | youtube | https://www.youtube.com/watch?v=eKs_Kw0ytcc |
 
 ## Aggregates (video-measured records only)
 
@@ -149,18 +149,18 @@ Every number in this section is computed ONLY over the video-measured records ta
 
 All minima and maxima are computed over `rankable` records only and name the record id and validity flags.
 
-Unique records before dedupe: 143; after dedupe: 143 (0 duplicate extra record(s) collapsed).
+Unique records before dedupe: 160; after dedupe: 160 (0 duplicate extra record(s) collapsed).
 
-Rankable records: 133 of 143 unique; excluded as non-rankable: 10.
+Rankable records: 148 of 160 unique; excluded as non-rankable: 12.
 
 | metric | n | min (record; flags) | median | max (record; flags) |
 | --- | --- | --- | --- | --- |
-| duration_s | 133 | 53.10 (chanel-25-handbag-chanel; no-cuts-observed) | 138.14 | 520.89 (lime-tikka-baalti-lapgan; low-coverage) |
-| mean_luma | 133 | 0.0365 (down-with-heaven-art-feynman; low-coverage, no-cuts-observed) | 0.2243 | 0.7480 (shape-of-dreams-on; low-coverage) |
-| mean_sat | 133 | 0.0000 (big-beautiful-sound-dana-margolin; low-coverage) | 0.3187 | 0.8236 (romance-baalti-lapgan; —) |
-| delta_per_s | 133 | 0.0118 (trying-times-james-blake; low-coverage, no-cuts-observed) | 0.0665 | 0.1464 (i-see-buildings-fall-like-lightning; —) |
-| candidates_n | 133 | 0 (chanel-25-handbag-chanel; no-cuts-observed) | 13 | 47 (coming-of-age-mette; low-coverage) |
-| sampled_cut_candidates_per_min | 133 | 0.00 (chanel-25-handbag-chanel; no-cuts-observed) | 19.50 | 70.50 (coming-of-age-mette; low-coverage) |
+| duration_s | 148 | 40.01 (the-history-of-concrete; —) | 136.34 | 520.89 (lime-tikka-baalti-lapgan; low-coverage) |
+| mean_luma | 148 | 0.0365 (down-with-heaven-art-feynman; low-coverage, no-cuts-observed) | 0.2237 | 0.7480 (shape-of-dreams-on; low-coverage) |
+| mean_sat | 148 | 0.0000 (big-beautiful-sound-dana-margolin; low-coverage) | 0.3212 | 0.8236 (romance-baalti-lapgan; —) |
+| delta_per_s | 148 | 0.0118 (trying-times-james-blake; low-coverage, no-cuts-observed) | 0.0659 | 0.1464 (i-see-buildings-fall-like-lightning; —) |
+| candidates_n | 148 | 0 (chanel-25-handbag-chanel; no-cuts-observed) | 13 | 47 (coming-of-age-mette; low-coverage) |
+| sampled_cut_candidates_per_min | 148 | 0.00 (chanel-25-handbag-chanel; no-cuts-observed) | 19.50 | 70.50 (coming-of-age-mette; low-coverage) |
 Excluded as non-rankable (largest first):
 
 | record | sampled_cut_candidates_per_min | validity |
@@ -169,9 +169,9 @@ Excluded as non-rankable (largest first):
 | miama-1000vall | 78.00 | burst-heavy, low-coverage |
 | super-nature | 72.00 | burst-heavy |
 | freak-is-wild-skuzland-shygirl | 69.00 | burst-heavy, low-coverage |
-| box-of-god-daisy-maybe | 52.50 | burst-heavy, low-coverage |
+| 7-bridges-to-burn-knats | 54.00 | burst-heavy, low-coverage |
 
-Coverage-weighted caveat: 5720.0 sampled seconds cover 25247.3 runtime seconds (22.7%). Aggregates describe the sampled windows, not the full films. Where a full-film census record exists, `full_cuts_per_min` is film-level and `full_vs_window` states the difference (see `## Full-film census`).
+Coverage-weighted caveat: 6390.0 sampled seconds cover 27638.4 runtime seconds (23.1%). Aggregates describe the sampled windows, not the full films. Where a full-film census record exists, `full_cuts_per_min` is film-level and `full_vs_window` states the difference (see `## Full-film census`).
 
 ## Comparability
 
@@ -182,14 +182,14 @@ Coverage-weighted caveat: 5720.0 sampled seconds cover 25247.3 runtime seconds (
 Caveats:
 
 - Directors' Library: poolable is false; every number describes this site's measured sample only.
-- 143 of 5412 catalogue items were measured (2.642%) by YouTube availability; Vimeo-only rows are skipped as unsupported.
+- 160 of 5412 catalogue items were measured (2.956%) by YouTube availability; Vimeo-only rows are skipped as unsupported.
 - Measured rows are not a random sample: availability and recency select them, so cross-site pooling is invalid.
-- Provider families are not interchangeable: youtube x 143.
+- Provider families are not interchangeable: youtube x 160.
 - Renditions differ by site and record: platform-encoded YouTube renditions; Vimeo was never fetched or probed.
-- Measured renditions vary by resolution (1280x720 x 100, 960x720 x 14, 1080x720 x 6, 1200x720 x 4, 1048x720 x 2, 1190x720 x 2, 1280x692 x 2, 1032x720 x 1, +12 more), frame rate (24 x 59, 25 x 45, 23.976 x 36, 50 x 2, 29.97 x 1) and bitrate (1.0 x 21, 0.9 x 20, 0.7 x 18, 0.4 x 12, 0.6 x 9, 0.8 x 9, 1.1 x 9, 0.5 x 8, +10 more), so the sample is not a controlled transform.
-- Window coverage is sampled, not full-film: median 27.74% per record, p10 13.5062%, p90 44.8197%; 32.867133% of rows are below 20% and 2.797203% below 10%; median unobserved gap between windows is 29.0 s. Window rates describe those windows; a full-film census, when present, is reported separately.
-- 0 extra record(s) in 0 duplicate group(s) share media; unique media after dedupe is 143.
-- Still/video overlap: 5348 still record(s), 5210 still-only, are a separate single-frame lane and never enter these aggregates.
+- Measured renditions vary by resolution (1280x720 x 112, 960x720 x 14, 1080x720 x 8, 1200x720 x 4, 1048x720 x 2, 1190x720 x 2, 1198x720 x 2, 1280x676 x 2, +13 more), frame rate (24 x 65, 25 x 50, 23.976 x 41, 29.97 x 2, 50 x 2) and bitrate (0.9 x 23, 1.0 x 21, 0.7 x 20, 0.4 x 12, 0.8 x 12, 0.6 x 10, 1.1 x 9, 0.5 x 8, +10 more), so the sample is not a controlled transform.
+- Window coverage is sampled, not full-film: median 28.70125% per record, p10 13.9206%, p90 44.4711%; 31.875% of rows are below 20% and 2.5% below 10%; median unobserved gap between windows is 28.0 s. Window rates describe those windows; a full-film census, when present, is reported separately.
+- 0 extra record(s) in 0 duplicate group(s) share media; unique media after dedupe is 160.
+- Still/video overlap: 5348 still record(s), 5193 still-only, are a separate single-frame lane and never enter these aggregates.
 
 ## Coverage
 
@@ -198,17 +198,17 @@ Per-record coverage distribution over the deduped records. The unobserved gap is
 | statistic | coverage_pct |
 | --- | --- |
 | min | 7.7 |
-| p10 | 13.5 |
-| median | 27.7 |
-| p90 | 44.8 |
+| p10 | 13.9 |
+| median | 28.7 |
+| p90 | 44.5 |
 | max | 75.3 |
-| below 20% | 32.9% |
-| below 10% | 2.8% |
-| median unobserved gap between windows | 29.0 s |
+| below 20% | 31.9% |
+| below 10% | 2.5% |
+| median unobserved gap between windows | 28.0 s |
 
 ## Full-film census
 
-Film-level evidence: 142 of 143 video-measured records (99.3%) on Directors' Library have a full-runtime census record. Census values are **film-level**: every cut candidate in the file was counted and the appearance series is time-weighted over the whole runtime, so `decodeCoverageFraction` is 1.000000. The `full_cuts_per_min` column is that film-level rate; every `sampled_cut_candidates_per_min` value remains a sample of its windows.
+Film-level evidence: 142 of 160 video-measured records (88.8%) on Directors' Library have a full-runtime census record. Census values are **film-level**: every cut candidate in the file was counted and the appearance series is time-weighted over the whole runtime, so `decodeCoverageFraction` is 1.000000. The `full_cuts_per_min` column is that film-level rate; every `sampled_cut_candidates_per_min` value remains a sample of its windows.
 
 Census cut candidates are still ffmpeg scene-score exceedances, not verified edits; fast movement, flashes, transitions and compression can exceed the threshold. A `strobe` record's rate describes strobe-like candidate density and is **not comparable to a cut rate**, so strobe records are excluded from the range below and reported separately.
 
@@ -319,6 +319,88 @@ Window values are samples of the runtime; census values cover the film. Relative
 | air-lemonder-viper-bicep | 113 | 85 | 28 | 10.50 | 18.31 |
 | discipline-makeshift-art-bar | 63 | 36 | 27 | 22.50 | 31.12 |
 | (+63 more rank changes in `aggregate.json`) | | | | | |
+
+## Editorial structure
+
+Derived offline from each record's stored census cut candidates and 1 Hz appearance series (pure function, no media re-decode). A `shot` is the interval between consecutive detected scene changes, a lower bound on edits; `shotCount` is always candidates + 1.
+
+Shot-length distribution across 133 non-strobe clip(s), using each clip's median shot length. Strobe records are excluded because their candidate intervals are frame-scale.
+
+| statistic | median_shot_s |
+| --- | --- |
+| n | 133 |
+| min | 0.40 |
+| p10 | 0.92 |
+| median | 1.83 |
+| p90 | 5.01 |
+| max | 323.66 |
+
+Median cut rate (non-strobe): 20.62 cuts/min. Shot counts across clips: 1–219.
+
+Pace trend, last third ÷ first third with a ±15% band: accelerating 63, steady 31, decelerating 42, unclassified 6 (unclassified means no cut candidate in the first third, so no ratio exists).
+
+Clips whose last third is >2× their first third (>2×; non-strobe):
+
+| id | pace_drift_ratio | median_shot_s |
+| --- | --- | --- |
+| a-personal-appeal-alzheimers-society | 9.00 | 1.88 |
+| your-way-out-coinbase | 6.00 | 1.36 |
+| youre-not-like-that-the-rapants | 4.55 | 1.64 |
+| drop-dead-olivia-rodrigo | 4.00 | 1.94 |
+| tiramisu-oat-cult | 3.73 | 0.80 |
+| variations-on-a-theme | 3.25 | 2.25 |
+| amazomania | 3.00 | 1.94 |
+| minotaur | 3.00 | 1.33 |
+| mexicanamerican | 2.75 | 3.34 |
+| a24-meets-dior | 2.65 | 0.84 |
+| artificial | 2.60 | 0.40 |
+| all-of-a-sudden | 2.50 | 1.62 |
+| odor-enis | 2.40 | 1.84 |
+| digger | 2.17 | 1.00 |
+| the-cure-olivia-rodrigo | 2.12 | 2.36 |
+| air-lemonder-viper-bicep | 2.05 | 0.58 |
+| american-girls-harry-styles | 2.00 | 2.35 |
+| backrooms | 2.00 | 2.00 |
+
+Clips whose last third is <0.5× their first third (<0.5×; non-strobe):
+
+| id | pace_drift_ratio | median_shot_s |
+| --- | --- | --- |
+| dead-grandma | 0.00 | 40.46 |
+| storm-gener8ion | 0.01 | 1.52 |
+| same-sht-isaiah-rashad | 0.10 | 1.96 |
+| life-within-rimowa | 0.11 | 2.00 |
+| easy-street-queens-of-the-stone-age | 0.11 | 1.92 |
+| henna | 0.20 | 2.90 |
+| nino-milo-j | 0.25 | 4.72 |
+| coda-dpat | 0.28 | 1.38 |
+| burn | 0.29 | 1.67 |
+| in-my-head-estelle-chen | 0.29 | 4.38 |
+| i-see-red-daniela-andrade | 0.36 | 1.08 |
+| sound-of-falling-2 | 0.36 | 2.12 |
+| dragonfly | 0.40 | 1.83 |
+| birds-of-war | 0.44 | 1.40 |
+| hope | 0.44 | 2.34 |
+| once-again-orelsan-yame | 0.46 | 2.00 |
+| union-county | 0.47 | 2.21 |
+| romance-baalti-lapgan | 0.50 | 2.08 |
+
+Flicker outliers (median absolute luma delta per second above 0.050; sample instability, not a flicker frequency):
+
+| id | flicker_luma_per_s |
+| --- | --- |
+| father | 0.085 |
+| take-me-home-labat-notinbed | 0.085 |
+| i-see-buildings-fall-like-lightning | 0.084 |
+| super-nature | 0.063 |
+| introducing-the-dyson-camerajet | 0.061 |
+| parallel-tales | 0.057 |
+| the-beat-aclu | 0.057 |
+| cover-up | 0.054 |
+| i-only-rest-in-the-storm | 0.054 |
+| i-love-boosters | 0.051 |
+
+Strobe records excluded from the shot-length aggregates: `automatic`, `blue-girl-in-red`, `box-of-god-daisy-maybe`, `freak-is-wild-skuzland-shygirl`, `in-the-night-beck`, `landmarks`, `miama-1000vall`, `super-nature`, `take-me-home-labat-notinbed`.
 
 ## Measured stills
 

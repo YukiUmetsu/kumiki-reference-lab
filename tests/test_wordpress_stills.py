@@ -1325,6 +1325,12 @@ class VideoReportTests(unittest.TestCase):
                 "fullRuntimeDecoded": True,
             },
             "record": {"id": 1, "slug": "one"},
+            "editorial": {
+                "shotCount": 6, "medianShotSeconds": 2.0,
+                "shotsUnderHalfSecondFraction": 0.0,
+                "paceTrend": "decelerating", "paceDriftRatio": 0.4,
+                "flickerLumaPerSecond": 0.01, "strobeFlag": False,
+            },
         })
         wps.run_report(DL, out_dir, top=10, log=lambda _: None)
         report = (out_dir / "report.md").read_text(encoding="utf-8")
@@ -1333,13 +1339,19 @@ class VideoReportTests(unittest.TestCase):
         self.assertIn("## Full-film census", report)
         self.assertIn("## Census reconciliation", report)
         self.assertIn("full_cuts_per_min", report)
+        self.assertIn("median_shot_s", report)
+        self.assertIn("pace_trend", report)
+        self.assertIn("## Editorial structure", report)
         self.assertIn("| 30.00 |", report)
         self.assertEqual(aggregate["census"]["coverage"]["records"], 1)
         self.assertEqual(aggregate["census"]["coverage"]["videoRecords"], 2)
         self.assertEqual(aggregate["census"]["aggregate"]["median"], 30.0)
         by_slug = {row["slug"]: row for row in aggregate["videos"]}
         self.assertEqual(by_slug["one"]["fullCutsPerMinute"], 30.0)
-        self.assertIsNone(by_slug["two"]["fullCutsPerMinute"])
+        self.assertEqual(by_slug["one"]["median_shot_s"], 2.0)
+        self.assertEqual(by_slug["one"]["pace_trend"], "decelerating")
+        self.assertIsNone(by_slug["two"]["median_shot_s"])
+        self.assertEqual(aggregate["census"]["editorial"]["n"], 1)
 
 
 class SchemaAndConfigTests(unittest.TestCase):

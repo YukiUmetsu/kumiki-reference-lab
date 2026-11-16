@@ -7,21 +7,21 @@ This deliverable tabulates only what the committed evidence records contain: Pro
 - Catalog videos collected: 17805
 - Catalog `hits.total` reported: 17805
 - Catalog complete (all reported hits collected): True
-- Video-measured records: 213
-- Unique video media after dedupe: 213 (0 extra record(s) in 0 duplicate group(s))
+- Video-measured records: 231
+- Unique video media after dedupe: 231 (0 extra record(s) in 0 duplicate group(s))
 - Still-measured records: 16908
-- Still-only records (no matching video record): 16695
+- Still-only records (no matching video record): 16677
 - Skipped, no usable image: 585
 - Skipped (index context): 17415
 - Failed acquisitions (index context): 311
 - Unreadable records: 0
-- generatedAt: 2026-11-12T19:16:52.961999Z
+- generatedAt: 2026-11-16T16:19:47.770684Z
 - Provider split (catalog): none x 498, other x 1673, vimeo x 3448, youtube x 12186
 - Provider split (measured stills): none x 331, other x 1537, vimeo x 3204, youtube x 11836
-- Provider split (measured videos): youtube x 213
+- Provider split (measured videos): youtube x 231
 - Skip reasons (stills index): no-usable-poster x 585, resume-existing-record x 16829, unsafe-slug: identifier is not a safe file name x 1
-- Skip reasons (video index): no-video-reference x 1, provider-refused x 125, resume-existing-record x 139, unsupported-vimeo x 25
-- `--top 20` applied: the first 20 of 213 video-measured rows are tabulated below; `aggregate.json` holds all.
+- Skip reasons (video index): no-video-reference x 1, provider-refused x 1, resume-existing-record x 213, unsupported-vimeo x 41
+- `--top 20` applied: the first 20 of 231 video-measured rows are tabulated below; `aggregate.json` holds all.
 - `--top 20` applied: the first 20 of 16908 measured stills are tabulated below; `aggregate.json` holds all.
 
 Reproduce the inputs and this report with:
@@ -35,30 +35,30 @@ python scripts/research_promonews.py report --out-dir research/analysis/promonew
 
 ## Per-video analysis
 
-213 video-measured record(s), newest catalogue row first. All columns are numeric record fields from the sampled source-PTS windows of the public YouTube rendition; `duration_s` is the decoded local source duration, not a catalogue value.
+231 video-measured record(s), newest catalogue row first. All columns are numeric record fields from the sampled source-PTS windows of the public YouTube rendition; `duration_s` is the decoded local source duration, not a catalogue value.
 
-| nid | slug | title | provider | published | duration_s | resolution | download_mb | windows | coverage_pct | candidates_n | sampled_cut_candidates_per_min | full_cuts_per_min | full_vs_window | ci95 | burst | gap_frames | within_shot_pairs | cut_sep_pairs | delta_basis_pairs | validity | mean_luma | mean_sat | delta_per_s |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 96941 | sports-team-billy-kris-r | Sports Team 'Billy' by Kris R | youtube | 2026-11-11 | 160.50 | 1280x720 | 19.3 | 4 | 24.9 | 19 | 28.50 | 21.68 | +31% | 15.49-46.86 | 0.105 | 29.0 | 28 | 16 | 28 | low-coverage | 0.1722 | 0.3239 | 0.1464 |
-| 96852 | these-wicked-rivers-rise-conor-lee-butler | These Wicked Rivers 'Rise' by Conor Lee Butler | youtube | 2026-11-11 | 252.45 | 1280x550 | 25.5 | 4 | 15.8 | 17 | 25.50 | 24.96 | +2% | 11.92-45.05 | 0.000 | 44.5 | 27 | 17 | 27 | low-coverage | 0.2554 | 0.4602 | 0.1227 |
-| 96929 | missu-sweat-loys-assal | MISSU 'Sweat' by Loys Assal | youtube | 2026-11-10 | 165.21 | 1280x720 | 22.2 | 4 | 24.2 | 4 | 6.00 | 10.90 | -45% | 0.96-16.81 | 0.000 | 79.0 | 40 | 4 | 40 | low-coverage | 0.1562 | 0.3334 | 0.1166 |
-| 96904 | frankie-and-deadbeats-you-are-all-mine-night-lubos-vacke | Frankie And The Deadbeats 'You Are All Mine For The Night' by Lubos Vacke | youtube | 2026-11-10 | 246.06 | 1048x720 | 14.6 | 4 | 16.3 | 0 | 0.00 | 0.49 | -100% | 0.00-5.53 | — | — | 44 | 0 | 44 | low-coverage, no-cuts-observed | 0.0704 | 0.4915 | 0.0295 |
-| 96857 | fontaines-dc-japan-luna-carmoon | Fontaines D.C. 'Japan' by Luna Carmoon | youtube | 2026-11-10 | 216.34 | 1280x720 | 19.4 | 4 | 18.5 | 6 | 9.00 | 7.49 | +20% | 2.99-20.16 | 0.000 | 103.0 | 38 | 6 | 38 | low-coverage | 0.1604 | 0.3139 | 0.0859 |
-| 96924 | olivia-rodrigo-take-me-home-4-christmas-fiona-jane-burgess | Olivia Rodrigo 'Take Me Home (4 Christmas)' by Fiona Jane Burgess | youtube | 2026-11-09 | 187.76 | 960x720 | 16.5 | 4 | 21.3 | 27 | 40.50 | 31.64 | +28% | 23.48-63.21 | 0.148 | 29.0 | 23 | 21 | 23 | low-coverage | 0.2759 | 0.4152 | 0.0682 |
-| 96914 | morrissey-kerching-kerching-lewis-cater | Morrissey 'Kerching Kerching' by Lewis Cater | youtube | 2026-11-09 | 185.46 | 1048x720 | 6.4 | 4 | 21.6 | 4 | 6.00 | 6.15 | -2% | 0.96-16.81 | 0.000 | 175.0 | 40 | 4 | 40 | low-coverage | 0.1162 | 0.2861 | 0.0388 |
-| 96890 | dove-rd-fantasy-matt-burns | dove rd 'Fantasy' by Matt Burns | youtube | 2026-11-09 | 194.19 | 1280x720 | 30.4 | 4 | 20.6 | 10 | 15.00 | 21.63 | -31% | 3.25-33.95 | 0.300 | 64.0 | 36 | 8 | 36 | low-coverage | 0.2798 | 0.2679 | 0.0640 |
-| 96864 | van%C3%A8s-bad-girl-shy-salma-labib | VANÈS 'Bad Girl Shy' by Salma Labib | youtube | 2026-11-06 | 196.00 | 1280x676 | 23.6 | 4 | 20.4 | 4 | 6.00 | 15.92 | -62% | 0.96-16.81 | 0.000 | 110.0 | 40 | 4 | 40 | low-coverage | 0.1335 | 0.5323 | 0.0683 |
-| 96846 | omah-lay-artificial-happiness-nwspk | Omah Lay 'Artificial Happiness' by NWSPK  | youtube | 2026-11-06 | 186.41 | 1048x720 | 16.8 | 4 | 21.5 | 9 | 13.50 | 22.85 | -41% | 3.43-30.17 | 0.000 | 74.0 | 35 | 9 | 35 | low-coverage | 0.2660 | 0.0841 | 0.0911 |
-| 96841 | tinashe-pillow-fight-zac-dov-wiesel | Tinashe 'Pillow Fight' by Zac Dov Wiesel | youtube | 2026-11-03 | 151.88 | 1280x720 | 11.8 | 4 | 26.3 | 24 | 36.00 | 28.44 | +27% | 23.07-53.57 | 0.000 | 35.0 | 22 | 22 | 22 | — | 0.2030 | 0.1805 | 0.0885 |
-| 96844 | ear-candy-clean-clothes-rob-ulitski | Ear Candy 'Clean Clothes' by Rob Ulitski | youtube | 2026-11-03 | 167.60 | 1280x720 | 35.7 | 4 | 23.9 | 19 | 28.50 | 36.16 | -21% | 16.96-44.78 | 0.263 | 49.5 | 29 | 15 | 29 | low-coverage | 0.4442 | 0.3813 | 0.1273 |
-| 96833 | waterbaby-memory-be-blade-felix-scheynius | waterbaby 'Memory Be A Blade' by Felix Scheynius | youtube | 2026-11-03 | 265.10 | 1280x720 | 22.8 | 4 | 15.1 | 5 | 7.50 | 4.07 | +84% | 2.44-17.50 | 0.000 | 1797.5 | 39 | 5 | 39 | low-coverage | 0.2001 | 0.2018 | 0.0673 |
-| 96830 | chloe-qisha-he-likes-boys-bedroom | Chloe Qisha 'He Likes Boys' by Bedroom | youtube | 2026-11-02 | 214.53 | 1032x720 | 23.5 | 4 | 18.6 | 5 | 7.50 | 4.47 | +68% | 0.00-29.87 | 0.400 | 35.5 | 40 | 4 | 40 | low-coverage | 0.0628 | 0.5987 | 0.0661 |
-| 96822 | them-i-say-you-dont-jim-longden | Them & I 'Say You Don't' by Jim Longden | youtube | 2026-11-02 | 157.38 | 1280x720 | 12.6 | 4 | 25.4 | 0 | 0.00 | 0.76 | -100% | 0.00-5.53 | — | — | 44 | 0 | 44 | no-cuts-observed | 0.0900 | 0.6938 | 0.0550 |
-| 96774 | tom-grennan-wrapped-gold-freddie-cattaneo | Tom Grennan 'Wrapped In Gold' by Freddie Cattaneo | youtube | 2026-10-30 | 198.14 | 1080x720 | 18.3 | 4 | 20.2 | 7 | 10.50 | 7.27 | +44% | 4.22-21.63 | 0.000 | 42.0 | 37 | 7 | 37 | low-coverage | 0.1067 | 0.3919 | 0.0651 |
-| 96807 | james-blunt-circles-jack-howard | James Blunt 'Circles' by Jack Howard | youtube | 2026-10-30 | 239.37 | 1034x720 | 23.9 | 4 | 16.7 | 8 | 12.00 | 13.28 | -10% | 1.58-29.79 | 0.000 | 70.0 | 36 | 8 | 36 | low-coverage | 0.2412 | 0.3594 | 0.0859 |
-| 96811 | telemakus-w-sparklmami-bigboihums-feat-tristan-cappel-hands-rejoice-mackai-sharp | Telemakus w Sparklmami, Bigboihums (feat. Tristan Cappel) 'Hands Rejoice!' by Mackai Sharp | youtube | 2026-10-30 | 124.85 | 1080x720 | 22.2 | 4 | 32.0 | 18 | 27.00 | 35.08 | -23% | 13.95-45.59 | 0.333 | 53.0 | 29 | 15 | 29 | — | 0.2411 | 0.6212 | 0.0920 |
-| 96781 | texas-another-way-cry-niall-trask | Texas 'Another Way To Cry' by Niall Trask | youtube | 2026-10-29 | 232.39 | 1280x720 | 29.1 | 4 | 17.2 | 9 | 13.50 | 15.75 | -14% | 4.25-28.80 | 0.000 | 112.5 | 35 | 9 | 35 | low-coverage | 0.3357 | 0.3022 | 0.0702 |
-| 96805 | kinlaw-ride-ride-barbara-anastacio | Kinlaw 'Ride The Ride' by Barbara Anastacio | youtube | 2026-10-29 | 232.78 | 960x720 | 32.6 | 4 | 17.2 | 4 | 6.00 | 17.53 | -66% | 1.63-15.36 | 0.000 | 1772.0 | 40 | 4 | 40 | low-coverage | 0.2276 | 0.3051 | 0.0546 |
+| nid | slug | title | provider | published | duration_s | resolution | download_mb | windows | coverage_pct | candidates_n | sampled_cut_candidates_per_min | full_cuts_per_min | full_vs_window | median_shot_s | shots_lt_0_5s_pct | pace_trend | flicker | ci95 | burst | gap_frames | within_shot_pairs | cut_sep_pairs | delta_basis_pairs | validity | mean_luma | mean_sat | delta_per_s |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 96941 | sports-team-billy-kris-r | Sports Team 'Billy' by Kris R | youtube | 2026-11-11 | 160.50 | 1280x720 | 19.3 | 4 | 24.9 | 19 | 28.50 | 21.68 | +31% | 1.16 | 30.5 | decelerating | 0.032 | 15.49-46.86 | 0.105 | 29.0 | 28 | 16 | 28 | low-coverage | 0.1722 | 0.3239 | 0.1464 |
+| 96852 | these-wicked-rivers-rise-conor-lee-butler | These Wicked Rivers 'Rise' by Conor Lee Butler | youtube | 2026-11-11 | 252.45 | 1280x550 | 25.5 | 4 | 15.8 | 17 | 25.50 | 24.96 | +2% | 1.96 | 2.8 | steady | 0.021 | 11.92-45.05 | 0.000 | 44.5 | 27 | 17 | 27 | low-coverage | 0.2554 | 0.4602 | 0.1227 |
+| 96929 | missu-sweat-loys-assal | MISSU 'Sweat' by Loys Assal | youtube | 2026-11-10 | 165.21 | 1280x720 | 22.2 | 4 | 24.2 | 4 | 6.00 | 10.90 | -45% | 1.44 | 6.5 | decelerating | 0.019 | 0.96-16.81 | 0.000 | 79.0 | 40 | 4 | 40 | low-coverage | 0.1562 | 0.3334 | 0.1166 |
+| 96904 | frankie-and-deadbeats-you-are-all-mine-night-lubos-vacke | Frankie And The Deadbeats 'You Are All Mine For The Night' by Lubos Vacke | youtube | 2026-11-10 | 246.06 | 1048x720 | 14.6 | 4 | 16.3 | 0 | 0.00 | 0.49 | -100% | 22.48 | 0.0 | decelerating | 0.004 | 0.00-5.53 | — | — | 44 | 0 | 44 | low-coverage, no-cuts-observed | 0.0704 | 0.4915 | 0.0295 |
+| 96857 | fontaines-dc-japan-luna-carmoon | Fontaines D.C. 'Japan' by Luna Carmoon | youtube | 2026-11-10 | 216.34 | 1280x720 | 19.4 | 4 | 18.5 | 6 | 9.00 | 7.49 | +20% | 3.44 | 3.6 | decelerating | 0.012 | 2.99-20.16 | 0.000 | 103.0 | 38 | 6 | 38 | low-coverage | 0.1604 | 0.3139 | 0.0859 |
+| 96924 | olivia-rodrigo-take-me-home-4-christmas-fiona-jane-burgess | Olivia Rodrigo 'Take Me Home (4 Christmas)' by Fiona Jane Burgess | youtube | 2026-11-09 | 187.76 | 960x720 | 16.5 | 4 | 21.3 | 27 | 40.50 | 31.64 | +28% | 1.21 | 13.0 | accelerating | 0.019 | 23.48-63.21 | 0.148 | 29.0 | 23 | 21 | 23 | low-coverage | 0.2759 | 0.4152 | 0.0682 |
+| 96914 | morrissey-kerching-kerching-lewis-cater | Morrissey 'Kerching Kerching' by Lewis Cater | youtube | 2026-11-09 | 185.46 | 1048x720 | 6.4 | 4 | 21.6 | 4 | 6.00 | 6.15 | -2% | 3.38 | 0.0 | decelerating | 0.003 | 0.96-16.81 | 0.000 | 175.0 | 40 | 4 | 40 | low-coverage | 0.1162 | 0.2861 | 0.0388 |
+| 96890 | dove-rd-fantasy-matt-burns | dove rd 'Fantasy' by Matt Burns | youtube | 2026-11-09 | 194.19 | 1280x720 | 30.4 | 4 | 20.6 | 10 | 15.00 | 21.63 | -31% | 1.35 | 39.4 | accelerating | 0.014 | 3.25-33.95 | 0.300 | 64.0 | 36 | 8 | 36 | low-coverage | 0.2798 | 0.2679 | 0.0640 |
+| 96864 | van%C3%A8s-bad-girl-shy-salma-labib | VANÈS 'Bad Girl Shy' by Salma Labib | youtube | 2026-11-06 | 196.00 | 1280x676 | 23.6 | 4 | 20.4 | 4 | 6.00 | 15.92 | -62% | 1.92 | 1.9 | accelerating | 0.017 | 0.96-16.81 | 0.000 | 110.0 | 40 | 4 | 40 | low-coverage | 0.1335 | 0.5323 | 0.0683 |
+| 96846 | omah-lay-artificial-happiness-nwspk | Omah Lay 'Artificial Happiness' by NWSPK  | youtube | 2026-11-06 | 186.41 | 1048x720 | 16.8 | 4 | 21.5 | 9 | 13.50 | 22.85 | -41% | 2.06 | 2.8 | accelerating | 0.021 | 3.43-30.17 | 0.000 | 74.0 | 35 | 9 | 35 | low-coverage | 0.2660 | 0.0841 | 0.0911 |
+| 96841 | tinashe-pillow-fight-zac-dov-wiesel | Tinashe 'Pillow Fight' by Zac Dov Wiesel | youtube | 2026-11-03 | 151.88 | 1280x720 | 11.8 | 4 | 26.3 | 24 | 36.00 | 28.44 | +27% | 1.46 | 4.1 | decelerating | 0.028 | 23.07-53.57 | 0.000 | 35.0 | 22 | 22 | 22 | — | 0.2030 | 0.1805 | 0.0885 |
+| 96844 | ear-candy-clean-clothes-rob-ulitski | Ear Candy 'Clean Clothes' by Rob Ulitski | youtube | 2026-11-03 | 167.60 | 1280x720 | 35.7 | 4 | 23.9 | 19 | 28.50 | 36.16 | -21% | 1.20 | 26.5 | steady | 0.036 | 16.96-44.78 | 0.263 | 49.5 | 29 | 15 | 29 | low-coverage | 0.4442 | 0.3813 | 0.1273 |
+| 96833 | waterbaby-memory-be-blade-felix-scheynius | waterbaby 'Memory Be A Blade' by Felix Scheynius | youtube | 2026-11-03 | 265.10 | 1280x720 | 22.8 | 4 | 15.1 | 5 | 7.50 | 4.07 | +84% | 7.40 | 0.0 | decelerating | 0.009 | 2.44-17.50 | 0.000 | 1797.5 | 39 | 5 | 39 | low-coverage | 0.2001 | 0.2018 | 0.0673 |
+| 96830 | chloe-qisha-he-likes-boys-bedroom | Chloe Qisha 'He Likes Boys' by Bedroom | youtube | 2026-11-02 | 214.53 | 1032x720 | 23.5 | 4 | 18.6 | 5 | 7.50 | 4.47 | +68% | 2.68 | 11.8 | accelerating | 0.016 | 0.00-29.87 | 0.400 | 35.5 | 40 | 4 | 40 | low-coverage | 0.0628 | 0.5987 | 0.0661 |
+| 96822 | them-i-say-you-dont-jim-longden | Them & I 'Say You Don't' by Jim Longden | youtube | 2026-11-02 | 157.38 | 1280x720 | 12.6 | 4 | 25.4 | 0 | 0.00 | 0.76 | -100% | 6.47 | 0.0 | — | 0.007 | 0.00-5.53 | — | — | 44 | 0 | 44 | no-cuts-observed | 0.0900 | 0.6938 | 0.0550 |
+| 96774 | tom-grennan-wrapped-gold-freddie-cattaneo | Tom Grennan 'Wrapped In Gold' by Freddie Cattaneo | youtube | 2026-10-30 | 198.14 | 1080x720 | 18.3 | 4 | 20.2 | 7 | 10.50 | 7.27 | +44% | 4.24 | 4.0 | decelerating | 0.014 | 4.22-21.63 | 0.000 | 42.0 | 37 | 7 | 37 | low-coverage | 0.1067 | 0.3919 | 0.0651 |
+| 96807 | james-blunt-circles-jack-howard | James Blunt 'Circles' by Jack Howard | youtube | 2026-10-30 | 239.37 | 1034x720 | 23.9 | 4 | 16.7 | 8 | 12.00 | 13.28 | -10% | 2.84 | 1.9 | accelerating | 0.011 | 1.58-29.79 | 0.000 | 70.0 | 36 | 8 | 36 | low-coverage | 0.2412 | 0.3594 | 0.0859 |
+| 96811 | telemakus-w-sparklmami-bigboihums-feat-tristan-cappel-hands-rejoice-mackai-sharp | Telemakus w Sparklmami, Bigboihums (feat. Tristan Cappel) 'Hands Rejoice!' by Mackai Sharp | youtube | 2026-10-30 | 124.85 | 1080x720 | 22.2 | 4 | 32.0 | 18 | 27.00 | 35.08 | -23% | 0.88 | 37.8 | accelerating | 0.012 | 13.95-45.59 | 0.333 | 53.0 | 29 | 15 | 29 | — | 0.2411 | 0.6212 | 0.0920 |
+| 96781 | texas-another-way-cry-niall-trask | Texas 'Another Way To Cry' by Niall Trask | youtube | 2026-10-29 | 232.39 | 1280x720 | 29.1 | 4 | 17.2 | 9 | 13.50 | 15.75 | -14% | 3.22 | 1.6 | accelerating | 0.012 | 4.25-28.80 | 0.000 | 112.5 | 35 | 9 | 35 | low-coverage | 0.3357 | 0.3022 | 0.0702 |
+| 96805 | kinlaw-ride-ride-barbara-anastacio | Kinlaw 'Ride The Ride' by Barbara Anastacio | youtube | 2026-10-29 | 232.78 | 960x720 | 32.6 | 4 | 17.2 | 4 | 6.00 | 17.53 | -66% | 0.68 | 43.5 | accelerating | 0.017 | 1.63-15.36 | 0.000 | 1772.0 | 40 | 4 | 40 | low-coverage | 0.2276 | 0.3051 | 0.0546 |
 
 | download_method | provider | video_url |
 | --- | --- | --- |
@@ -89,18 +89,18 @@ Every number in this section is computed ONLY over the video-measured records ta
 
 All minima and maxima are computed over `rankable` records only and name the record id and validity flags.
 
-Unique records before dedupe: 213; after dedupe: 213 (0 duplicate extra record(s) collapsed).
+Unique records before dedupe: 231; after dedupe: 231 (0 duplicate extra record(s) collapsed).
 
-Rankable records: 188 of 213 unique; excluded as non-rankable: 25.
+Rankable records: 203 of 231 unique; excluded as non-rankable: 28.
 
 | metric | n | min (record; flags) | median | max (record; flags) |
 | --- | --- | --- | --- | --- |
-| duration_s | 188 | 117.68 (no-na-rollerblade-fa-fon; —) | 214.58 | 576.67 (studio20-live-metalcraft-pedro-takahashi; low-coverage) |
-| mean_luma | 188 | 0.0612 (dexter-newsagent-fantasy-iris-luz; —) | 0.2272 | 0.5954 (final-call-life-party-evan-brandow; low-coverage) |
-| mean_sat | 188 | 0.0000 (alexis-taylor-colombia-ian-svenonius; low-coverage) | 0.3524 | 0.9718 (lonnie-gunn-taxidermy-swan-lea-otovic; low-coverage) |
-| delta_per_s | 188 | 0.0052 (kelsey-lu-portrait-lady-fire-savanah-leaf; low-coverage) | 0.0818 | 0.1965 (fat-dog-cancel-me-im-tired-fat-dog-james-winstanley-lloyd-young; low-coverage) |
-| candidates_n | 188 | 0 (do%CC%81ttirx-live-session-voli-whisperintrovert-luigi-calabrese-fil-thorpe; low-coverage, no-cuts-observed) | 11 | 43 (say-now-hot-talking-vasso-vu; low-coverage) |
-| sampled_cut_candidates_per_min | 188 | 0.00 (do%CC%81ttirx-live-session-voli-whisperintrovert-luigi-calabrese-fil-thorpe; low-coverage, no-cuts-observed) | 16.50 | 64.50 (say-now-hot-talking-vasso-vu; low-coverage) |
+| duration_s | 203 | 117.68 (no-na-rollerblade-fa-fon; —) | 214.67 | 576.67 (studio20-live-metalcraft-pedro-takahashi; low-coverage) |
+| mean_luma | 203 | 0.0612 (dexter-newsagent-fantasy-iris-luz; —) | 0.2276 | 0.5954 (final-call-life-party-evan-brandow; low-coverage) |
+| mean_sat | 203 | 0.0000 (alexis-taylor-colombia-ian-svenonius; low-coverage) | 0.3521 | 0.9718 (lonnie-gunn-taxidermy-swan-lea-otovic; low-coverage) |
+| delta_per_s | 203 | 0.0052 (kelsey-lu-portrait-lady-fire-savanah-leaf; low-coverage) | 0.0813 | 0.1965 (fat-dog-cancel-me-im-tired-fat-dog-james-winstanley-lloyd-young; low-coverage) |
+| candidates_n | 203 | 0 (do%CC%81ttirx-live-session-voli-whisperintrovert-luigi-calabrese-fil-thorpe; low-coverage, no-cuts-observed) | 11 | 43 (say-now-hot-talking-vasso-vu; low-coverage) |
+| sampled_cut_candidates_per_min | 203 | 0.00 (do%CC%81ttirx-live-session-voli-whisperintrovert-luigi-calabrese-fil-thorpe; low-coverage, no-cuts-observed) | 16.50 | 64.50 (say-now-hot-talking-vasso-vu; low-coverage) |
 Excluded as non-rankable (largest first):
 
 | record | sampled_cut_candidates_per_min | validity |
@@ -111,7 +111,7 @@ Excluded as non-rankable (largest first):
 | anna-meredith-dusky-ewan-jones-morris | 159.00 | burst-heavy, low-coverage, non-edit-scene-change |
 | fortuno-alive-tobi-omola-ja%E2%80%99lisa-arnold | 157.50 | burst-heavy, low-coverage, non-edit-scene-change |
 
-Coverage-weighted caveat: 8520.0 sampled seconds cover 47617.9 runtime seconds (17.9%). Aggregates describe the sampled windows, not the full films. Where a full-film census record exists, `full_cuts_per_min` is film-level and `full_vs_window` states the difference (see `## Full-film census`).
+Coverage-weighted caveat: 9240.0 sampled seconds cover 51833.0 runtime seconds (17.8%). Aggregates describe the sampled windows, not the full films. Where a full-film census record exists, `full_cuts_per_min` is film-level and `full_vs_window` states the difference (see `## Full-film census`).
 
 ## Comparability
 
@@ -122,14 +122,14 @@ Coverage-weighted caveat: 8520.0 sampled seconds cover 47617.9 runtime seconds (
 Caveats:
 
 - Promonews: poolable is false; every number describes this site's measured sample only.
-- 213 of 17805 catalogue items were measured (1.196%) by YouTube availability and recency; Vimeo entries are skipped as unsupported.
+- 231 of 17805 catalogue items were measured (1.297%) by YouTube availability and recency; Vimeo entries are skipped as unsupported.
 - Measured rows are not a random sample: availability and recency select them, so cross-site pooling is invalid.
-- Provider families are not interchangeable: youtube x 213.
+- Provider families are not interchangeable: youtube x 231.
 - Renditions differ by site and record: platform-encoded YouTube renditions; Vimeo was never fetched or probed.
-- Measured renditions vary by resolution (1280x720 x 121, 960x720 x 31, 1080x720 x 15, 1048x720 x 10, 1190x720 x 4, 1200x720 x 4, 1280x676 x 4, 1034x720 x 2, +19 more), frame rate (25 x 113, 24 x 63, 23.976 x 29, 29.97 x 2, 30 x 2, 23.7644 x 1, 50 x 1, 59.9401 x 1, +1 more) and bitrate (0.9 x 32, 1.0 x 29, 0.8 x 27, 1.1 x 21, 0.7 x 20, 1.2 x 12, 1.3 x 10, 0.5 x 9, +16 more), so the sample is not a controlled transform.
-- Window coverage is sampled, not full-film: median 18.6334% per record, p10 13.55514%, p90 25.39226%; 59.15493% of rows are below 20% and 2.347418% below 10%; median unobserved gap between windows is 51.0 s. Window rates describe those windows; a full-film census, when present, is reported separately.
-- 0 extra record(s) in 0 duplicate group(s) share media; unique media after dedupe is 213.
-- Still/video overlap: 16908 still record(s), 16695 still-only, are a separate single-frame lane and never enter these aggregates.
+- Measured renditions vary by resolution (1280x720 x 130, 960x720 x 38, 1080x720 x 15, 1048x720 x 10, 1200x720 x 5, 1190x720 x 4, 1280x676 x 4, 1034x720 x 2, +20 more), frame rate (25 x 125, 24 x 64, 23.976 x 34, 29.97 x 2, 30 x 2, 23.7644 x 1, 50 x 1, 59.9401 x 1, +1 more) and bitrate (0.9 x 34, 1.0 x 33, 0.8 x 29, 0.7 x 23, 1.1 x 22, 1.2 x 12, 1.3 x 12, 0.6 x 10, +16 more), so the sample is not a controlled transform.
+- Window coverage is sampled, not full-film: median 18.5932% per record, p10 13.5142%, p90 25.5511%; 58.874459% of rows are below 20% and 2.597403% below 10%; median unobserved gap between windows is 51.0 s. Window rates describe those windows; a full-film census, when present, is reported separately.
+- 0 extra record(s) in 0 duplicate group(s) share media; unique media after dedupe is 231.
+- Still/video overlap: 16908 still record(s), 16677 still-only, are a separate single-frame lane and never enter these aggregates.
 
 ## Coverage
 
@@ -138,17 +138,17 @@ Per-record coverage distribution over the deduped records. The unobserved gap is
 | statistic | coverage_pct |
 | --- | --- |
 | min | 6.9 |
-| p10 | 13.6 |
+| p10 | 13.5 |
 | median | 18.6 |
-| p90 | 25.4 |
+| p90 | 25.6 |
 | max | 34.0 |
-| below 20% | 59.2% |
-| below 10% | 2.3% |
+| below 20% | 58.9% |
+| below 10% | 2.6% |
 | median unobserved gap between windows | 51.0 s |
 
 ## Full-film census
 
-Film-level evidence: 212 of 213 video-measured records (99.5%) on Promonews have a full-runtime census record. Census values are **film-level**: every cut candidate in the file was counted and the appearance series is time-weighted over the whole runtime, so `decodeCoverageFraction` is 1.000000. The `full_cuts_per_min` column is that film-level rate; every `sampled_cut_candidates_per_min` value remains a sample of its windows.
+Film-level evidence: 212 of 231 video-measured records (91.8%) on Promonews have a full-runtime census record. Census values are **film-level**: every cut candidate in the file was counted and the appearance series is time-weighted over the whole runtime, so `decodeCoverageFraction` is 1.000000. The `full_cuts_per_min` column is that film-level rate; every `sampled_cut_candidates_per_min` value remains a sample of its windows.
 
 Census cut candidates are still ffmpeg scene-score exceedances, not verified edits; fast movement, flashes, transitions and compression can exceed the threshold. A `strobe` record's rate describes strobe-like candidate density and is **not comparable to a cut rate**, so strobe records are excluded from the range below and reported separately.
 
@@ -319,6 +319,118 @@ Window values are samples of the runtime; census values cover the film. Relative
 | andy-cant-wait-harry-welsh | 141 | 91 | 50 | 12.00 | 22.28 |
 | bonobo-me-and-you-inout | 20 | 70 | -50 | 46.50 | 27.65 |
 | (+132 more rank changes in `aggregate.json`) | | | | | |
+
+## Editorial structure
+
+Derived offline from each record's stored census cut candidates and 1 Hz appearance series (pure function, no media re-decode). A `shot` is the interval between consecutive detected scene changes, a lower bound on edits; `shotCount` is always candidates + 1.
+
+Shot-length distribution across 188 non-strobe clip(s), using each clip's median shot length. Strobe records are excluded because their candidate intervals are frame-scale.
+
+| statistic | median_shot_s |
+| --- | --- |
+| n | 188 |
+| min | 0.11 |
+| p10 | 0.91 |
+| median | 1.92 |
+| p90 | 5.40 |
+| max | 451.05 |
+
+Median cut rate (non-strobe): 19.32 cuts/min. Shot counts across clips: 1–236.
+
+Pace trend, last third ÷ first third with a ±15% band: accelerating 87, steady 42, decelerating 78, unclassified 5 (unclassified means no cut candidate in the first third, so no ratio exists).
+
+Clips whose last third is >2× their first third (>2×; non-strobe):
+
+| id | pace_drift_ratio | median_shot_s |
+| --- | --- | --- |
+| chloe-qisha-he-likes-boys-bedroom | 12.00 | 2.68 |
+| fontaines-dc-tongue-john-angus-stewart | 12.00 | 1.28 |
+| anotr-it-alice-kong | 8.00 | 1.16 |
+| adela-kgb-rachel-dunkel | 6.83 | 1.62 |
+| hot-freaks-girlfriend-mind-cody-lee-brown | 6.50 | 1.69 |
+| eliza-rose-undercover-lover-jade-ang-jackman | 6.00 | 1.44 |
+| kinlaw-ride-ride-barbara-anastacio | 4.90 | 0.68 |
+| lonnie-gunn-taxidermy-swan-lea-otovic | 4.83 | 1.40 |
+| mnek-reverse-douglas-reddan | 4.78 | 0.63 |
+| charlotte-cardin-take-me-back-vincent-ren%C3%A9-lortie | 3.88 | 1.46 |
+| sada-nu-ocnebob-sali-nikolaishvili-and-sandro-darakhvelidze | 3.62 | 2.90 |
+| gliiico-dont-eat-dont-sleep-jackson-lee-forsythe | 3.25 | 3.02 |
+| maisie-peters-questions-georgie-cowan-turner | 3.23 | 1.44 |
+| tamino-raven-thibaut-grevet | 3.20 | 3.23 |
+| keo-be-happy-tommy-davis | 3.18 | 0.50 |
+| khalique-concrete-george-moore-chadwick | 2.76 | 1.30 |
+| jorja-smith-price-it-all-kc-locke | 2.67 | 2.90 |
+| clean-bandit-ft-chl%C3%B6e-bailey-omah-lay-company-jack-patterson | 2.60 | 1.71 |
+| telemakus-w-sparklmami-bigboihums-feat-tristan-cappel-hands-rejoice-mackai-sharp | 2.58 | 0.88 |
+| rolling-stones-mr-charm-henry-scholfield | 2.50 | 1.96 |
+| joshua-burnside-its-not-going-be-okay-jake-duncan | 2.46 | 1.32 |
+| dove-rd-fantasy-matt-burns | 2.44 | 1.35 |
+| james-blunt-circles-jack-howard | 2.27 | 2.84 |
+| hylo-its-not-about-him-james-humby | 2.20 | 3.32 |
+| keo-thats-me-hermione-sylvester | 2.08 | 1.33 |
+| bicep-viper-air-and-lemonder-ryan-doubiago | 2.05 | 0.58 |
+| bnxn-x-asake-eja-meja-labi-odebunmi | 2.00 | 1.92 |
+| charlie-jeer-my-madonna-ben-stancombe | 2.00 | 3.09 |
+
+Clips whose last third is <0.5× their first third (<0.5×; non-strobe):
+
+| id | pace_drift_ratio | median_shot_s |
+| --- | --- | --- |
+| charlie-jeer-jennifer-douglas-reddan | 0.00 | 84.31 |
+| charlotte-cardin-memories-i-ii-vincent-ren%C3%A9-lortie | 0.00 | 8.12 |
+| emily-makis-pola-bryson-pretender-ted-clarke | 0.00 | 1.02 |
+| frankie-and-deadbeats-you-are-all-mine-night-lubos-vacke | 0.00 | 22.48 |
+| mr-bruce-go-slow-tom-oliver | 0.00 | 3.84 |
+| gener8ion-storm-romain-gavras | 0.01 | 1.52 |
+| dani-toi-ft-lemzi-shazzid%C3%A9-look-around-coro-benavent | 0.05 | 2.60 |
+| isaiah-rashad-same-sht-omar-jones | 0.10 | 1.96 |
+| sports-team-billy-kris-r | 0.18 | 1.16 |
+| mnek-muscle-marys-ben-galster | 0.20 | 1.12 |
+| fontaines-dc-japan-luna-carmoon | 0.22 | 3.44 |
+| junior-varsity-radio-matthew-dillon-cohen | 0.24 | 3.00 |
+| missu-sweat-loys-assal | 0.26 | 1.44 |
+| django-django-dirty-hotel-blues-jim-longden | 0.27 | 1.38 |
+| myles-smith-hold-me-dark-myles-smith | 0.29 | 1.96 |
+| rachel-chinouriri-pretty-girls-dora-paphides | 0.31 | 1.52 |
+| anderson-paak-cordae-good-day-dave-meyers | 0.32 | 1.79 |
+| no-na-rollerblade-fa-fon | 0.33 | 4.60 |
+| waterbaby-memory-be-blade-felix-scheynius | 0.33 | 7.40 |
+| zenareeta-sumuhood-zenareeta | 0.38 | 3.86 |
+| muse-nightshift-superstar-lado-kvataniya | 0.38 | 2.96 |
+| paris-paloma-silhouette-hill-georgie-cowan-turner | 0.38 | 2.28 |
+| alexis-taylor-colombia-ian-svenonius | 0.40 | 9.66 |
+| hunter-bavaro-do-you-still-make-music-mason-treen | 0.40 | 1.26 |
+| bina-art-anger-niyadre | 0.40 | 1.00 |
+| tinariwen-erghad-afewo-axel-digoix | 0.43 | 1.29 |
+| nihilists-climbing-over-bodies-kelli-watson-jack-hyslop | 0.44 | 0.84 |
+| tobe-nwigwe-x-labrinth-all-or-nothing-tobe-nwigwe-filfury | 0.44 | 6.46 |
+| rosal%C3%ADa-focu-ranni-petra-collins | 0.45 | 0.67 |
+| dj-snake-cairo-express-chndy | 0.46 | 1.04 |
+| chuck-strangers-everyday-broken-antenna | 0.46 | 1.48 |
+| rose-gray-blink-twice-ben-cole | 0.47 | 1.38 |
+| boy-harsher-faulty-boy-harsher | 0.50 | 5.21 |
+| fat-dog-cancel-me-im-tired-fat-dog-james-winstanley-lloyd-young | 0.50 | 1.96 |
+| morrissey-kerching-kerching-lewis-cater | 0.50 | 3.38 |
+
+Flicker outliers (median absolute luma delta per second above 0.050; sample instability, not a flicker frequency):
+
+| id | flicker_luma_per_s |
+| --- | --- |
+| blondie-spectral-eyes-rob-roth | 0.129 |
+| michelle-kash-salvation-tyler-dunning-evans | 0.119 |
+| beastie-mitcham-mint-goose | 0.086 |
+| u2-silencio-cliqua | 0.074 |
+| keo-be-happy-tommy-davis | 0.072 |
+| khalique-concrete-george-moore-chadwick | 0.067 |
+| bina-art-anger-niyadre | 0.061 |
+| katseye-%E2%80%98hootie-frutti%E2%80%99-alfred-marroquin | 0.060 |
+| lady-gaga-doechii-runway-parris-goebel | 0.054 |
+| chuck-strangers-g-pack-broken-antenna | 0.054 |
+| fortuno-alive-tobi-omola-ja%E2%80%99lisa-arnold | 0.053 |
+| roy-g-hemmings-never-know-what-youve-got-orson-nava | 0.053 |
+| ma%C3%ABlle-tic-tac-elisa-baudoin | 0.051 |
+
+Strobe records excluded from the shot-length aggregates: `anna-meredith-dusky-ewan-jones-morris`, `au-ra-e-motion-andy-mihov`, `blondie-spectral-eyes-rob-roth`, `blue-lab-beats-ft-denzel-himself-hear-it-pop-sergi-fiddes-xammar`, `bricknasty-honey-bee-talia-beale`, `chuck-strangers-g-pack-broken-antenna`, `cikho-fell-again-original-concrete-club`, `daisy-maybe-box-god-thomas-harrington-rawle`, `deep-purple-guilt-trippin-tom-readdy-lucy-dawkins`, `dezzie-x-izzpot-x-clavish-any-means-ted-clarke`, `el-roig-stupid-cowboy-claudia-o-sala`, `feu-chatterton-l%E2%80%99%C3%A9tranger-ernest-bouvier-r%C3%A9my-monti-jordan-le-gal%C3%A8ze`, `fontaines-dc-marianne-dave-meyers-cam-erickson`, `fortuno-alive-tobi-omola-ja%E2%80%99lisa-arnold`, `girl-red-blue-isak-jenssen`, `girl-year-above-wet-paint-dylan-friese-greene`, `gurriers-waiting-fisher-thomas-james`, `joe-khalique-brown-junkspace-george-moore-chadwick`, `kilimanjaro-ft-rahh-stumble-sekou-abineri`, `liars-ice-pick-kalamazoo-angus-andrew`, `muse-ft-ellie-goulding-hush-harry-lindley`, `phoebe-bridgers-i-cant-wait-pablo-rochat-and-chris-maggio`, `rora-and-untamed-savage-white-swan-irene-marco-markus-meedt`, `u2-silencio-cliqua`.
 
 ## Measured stills
 

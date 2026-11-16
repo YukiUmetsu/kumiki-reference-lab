@@ -9,14 +9,14 @@ This deliverable tabulates only what the committed evidence records contain: Wor
 - Unique video media after dedupe: 0 (0 extra record(s) in 0 duplicate group(s))
 - Still-measured records: 5277
 - Still-only records (no matching video record): 5277
-- Skipped rows (stills index context): 5377
+- Skipped rows (stills index context): 5399
 - Failed acquisitions (stills index context): 0
 - Skipped rows (video index context): 0
 - Failed acquisitions (video index context): 0
 - Catalogue items without a usable poster: 122
 - Unreadable records: 0
 - generatedAt: 2026-11-12T18:40:02.475812Z
-- Skip reasons (stills index): no-published-poster x 122, resume-existing-record x 5255
+- Skip reasons (stills index): no-published-poster x 122, resume-existing-record x 5277
 - Per-row provider labels: unknown x 5277
 - `--top 50` applied: the first 50 of 5277 measured stills are tabulated below; `aggregate.json` holds all.
 
@@ -199,6 +199,10 @@ census: not present (0 of 0 video-measured records have a census record).
 ## Census reconciliation
 
 census: not present (reconciliation needs at least one full-film census record).
+
+## Editorial structure
+
+editorial: not present (no video record on STASH carries a derived `editorial` block; run `python scripts/derive_census_editorial.py`).
 
 ## Explicit non-claims
 

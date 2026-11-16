@@ -914,6 +914,32 @@ class ReportingHelperTests(unittest.TestCase):
             "record": {"id": record_id, "slug": slug},
         }
 
+    def test_editorial_columns_and_aggregate_read_the_stored_block(self) -> None:
+        record = self._census(rate=60.0, slug="clip", record_id="1")
+        record["editorial"] = {
+            "shotCount": 8, "medianShotSeconds": 1.25,
+            "shotsUnderHalfSecondFraction": 0.375,
+            "paceTrend": "accelerating", "paceDriftRatio": 2.5,
+            "flickerLumaPerSecond": 0.02, "strobeFlag": False,
+        }
+        columns = acq.editorial_columns(record)
+        self.assertTrue(columns["editorial_present"])
+        self.assertEqual(columns["median_shot_s"], 1.25)
+        self.assertEqual(columns["shots_lt_0_5s_pct"], 37.5)
+        self.assertEqual(columns["pace_trend"], "accelerating")
+        self.assertEqual(columns["flicker"], 0.02)
+
+        rows = [{"id": "clip", "strobe": False, "full_cuts_per_min": 60.0}]
+        acq.census_annotate_rows(rows, acq.census_lookup([record]))
+        self.assertEqual(rows[0]["median_shot_s"], 1.25)
+        aggregate = acq.editorial_aggregate(rows)
+        self.assertEqual(aggregate["n"], 1)
+        self.assertEqual(aggregate["shot_length"]["median"], 1.25)
+        self.assertEqual(aggregate["accelerating_clips"][0]["id"], "clip")
+        self.assertIn("## Editorial structure",
+                      "\n".join(acq.editorial_section_lines(
+                          aggregate, site="Example")))
+
     def test_census_columns_on_a_strobe_record(self) -> None:
         columns = acq.census_columns(self._census(
             rate=240.0, slug="strobe", record_id="7", strobe=True,

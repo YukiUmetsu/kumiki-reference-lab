@@ -841,6 +841,7 @@ class ReportTests(unittest.TestCase):
         self.assertIn("No video-measured records.", report)
         self.assertIn("None.", report)
         self.assertIn("census: not present", report)
+        self.assertIn("editorial: not present", report)
         self.assertEqual(sorted(path.name for path in out_dir.iterdir()),
                          ["aggregate.json", "report.md"])
 
