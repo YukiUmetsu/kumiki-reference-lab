@@ -891,6 +891,106 @@ class ReportingHelperTests(unittest.TestCase):
         self.assertEqual((stored["width"], stored["height"]), (160, 68))
         self.assertFalse(stored["derived"])
 
+    def _census(self, *, rate, slug, record_id, strobe=False,
+                gap=30.0, burst=0.0, count=10) -> dict:
+        return {
+            "schemaVersion": "kumiki.example-census-evidence.v1",
+            "coverage": {"fullFilmDecoded": True,
+                         "decodeCoverageFraction": 1.0},
+            "census": {
+                "cutCount": count,
+                "cutsPerMinute": rate,
+                "medianCutGapFrames": gap,
+                "burstFraction": burst,
+                "strobe": strobe,
+                "seriesSummary": {
+                    "meanDisplayLuma": 0.42,
+                    "meanSaturation": 0.33,
+                    "decodeCoverageFraction": 1.0,
+                    "sampledSeconds": 30.0,
+                },
+                "fullRuntimeDecoded": True,
+            },
+            "record": {"id": record_id, "slug": slug},
+        }
+
+    def test_census_columns_on_a_strobe_record(self) -> None:
+        columns = acq.census_columns(self._census(
+            rate=240.0, slug="strobe", record_id="7", strobe=True,
+            gap=1.5, burst=0.9, count=120))
+        self.assertEqual(columns["full_cut_count"], 120)
+        self.assertEqual(columns["full_cuts_per_min"], 240.0)
+        self.assertEqual(columns["median_gap_frames"], 1.5)
+        self.assertEqual(columns["burst_fraction"], 0.9)
+        self.assertTrue(columns["strobe"])
+        self.assertEqual(columns["mean_luma"], 0.42)
+        self.assertEqual(columns["mean_saturation"], 0.33)
+        self.assertEqual(columns["decoded_fraction"], 1.0)
+        self.assertEqual(columns["evidence"], "full-film")
+
+    def test_census_reconciliation_sign_magnitude_and_rank_changes(self) -> None:
+        records = []
+        rows = []
+        for index in range(8):
+            slug = f"r{index}"
+            records.append(self._census(
+                rate=100.0 - index * 10.0, slug=slug,
+                record_id=str(index)))
+            rows.append({"slug": slug,
+                         "sampledCutCandidatesPerMinute": 30.0 + index * 10.0})
+        records.append(self._census(
+            rate=0.0, slug="zero", record_id="zero"))
+        rows.append({"slug": "zero", "sampledCutCandidatesPerMinute": 10.0})
+        reconciliation = acq.census_reconciliation(
+            rows, acq.census_lookup(records))
+        self.assertEqual(reconciliation["n"], 8)
+        self.assertEqual(reconciliation["skipped_zero_full_rate"], 1)
+        self.assertAlmostEqual(
+            reconciliation["median_abs_relative_error"], 0.577778, places=6)
+        self.assertAlmostEqual(
+            reconciliation["p90_abs_relative_error"], 1.575, places=6)
+        self.assertEqual(reconciliation["improved"], 6)
+        self.assertAlmostEqual(
+            reconciliation["improved_share"], 0.75, places=6)
+        # r0 was ranked first by the film rate and last by the window rate.
+        self.assertEqual(
+            [entry["id"] for entry in reconciliation["rank_changes"]],
+            ["r0", "r7"])
+        self.assertEqual(
+            reconciliation["rank_changes"][0]["position_change"], 7)
+        by_id = {entry["id"]: entry for entry in reconciliation["over_25pct"]}
+        self.assertLess(by_id["r0"]["relative_error"], 0)
+        self.assertEqual(by_id["r0"]["direction"], "window lower")
+        self.assertGreater(by_id["r7"]["relative_error"], 0)
+        self.assertEqual(by_id["r7"]["direction"], "window higher")
+        self.assertNotIn("r4", by_id)
+
+    def test_census_aggregate_never_pools_strobes_with_cut_rates(self) -> None:
+        rows = [
+            {"id": "a", "evidence": "full-film", "strobe": False,
+             "full_cuts_per_min": 10.0},
+            {"id": "b", "evidence": "full-film", "strobe": False,
+             "full_cuts_per_min": 20.0},
+            {"id": "s", "evidence": "full-film", "strobe": True,
+             "full_cuts_per_min": 100.0, "median_gap_frames": 2.0,
+             "burst_fraction": 0.9},
+            {"id": "window-only", "evidence": "window",
+             "full_cuts_per_min": 50.0},
+        ]
+        aggregate = acq.census_aggregate(rows)
+        self.assertEqual(aggregate["n"], 2)
+        self.assertEqual(aggregate["min"], 10.0)
+        self.assertEqual(aggregate["median"], 15.0)
+        self.assertEqual(aggregate["max"], 20.0)
+        self.assertEqual(aggregate["max_id"], "b")
+        self.assertEqual(aggregate["strobe_count"], 1)
+        self.assertEqual(aggregate["strobe_ids"], ["s"])
+        self.assertEqual(aggregate["strobe"]["max"], 100.0)
+        self.assertEqual(aggregate["strobe"]["n"], 1)
+        self.assertEqual(aggregate["strobe_rows"][0]["id"], "s")
+        self.assertNotIn(100.0, (
+            aggregate["min"], aggregate["median"], aggregate["max"]))
+
 
 class ProbeAdapterTests(unittest.TestCase):
     def test_metadata_reduction_reports_duration_dimensions_and_size(self) -> None:

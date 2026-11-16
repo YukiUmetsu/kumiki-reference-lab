@@ -83,6 +83,55 @@ PYTHONPATH=src python scripts/census_video_cuts.py \
   --site shots --refresh --acknowledge-rights
 ```
 
+## Expired signed URLs and catalog fallback
+
+Some lanes (AICP, shots) store signed CDN URLs. Their signature is valid for
+about an hour, so the URL captured when the evidence record was written may be
+expired by census time. The driver therefore resolves each record's media URL in
+this order:
+
+1. The URL stored in the record (`urlSource: "record"`).
+2. The URL for the same record id in the site catalog
+   (`urlSource: "catalog"`), used when the stored URL is absent or when the
+   download/probe fails with a 4xx that signed media uses for expiry
+   (400/401/403/404/410).
+
+Catalogs are loaded once per site. `--catalog PATH` is repeatable; when it is
+omitted the driver auto-discovers `<root>/<site>/catalog.json`. Rows are indexed
+by every adapter id key (`id`, `nid`, `projectId`, `catalogId`, and the aliases
+the catalogs use), and the catalog's row container is discovered from
+`entries`, `videos`, `projects`, `clips`, `items`, or `records`. A catalog that
+is itself expired must be refetched first (see the AICP command below).
+
+AICP's signed entry is a Vimeo `player.vimeo.com/external/<id>.m3u8` URL that
+redirects to a `vod-adaptive-*.vimeocdn.com` master with **relative** variant
+URIs. The driver follows that redirect chain under the same host allowlist and
+query opt-in before handing the final master URL to the playback planner;
+otherwise the relative variant resolves against the pre-redirect host and
+404s.
+
+When the fallback succeeds the progress line carries `url-from-catalog`, the
+census record stores `acquisition.urlSource: "catalog"` and
+`record.urlSource: "catalog"`, and the measured index row carries the same
+field. When the catalog URL also returns the expiry 4xx the item is a
+`stale-signed-url` failure rather than an opaque `ValueError`. The stored
+media SHA-256 is still verified after a fallback: if the fresh URL yields a
+different file, the item remains a `media-changed` failure (the platform
+re-encoded the asset), never a measurement.
+
+```bash
+# Refetch the AICP catalog first: its rows hold the same expiring signatures.
+PYTHONPATH=src python scripts/research_aicp.py catalog \
+  --out research/analysis/aicp/catalog.json
+
+# Re-run AICP with the fresh catalog; then the census fallback can re-resolve.
+PYTHONPATH=src python -u scripts/census_video_cuts.py \
+  --root research/analysis --site aicp \
+  --catalog research/analysis/aicp/catalog.json \
+  --acknowledge-rights --jobs 2 --delay-seconds 1.0 \
+  > /tmp/census_aicp.log 2>&1
+```
+
 The driver reads `<root>/<site>/videos/*.json`, recovers the canonical upstream
 URL, provider and stored `source.mediaSha256` across adapter shapes, downloads
 into a `TemporaryDirectory`, verifies the SHA-256, scans, writes
@@ -95,6 +144,37 @@ Missing URLs are `missing-url` skips; existing output is skipped under
 Per-site host allowlists come from the recorded URLs. `allow_query=True` is
 enabled only for the lanes whose recorded URLs carry a signature (shots,
 AICP); YouTube stays yt-dlp-mediated, cookie-free and login-free.
+
+## Census in reports
+
+Every adapter report (`shots`, `motiondesignawards`, `aicp`, `promonews`,
+`directorslibrary`, `stash`) reads `<out-dir>/census/*.json` and
+`<out-dir>/census-index.json` read-only when they exist. The report gains:
+
+- two per-video columns: `full_cuts_per_min` (film-level, `—` when the record
+  has no census) and `full_vs_window` (the window sample relative to the film
+  rate, rendered as `+12%`/`-8%`; `—` when either side is missing);
+- `## Full-film census`: coverage (`n` census records of `m` video-measured
+  records), the distribution of non-strobe `full_cuts_per_min`, the strobe
+  records listed separately by id with their own range, and the
+  `decodeCoverageFraction` statement;
+- `## Census reconciliation`: per-record relative error
+  `(window_rate - full_rate) / full_rate`, its median/p90/max absolute value,
+  the count off by more than 25%, and the records whose ordering changes by more
+  than five positions when ranked by each rate.
+
+The prose states the two bases explicitly: census values are film-level, window
+values are samples, census cut candidates are still ffmpeg scene-score
+exceedances rather than verified edits, and a `strobe` record's rate is **not**
+comparable to a cut rate. Strobe and non-strobe rates are never pooled in one
+range. When no census record exists (for example a stills-only tree), the report
+keeps its window-only sections and prints `census: not present` rather than
+silently implying film-level evidence. Reports stay deterministic: two runs over
+the same tree are byte-identical.
+
+The helpers live in `acquisition/reporting.py`:
+`census_columns`, `census_reconciliation`, `census_aggregate`, plus the small
+lookup/formatting helpers the adapters share.
 
 ## Cost and non-claims
 
