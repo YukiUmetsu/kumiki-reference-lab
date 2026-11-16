@@ -26,6 +26,9 @@ import math
 import statistics
 from typing import Any, Callable, Iterable, Mapping
 
+from .editorial import (
+    ACCELERATION_RATIO, DECELERATION_RATIO, FLICKER_OUTLIER_PER_SECOND,
+)
 from .probe import as_int, as_text, finite_float
 from .windows import cut_validity
 
@@ -35,6 +38,7 @@ __all__ = [
     "census_delta_text", "census_for", "census_lookup",
     "census_reconciliation", "census_section_lines", "comparability_block",
     "coverage_distribution", "cut_columns", "duplicate_summary",
+    "editorial_aggregate", "editorial_columns", "editorial_section_lines",
     "still_decode_counts", "still_decode_dimensions", "unique_media_rows",
 ]
 
@@ -615,6 +619,32 @@ def census_columns(record: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def editorial_columns(record: Mapping[str, Any]) -> dict[str, Any]:
+    """Report columns for one record's derived ``editorial`` block.
+
+    The block is written beside the census scan by
+    ``scripts/derive_census_editorial.py``. A record without one yields
+    explicit ``None`` values, so the report renders ``—`` rather than implying
+    a measurement that does not exist.
+    """
+    record = _mapping(record)
+    block = _mapping(record.get("editorial"))
+    if not block:
+        scan = _mapping(record.get("census")) or _mapping(record.get("scan"))
+        block = _mapping(scan.get("editorial"))
+    fraction = finite_float(block.get("shotsUnderHalfSecondFraction"))
+    return {
+        "editorial_present": bool(block),
+        "shot_count": as_int(block.get("shotCount")),
+        "median_shot_s": finite_float(block.get("medianShotSeconds")),
+        "shots_lt_0_5s_pct": (
+            None if fraction is None else _round(fraction * 100.0)),
+        "pace_trend": as_text(block.get("paceTrend")),
+        "pace_drift_ratio": finite_float(block.get("paceDriftRatio")),
+        "flicker": finite_float(block.get("flickerLumaPerSecond")),
+    }
+
+
 def census_for(
     row: Mapping[str, Any], lookup: Mapping[str, Mapping[str, Any]],
 ) -> Mapping[str, Any] | None:
@@ -676,9 +706,19 @@ def census_annotate_rows(
         if record is None:
             row["fullCutsPerMinute"] = None
             row["fullVsWindow"] = "—"
+            row.update({
+                "editorial_present": False,
+                "shot_count": None,
+                "median_shot_s": None,
+                "shots_lt_0_5s_pct": None,
+                "pace_trend": None,
+                "pace_drift_ratio": None,
+                "flicker": None,
+            })
             continue
         columns = census_columns(record)
         row.update(columns)
+        row.update(editorial_columns(record))
         row["fullCutsPerMinute"] = columns["full_cuts_per_min"]
         row["fullVsWindow"] = census_delta_text(
             row.get(window_key), columns["full_cuts_per_min"])
@@ -847,10 +887,242 @@ def _fmt(value: object, digits: int = 2) -> str:
     return "—" if number is None else f"{number:.{digits}f}"
 
 
+def _editorial_values(row: Mapping[str, Any]) -> dict[str, Any]:
+    """Read the editorial columns from a row, deriving them if absent."""
+    if "editorial_present" in row:
+        return {
+            "present": row.get("editorial_present") is True,
+            "shot_count": as_int(row.get("shot_count")),
+            "median_shot_s": finite_float(row.get("median_shot_s")),
+            "pace_trend": as_text(row.get("pace_trend")),
+            "pace_drift_ratio": finite_float(row.get("pace_drift_ratio")),
+            "flicker": finite_float(row.get("flicker")),
+        }
+    columns = editorial_columns(row)
+    return {
+        "present": columns["editorial_present"],
+        "shot_count": columns["shot_count"],
+        "median_shot_s": columns["median_shot_s"],
+        "pace_trend": columns["pace_trend"],
+        "pace_drift_ratio": columns["pace_drift_ratio"],
+        "flicker": columns["flicker"],
+    }
+
+
+def editorial_aggregate(rows: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
+    """Summarise derived editorial structure across one site's video rows.
+
+    Shot-length statistics are computed over non-strobe records only: a strobe
+    record's "shots" are frame-scale candidate intervals, not editorial shots,
+    so pooling them would pull every median toward zero. Flicker outliers are
+    reported separately and are **not** filtered by strobe, because strobe is
+    exactly the condition a high flicker value describes.
+    """
+    trends = {"accelerating": 0, "steady": 0, "decelerating": 0,
+              "unclassified": 0}
+    shot_medians: list[float] = []
+    cut_rates: list[float] = []
+    shot_counts: list[int] = []
+    strobe_ids: list[str] = []
+    accelerating: list[dict[str, Any]] = []
+    decelerating: list[dict[str, Any]] = []
+    flicker_outliers: list[dict[str, Any]] = []
+    n = 0
+    for index, row in enumerate(rows or []):
+        if not isinstance(row, Mapping):
+            continue
+        value = _editorial_values(row)
+        if not value["present"]:
+            continue
+        n += 1
+        identifier = _record_id(row, index)
+        trend = value["pace_trend"]
+        trends[trend if trend in trends else "unclassified"] += 1
+        strobe = row.get("strobe") is True
+        if strobe:
+            strobe_ids.append(identifier)
+        else:
+            if value["median_shot_s"] is not None:
+                shot_medians.append(value["median_shot_s"])
+            rate = finite_float(row.get("full_cuts_per_min"))
+            if rate is not None:
+                cut_rates.append(rate)
+            if value["shot_count"] is not None:
+                shot_counts.append(value["shot_count"])
+            ratio = value["pace_drift_ratio"]
+            if ratio is not None and ratio >= ACCELERATION_RATIO:
+                accelerating.append({
+                    "id": identifier,
+                    "pace_drift_ratio": _round(ratio),
+                    "median_shot_s": _round(value["median_shot_s"]),
+                })
+            elif ratio is not None and ratio <= DECELERATION_RATIO:
+                decelerating.append({
+                    "id": identifier,
+                    "pace_drift_ratio": _round(ratio),
+                    "median_shot_s": _round(value["median_shot_s"]),
+                })
+        flicker = value["flicker"]
+        if flicker is not None and flicker > FLICKER_OUTLIER_PER_SECOND:
+            flicker_outliers.append({
+                "id": identifier,
+                "flicker": _round(flicker),
+            })
+
+    ordered = sorted(shot_medians)
+    accelerating.sort(key=lambda entry: (-entry["pace_drift_ratio"],
+                                         entry["id"]))
+    decelerating.sort(key=lambda entry: (entry["pace_drift_ratio"],
+                                         entry["id"]))
+    flicker_outliers.sort(key=lambda entry: (-entry["flicker"], entry["id"]))
+    return {
+        "n": n,
+        "non_strobe_n": len(shot_medians),
+        "shot_length": {
+            "n": len(ordered),
+            "min": _round(ordered[0]) if ordered else None,
+            "p10": _round(_percentile(ordered, 0.10)),
+            "median": _round(statistics.median(ordered)) if ordered else None,
+            "p90": _round(_percentile(ordered, 0.90)),
+            "max": _round(ordered[-1]) if ordered else None,
+        },
+        "median_cut_rate": (
+            _round(statistics.median(cut_rates)) if cut_rates else None),
+        "shot_count_range": {
+            "min": min(shot_counts) if shot_counts else None,
+            "max": max(shot_counts) if shot_counts else None,
+        },
+        "pace_trend_counts": trends,
+        "accelerating_clips": accelerating,
+        "decelerating_clips": decelerating,
+        "flicker_threshold": FLICKER_OUTLIER_PER_SECOND,
+        "flicker_outliers": flicker_outliers,
+        "strobe_count": len(strobe_ids),
+        "strobe_ids": sorted(strobe_ids),
+    }
+
+
+def editorial_section_lines(
+    editorial: Mapping[str, Any], *, site: str, digits: int = 2,
+) -> list[str]:
+    """Markdown lines for the derived ``## Editorial structure`` section.
+
+    Every number is read from the stored per-record ``editorial`` blocks (via
+    :func:`editorial_aggregate`), so the section is deterministic and
+    recomputable offline. Strobe records are named and kept out of the
+    shot-length aggregates; their candidate intervals are frame-scale, not
+    editorial shots.
+    """
+    editorial = _mapping(editorial)
+    n = as_int(editorial.get("n")) or 0
+    lines: list[str] = ["## Editorial structure", ""]
+    if not n:
+        lines.append(
+            "editorial: not present (no video record on "
+            f"{site} carries a derived `editorial` block; run "
+            "`python scripts/derive_census_editorial.py`).")
+        lines.append("")
+        return lines
+
+    shot = _mapping(editorial.get("shot_length"))
+    lines.append(
+        "Derived offline from each record's stored census cut candidates and "
+        "1 Hz appearance series (pure function, no media re-decode). A `shot` "
+        "is the interval between consecutive detected scene changes, a lower "
+        "bound on edits; `shotCount` is always candidates + 1.")
+    lines.append("")
+    lines.append(
+        f"Shot-length distribution across {editorial.get('non_strobe_n', 0)} "
+        "non-strobe clip(s), using each clip's median shot length. Strobe "
+        "records are excluded because their candidate intervals are "
+        "frame-scale.")
+    lines.append("")
+    lines.append("| statistic | median_shot_s |")
+    lines.append("| --- | --- |")
+    for label in ("n", "min", "p10", "median", "p90", "max"):
+        value = shot.get(label)
+        rendered = str(value) if label == "n" else _fmt(value, digits)
+        lines.append(f"| {label} | {rendered} |")
+    lines.append("")
+    shot_range = _mapping(editorial.get("shot_count_range"))
+    lines.append(
+        "Median cut rate (non-strobe): "
+        f"{_fmt(editorial.get('median_cut_rate'), digits)} cuts/min. "
+        "Shot counts across clips: "
+        f"{shot_range.get('min', '—')}–{shot_range.get('max', '—')}.")
+    lines.append("")
+
+    trends = _mapping(editorial.get("pace_trend_counts"))
+    lines.append(
+        "Pace trend, last third ÷ first third with a ±15% band: "
+        f"accelerating {trends.get('accelerating', 0)}, "
+        f"steady {trends.get('steady', 0)}, "
+        f"decelerating {trends.get('decelerating', 0)}, "
+        f"unclassified {trends.get('unclassified', 0)} (unclassified means "
+        "no cut candidate in the first third, so no ratio exists).")
+    lines.append("")
+
+    for label, key, comparison in (
+            ("Clips whose last third is >2× their first third",
+             "accelerating_clips", ">2×"),
+            ("Clips whose last third is <0.5× their first third",
+             "decelerating_clips", "<0.5×")):
+        entries = editorial.get(key) or []
+        lines.append(f"{label} ({comparison}; non-strobe):")
+        lines.append("")
+        if not entries:
+            lines.append("None.")
+            lines.append("")
+            continue
+        lines.append("| id | pace_drift_ratio | median_shot_s |")
+        lines.append("| --- | --- | --- |")
+        for entry in entries:
+            entry = _mapping(entry)
+            lines.append(
+                f"| {_fmt_id(entry.get('id'))} | "
+                f"{_fmt(entry.get('pace_drift_ratio'), 2)} | "
+                f"{_fmt(entry.get('median_shot_s'), digits)} |")
+        lines.append("")
+
+    threshold = finite_float(editorial.get("flicker_threshold"))
+    outliers = editorial.get("flicker_outliers") or []
+    lines.append(
+        "Flicker outliers (median absolute luma delta per second above "
+        f"{_fmt(threshold, 3)}; sample instability, not a flicker frequency):")
+    lines.append("")
+    if not outliers:
+        lines.append("None.")
+    else:
+        lines.append("| id | flicker_luma_per_s |")
+        lines.append("| --- | --- |")
+        for entry in outliers:
+            entry = _mapping(entry)
+            lines.append(
+                f"| {_fmt_id(entry.get('id'))} | "
+                f"{_fmt(entry.get('flicker'), 3)} |")
+    lines.append("")
+    strobe_ids = editorial.get("strobe_ids") or []
+    if strobe_ids:
+        lines.append(
+            "Strobe records excluded from the shot-length aggregates: "
+            + ", ".join(f"`{_fmt_id(value)}`" for value in strobe_ids) + ".")
+    else:
+        lines.append(
+            "No strobe record was present, so no clip was excluded from the "
+            "shot-length aggregates.")
+    lines.append("")
+    return lines
+
+
+def _fmt_id(value: object) -> str:
+    text = as_text(value)
+    return text if text is not None else "—"
+
+
 def census_context_lines(
     context: Mapping[str, Any], *, site: str, digits: int = 2,
 ) -> list[str]:
-    """Render the two census sections from an adapter's ``census`` block."""
+    """Render the census sections plus the derived editorial section."""
     context = _mapping(context)
     coverage = _mapping(context.get("coverage"))
     counts = _mapping(context.get("indexCounts"))
@@ -858,7 +1130,7 @@ def census_context_lines(
     if counts:
         index_counts = (as_int(counts.get("measured")) or 0,
                         as_int(counts.get("failed")) or 0)
-    return census_section_lines(
+    lines = census_section_lines(
         _mapping(context.get("aggregate")),
         _mapping(context.get("reconciliation")),
         coverage_n=as_int(coverage.get("records")) or 0,
@@ -866,6 +1138,9 @@ def census_context_lines(
         site=site,
         decode_fraction=finite_float(coverage.get("decodeFraction")),
         index_counts=index_counts, digits=digits)
+    lines.extend(editorial_section_lines(
+        _mapping(context.get("editorial")), site=site, digits=digits))
+    return lines
 
 
 def census_section_lines(

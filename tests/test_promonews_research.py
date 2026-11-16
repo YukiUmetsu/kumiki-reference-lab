@@ -1132,6 +1132,12 @@ class VideoReportTests(unittest.TestCase):
                 "fullRuntimeDecoded": True,
             },
             "record": {"id": 1, "slug": video["slug"]},
+            "editorial": {
+                "shotCount": 3, "medianShotSeconds": 1.2,
+                "shotsUnderHalfSecondFraction": 0.5,
+                "paceTrend": "steady", "paceDriftRatio": 1.0,
+                "flickerLumaPerSecond": 0.03, "strobeFlag": False,
+            },
         })
 
         pnm.run_report(out_dir, log=lambda _s: None)
@@ -1141,11 +1147,17 @@ class VideoReportTests(unittest.TestCase):
         self.assertIn("## Full-film census", report)
         self.assertIn("## Census reconciliation", report)
         self.assertIn("full_cuts_per_min", report)
+        self.assertIn("median_shot_s", report)
+        self.assertIn("pace_trend", report)
+        self.assertIn("## Editorial structure", report)
         self.assertIn("| 20.00 |", report)
         self.assertEqual(aggregate["census"]["coverage"]["records"], 1)
         self.assertEqual(aggregate["census"]["aggregate"]["n"], 1)
         self.assertEqual(aggregate["census"]["aggregate"]["median"], 20.0)
         self.assertEqual(aggregate["videos"][0]["fullCutsPerMinute"], 20.0)
+        self.assertEqual(aggregate["videos"][0]["median_shot_s"], 1.2)
+        self.assertEqual(aggregate["videos"][0]["pace_trend"], "steady")
+        self.assertEqual(aggregate["census"]["editorial"]["n"], 1)
         # A census is knowledge of a different basis, not a motion claim.
         self.assertIn("film-level", report)
         self.assertIn("not comparable to a cut rate", report)

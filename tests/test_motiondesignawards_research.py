@@ -806,6 +806,7 @@ class ReportTests(unittest.TestCase):
         self.assertIn("No video-measured records.", report)
         self.assertIn("None.", report)
         self.assertIn("census: not present", report)
+        self.assertIn("editorial: not present", report)
         self.assertEqual(sorted(path.name for path in out_dir.iterdir()),
                          ["aggregate.json", "report.md"])
 
@@ -831,6 +832,16 @@ class ReportTests(unittest.TestCase):
                     "fullRuntimeDecoded": True,
                 },
                 "record": {"id": project_id, "slug": slug},
+                "editorial": {
+                    "shotCount": 60,
+                    "medianShotSeconds": 2.0 if slug == "clean" else 0.05,
+                    "shotsUnderHalfSecondFraction": 0.0 if slug == "clean"
+                    else 1.0,
+                    "paceTrend": "steady" if slug == "clean" else None,
+                    "paceDriftRatio": 1.0 if slug == "clean" else None,
+                    "flickerLumaPerSecond": 0.01 if slug == "clean" else 0.3,
+                    "strobeFlag": strobe,
+                },
             })
 
         mda.run_report(out_dir, log=lambda _: None)
@@ -838,6 +849,8 @@ class ReportTests(unittest.TestCase):
         aggregate = json.loads(
             (out_dir / "aggregate.json").read_text(encoding="utf-8"))
         self.assertIn("## Full-film census", report)
+        self.assertIn("## Editorial structure", report)
+        self.assertIn("median_shot_s", report)
         self.assertIn("Strobe block", report)
         self.assertIn("| strobe | 300.00 |", report)
         self.assertIn("not comparable to a cut rate", report)
@@ -850,6 +863,12 @@ class ReportTests(unittest.TestCase):
         by_slug = {row["slug"]: row for row in aggregate["videos"]}
         self.assertEqual(by_slug["clean"]["fullCutsPerMinute"], 30.0)
         self.assertEqual(by_slug["strobe"]["fullCutsPerMinute"], 300.0)
+        self.assertEqual(by_slug["clean"]["median_shot_s"], 2.0)
+        self.assertEqual(aggregate["census"]["editorial"]["non_strobe_n"], 1)
+        self.assertEqual(
+            aggregate["census"]["editorial"]["shot_length"]["median"], 2.0)
+        self.assertEqual(aggregate["census"]["editorial"]["strobe_ids"],
+                         ["strobe"])
 
     def test_still_only_records_never_enter_motion_aggregates(self) -> None:
         out_dir = self.root / "out"
