@@ -1065,6 +1065,103 @@ class CollectTests(unittest.TestCase):
         self.assertEqual(list(self.root.rglob("*.mp4")), [])
 
 
+class IdSelectionTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+
+    def write(self, name: str, text: str) -> Path:
+        path = self.root / name
+        path.write_text(text, encoding="utf-8")
+        return path
+
+    def catalog(self, rows: list[dict]) -> Path:
+        path = self.root / "catalog.json"
+        acq.write_json_atomic(path, pnm.build_catalog(
+            rows, len(rows), generated_at="2026-01-01T00:00:00Z"))
+        return path
+
+    def test_all_three_forms_and_numeric_equality(self) -> None:
+        self.assertEqual(
+            pnm.load_ids_file(self.write("list.json", '["1", 2, "3"]')),
+            ["1", "2", "3"])
+        self.assertEqual(
+            pnm.load_ids_file(self.write("object.json", '{"ids": [1, 2]}')),
+            ["1", "2"])
+        self.assertEqual(
+            pnm.load_ids_file(self.write("lines.txt", "1\n2\n3\n")),
+            ["1", "2", "3"])
+
+    def test_malformed_and_blank_ids_are_refused(self) -> None:
+        for name, text in (
+                ("empty.txt", " \n"), ("bad.json", "{not json"),
+                ("no-ids.json", '{"other": []}'), ("scalar.json", '"1"'),
+                ("blank-list.json", '["1", " "]'),
+                ("blank-line.txt", "1\n \n2\n")):
+            with self.subTest(name=name):
+                path = self.write(name, text)
+                with self.assertRaises(ValueError) as caught:
+                    pnm.load_ids_file(path)
+                self.assertIn(str(path), str(caught.exception))
+
+    def test_filter_preserves_catalog_order_and_reports_missing(self) -> None:
+        rows = [youtube_row(nid=1, created=100),
+                youtube_row(nid=3, created=300),
+                youtube_row(nid=2, created=200)]
+        rows = sorted(rows, key=pnm.catalog_order, reverse=True)
+        chosen, missing = pnm.select_ids(rows, ["1", 3, "999"], key="nid")
+        self.assertEqual([row["nid"] for row in chosen], [3, 1])
+        self.assertEqual(missing, ["999"])
+
+    def test_missing_id_becomes_a_skip_row(self) -> None:
+        rows = [youtube_row(nid=1, created=100)]
+        catalog_path = self.catalog(rows)
+        ids_path = self.write("ids.json", '["1", 999]')
+        out_dir = self.root / "out"
+
+        def fake_collect(source: dict, out: Path, **_: object) -> dict:
+            return synthetic_video_record(source)
+
+        with patch.object(pnm, "collect_one", side_effect=fake_collect):
+            code = pnm.run_collect(
+                catalog_path, out_dir=out_dir, resume=False, delay_seconds=0,
+                acknowledge_rights=True, ids_file=ids_path, log=lambda _: None)
+
+        self.assertEqual(code, 0)
+        index = json.loads((out_dir / "index.json").read_text(encoding="utf-8"))
+        missing = [row for row in index["skips"]
+                   if row["reason"] == "missing-from-catalog"]
+        self.assertEqual([row["nid"] for row in missing], ["999"])
+
+    def test_run_collect_selects_exactly_three_ids_offline(self) -> None:
+        rows = [youtube_row(nid=index, created=index * 100)
+                for index in (1, 2, 3, 4, 5)]
+        catalog_path = self.catalog(rows)
+        ids_path = self.write("ids.json", '{"ids": [2, 4, 5]}')
+        out_dir = self.root / "out"
+        calls: list[str] = []
+
+        def fake_collect(source: dict, out: Path, **_: object) -> dict:
+            calls.append(str(source["nid"]))
+            record = synthetic_video_record(source)
+            acq.write_json_atomic(pnm.video_record_path(out, source), record)
+            return record
+
+        lines: list[str] = []
+        with patch.object(pnm, "collect_one", side_effect=fake_collect):
+            code = pnm.run_collect(
+                catalog_path, out_dir=out_dir, limit=0, resume=False,
+                delay_seconds=0, acknowledge_rights=True, ids_file=ids_path,
+                log=lines.append)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(calls, ["5", "4", "2"])
+        self.assertIn("ids=3 matched=3 missing=0", lines)
+        index = json.loads((out_dir / "index.json").read_text(encoding="utf-8"))
+        self.assertEqual(index["counts"]["measured"], 3)
+
+
 class VideoReportTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory()

@@ -197,7 +197,8 @@ PYTHONPATH=src python scripts/research_promonews.py report \
 250 and counts only attempted rows: Vimeo, no-reference, and resume skips do
 not consume it; rows are taken newest-first by `created`. `--limit 0` means all
 remaining. `--resume` (default) only reads existing video records; `--refresh`
-re-measures.
+re-measures. `--ids-file PATH` filters the catalogue to an explicit id list
+(JSON list, `{"ids": [...]}`, or newline ids) before `--limit` is applied.
 
 `--resume` (default) on `stills` also only reads existing records; bytes and
 mtimes are left untouched. `--limit N` on `stills` measures the first N pending

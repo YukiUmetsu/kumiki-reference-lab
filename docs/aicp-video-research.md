@@ -158,6 +158,8 @@ python scripts/research_aicp.py collect \
   --max-duration-seconds 600 --max-file-bytes 250MiB
 
 # Resume is the default; --refresh re-measures. --limit 0 means all remaining.
+# --ids-file PATH (JSON list, {"ids": [...]} or newline ids) filters first;
+# --limit then applies to that selection and absent ids become skip rows.
 python scripts/research_aicp.py collect \
   --catalog research/analysis/aicp/catalog.json \
   --out-dir research/analysis/aicp --limit 0 --jobs 2 --acknowledge-rights

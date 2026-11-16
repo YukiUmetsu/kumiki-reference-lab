@@ -109,6 +109,63 @@ def stratified_sample(paths: Iterable[Path], sample: int) -> list[Path]:
     return [ordered[index] for index in indices]
 
 
+def load_ids_file(path: Path) -> list[str]:
+    """Read an explicit id selection: JSON list, ``{"ids": [...]}``, or lines.
+
+    Ids are compared as ``str()`` everywhere, so catalog integers and JSON
+    strings are interchangeable. Malformed files raise ``ValueError`` naming the
+    path and the reason; blank ids are refused so an empty line cannot silently
+    widen the selection.
+    """
+    path = Path(path)
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as error:
+        raise ValueError(f"ids file {path}: unreadable ({error})") from None
+    stripped = text.strip()
+    if not stripped:
+        raise ValueError(f"ids file {path}: file is empty")
+    if stripped[0] in "[{\"":
+        try:
+            payload = json.loads(stripped)
+        except ValueError as error:
+            raise ValueError(f"ids file {path}: invalid JSON ({error})") from None
+        if isinstance(payload, dict):
+            if "ids" not in payload:
+                raise ValueError(
+                    f'ids file {path}: JSON object must contain an "ids" list')
+            payload = payload["ids"]
+        if not isinstance(payload, list):
+            raise ValueError(
+                f'ids file {path}: expected a JSON list or an object with an '
+                f'"ids" list')
+        raw = payload
+    else:
+        raw = text.splitlines()
+    ids: list[str] = []
+    for value in raw:
+        if isinstance(value, (dict, list)):
+            raise ValueError(f"ids file {path}: id {value!r} is not a scalar")
+        if value is None:
+            raise ValueError(f"ids file {path}: null id is not allowed")
+        identifier = str(value).strip()
+        if not identifier:
+            raise ValueError(f"ids file {path}: empty id after stripping")
+        ids.append(identifier)
+    return ids
+
+
+def select_ids(
+    rows: Iterable[dict[str, Any]], ids: Iterable[str], *, key: str = "id",
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """Filter rows to the id set, preserving order; return missing ids."""
+    wanted = {str(value) for value in ids}
+    chosen = [row for row in rows
+              if row.get(key) is not None and str(row.get(key)) in wanted]
+    present = {str(row.get(key)) for row in rows if row.get(key) is not None}
+    return chosen, sorted(wanted - present)
+
+
 def load_items(
     root: Path, site: str, *, max_duration_seconds: float, max_file_bytes: int,
     resume: bool, catalog: dict[str, str] | None = None,
@@ -359,14 +416,31 @@ def audio_site(
     catalog = load_catalog_urls(catalog_paths)
     videos_dir = root / site / "videos"
     paths = sorted(videos_dir.glob("*.json"))
-    if options.sample_stratified:
+    ids_file = getattr(options, "ids_file", None)
+    if options.sample_stratified and ids_file is None:
         paths = stratified_sample(paths, options.sample_stratified)
     work, pre_skips = load_items(
         root, site, max_duration_seconds=options.max_duration_seconds,
         max_file_bytes=options.max_file_bytes, resume=options.resume,
         catalog=catalog, paths=paths)
+    ids = load_ids_file(ids_file) if ids_file is not None else None
+    if ids is not None:
+        wanted = set(ids)
+        present = ({str(item["id"]) for item in work}
+                   | {str(row["id"]) for row in pre_skips})
+        print(f"ids={len(wanted)} matched={len(wanted & present)} "
+              f"missing={len(wanted - present)}")
+        work = [item for item in work if str(item["id"]) in wanted]
+        pre_skips = [row for row in pre_skips if str(row["id"]) in wanted]
+        pre_skips.extend(
+            {"id": identifier, "slug": "", "recordPath": None,
+             "reason": "missing-from-catalog"}
+            for identifier in sorted(wanted - present))
     if options.limit and options.limit > 0:
         work = work[:options.limit]
+    print(f"selection: {len(work)} items selected "
+          f"(limit={'all' if not options.limit else options.limit}, ids="
+          f"{'file' if ids is not None else 'records'})")
     index_path = root / site / "audio-index.json"
     schema = f"kumiki.{site}-audio-index.v1"
 
@@ -420,6 +494,9 @@ def build_parser() -> argparse.ArgumentParser:
                         help="comma-separated site directory names")
     parser.add_argument("--limit", type=int, default=0,
                         help="items per site; 0 means all remaining")
+    parser.add_argument("--ids-file", type=Path, default=None,
+                        help="JSON id list / {\"ids\": [...]} / newline ids; "
+                             "--limit applies to the filtered selection")
     parser.add_argument("--jobs", type=int, default=1, choices=(1, 2))
     parser.add_argument("--delay-seconds", type=float, default=1.2)
     parser.add_argument("--max-duration-seconds", type=float, default=600.0)

@@ -224,6 +224,95 @@ class SelectionOrderingTests(unittest.TestCase):
         self.assertEqual(skips[0]["reason"], "unsupported-vimeo")
 
 
+class IdSelectionTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.rows = [
+            project_row("10", overall=7.0, created="2024-01-01T00:00:00Z"),
+            project_row("20", overall=9.0, created="2024-03-01T00:00:00Z"),
+            project_row("30", overall=8.0, created="2024-02-01T00:00:00Z"),
+            project_row("40", overall=7.0, created="2024-04-01T00:00:00Z"),
+            project_row("50", overall=6.0, created="2024-05-01T00:00:00Z"),
+        ]
+
+    def write(self, name: str, text: str) -> Path:
+        path = self.root / name
+        path.write_text(text, encoding="utf-8")
+        return path
+
+    def test_all_three_forms_and_numeric_equality(self) -> None:
+        self.assertEqual(
+            mda.load_ids_file(self.write("list.json", '["10", 30, "40"]')),
+            ["10", "30", "40"])
+        self.assertEqual(
+            mda.load_ids_file(self.write("object.json", '{"ids": [10, 30]}')),
+            ["10", "30"])
+        self.assertEqual(
+            mda.load_ids_file(self.write("lines.txt", "10\n30\n40\n")),
+            ["10", "30", "40"])
+
+    def test_malformed_and_blank_ids_are_refused(self) -> None:
+        for name, text in (
+                ("empty.txt", " \n"), ("bad.json", "{not json"),
+                ("no-ids.json", '{"other": []}'), ("scalar.json", '"10"'),
+                ("blank-list.json", '["10", " "]'),
+                ("blank-line.txt", "10\n \n20\n")):
+            with self.subTest(name=name):
+                path = self.write(name, text)
+                with self.assertRaises(ValueError) as caught:
+                    mda.load_ids_file(path)
+                self.assertIn(str(path), str(caught.exception))
+
+    def test_selection_limit_order_and_missing(self) -> None:
+        chosen, skips = mda.select_projects(
+            self.rows, order="best", limit=2, ids=["10", 30, "40", "999"])
+        self.assertEqual([row["projectId"] for row in chosen], ["30", "40"])
+        missing = [row for row in skips
+                   if row["reason"] == "missing-from-catalog"]
+        self.assertEqual([row["projectId"] for row in missing], ["999"])
+
+    def test_ids_limit_zero_means_all_filtered(self) -> None:
+        chosen, _ = mda.select_projects(
+            self.rows, order="latest", limit=0, ids=["10", "40"])
+        self.assertEqual([row["projectId"] for row in chosen], ["40", "10"])
+
+    def test_run_collect_selects_exactly_three_ids_offline(self) -> None:
+        catalog_path = self.write("catalog.json", json.dumps(
+            mda.build_catalog(self.rows, len(self.rows))))
+        ids_path = self.write("ids.json", '{"ids": [10, "30", 40]}')
+        out_dir = self.root / "out"
+        calls: list[str] = []
+
+        def fake_collect(project: dict, _out_dir: Path, **_: object) -> dict:
+            calls.append(str(project["projectId"]))
+            return {
+                "projectId": project["projectId"], "slug": project["slug"],
+                "catalog": {"title": project["slug"], "studio": None,
+                            "category": None, "scores": {}, "awards": [], "tags": []},
+                "source": {"resolution": [1280, 720], "durationSeconds": 12.0,
+                           "sizeBytes": 2 * 1024 * 1024, "mediaSha256": "a" * 64},
+                "coverage": {"windowsMeasured": 1},
+                "summary": {"cutCandidates": 3, "cutCandidateRatePerMinute": 15.0,
+                            "meanDisplayLuma": 0.4, "meanSaturation": 0.2},
+            }
+
+        lines: list[str] = []
+        with patch.object(mda, "collect_one", side_effect=fake_collect):
+            code = mda.run_collect(
+                catalog_path, out_dir=out_dir, limit=0, order="best",
+                acknowledge_rights=True, delay_seconds=0, ids_file=ids_path,
+                log=lines.append)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(calls, ["30", "40", "10"])
+        self.assertIn("ids=3 matched=3 missing=0", lines)
+        index = json.loads((out_dir / "index.json").read_text(encoding="utf-8"))
+        self.assertEqual(index["counts"]["measured"], 3)
+        self.assertEqual([row["reason"] for row in index["skips"]], [])
+
+
 class WindowAndSummaryTests(unittest.TestCase):
     def test_window_plan_starts_at_zero_and_skips_trailing_decile(self) -> None:
         span, count, starts, fraction = acq.plan_windows(45.2, count=4, seconds=10)

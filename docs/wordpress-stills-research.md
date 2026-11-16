@@ -188,7 +188,9 @@ never retained.
 `collect` requires `--acknowledge-rights`. `--limit` (default 250) caps only
 **attempted** rows: resume skips and the whole-site STASH refusal do not consume
 it. `--resume` (default) reads existing video records and leaves their bytes and
-mtimes untouched; `--refresh` re-measures. `--jobs` is bounded to 1..2 and the
+mtimes untouched; `--refresh` re-measures. `--ids-file PATH` filters the
+catalogue to an explicit id list (JSON list, `{"ids": [...]}`, or newline ids)
+before `--limit` is applied. `--jobs` is bounded to 1..2 and the
 default `--delay-seconds 1.4` keeps the Cloudflare-fronted site polite. A
 403/429 from the article page is a refusal, not a transient fault.
 
