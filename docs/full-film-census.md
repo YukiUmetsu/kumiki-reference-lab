@@ -176,6 +176,21 @@ The helpers live in `acquisition/reporting.py`:
 `census_columns`, `census_reconciliation`, `census_aggregate`, plus the small
 lookup/formatting helpers the adapters share.
 
+## Published dataset
+
+The measured census and window records for all six sites are published in
+`research/analysis/<site>/dataset/` (about 75 MiB total). Each directory holds
+deterministic `videos.tar.gz`, `stills.tar.gz` and `census.tar.gz` trees plus
+gzip-compressed `catalog.json`, `index.json`, `stills-index.json` and
+`census-index.json`; its `DATASET.md` records the counts, catalog URL,
+acquisition window and non-claims, and `research/analysis/README.md` summarises
+all sites. Rebuild the package with
+`PYTHONPATH=src python scripts/package_research_dataset.py --root research/analysis`
+and unpack one site with `cd research/analysis/<site> && tar -xzf dataset/census.tar.gz`
+(use `gzip -dk dataset/census-index.json.gz` for the index). The raw 646 MiB
+record trees stay untracked; only the compressed copy and the plain
+`report.md` / `aggregate.json` deliverables are committed.
+
 ## Cost and non-claims
 
 - **Cost:** one re-download plus one full decode per clip (the two ffmpeg

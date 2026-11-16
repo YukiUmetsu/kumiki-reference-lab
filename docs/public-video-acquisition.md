@@ -366,6 +366,20 @@ with tempfile.TemporaryDirectory(prefix="kumiki-youtube-smoke-") as tmp:
 PY
 ```
 
+## Published dataset
+
+The numeric evidence produced by these adapters is published in compressed form
+under `research/analysis/<site>/dataset/`: deterministic `videos.tar.gz`,
+`stills.tar.gz` and `census.tar.gz` record trees, gzip-compressed catalog and
+index JSON, and a `DATASET.md` with counts, catalog URL, acquisition window,
+unpack commands and non-claims (see `research/analysis/README.md` for the
+cross-site summary). Rebuild it with
+`PYTHONPATH=src python scripts/package_research_dataset.py --root research/analysis`;
+unpack a site with `cd research/analysis/<site> && tar -xzf dataset/videos.tar.gz`
+and `gzip -dk dataset/index.json.gz`. The raw record trees remain untracked; the
+packaged copy, `report.md` and `aggregate.json` are committed. Media is never in
+either form — only measurements, metadata and hashes survive.
+
 ## Known gaps (deliberate)
 
 - No generic HTTP POST/JSON client: catalogue APIs with bespoke auth-free
