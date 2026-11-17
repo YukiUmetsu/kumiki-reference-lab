@@ -66,6 +66,52 @@ acquisition provider/method, `coverage.fullFilmDecoded: true`, rights
 attestation, `rightsStatus: review-required`, limits and generation time. It
 writes no files and retains no media.
 
+The census record also carries one top-level `identityVerification` block (see
+below). No other key changes; the rest of the schema is unchanged.
+
+## Identity is delivery-dependent
+
+The census re-downloads media, but a second download of the same work is not
+always byte-identical. `identityVerification` in every census record states
+which rule ran:
+
+- **Byte-stable direct HTTP/MP4** (`method: "http-download"`, direct provider):
+  strict SHA-256 equality with `source.mediaSha256`. A mismatch is a
+  `media-changed` failure and the item is not measured.
+- **Remuxed HLS** (the observed method contains `hls`, the record's
+  `acquisition.method` is an HLS remux, or the provider is a streaming
+  manifest): content identity instead of byte identity —
+  `durationSeconds` within 0.5 s, resolution equal, and container/codec family
+  equal. The block records
+  `{"kind": "duration+resolution+codec", "shaMatched": false,
+  "durationDeltaSeconds": 0.16, "resolutionMatched": true,
+  "containerMatched": true, "codecMatched": true}`.
+- **yt-dlp/YouTube** (`method: "ytdlp-merge"`): the same duration, resolution
+  and container rule, but the codec family may differ between renditions. That
+  is recorded as `codecMatched: false`, not a failure.
+
+Anything outside those tolerances is still a `media-changed` failure with the
+specific reason (for example `duration delta 1.234s exceeds 0.5s`), and the
+failure row carries it in `detail`. **Byte identity is not asserted for remuxed
+or platform-transcoded sources**: the stored SHA-256 describes the bytes
+captured at evidence time, while `identityVerification` is the identity
+statement for the census. A SHA that happens to match is still reported only as
+`shaMatched: true` inside the content-identity block, never as a byte-identity
+claim.
+
+Two flags override the per-delivery default:
+
+- `--strict-identity` forces SHA-256 equality for every method, including HLS
+  and YouTube (the old behaviour).
+- `--allow-media-change` measures a record whose identity could not be
+  established and records `{"kind": "forced", "shaMatched": false,
+  "reason": ...}`. Forced rows remain visible in the census record and index
+  and are counted separately.
+
+The index carries `identityCounts: {"strict-sha": n, "tolerant": n,
+"forced": n}`, each measured record repeats its `identityVerification` block,
+and the run summary prints the same three counts.
+
 ## Commands
 
 `--ids-file PATH` restricts each site to an explicit id list (JSON list,
@@ -84,6 +130,14 @@ PYTHONPATH=src python scripts/census_video_cuts.py \
 # Refresh existing census records.
 PYTHONPATH=src python scripts/census_video_cuts.py \
   --site shots --refresh --acknowledge-rights
+
+# Force the byte-identity gate everywhere (pre-tolerance behaviour).
+PYTHONPATH=src python scripts/census_video_cuts.py \
+  --site aicp --strict-identity --acknowledge-rights
+
+# Measure despite an unestablished identity; rows are marked forced.
+PYTHONPATH=src python scripts/census_video_cuts.py \
+  --site aicp --allow-media-change --acknowledge-rights
 ```
 
 ## Expired signed URLs and catalog fallback
@@ -117,10 +171,11 @@ When the fallback succeeds the progress line carries `url-from-catalog`, the
 census record stores `acquisition.urlSource: "catalog"` and
 `record.urlSource: "catalog"`, and the measured index row carries the same
 field. When the catalog URL also returns the expiry 4xx the item is a
-`stale-signed-url` failure rather than an opaque `ValueError`. The stored
-media SHA-256 is still verified after a fallback: if the fresh URL yields a
-different file, the item remains a `media-changed` failure (the platform
-re-encoded the asset), never a measurement.
+`stale-signed-url` failure rather than an opaque `ValueError`. The stored media
+identity is still verified after a fallback: a byte-stable delivery must match
+the stored SHA-256, while a remuxed HLS delivery is re-checked on duration,
+resolution and container/codec family (see above). A fresh URL whose media
+fails those rules remains a `media-changed` failure, never a measurement.
 
 ```bash
 # Refetch the AICP catalog first: its rows hold the same expiring signatures.
@@ -137,10 +192,12 @@ PYTHONPATH=src python -u scripts/census_video_cuts.py \
 
 The driver reads `<root>/<site>/videos/*.json`, recovers the canonical upstream
 URL, provider and stored `source.mediaSha256` across adapter shapes, downloads
-into a `TemporaryDirectory`, verifies the SHA-256, scans, writes
+into a `TemporaryDirectory`, verifies the stored identity with the rule for its
+delivery method (strict SHA for byte-stable files, duration/resolution/
+container+codec for remuxed HLS and YouTube), scans, writes
 `<root>/<site>/census/<id>-<slug>.json` atomically, and deletes the media in a
-`finally` block. If the re-downloaded hash differs from the stored hash the
-item is **not measured**: it lands in the index as a `media-changed` failure.
+`finally` block. If the identity gate fails the item is **not measured**: it
+lands in the index as a `media-changed` failure with a specific `detail`.
 Missing URLs are `missing-url` skips; existing output is skipped under
 `--resume` and re-measured under `--refresh`.
 
