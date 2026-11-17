@@ -2,11 +2,12 @@
 
 Windowed measurement samples four 10 s windows per clip, so a window rate
 describes the windows, not the film. This module decodes the whole file once
-for frame-accurate scene candidates and once at a fixed cadence for appearance
-proxies. It performs no network access, writes no files, and knows nothing
-about any website.
+for frame-accurate scene candidates, once at a fixed cadence for appearance
+proxies, and once for bounded cut-transition windows. It performs no network
+access, writes no evidence files, and knows nothing about any website; the
+transition window pass uses only a temporary frame buffer, deleted immediately.
 
-Both passes keep original source PTS. Candidate cuts are ffmpeg scene-score
+All passes keep original source PTS. Candidate cuts are ffmpeg scene-score
 exceedances, never verified edits; appearance rows are display-RGB proxies at
 the requested decode size, never calibrated colour.
 """
@@ -17,7 +18,9 @@ import math
 import re
 import statistics
 import subprocess
+import tempfile
 import time
+from bisect import bisect_left, bisect_right
 from fractions import Fraction
 from pathlib import Path
 from typing import Any, Iterable
@@ -33,6 +36,7 @@ from kumiki_reference_lab.core.timebase import (
     as_rational_dict, parse_rational,
 )
 
+from .motion_profile import classify_transitions, motion_signature
 from .probe import finite_float
 from .runner import safe_error
 from .store import utc_now
@@ -47,6 +51,11 @@ BURST_NEIGHBOUR_SECONDS = 0.25
 NON_EDIT_MEDIAN_FRAMES = 3.0
 _SEARCH_EXPRESSION = "isnan(prev_selected_t)+gte(t-prev_selected_t,{seconds})"
 _MAX_LOG_BYTES = 8_000_000
+# Transition windows are decoded as a bounded, lower-rate buffer: 96x54 RGB at
+# about 12 fps, then only the ±0.4 s neighbourhood of each cut is retained.
+MOTION_TRANSITION_WIDTH = 96
+MOTION_TRANSITION_HEIGHT = 54
+MOTION_TRANSITION_SAMPLE_FPS = 12.0
 
 
 def _checked_seconds(value: object, *, name: str = "sample_seconds") -> float:
@@ -204,6 +213,89 @@ def _cadence_pass(
     frames = [body[index * plane_size:(index + 1) * plane_size]
               for index in range(len(pts))]
     return pts, frames, next(iter(timebases))
+
+
+def _transition_windows(
+    source: Path, stream_index: int, *, cut_pts: Iterable[int],
+    timebase: Fraction, fps: float | None, ffmpeg: str, timeout: float,
+) -> dict[int, list[tuple[float, bytes]]]:
+    """Decode only the ±0.4 s neighbourhood of every cut into a bounded buffer.
+
+    One ffmpeg pass selects the merged cut windows at a reduced frame rate
+    (roughly 12 fps) and 96x54 RGB. The raw frames go to a temporary file; only
+    that bounded selected buffer is read back (about 11 MB per runtime minute),
+    and the file is removed with the temporary directory.
+    """
+    cuts = sorted({int(value) for value in cut_pts})
+    if not cuts:
+        return {}
+    cut_seconds = [value * float(timebase) for value in cuts]
+    intervals: list[list[float]] = []
+    for moment in cut_seconds:
+        start = max(0.0, moment - 0.4)
+        end = moment + 0.4
+        if intervals and start <= intervals[-1][1]:
+            intervals[-1][1] = max(intervals[-1][1], end)
+        else:
+            intervals.append([start, end])
+    rate = fps if fps is not None and fps > 0 else 24.0
+    stride = max(1, int(round(rate / MOTION_TRANSITION_SAMPLE_FPS)))
+    windows_expression = "+".join(
+        f"between(t,{start:.6f},{end:.6f})"
+        for start, end in intervals)
+    filter_graph = (
+        f"select='({windows_expression})*not(mod(n,{stride}))',"
+        f"scale={MOTION_TRANSITION_WIDTH}:{MOTION_TRANSITION_HEIGHT}:"
+        "flags=fast_bilinear,format=rgb24,showinfo")
+    with tempfile.TemporaryDirectory(prefix="kumiki-motion-") as directory:
+        raw_path = Path(directory) / "windows.rgb"
+        command = [
+            ffmpeg, "-hide_banner", "-loglevel", "info", "-nostdin",
+            "-nostats", "-i", str(source.resolve()),
+            "-map", f"0:{stream_index}", "-vf", filter_graph, "-an",
+            "-fps_mode", "passthrough", "-pix_fmt", "rgb24",
+            "-f", "rawvideo", "-y", str(raw_path),
+        ]
+        result = _run(command, timeout=timeout, label="transition pass",
+                      text=True, redact=(str(source), str(source.resolve())))
+        stderr = result.stderr or ""
+        if len(stderr) > _MAX_LOG_BYTES:
+            raise ValueError("transition pass log exceeded the bounded scan")
+        pts: list[int] = []
+        timebases: set[Fraction] = set()
+        for line in stderr.splitlines():
+            if "Parsed_showinfo" not in line:
+                continue
+            match_timebase = _SHOWINFO_TIMEBASE.search(line)
+            if match_timebase is not None:
+                value = parse_rational(match_timebase.group(1))
+                if value is None:
+                    raise ValueError(
+                        "transition filter reported an invalid timebase")
+                timebases.add(value)
+            elif " n:" in line:
+                match = _SHOWINFO_PTS.search(line)
+                if match is None:
+                    raise ValueError(
+                        "transition pass reported an invalid source PTS")
+                pts.append(int(match.group(1)))
+        if timebases and timebases != {timebase}:
+            raise ValueError("transition pass changed the original timebase")
+        plane_size = MOTION_TRANSITION_WIDTH * MOTION_TRANSITION_HEIGHT * 3
+        body = raw_path.read_bytes() if raw_path.exists() else b""
+        if len(body) != plane_size * len(pts):
+            raise ValueError(
+                "transition pass produced an unexpected pixel-buffer size")
+        times = [value * float(timebase) for value in pts]
+        ordered = [body[index * plane_size:(index + 1) * plane_size]
+                   for index in range(len(pts))]
+        windows: dict[int, list[tuple[float, bytes]]] = {}
+        for cut, moment in zip(cuts, cut_seconds, strict=True):
+            left = bisect_left(times, moment - 0.4)
+            right = bisect_right(times, moment + 0.4)
+            windows[cut] = list(zip(times[left:right], ordered[left:right],
+                                    strict=True))
+        return windows
 
 
 def _percentile(values: list[float], quantile: float) -> float:
@@ -393,6 +485,25 @@ def scan_full_runtime(
         cut_pts, timebase_seconds=float(timebase),
         duration_seconds=duration, fps=fps_value)
     summary = _series_summary(series, duration_seconds=duration)
+    transition_note = None
+    try:
+        transition_frames = _transition_windows(
+            source, stream, cut_pts=cut_pts, timebase=timebase,
+            fps=fps_value, ffmpeg=ffmpeg, timeout=timeout)
+        transitions = classify_transitions(
+            transition_frames, cut_pts=cut_pts, timebase=float(timebase),
+            fps=fps_value, duration_seconds=duration)
+    except (OSError, ValueError) as error:
+        transition_note = safe_error(error, limit=400)
+        transitions = classify_transitions(
+            {}, cut_pts=cut_pts, timebase=float(timebase),
+            fps=fps_value, duration_seconds=duration)
+        transitions["status"] = "unavailable"
+        transitions["note"] = transition_note
+    motion_profile = motion_signature(
+        frames, width=width, height=height, cut_pts=cut_pts,
+        timebase=float(timebase), fps=fps_value, sample_seconds=sample,
+        duration_seconds=duration, transitions=transitions)
     return {
         "durationSeconds": round(duration, 6),
         "timebase": as_rational_dict(timebase),
@@ -402,6 +513,7 @@ def scan_full_runtime(
         **stats,
         "series": series,
         "seriesSummary": summary,
+        "motionProfile": motion_profile,
         "scanSeconds": round(time.monotonic() - started, 3),
         "fullRuntimeDecoded": True,
     }

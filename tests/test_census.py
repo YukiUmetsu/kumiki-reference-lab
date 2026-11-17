@@ -81,10 +81,19 @@ class _ScanFake:
             return subprocess.CompletedProcess(
                 command, 0, stdout=_ffprobe_json(self.duration), stderr="")
         if "rawvideo" in command:
-            body = b"".join(self.frames)
+            if command[-1] == "-":
+                body = b"".join(self.frames)
+                return subprocess.CompletedProcess(
+                    command, 0, stdout=body,
+                    stderr=_cadence_stderr(self.sample_pts, self.timebase))
+            # Transition pass writes a raw file; mirror that shape.
+            plane = (census.MOTION_TRANSITION_WIDTH
+                     * census.MOTION_TRANSITION_HEIGHT * 3)
+            body = bytes([128]) * plane * len(self.cut_pts)
+            Path(command[-1]).write_bytes(body)
             return subprocess.CompletedProcess(
-                command, 0, stdout=body,
-                stderr=_cadence_stderr(self.sample_pts, self.timebase))
+                command, 0, stdout="",
+                stderr=_scene_stderr(self.cut_pts, self.timebase))
         return subprocess.CompletedProcess(
             command, 0, stdout="",
             stderr=_scene_stderr(self.cut_pts, self.timebase))
@@ -125,9 +134,14 @@ class CensusScanTests(unittest.TestCase):
         self.assertEqual(scan["seriesSummary"]["samples"], 2)
         self.assertEqual(scan["seriesSummary"]["decodeCoverageFraction"], 1.0)
         self.assertEqual(scan["seriesSummary"]["sampledSeconds"], 2.0)
-        # Exactly one ffprobe plus one scene pass plus one cadence pass.
+        motion = scan["motionProfile"]
+        for key in ("transitions", "globalMotion", "localMotion",
+                    "overlayActivity", "limits"):
+            self.assertIn(key, motion)
+        self.assertEqual(motion["transitions"]["transitionCount"], 3)
+        # Exactly one ffprobe plus scene, cadence and bounded transition passes.
         ffmpeg_calls = [call for call in fake.calls if call[0] != "ffprobe"]
-        self.assertEqual(len(ffmpeg_calls), 2)
+        self.assertEqual(len(ffmpeg_calls), 3)
 
     def test_scene_pass_failure_is_bounded_and_redacted(self) -> None:
         def failing(command, **kwargs):  # noqa: ANN001 - test double
@@ -356,6 +370,25 @@ def _scan_payload() -> dict:
         "fullRuntimeDecoded": True, "durationSeconds": 2.0,
         "cutCount": 1, "cutsPerMinute": 30.0, "strobe": False,
         "seriesSummary": {"decodeCoverageFraction": 1.0},
+        "motionProfile": {
+            "schemaVersion": "kumiki.motion-profile.v1",
+            "transitions": {
+                "counts": {"hard-cut": 1, "short-dissolve": 0,
+                           "long-dissolve": 0, "fade-through-black": 0,
+                           "fade-through-white": 0, "unknown": 0},
+                "transitionRatePerMinute": 30.0, "classifiedShare": 1.0,
+            },
+            "globalMotion": {
+                "medianAbsDxPixelsPerSecond": 0.0,
+                "medianAbsDyPixelsPerSecond": 0.0,
+                "panFraction": 0.0, "staticFraction": 1.0,
+                "zoomProxy": 1.0,
+            },
+            "localMotion": {"centreShare": 0.12, "motionCoverage": 0.33},
+            "overlayActivity": {
+                "lowerThirdActivity": 0.1, "upperThirdActivity": 0.1},
+            "limits": ["numeric proxy"],
+        },
     }
 
 
@@ -382,6 +415,9 @@ class ScriptLifecycleTests(unittest.TestCase):
             self.assertFalse(payload["mediaRetained"])
             self.assertEqual(payload["census"], _scan_payload())
             self.assertEqual(row["cutsPerMinute"], 30.0)
+            self.assertEqual(row["motionProfile"]["transitionRatePerMinute"],
+                             30.0)
+            self.assertEqual(row["transitions"]["counts"]["hard-cut"], 1)
             self.assertEqual(list(output.parent.glob("*.tmp")), [])
             self.assertTrue(created)
             self.assertFalse(created[0].exists())
