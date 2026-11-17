@@ -38,9 +38,10 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 
-FAMILIES = ("videos", "stills", "census")
+FAMILIES = ("videos", "stills", "census", "audio")
 COMPRESSED_JSON = ("catalog.json", "index.json", "stills-index.json",
-                   "census-index.json", "aggregate.json")
+                   "census-index.json", "audio-index.json", "aggregate.json",
+                   "quality-selection.json", "components.json", "ids.json")
 GZIP_LEVEL = 1
 
 
@@ -221,9 +222,10 @@ def package_site(site_dir: Path) -> dict[str, Any]:
     sizes: dict[str, int] = {}
     stats: list[FamilyStats] = []
     for folder in FAMILIES:
-        stats.append(_family_stats(site_dir, folder))
         archive = dataset / f"{folder}.tar.gz"
         sizes[archive.name] = _tar_gz_tree(site_dir / folder, folder, archive)
+        if (site_dir / folder).is_dir():
+            stats.append(_family_stats(site_dir, folder))
     compressed: list[str] = []
     for name in COMPRESSED_JSON:
         source = site_dir / name

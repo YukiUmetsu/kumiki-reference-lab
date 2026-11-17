@@ -102,7 +102,7 @@ class PackageDatasetTests(unittest.TestCase):
 
             package_site(site)
 
-            for folder in ("videos", "stills", "census"):
+            for folder in ("videos", "stills", "census", "audio"):
                 archive = site / "dataset" / f"{folder}.tar.gz"
                 with tarfile.open(archive) as handle:
                     self.assertEqual(handle.getnames(), [])

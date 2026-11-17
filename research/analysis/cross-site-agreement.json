@@ -1,0 +1,473 @@
+{
+  "schemaVersion": "kumiki.cross-site-agreement.v1",
+  "derivedAt": "2026-11-17T00:45:45.229504Z",
+  "derivedFrom": "maximum mtime of the input records (never now())",
+  "root": "research/analysis",
+  "sites": [
+    "aicp",
+    "directorslibrary",
+    "motiondesignawards",
+    "promonews",
+    "shots"
+  ],
+  "metrics": [
+    "cutsPerMinute",
+    "medianShotSeconds",
+    "meanLuma",
+    "meanSaturation",
+    "integratedLufs",
+    "lra",
+    "onsetRate"
+  ],
+  "thresholds": {
+    "durationMismatchFraction": 0.1,
+    "cutRateDivergenceFraction": 0.5,
+    "sparsePairThreshold": 3
+  },
+  "coverage": {
+    "sites": [
+      "aicp",
+      "directorslibrary",
+      "motiondesignawards",
+      "promonews",
+      "shots"
+    ],
+    "crossSiteWorks": 248,
+    "crossSiteWorksWithAnyMeasurement": 98,
+    "crossSiteWorksMeasuredOnTwoSites": 0,
+    "crossSiteWorksWithTwoMeasuredMembersSameSite": 5,
+    "measuredRecordsInsideCrossSiteWorks": 103,
+    "combinations": [
+      {
+        "sites": "aicp+shots",
+        "works": 225,
+        "withAnyMeasurement": 93,
+        "withMeasuredPair": 0
+      },
+      {
+        "sites": "directorslibrary+shots",
+        "works": 4,
+        "withAnyMeasurement": 1,
+        "withMeasuredPair": 0
+      },
+      {
+        "sites": "motiondesignawards+shots",
+        "works": 3,
+        "withAnyMeasurement": 3,
+        "withMeasuredPair": 0
+      },
+      {
+        "sites": "promonews+shots",
+        "works": 16,
+        "withAnyMeasurement": 1,
+        "withMeasuredPair": 0
+      }
+    ]
+  },
+  "counts": {
+    "pairs": 0,
+    "worksPaired": 0,
+    "durationMismatchPairs": 0,
+    "cutRateDivergentPairs": 0,
+    "partialPairs": 0,
+    "measuredRecords": 2563,
+    "cataloguedIdentities": 68758
+  },
+  "statistics": {
+    "cutsPerMinute": {
+      "key": "cutsPerMinute",
+      "label": "Cut candidates per minute",
+      "unit": "cuts/min",
+      "lane": "census",
+      "meaningfulZero": true,
+      "excludeStrobe": true,
+      "all": {
+        "n_pairs": 0,
+        "n_works": 0,
+        "signedMean": null,
+        "signedMedian": null,
+        "absoluteMean": null,
+        "absoluteMedian": null,
+        "relativeMean": null,
+        "relativeMedian": null,
+        "relativeZeroDenominators": 0,
+        "spearman": null,
+        "icc": null,
+        "iccDetail": null,
+        "valueRange": {
+          "min": null,
+          "max": null
+        }
+      },
+      "durationMatched": {
+        "n_pairs": 0,
+        "n_works": 0,
+        "signedMean": null,
+        "signedMedian": null,
+        "absoluteMean": null,
+        "absoluteMedian": null,
+        "relativeMean": null,
+        "relativeMedian": null,
+        "relativeZeroDenominators": 0,
+        "spearman": null,
+        "icc": null,
+        "iccDetail": null,
+        "valueRange": {
+          "min": null,
+          "max": null
+        }
+      },
+      "cutRateConsistent": {
+        "n_pairs": 0,
+        "n_works": 0,
+        "signedMean": null,
+        "signedMedian": null,
+        "absoluteMean": null,
+        "absoluteMedian": null,
+        "relativeMean": null,
+        "relativeMedian": null,
+        "relativeZeroDenominators": 0,
+        "spearman": null,
+        "icc": null,
+        "iccDetail": null,
+        "valueRange": {
+          "min": null,
+          "max": null
+        }
+      },
+      "excludedStrobePairs": 0,
+      "sparse": true,
+      "notes": [
+        "no work has this metric measured on two sites",
+        "ICC undefined: needs at least two works with two or more values each",
+        "Spearman undefined: needs two or more pairs with varying values"
+      ]
+    },
+    "medianShotSeconds": {
+      "key": "medianShotSeconds",
+      "label": "Median shot length",
+      "unit": "s",
+      "lane": "census",
+      "meaningfulZero": true,
+      "excludeStrobe": false,
+      "all": {
+        "n_pairs": 0,
+        "n_works": 0,
+        "signedMean": null,
+        "signedMedian": null,
+        "absoluteMean": null,
+        "absoluteMedian": null,
+        "relativeMean": null,
+        "relativeMedian": null,
+        "relativeZeroDenominators": 0,
+        "spearman": null,
+        "icc": null,
+        "iccDetail": null,
+        "valueRange": {
+          "min": null,
+          "max": null
+        }
+      },
+      "durationMatched": {
+        "n_pairs": 0,
+        "n_works": 0,
+        "signedMean": null,
+        "signedMedian": null,
+        "absoluteMean": null,
+        "absoluteMedian": null,
+        "relativeMean": null,
+        "relativeMedian": null,
+        "relativeZeroDenominators": 0,
+        "spearman": null,
+        "icc": null,
+        "iccDetail": null,
+        "valueRange": {
+          "min": null,
+          "max": null
+        }
+      },
+      "excludedStrobePairs": 0,
+      "sparse": true,
+      "notes": [
+        "no work has this metric measured on two sites",
+        "ICC undefined: needs at least two works with two or more values each",
+        "Spearman undefined: needs two or more pairs with varying values"
+      ]
+    },
+    "meanLuma": {
+      "key": "meanLuma",
+      "label": "Mean display luma",
+      "unit": "0..1 proxy",
+      "lane": "census",
+      "meaningfulZero": true,
+      "excludeStrobe": false,
+      "all": {
+        "n_pairs": 0,
+        "n_works": 0,
+        "signedMean": null,
+        "signedMedian": null,
+        "absoluteMean": null,
+        "absoluteMedian": null,
+        "relativeMean": null,
+        "relativeMedian": null,
+        "relativeZeroDenominators": 0,
+        "spearman": null,
+        "icc": null,
+        "iccDetail": null,
+        "valueRange": {
+          "min": null,
+          "max": null
+        }
+      },
+      "durationMatched": {
+        "n_pairs": 0,
+        "n_works": 0,
+        "signedMean": null,
+        "signedMedian": null,
+        "absoluteMean": null,
+        "absoluteMedian": null,
+        "relativeMean": null,
+        "relativeMedian": null,
+        "relativeZeroDenominators": 0,
+        "spearman": null,
+        "icc": null,
+        "iccDetail": null,
+        "valueRange": {
+          "min": null,
+          "max": null
+        }
+      },
+      "excludedStrobePairs": 0,
+      "sparse": true,
+      "notes": [
+        "no work has this metric measured on two sites",
+        "ICC undefined: needs at least two works with two or more values each",
+        "Spearman undefined: needs two or more pairs with varying values"
+      ]
+    },
+    "meanSaturation": {
+      "key": "meanSaturation",
+      "label": "Mean saturation",
+      "unit": "0..1 proxy",
+      "lane": "census",
+      "meaningfulZero": true,
+      "excludeStrobe": false,
+      "all": {
+        "n_pairs": 0,
+        "n_works": 0,
+        "signedMean": null,
+        "signedMedian": null,
+        "absoluteMean": null,
+        "absoluteMedian": null,
+        "relativeMean": null,
+        "relativeMedian": null,
+        "relativeZeroDenominators": 0,
+        "spearman": null,
+        "icc": null,
+        "iccDetail": null,
+        "valueRange": {
+          "min": null,
+          "max": null
+        }
+      },
+      "durationMatched": {
+        "n_pairs": 0,
+        "n_works": 0,
+        "signedMean": null,
+        "signedMedian": null,
+        "absoluteMean": null,
+        "absoluteMedian": null,
+        "relativeMean": null,
+        "relativeMedian": null,
+        "relativeZeroDenominators": 0,
+        "spearman": null,
+        "icc": null,
+        "iccDetail": null,
+        "valueRange": {
+          "min": null,
+          "max": null
+        }
+      },
+      "excludedStrobePairs": 0,
+      "sparse": true,
+      "notes": [
+        "no work has this metric measured on two sites",
+        "ICC undefined: needs at least two works with two or more values each",
+        "Spearman undefined: needs two or more pairs with varying values"
+      ]
+    },
+    "integratedLufs": {
+      "key": "integratedLufs",
+      "label": "Integrated loudness",
+      "unit": "LUFS",
+      "lane": "audio",
+      "meaningfulZero": false,
+      "excludeStrobe": false,
+      "all": {
+        "n_pairs": 0,
+        "n_works": 0,
+        "signedMean": null,
+        "signedMedian": null,
+        "absoluteMean": null,
+        "absoluteMedian": null,
+        "relativeMean": null,
+        "relativeMedian": null,
+        "relativeZeroDenominators": 0,
+        "spearman": null,
+        "icc": null,
+        "iccDetail": null,
+        "valueRange": {
+          "min": null,
+          "max": null
+        }
+      },
+      "durationMatched": {
+        "n_pairs": 0,
+        "n_works": 0,
+        "signedMean": null,
+        "signedMedian": null,
+        "absoluteMean": null,
+        "absoluteMedian": null,
+        "relativeMean": null,
+        "relativeMedian": null,
+        "relativeZeroDenominators": 0,
+        "spearman": null,
+        "icc": null,
+        "iccDetail": null,
+        "valueRange": {
+          "min": null,
+          "max": null
+        }
+      },
+      "excludedStrobePairs": 0,
+      "sparse": true,
+      "notes": [
+        "no work has this metric measured on two sites",
+        "ICC undefined: needs at least two works with two or more values each",
+        "Spearman undefined: needs two or more pairs with varying values"
+      ]
+    },
+    "lra": {
+      "key": "lra",
+      "label": "Loudness range",
+      "unit": "LU",
+      "lane": "audio",
+      "meaningfulZero": false,
+      "excludeStrobe": false,
+      "all": {
+        "n_pairs": 0,
+        "n_works": 0,
+        "signedMean": null,
+        "signedMedian": null,
+        "absoluteMean": null,
+        "absoluteMedian": null,
+        "relativeMean": null,
+        "relativeMedian": null,
+        "relativeZeroDenominators": 0,
+        "spearman": null,
+        "icc": null,
+        "iccDetail": null,
+        "valueRange": {
+          "min": null,
+          "max": null
+        }
+      },
+      "durationMatched": {
+        "n_pairs": 0,
+        "n_works": 0,
+        "signedMean": null,
+        "signedMedian": null,
+        "absoluteMean": null,
+        "absoluteMedian": null,
+        "relativeMean": null,
+        "relativeMedian": null,
+        "relativeZeroDenominators": 0,
+        "spearman": null,
+        "icc": null,
+        "iccDetail": null,
+        "valueRange": {
+          "min": null,
+          "max": null
+        }
+      },
+      "excludedStrobePairs": 0,
+      "sparse": true,
+      "notes": [
+        "no work has this metric measured on two sites",
+        "ICC undefined: needs at least two works with two or more values each",
+        "Spearman undefined: needs two or more pairs with varying values"
+      ]
+    },
+    "onsetRate": {
+      "key": "onsetRate",
+      "label": "Onset rate",
+      "unit": "onsets/min",
+      "lane": "audio",
+      "meaningfulZero": true,
+      "excludeStrobe": false,
+      "all": {
+        "n_pairs": 0,
+        "n_works": 0,
+        "signedMean": null,
+        "signedMedian": null,
+        "absoluteMean": null,
+        "absoluteMedian": null,
+        "relativeMean": null,
+        "relativeMedian": null,
+        "relativeZeroDenominators": 0,
+        "spearman": null,
+        "icc": null,
+        "iccDetail": null,
+        "valueRange": {
+          "min": null,
+          "max": null
+        }
+      },
+      "durationMatched": {
+        "n_pairs": 0,
+        "n_works": 0,
+        "signedMean": null,
+        "signedMedian": null,
+        "absoluteMean": null,
+        "absoluteMedian": null,
+        "relativeMean": null,
+        "relativeMedian": null,
+        "relativeZeroDenominators": 0,
+        "spearman": null,
+        "icc": null,
+        "iccDetail": null,
+        "valueRange": {
+          "min": null,
+          "max": null
+        }
+      },
+      "excludedStrobePairs": 0,
+      "sparse": true,
+      "notes": [
+        "no work has this metric measured on two sites",
+        "ICC undefined: needs at least two works with two or more values each",
+        "Spearman undefined: needs two or more pairs with varying values"
+      ]
+    }
+  },
+  "durationDeltaDistribution": {
+    "n": 0,
+    "mean": null,
+    "median": null,
+    "p90": null,
+    "max": null,
+    "buckets": {},
+    "mismatchCount": 0
+  },
+  "pairs": [],
+  "limitations": [
+    "Duration mismatch: the same campaign is often published as a 30 s cut and a 60 s cut. A pair whose runtimes differ by more than 10% of the longer one is marked durationMismatch and reported both inside and outside the durationMatched statistics; it is a different edit, not a delivery artefact.",
+    "Different cuts of the same work: when the duration matches but cuts per minute differ by more than 50%, the pair is a retimed or alternate edit. It is flagged cutRateDivergence and cut out of the cutRateConsistent statistics rather than counted as measurement error.",
+    "Host loudness normalisation: YouTube and Vimeo normalise playback loudness. LUFS/LRA agreement therefore validates the delivered stream, not the master; a mastering difference can be flattened or invented by the host.",
+    "Partial lanes: a work with census on one site and only audio on the other is a partial pair. It is counted and paired only on the lane both sides share; it is never averaged into a metric one side lacks.",
+    "Zero-valued metrics: a relative difference is defined as (A - B) / max(|A|, |B|). When both values are zero the denominator is zero, so the relative difference is null and counted under relativeZeroDenominators rather than coerced to zero or to infinity.",
+    "Census cut candidates are ffmpeg scene-score exceedances, not verified edits; fast motion, flashes, transitions and compression can cross the threshold. Strobe-flagged records are never pooled with non-strobe records for cutsPerMinute.",
+    "Luma and saturation are display-RGB proxies at the decoded rendition size, not scene-linear light or calibrated colour; different resolutions and codecs shift them independently of the work.",
+    "Coverage gap in this snapshot: 248 works appear on two or more sites, but 0 have numeric census or audio evidence on two of them. The figure of 219 describes works with a *selected row* on more than one site, not works that were measured twice. The pair statistics above are therefore empty, and the honest reading is that this corpus cannot yet answer the cross-site question."
+  ]
+}
