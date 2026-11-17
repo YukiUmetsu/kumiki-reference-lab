@@ -64,12 +64,14 @@ from .editorial import (
     derive_editorial,
 )
 from .reporting import (
+    IDENTITY_COUNT_KEYS, IDENTITY_MODES, IDENTITY_TOLERANCE_SECONDS,
     aggregate_extremes, census_aggregate, census_annotate_rows, census_columns,
-    census_delta_text, census_for, census_lookup, census_reconciliation,
-    comparability_block, coverage_distribution, cut_columns,
-    duplicate_summary, editorial_aggregate, editorial_columns,
-    editorial_section_lines, still_decode_counts, still_decode_dimensions,
-    unique_media_rows,
+    census_delta_text, census_for, census_identity, census_lookup,
+    census_reconciliation, census_section_lines, comparability_block,
+    coverage_distribution,
+    cut_columns, duplicate_summary, editorial_aggregate, editorial_columns,
+    editorial_section_lines, identity_verification, still_decode_counts,
+    still_decode_dimensions, unique_media_rows,
 )
 from .store import build_index, resume_matches, safe_slug, utc_now, write_json_atomic
 from .windows import (
@@ -109,12 +111,15 @@ __all__ = [
     "still_quality_counts", "still_quality_flags", "still_quality_summary",
     "still_record_flags",
     # reporting
+    "IDENTITY_COUNT_KEYS", "IDENTITY_MODES", "IDENTITY_TOLERANCE_SECONDS",
     "aggregate_extremes", "census_aggregate", "census_annotate_rows",
-    "census_columns", "census_delta_text", "census_for", "census_lookup",
-    "census_reconciliation", "comparability_block", "coverage_distribution",
-    "cut_columns", "duplicate_summary", "editorial_aggregate",
-    "editorial_columns", "editorial_section_lines", "still_decode_counts",
-    "still_decode_dimensions", "unique_media_rows",
+    "census_columns", "census_delta_text", "census_for", "census_identity",
+    "census_lookup", "census_reconciliation", "census_section_lines",
+    "comparability_block",
+    "coverage_distribution", "cut_columns", "duplicate_summary",
+    "editorial_aggregate", "editorial_columns", "editorial_section_lines",
+    "identity_verification", "still_decode_counts", "still_decode_dimensions",
+    "unique_media_rows",
     # store
     "build_index", "resume_matches", "safe_slug", "utc_now",
     "write_json_atomic",

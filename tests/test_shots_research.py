@@ -700,6 +700,143 @@ class CollectRunTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
+# explicit id selection (--ids-file)
+# ---------------------------------------------------------------------------
+
+
+class IdSelectionTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.out_dir = self.root / "out"
+
+    def write(self, name: str, text: str) -> Path:
+        path = self.root / name
+        path.write_text(text, encoding="utf-8")
+        return path
+
+    def catalog(self, identifiers: list[int]) -> Path:
+        rows = [catalog_row(id=identifier, urlname=f"clip-{identifier}",
+                            publication_date="2026-11-01T00:00:00Z")
+                for identifier in identifiers]
+        path = self.root / "catalog.json"
+        acq.write_json_atomic(path, shots.build_catalog(
+            rows, len(rows), retrieved_at="2026-01-01T00:00:00Z"))
+        return path
+
+    def test_all_three_forms_and_numeric_equality(self) -> None:
+        self.assertEqual(
+            shots.load_ids_file(self.write("list.json", '["1", 2, "3"]')),
+            ["1", "2", "3"])
+        self.assertEqual(
+            shots.load_ids_file(self.write("object.json", '{"ids": [1, 2]}')),
+            ["1", "2"])
+        self.assertEqual(
+            shots.load_ids_file(self.write("lines.txt", "1\n2\n3\n")),
+            ["1", "2", "3"])
+
+    def test_numeric_catalog_ids_match_string_file_ids(self) -> None:
+        rows = [{"id": 40169, "slug": "a"}, {"id": 38635, "slug": "b"}]
+        chosen, missing = shots.select_ids(rows, ["38635"], key="id")
+        self.assertEqual([row["slug"] for row in chosen], ["b"])
+        self.assertEqual(missing, [])
+
+    def test_malformed_and_blank_ids_are_refused(self) -> None:
+        for name, text in (
+                ("empty.txt", " \n"), ("bad.json", "{not json"),
+                ("no-ids.json", '{"other": []}'), ("scalar.json", '"1"'),
+                ("blank-list.json", '["1", " "]'),
+                ("blank-line.txt", "1\n \n2\n")):
+            with self.subTest(name=name):
+                path = self.write(name, text)
+                with self.assertRaises(ValueError) as caught:
+                    shots.load_ids_file(path)
+                self.assertIn(str(path), str(caught.exception))
+
+    def test_filter_preserves_catalog_order_and_reports_missing(self) -> None:
+        rows = [
+            {"id": 3, "slug": "c"},
+            {"id": 1, "slug": "a"},
+            {"id": 2, "slug": "b"},
+        ]
+        chosen, missing = shots.select_ids(rows, ["3", 1, "999"], key="id")
+        self.assertEqual([row["id"] for row in chosen], [3, 1])
+        self.assertEqual(missing, ["999"])
+
+    def test_missing_id_becomes_a_skip_row_and_is_reported(self) -> None:
+        catalog_path = self.catalog([1])
+        ids_path = self.write("ids.json", '["1", 999]')
+        lines: list[str] = []
+
+        def fake_collect(row: dict, _out_dir: Path, **_: object) -> dict:
+            return synthetic_video_record(row)
+
+        with patch.object(shots, "collect_one", side_effect=fake_collect):
+            code = shots.run_collect(
+                catalog_path, out_dir=self.out_dir, limit=0, resume=False,
+                acknowledge_rights=True, delay_seconds=0, ids_file=ids_path,
+                log=lines.append)
+
+        self.assertEqual(code, 0)
+        self.assertIn("ids=2 matched=1 missing=1", lines)
+        index = json.loads((self.out_dir / "index.json").read_text(encoding="utf-8"))
+        missing = [row for row in index["skips"]
+                   if row["reason"] == "missing-from-catalog"]
+        self.assertEqual([row["clipId"] for row in missing], ["999"])
+
+    def test_limit_applies_after_the_id_filter(self) -> None:
+        catalog_path = self.catalog([1, 2, 3, 4, 5])
+        ids_path = self.write("ids.txt", "1\n2\n3\n")
+        calls: list[str] = []
+        lines: list[str] = []
+
+        def fake_collect(row: dict, _out_dir: Path, **_: object) -> dict:
+            calls.append(str(row["id"]))
+            return synthetic_video_record(row)
+
+        with patch.object(shots, "collect_one", side_effect=fake_collect):
+            code = shots.run_collect(
+                catalog_path, out_dir=self.out_dir, limit=2, resume=False,
+                acknowledge_rights=True, delay_seconds=0, ids_file=ids_path,
+                log=lines.append)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(calls, ["3", "2"])
+        self.assertIn("ids=3 matched=3 missing=0", lines)
+        self.assertIn("selection: 2 rows selected (limit=2, ids=file)", lines)
+
+    def test_run_collect_selects_exactly_three_ids_offline(self) -> None:
+        catalog_path = self.catalog([1, 2, 3, 4, 5])
+        ids_path = self.write("ids.json", '{"ids": [2, 4, 5]}')
+        calls: list[str] = []
+        lines: list[str] = []
+
+        def fake_collect(row: dict, _out_dir: Path, **_: object) -> dict:
+            calls.append(str(row["id"]))
+            return synthetic_video_record(row)
+
+        with patch.object(shots, "collect_one", side_effect=fake_collect):
+            code = shots.run_collect(
+                catalog_path, out_dir=self.out_dir, limit=0, resume=False,
+                acknowledge_rights=True, delay_seconds=0, ids_file=ids_path,
+                log=lines.append)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(calls, ["5", "4", "2"])
+        self.assertIn("ids=3 matched=3 missing=0", lines)
+        index = json.loads((self.out_dir / "index.json").read_text(encoding="utf-8"))
+        self.assertEqual(index["counts"]["measured"], 3)
+
+    def test_limit_zero_with_ids_file_requires_a_catalog(self) -> None:
+        ids_path = self.write("ids.json", "[1]")
+        with self.assertRaises(ValueError):
+            shots.run_collect(
+                None, out_dir=self.out_dir, limit=0, acknowledge_rights=True,
+                ids_file=ids_path, log=lambda _s: None)
+
+
+# ---------------------------------------------------------------------------
 # stills lane
 # ---------------------------------------------------------------------------
 

@@ -158,6 +158,17 @@ posters are dropped. `videoUrl` is `null` when no ladder candidate is usable.
 
 For each clip in the requested catalog slice:
 
+`--ids-file` narrows the slice to an explicit id set *before* `--limit` is
+applied. It accepts a JSON list (`["40169", 38635]`), an object with an `ids`
+list (`{"ids": [...]}`), or newline-separated ids. Every id is compared as
+`str()`, so catalog integer ids and JSON string ids are interchangeable; blank
+or malformed files are refused with the offending path named. Matched rows keep
+the catalog order, unmatched ids become `missing-from-catalog` skip rows in
+`index.json`, and the run prints `ids=X matched=Y missing=Z` before the
+selection header. With `--ids-file`, `--limit 0` means **every filtered row**
+instead of the historical offline no-op; without it, `--limit 0` keeps that
+offline meaning. The flag composes with `--offset`, `--resume`, and `--refresh`.
+
 1. Reject from catalog metadata before any bytes move when
    `durationSeconds > --max-duration-seconds` (default 600) or
    `videoBytes > --max-file-bytes` (default 250 MiB). These become skip rows.
@@ -302,6 +313,13 @@ PYTHONPATH=src python scripts/research_shots.py collect \
   --out-dir research/analysis/shots \
   --limit 25 --offset 0 --acknowledge-rights
 
+# Only the ids in one file; --limit 0 measures every filtered row.
+PYTHONPATH=src python scripts/research_shots.py collect \
+  --catalog research/analysis/shots/catalog.json \
+  --out-dir research/analysis/shots \
+  --ids-file research/analysis/shots/cross-census-ids.json \
+  --limit 0 --resume --acknowledge-rights
+
 # Stills for every remaining clip (resume-safe).
 PYTHONPATH=src python scripts/research_shots.py stills \
   --catalog research/analysis/shots/catalog.json \
@@ -317,7 +335,8 @@ PYTHONPATH=src python scripts/research_shots.py collect \
   --out-dir /tmp/shots-dry --limit 0 --acknowledge-rights
 ```
 
-`collect --limit 0` is a valid offline no-op. `stills --limit 0` is the
+`collect --limit 0` is a valid offline no-op; with `--ids-file` it instead
+means every row in the filtered selection. `stills --limit 0` is the
 opposite by design: it means all remaining clips.
 
 ## Verification

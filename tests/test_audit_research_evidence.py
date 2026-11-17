@@ -210,6 +210,7 @@ class AuditorTests(unittest.TestCase):
         self.root = Path(self._temporary.name)
         (self.root / "demo" / "videos").mkdir(parents=True)
         (self.root / "demo" / "stills").mkdir(parents=True)
+        (self.root / "demo" / "census").mkdir(parents=True)
 
     def tearDown(self) -> None:
         self._temporary.cleanup()
@@ -238,6 +239,46 @@ class AuditorTests(unittest.TestCase):
     def test_clean_tree_exits_zero(self) -> None:
         self.write("videos", "1-demo.json", good_video(1))
         self.write("stills", "2-demo.json", good_still(2))
+        self.assertEqual(self.exit_code(), 0)
+
+    def _census(self, block: object = None) -> dict[str, object]:
+        record: dict[str, object] = {
+            "schemaVersion": "kumiki.demo-census-evidence.v1",
+            "record": {"id": 1, "slug": "demo"},
+            "census": {"durationSeconds": 10.0, "cutCount": 1,
+                       "cutsPerMinute": 6.0, "strobe": False},
+            "acquisition": {"method": "http-download"},
+        }
+        if block is not None:
+            record["identityVerification"] = block
+        return record
+
+    def test_census_identity_block_is_optional(self) -> None:
+        # Older census records predate the tolerance rules: no block, no error.
+        self.write("videos", "1-demo.json", good_video(1))
+        self.write("census", "1-demo.json", self._census())
+        report = run_audit(self.root)
+        self.assertEqual(report["findings"], [])
+        self.assertEqual(
+            report["sites"]["demo"]["recordCounts"],
+            {"video": 1, "still": 0, "unclassified": 0})
+
+    def test_census_unknown_identity_mode_is_an_error(self) -> None:
+        self.write("videos", "1-demo.json", good_video(1))
+        self.write("census", "1-demo.json",
+                   self._census({"kind": "byte-identical"}))
+        report = run_audit(self.root)
+        self.assertIn("identity.unknown-mode", self.rules(report))
+        self.assertEqual(report["summary"]["bySeverity"]["error"], 1)
+
+    def test_census_documented_identity_modes_pass(self) -> None:
+        self.write("videos", "1-demo.json", good_video(1))
+        for index, kind in enumerate(
+                ("strict-sha", "duration+resolution+codec", "forced"), start=1):
+            self.write("census", f"{index}-demo.json",
+                       self._census({"kind": kind}))
+        report = run_audit(self.root)
+        self.assertEqual(report["findings"], [])
         self.assertEqual(self.exit_code(), 0)
 
     def test_bad_window_arithmetic_is_error(self) -> None:
