@@ -812,6 +812,50 @@ def load_items(
     return work, skips
 
 
+def _motion_summary(motion: Any) -> dict[str, Any] | None:
+    """Compact motion-profile fields for a census-index row."""
+    if not isinstance(motion, dict):
+        return None
+    transitions = motion.get("transitions")
+    transitions = transitions if isinstance(transitions, dict) else {}
+    global_motion = motion.get("globalMotion")
+    global_motion = global_motion if isinstance(global_motion, dict) else {}
+    local = motion.get("localMotion")
+    local = local if isinstance(local, dict) else {}
+    overlay = motion.get("overlayActivity")
+    overlay = overlay if isinstance(overlay, dict) else {}
+    return {
+        "transitionCounts": transitions.get("counts"),
+        "transitionRatePerMinute": transitions.get("transitionRatePerMinute"),
+        "medianAbsDxPixelsPerSecond": global_motion.get(
+            "medianAbsDxPixelsPerSecond"),
+        "medianAbsDyPixelsPerSecond": global_motion.get(
+            "medianAbsDyPixelsPerSecond"),
+        "panFraction": global_motion.get("panFraction"),
+        "staticFraction": global_motion.get("staticFraction"),
+        "zoomProxy": global_motion.get("zoomProxy"),
+        "centreShare": local.get("centreShare"),
+        "motionCoverage": local.get("motionCoverage"),
+        "lowerThirdActivity": overlay.get("lowerThirdActivity"),
+        "upperThirdActivity": overlay.get("upperThirdActivity"),
+    }
+
+
+def _transition_summary(motion: Any) -> dict[str, Any] | None:
+    """Transition-only summary for a census-index row."""
+    if not isinstance(motion, dict):
+        return None
+    transitions = motion.get("transitions")
+    if not isinstance(transitions, dict):
+        return None
+    return {
+        "counts": transitions.get("counts"),
+        "transitionRatePerMinute": transitions.get("transitionRatePerMinute"),
+        "classifiedShare": transitions.get("classifiedShare"),
+        "status": transitions.get("status", "measured"),
+    }
+
+
 def run_census_item(
     item: dict[str, Any], *, site: str, options: argparse.Namespace,
 ) -> dict[str, Any]:
@@ -899,6 +943,8 @@ def run_census_item(
         "cutCount": scan["cutCount"],
         "cutsPerMinute": scan["cutsPerMinute"],
         "strobe": scan["strobe"],
+        "motionProfile": _motion_summary(scan.get("motionProfile")),
+        "transitions": _transition_summary(scan.get("motionProfile")),
         "method": method,
         "urlSource": used_source,
         "identityVerification": identity,

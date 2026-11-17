@@ -37,6 +37,11 @@ from __future__ import annotations
 from .census import (
     CENSUS_SCHEMA, build_census_evidence, scan_full_runtime,
 )
+from .motion_profile import (
+    MOTION_PROFILE_LIMITS, MOTION_PROFILE_SCHEMA, TRANSITION_CLASSES,
+    classify_transitions, global_motion, local_motion_distribution,
+    motion_signature, overlay_activity,
+)
 from .media import (
     DEFAULT_TEXT_LIMIT, DIRECT, HLS, IMAGE_SUFFIXES, METHOD_HLS_REMUX,
     METHOD_HTTP_DOWNLOAD, USER_AGENT, VIDEO_SUFFIXES, allowlisted_image_url,
@@ -87,6 +92,10 @@ from .ytdlp import (
 __all__ = [
     # census
     "CENSUS_SCHEMA", "build_census_evidence", "scan_full_runtime",
+    # motion profile
+    "MOTION_PROFILE_LIMITS", "MOTION_PROFILE_SCHEMA", "TRANSITION_CLASSES",
+    "classify_transitions", "global_motion", "local_motion_distribution",
+    "motion_signature", "overlay_activity",
     # editorial
     "EDITORIAL_LIMITS", "FLICKER_OUTLIER_PER_SECOND", "STATIC_RGB_DELTA",
     "derive_editorial",

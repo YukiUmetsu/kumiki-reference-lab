@@ -22,9 +22,10 @@ is one more decode pass — not a new acquisition pipeline.
   then time-weighted, so `decodeCoverageFraction` is exactly `1.0` rather than
   a window fraction.
 
-## The two passes
+## The scan passes
 
-`scan_full_runtime(path, ...)` runs exactly two ffmpeg passes over the file:
+`scan_full_runtime(path, ...)` runs two whole-file ffmpeg passes plus one bounded
+cut-window pass:
 
 1. **Scene candidates.** `select='gt(scene,0.25)',showinfo` over the whole
    file, mapped to the chosen video stream. The `showinfo` timebase and PTS are
@@ -37,6 +38,11 @@ is one more decode pass — not a new acquisition pipeline.
    `meanRgb`, `meanDisplayLumaProxy`, `meanSaturationProxy`,
    `shadowPixelFraction` and `brightPixelFraction` stay comparable with the
    windowed records.
+3. **Transition windows.** For cut candidates only, one `select` pass keeps the
+   merged ±0.4 s neighbourhoods at about 12 fps, scales them to `96×54`
+   (`rgb24`), and writes the raw frames to a temporary file. The scan reads that
+   bounded selected buffer back (about 11 MB per runtime minute), classifies one
+   cut window at a time, and deletes the file with the temporary directory.
 
 `ffprobe` supplies duration, source resolution, frame rate and timebase. It is
 not a decode pass.
@@ -58,7 +64,8 @@ caller) carries:
 | `strobe` | `medianCutGapFrames < 3` or `burstFraction > 0.5` |
 | `series[]` | one row per cadence sample: PTS, seconds, RGB mean, luma/saturation/shadow/bright proxies |
 | `seriesSummary` | time-weighted mean luma and saturation, `sampledSeconds`, `decodeCoverageFraction`, `samples` |
-| `scanSeconds` | wall time of the two passes |
+| `motionProfile` | measured transition, global-motion, local-motion and overlay proxies (see below) |
+| `scanSeconds` | wall time of the passes |
 | `fullRuntimeDecoded` | always `true` |
 
 `build_census_evidence(...)` wraps that block with the neutral source identity,
@@ -68,6 +75,41 @@ writes no files and retains no media.
 
 The census record also carries one top-level `identityVerification` block (see
 below). No other key changes; the rest of the schema is unchanged.
+
+## Motion and transition profile
+
+`census.motionProfile` is additive and comes from
+`acquisition/motion_profile.py`. It is measured, not interpreted:
+
+- `transitions`: every scene candidate is classified into the fixed vocabulary
+  `hard-cut`, `short-dissolve` (<0.25 s graded change), `long-dissolve`
+  (0.25–0.8 s), `fade-through-black` (luma ≤0.10 then recovers),
+  `fade-through-white` (luma ≥0.90 then recovers) or `unknown`. The block
+  reports `counts`, `shares`, `transitionRatePerMinute`, `classifiedShare` and
+  one `cuts[]` row per candidate with its `sourceSeconds`. A fade test runs
+  before the cut/dissolve tests; a hard cut needs one dominant single-frame
+  delta spike.
+- `globalMotion`: phase-correlation translation on the 1 Hz series, using the
+  existing `analyzers/motion/phase.py::measure_image_shift` rather than a
+  reimplementation. It reports median absolute dx/dy in pixels per second,
+  `panFraction` (pairs above 1.0 px/s), `staticFraction` (pairs at or below
+  0.5 px/s) and `zoomProxy` (median edge-density ratio between consecutive
+  frames). Both thresholds and the proxy method are stated in the block.
+- `localMotion`: mean absolute RGB delta per cell of a 3x3 grid, normalized to
+  `cellShares` summing to 1, plus `centreShare`, `motionCoverage` (cells at or
+  above 1/20 of the largest cell) and `dominantCell`.
+- `overlayActivity`: a text/graphic-overlay proxy. A 3x3 Laplacian luma
+  high-pass is taken per frame; the mean absolute frame-to-frame change of that
+  high-pass in the top and bottom thirds is reported as `upperThirdActivity`
+  and `lowerThirdActivity`, saturated at 0.02 luma units.
+- `limits`: denies effect recognition, template detection, camera/rig
+  inference, animation-technique identification and transition ground truth.
+
+The cut-window pass can degrade gracefully: if it cannot be decoded the
+`transitions` block carries `status: "unavailable"` and a bounded `note`, while
+the other three blocks are still measured. `motionProfile` is a proxy
+measurement at a reduced decode scale; it is comparable within this corpus, not
+to source-pixel motion or to a human edit log.
 
 ## Identity is delivery-dependent
 
@@ -282,10 +324,10 @@ record trees stay untracked; only the compressed copy and the plain
 
 ## Cost and non-claims
 
-- **Cost:** one re-download plus one full decode per clip (the two ffmpeg
-  passes share the decoded file; the second pass is the extra decode). A
-  10-minute clip at 160×90 is roughly 600 metric rows. Media is deleted, so
-  storage cost is only the JSON.
+- **Cost:** one re-download plus whole-file scene/appearance decodes per clip
+  and one bounded cut-window decode. A 10-minute clip at 160×90 is roughly 600
+  metric rows; the transition buffer is 96×54 at about 12 fps and is deleted.
+  Media is deleted, so storage cost is only the JSON.
 - **No new acquisition:** the host allowlist, bounded download, probe, store,
   runner and scene filter are the existing engine primitives.
 - **Candidates are not edits.** Fast motion, flashes, transitions and
