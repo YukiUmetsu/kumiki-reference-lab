@@ -236,6 +236,35 @@ The helpers live in `acquisition/reporting.py`:
 `census_columns`, `census_reconciliation`, `census_aggregate`, plus the small
 lookup/formatting helpers the adapters share.
 
+### How identity is reported
+
+Every census section repeats the identity basis of the records behind it, so a
+film-level number is never read without knowing how its media was reacquired.
+
+- One paragraph states the mode breakdown in the census vocabulary:
+  `strict-sha: N, tolerant: N (duration+resolution+codec), forced: N,
+  unrecorded: N`, followed by the delivery split the table uses
+  (`byte`, `remux`, `youtube`, `forced`).
+- One sentence states the policy: byte identity is asserted only for
+  direct-file sources; remuxed and platform-transcoded sources are matched on
+  duration ±0.5 s, resolution and codec family (`identityVerification`).
+- The per-video table gains an `identity` column (`byte`, `remux`, `youtube`,
+  `forced`, `—`). `—` means no identity statement exists for that row: it has
+  no census record, or its census record carries no `identityVerification`
+  block (the latter are the `unrecorded` count above). A mode is never
+  inferred from the URL or the method alone.
+- A `forced` record (identity gate waived) is **excluded** from the census
+  aggregates and from the reconciliation, named in the section with its reason,
+  and listed under `censusIdentity.forced` in `aggregate.json`. The same block
+  carries `counts` (index vocabulary), `modes` (delivery vocabulary),
+  `unrecorded` and `toleranceSeconds: 0.5`.
+
+The census index carries the same statement: `identityCounts: {"strict-sha": n,
+"tolerant": n, "forced": n}` plus each measured row's `identityVerification`.
+`scripts/rebuild_evidence_indexes.py` re-projects the block and recomputes
+`identityCounts` from the records on disk, so a rebuilt index cannot disagree
+with them.
+
 ## Published dataset
 
 The measured census and window records for all six sites are published in

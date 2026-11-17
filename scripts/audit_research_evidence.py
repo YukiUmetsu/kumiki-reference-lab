@@ -1,10 +1,11 @@
 """Offline, schema-agnostic audit of on-disk research evidence records.
 
 The auditor walks site trees under ``--root`` (each a directory containing a
-``videos/`` and/or ``stills/`` folder), detects each record family from its
-``schemaVersion`` string, and checks JSON shape, identity, window arithmetic,
-internal consistency, cross-record duplicates, still quality, and index/tree
-reconciliation. It never downloads anything.
+``videos/``, ``stills/`` and/or ``census/`` folder), detects each record family
+from its ``schemaVersion`` string, and checks JSON shape, identity, window
+arithmetic, internal consistency, cross-record duplicates, still quality, and
+index/tree reconciliation. Census records are checked only for their optional
+``identityVerification`` block. It never downloads anything.
 
 Integrity violations (schema, identity, window arithmetic, consistency,
 histogram, unreadable JSON, unknown schema) are errors. Duplicate media is a
@@ -62,6 +63,13 @@ STILL_TOP_KEYS = (
 DOCUMENTED_PAIR_STATUSES = frozenset({
     "rgb-image-difference-proxy",
     "cut-candidate-between-samples",
+})
+
+# Census records state how the reacquired media's identity was established.
+# Records written before the tolerance rules carry no block at all; that is
+# tolerated. A present block must use one of these kinds.
+DOCUMENTED_IDENTITY_KINDS = frozenset({
+    "strict-sha", "duration+resolution+codec", "forced",
 })
 
 DOCUMENTED_HUE_FAMILIES = frozenset({
@@ -240,6 +248,28 @@ def _check_schema(record: dict[str, Any], rel: str) -> tuple[str | None, list[di
             "schema.missing-identity", "error", rel,
             "missing or blank slug"))
     return family, findings
+
+
+def _check_census_identity(record: dict[str, Any], rel: str) -> list[dict[str, str]]:
+    """Check a census record's ``identityVerification`` block, if it has one.
+
+    The block is optional: records measured before the delivery-dependent
+    tolerance rules carried none, and their absence is not an integrity
+    violation. A block that *is* present must name a documented kind.
+    """
+    block = record.get("identityVerification")
+    if block is None:
+        return []
+    if not isinstance(block, dict):
+        return [_finding(
+            "identity.unknown-mode", "error", rel,
+            f"identityVerification is not an object: {_short(block)}")]
+    kind = block.get("kind")
+    if not isinstance(kind, str) or kind.strip() not in DOCUMENTED_IDENTITY_KINDS:
+        return [_finding(
+            "identity.unknown-mode", "error", rel,
+            f"unrecognised identityVerification.kind {_short(kind)}")]
+    return []
 
 
 def _check_video_identity(record: dict[str, Any], rel: str) -> list[dict[str, str]]:
@@ -733,7 +763,7 @@ def discover_sites(root: Path) -> list[Path]:
 
 def _load_records(site_dir: Path) -> list[dict[str, Any]]:
     records = []
-    for folder in ("videos", "stills"):
+    for folder in ("videos", "stills", "census"):
         directory = site_dir / folder
         if not directory.is_dir():
             continue
@@ -827,6 +857,14 @@ def run_audit(
                 findings.append(_finding(
                     "json.shape", "error", rel, "record root is not an object"))
                 counts["unclassified"] += 1
+                continue
+
+            if entry["folder"] == "census":
+                # Census identity is the only census rule here: the block is
+                # optional (pre-tolerance records) but a present one must use
+                # a documented kind. Census records carry no media bytes, so
+                # they take no part in the duplicate or index checks.
+                findings.extend(_check_census_identity(record, rel))
                 continue
 
             family, schema_findings = _check_schema(record, rel)

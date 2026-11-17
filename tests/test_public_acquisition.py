@@ -1018,6 +1018,201 @@ class ReportingHelperTests(unittest.TestCase):
             aggregate["min"], aggregate["median"], aggregate["max"]))
 
 
+class CensusIdentityReportingTests(unittest.TestCase):
+    def _identity_census(self, *, kind, method, slug, record_id) -> dict:
+        record = self._census(rate=30.0, slug=slug, record_id=record_id)
+        record["acquisition"] = {"method": method, "provider": "example"}
+        record["identityVerification"] = {"kind": kind}
+        return record
+
+    def _census(self, *, rate, slug, record_id, strobe=False,
+                gap=30.0, burst=0.0, count=10) -> dict:
+        return {
+            "schemaVersion": "kumiki.example-census-evidence.v1",
+            "coverage": {"fullFilmDecoded": True,
+                         "decodeCoverageFraction": 1.0},
+            "census": {
+                "cutCount": count,
+                "cutsPerMinute": rate,
+                "medianCutGapFrames": gap,
+                "burstFraction": burst,
+                "strobe": strobe,
+                "seriesSummary": {
+                    "meanDisplayLuma": 0.42,
+                    "meanSaturation": 0.33,
+                    "decodeCoverageFraction": 1.0,
+                    "sampledSeconds": 30.0,
+                },
+                "fullRuntimeDecoded": True,
+            },
+            "record": {"id": record_id, "slug": slug},
+        }
+
+    def test_identity_verification_maps_kind_to_delivery_mode(self) -> None:
+        cases = (
+            ("strict-sha", "http-download", "byte"),
+            ("duration+resolution+codec", "hls-remux", "remux"),
+            ("duration+resolution+codec", "ytdlp-merge", "youtube"),
+            ("duration+resolution+codec", "http-download", "remux"),
+            ("forced", "http-download", "forced"),
+        )
+        for kind, method, mode in cases:
+            record = self._identity_census(
+                kind=kind, method=method, slug="clip", record_id="1")
+            if kind == "forced":
+                record["identityVerification"]["reason"] = "sha mismatch"
+            info = acq.identity_verification(record)
+            self.assertEqual(info["mode"], mode, (kind, method))
+            self.assertEqual(info["kind"], kind)
+        self.assertIsNone(acq.identity_verification({})["mode"])
+        self.assertFalse(acq.identity_verification({})["recorded"])
+        # A tolerant block that already recorded a codec change is YouTube.
+        block = {"kind": "duration+resolution+codec", "codecMatched": False}
+        self.assertEqual(
+            acq.identity_verification({"identityVerification": block})["mode"],
+            "youtube")
+
+    def test_census_identity_counts_every_mode_plus_unrecorded(self) -> None:
+        records = [
+            self._identity_census(kind="strict-sha", method="http-download",
+                                  slug="byte", record_id="1"),
+            self._identity_census(kind="duration+resolution+codec",
+                                  method="hls-remux", slug="remux",
+                                  record_id="2"),
+            self._identity_census(kind="duration+resolution+codec",
+                                  method="ytdlp-merge", slug="youtube",
+                                  record_id="3"),
+            self._census(rate=30.0, slug="older", record_id="4"),
+        ]
+        identity = acq.census_identity(records)
+        self.assertEqual(identity["n"], 4)
+        self.assertEqual(identity["counts"],
+                         {"strict-sha": 1, "tolerant": 2, "forced": 0})
+        self.assertEqual(identity["modes"],
+                         {"byte": 1, "remux": 1, "youtube": 1, "forced": 0})
+        self.assertEqual(identity["unrecorded"], 1)
+        self.assertEqual(identity["forced"], [])
+        self.assertEqual(identity["toleranceSeconds"], 0.5)
+
+        # A video row with no census record is not one of "the records behind
+        # the section", so it must not inflate the unrecorded count.
+        identity = acq.census_identity(
+            records + [{"id": "window-only", "census_present": False}])
+        self.assertEqual(identity["n"], 4)
+        self.assertEqual(identity["unrecorded"], 1)
+
+    def test_annotated_rows_carry_the_identity_column(self) -> None:
+        records = [
+            self._identity_census(kind="strict-sha", method="http-download",
+                                  slug="byte", record_id="1"),
+            self._census(rate=30.0, slug="older", record_id="2"),
+        ]
+        rows = [{"id": "byte", "slug": "byte"}, {"id": "older", "slug": "older"},
+                {"id": "window-only", "slug": "window-only"}]
+        acq.census_annotate_rows(rows, acq.census_lookup(records))
+        self.assertEqual(rows[0]["identity"], "byte")
+        self.assertEqual(rows[0]["identity_kind"], "strict-sha")
+        self.assertFalse(rows[0]["identity_forced"])
+        self.assertTrue(rows[0]["census_present"])
+        # An older census record has no block: the column renders ``—`` but the
+        # row still is a census record.
+        self.assertIsNone(rows[1]["identity"])
+        self.assertIsNone(rows[1]["identity_kind"])
+        self.assertTrue(rows[1]["census_present"])
+        # A window-only row has no census record at all.
+        self.assertIsNone(rows[2]["identity"])
+        self.assertFalse(rows[2]["census_present"])
+        self.assertIn("identity", acq.census_columns(records[0]))
+
+    def test_forced_records_are_excluded_and_named(self) -> None:
+        rows = [
+            {"id": "a", "evidence": "full-film", "strobe": False,
+             "full_cuts_per_min": 10.0, "identity": "byte",
+             "identity_kind": "strict-sha", "identity_forced": False},
+            {"id": "forced-id", "evidence": "full-film", "strobe": False,
+             "full_cuts_per_min": 900.0, "identity": "forced",
+             "identity_kind": "forced", "identity_forced": True,
+             "identity_reason": "duration delta 1.234s exceeds 0.5s"},
+            {"id": "s", "evidence": "full-film", "strobe": True,
+             "full_cuts_per_min": 400.0, "identity": "remux",
+             "identity_kind": "duration+resolution+codec",
+             "identity_forced": False},
+        ]
+        aggregate = acq.census_aggregate(rows)
+        self.assertEqual(aggregate["n"], 1)
+        self.assertEqual(aggregate["max"], 10.0)
+        self.assertEqual(aggregate["max_id"], "a")
+        self.assertEqual(aggregate["strobe_ids"], ["s"])
+        identity = acq.census_identity(rows)
+        self.assertEqual(identity["forcedIds"], ["forced-id"])
+        self.assertEqual(identity["counts"],
+                         {"strict-sha": 1, "tolerant": 1, "forced": 1})
+        self.assertEqual(identity["forced"][0]["reason"],
+                         "duration delta 1.234s exceeds 0.5s")
+        self.assertEqual(identity["forced"][0]["fullCutsPerMinute"], 900.0)
+
+        # Reconciliation drops a forced record for the same reason.
+        reconcile_rows = [{
+            "id": "forced-id", "sampledCutCandidatesPerMinute": 40.0,
+            "identity": "forced", "identity_kind": "forced",
+            "identity_forced": True,
+        }]
+        lookup = acq.census_lookup([self._identity_census(
+            kind="forced", method="http-download", slug="forced-id",
+            record_id="forced-id")])
+        reconciliation = acq.census_reconciliation(reconcile_rows, lookup)
+        self.assertEqual(reconciliation["n"], 0)
+        self.assertEqual(reconciliation["skipped_forced"], 1)
+
+    def test_census_section_states_the_identity_breakdown(self) -> None:
+        rows = [
+            {"id": "a", "evidence": "full-film", "strobe": False,
+             "full_cuts_per_min": 10.0, "identity": "byte",
+             "identity_kind": "strict-sha", "identity_forced": False},
+            {"id": "b", "evidence": "full-film", "strobe": False,
+             "full_cuts_per_min": 20.0, "identity": "youtube",
+             "identity_kind": "duration+resolution+codec",
+             "identity_forced": False},
+            {"id": "forced-id", "evidence": "full-film", "strobe": False,
+             "full_cuts_per_min": 900.0, "identity": "forced",
+             "identity_kind": "forced", "identity_forced": True,
+             "identity_reason": "codec family changed"},
+        ]
+        text = "\n".join(acq.census_section_lines(
+            acq.census_aggregate(rows), {}, coverage_n=3, coverage_m=5,
+            site="Example", identity=acq.census_identity(rows)))
+        self.assertIn(
+            "strict-sha: 1, tolerant: 1 (duration+resolution+codec), "
+            "forced: 1, unrecorded: 0", text)
+        self.assertIn("byte 1, remux 0, youtube 1, forced 1", text)
+        self.assertIn(
+            "Byte identity is asserted only for direct-file sources", text)
+        self.assertIn("±0.5 s", text)
+        self.assertIn("resolution and codec family", text)
+        self.assertIn("`forced-id` (codec family changed)", text)
+        self.assertIn("Excluded from every census aggregate", text)
+
+    def test_census_section_makes_no_identity_claim_without_a_block(self) -> None:
+        aggregate = {
+            "n": 1, "min": 5.0, "p10": 5.0, "median": 5.0, "p90": 5.0,
+            "max": 5.0, "min_id": "a", "max_id": "a",
+            "strobe_count": 0, "strobe_ids": [], "strobe": {},
+            "n_all": 1,
+        }
+        text = "\n".join(acq.census_section_lines(
+            aggregate, {}, coverage_n=1, coverage_m=1, site="Example"))
+        self.assertNotIn("Byte identity is asserted", text)
+        self.assertNotIn("Reacquired-media identity", text)
+
+        # Records that carry no block are counted as unrecorded, not guessed.
+        text = "\n".join(acq.census_section_lines(
+            aggregate, {}, coverage_n=2, coverage_m=2, site="Example",
+            identity=acq.census_identity([{}, {}])))
+        self.assertIn("strict-sha: 0, tolerant: 0 (duration+resolution+codec), "
+                      "forced: 0, unrecorded: 2", text)
+        self.assertNotIn("Excluded from every census aggregate", text)
+
+
 class ProbeAdapterTests(unittest.TestCase):
     def test_metadata_reduction_reports_duration_dimensions_and_size(self) -> None:
         metadata = acq.metadata_from_probe({

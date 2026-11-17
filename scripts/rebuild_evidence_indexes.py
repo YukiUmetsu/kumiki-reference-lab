@@ -13,7 +13,9 @@ What is rebuilt
 - ``<site>/index.json`` from ``<site>/videos/*.json``
 - ``<site>/stills-index.json`` from ``<site>/stills/*.json``
 - ``<site>/census-index.json`` from ``<site>/census/*.json`` (the row shape is
-  the projection written by ``scripts/census_video_cuts.py``)
+  the projection written by ``scripts/census_video_cuts.py``, including the
+  record's ``identityVerification`` block and the recomputed
+  ``identityCounts: {"strict-sha": n, "tolerant": n, "forced": n}``)
 
 Rows are ordered by record file name. That is the order a resumed lane uses for
 its retained rows, and it makes two rebuilds byte-identical.
@@ -23,9 +25,10 @@ Preserved, not invented
 ``skips``, ``failures`` and every header field (including ``generatedAt``,
 ``catalogSha256`` and the run budgets) are carried over from the existing
 index: they describe attempts that left no record on disk and cannot be
-recomputed offline. Only ``records`` and ``counts`` are re-derived. If an index
-does not exist yet, ``generatedAt`` is the newest record timestamp (or the Unix
-epoch for an empty tree) so the output stays deterministic.
+recomputed offline. Only ``records``, ``counts`` and the census
+``identityCounts`` header are re-derived. If an index does not exist yet,
+``generatedAt`` is the newest record timestamp (or the Unix epoch for an empty
+tree) so the output stays deterministic.
 
 Usage::
 
@@ -71,6 +74,39 @@ class IndexSpec:
     index_name: str
     schema: Callable[[Any], str]
     summary: Callable[[Any, dict[str, Any], Path], dict[str, Any]]
+    extras: Callable[[list[dict[str, Any]]], dict[str, Any]] | None = None
+
+
+# Identity count keys, exactly the vocabulary ``census_video_cuts.py`` writes
+# into ``census-index.json`` and prints in its run summary.
+IDENTITY_COUNT_KEYS = ("strict-sha", "tolerant", "forced")
+
+
+def _identity_count_key(block: Any) -> str | None:
+    """Mirror ``census_video_cuts._identity_count_key``."""
+    kind = block.get("kind") if isinstance(block, dict) else None
+    if kind == "strict-sha":
+        return "strict-sha"
+    if kind == "forced":
+        return "forced"
+    if isinstance(kind, str) and kind.strip():
+        return "tolerant"
+    return None
+
+
+def identity_counts(rows: list[dict[str, Any]]) -> dict[str, int]:
+    """Mirror ``census_video_cuts.identity_counts`` over projected rows.
+
+    A record with no ``identityVerification`` block contributes to no bucket, so
+    the three counts may sum to less than ``counts.measured`` — the same shape
+    the census driver writes.
+    """
+    counts = {key: 0 for key in IDENTITY_COUNT_KEYS}
+    for row in rows:
+        key = _identity_count_key(row.get("identityVerification"))
+        if key is not None:
+            counts[key] += 1
+    return counts
 
 
 def _census_spec(site: str) -> IndexSpec:
@@ -93,12 +129,16 @@ def _census_spec(site: str) -> IndexSpec:
         }
         if "urlSource" in source:
             row["urlSource"] = source["urlSource"]
+        identity = record.get("identityVerification")
+        if isinstance(identity, dict):
+            row["identityVerification"] = identity
         return row
 
     return IndexSpec(
         folder="census", index_name="census-index.json",
         schema=lambda module: f"kumiki.{site}-census-index.v1",
-        summary=summary)
+        summary=summary,
+        extras=lambda records: {"identityCounts": identity_counts(records)})
 
 
 def specs_for_site(site: str, module: Any) -> list[IndexSpec]:
@@ -236,6 +276,8 @@ def rebuild_index(
               else spec.schema(module))
     extra = {key: value for key, value in (existing or {}).items()
              if key not in _RESERVED}
+    if spec.extras is not None:
+        extra.update(spec.extras(records))
 
     payload = module.build_index(
         schema_version=schema, records=records, skips=skips,

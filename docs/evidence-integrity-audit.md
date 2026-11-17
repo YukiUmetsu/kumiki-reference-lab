@@ -2,7 +2,7 @@
 
 `scripts/audit_research_evidence.py` is an offline, standard-library-only audit
 of the on-disk research records under `research/analysis/`. It walks each site
-tree (`videos/` and `stills/`), detects the record family from its
+tree (`videos/`, `stills/` and `census/`), detects the record family from its
 `schemaVersion`, and validates the evidence without downloading anything.
 
 ```sh
@@ -15,7 +15,7 @@ python scripts/audit_research_evidence.py --root research/analysis \
 | Family | Examples | Default severity |
 | --- | --- | --- |
 | Schema | `schema.missing`, `schema.unknown`, `schema.missing-keys`, `schema.missing-identity` | error |
-| Identity | `identity.source-sha256`, `identity.duration`, `identity.resolution`, `identity.media-retained`, `identity.media-path`, `identity.image-retained` | error |
+| Identity | `identity.source-sha256`, `identity.duration`, `identity.resolution`, `identity.media-retained`, `identity.media-path`, `identity.image-retained`, `identity.unknown-mode` | error |
 | Window arithmetic | `arithmetic.window-luma`, `arithmetic.window-delta`, `arithmetic.window-span`, `arithmetic.record-summary`, `arithmetic.coverage-fraction` | error |
 | Consistency | `consistency.window-bounds`, `consistency.window-overlap`, `consistency.cut-pts-bounds`, `consistency.appearance-range`, `consistency.pair-status` | error |
 | Still quality | `still.histogram-shape`, `still.histogram-sum`, `still.metric-range`, `still.hue-family`, `still.image-bytes-range` | error |
@@ -25,6 +25,11 @@ python scripts/audit_research_evidence.py --root research/analysis \
 
 Errors are integrity violations of a single record or of the tree. Warnings are
 conditions that need review but cannot be resolved by editing one record.
+
+Census records are checked only for their `identityVerification` block: a
+missing block is tolerated (records written before the delivery-dependent
+tolerance rules), but a present block whose `kind` is not `strict-sha`,
+`duration+resolution+codec` or `forced` is flagged as `identity.unknown-mode`.
 
 ## Duplicate media policy
 

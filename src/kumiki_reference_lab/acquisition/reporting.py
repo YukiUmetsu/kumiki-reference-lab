@@ -33,13 +33,15 @@ from .probe import as_int, as_text, finite_float
 from .windows import cut_validity
 
 __all__ = [
+    "IDENTITY_COUNT_KEYS", "IDENTITY_MODES", "IDENTITY_TOLERANCE_SECONDS",
     "RANKABILITY_FLAGS", "aggregate_extremes", "census_aggregate",
     "census_annotate_rows", "census_columns", "census_context_lines",
-    "census_delta_text", "census_for", "census_lookup",
+    "census_delta_text", "census_for", "census_identity", "census_lookup",
     "census_reconciliation", "census_section_lines", "comparability_block",
     "coverage_distribution", "cut_columns", "duplicate_summary",
     "editorial_aggregate", "editorial_columns", "editorial_section_lines",
-    "still_decode_counts", "still_decode_dimensions", "unique_media_rows",
+    "identity_verification", "still_decode_counts", "still_decode_dimensions",
+    "unique_media_rows",
 ]
 
 # Flags that say the candidate count is not measuring edits. A row carrying any
@@ -588,6 +590,153 @@ _CENSUS_ID_KEYS = ("id", "slug", "clipId", "nid", "postId", "projectId")
 _OVER_25 = 0.25
 _RANK_CHANGE_THRESHOLD = 5
 
+# Reacquired-media identity, as recorded by ``scripts/census_video_cuts.py`` in
+# every census record's top-level ``identityVerification`` block. The census
+# driver writes ``kind`` from this vocabulary: ``strict-sha`` (byte identity),
+# ``duration+resolution+codec`` (content identity for a remuxed or
+# platform-transcoded delivery) and ``forced`` (the identity gate was waived).
+IDENTITY_STRICT = "strict-sha"
+IDENTITY_TOLERANT = "duration+resolution+codec"
+IDENTITY_FORCED = "forced"
+IDENTITY_KINDS = (IDENTITY_STRICT, IDENTITY_TOLERANT, IDENTITY_FORCED)
+# Count keys are the ones the census index writes, so the report, the index and
+# the driver summary never drift into a second vocabulary.
+IDENTITY_COUNT_KEYS = ("strict-sha", "tolerant", "forced")
+# Report-facing delivery modes (the ``identity`` table column).
+IDENTITY_MODES = ("byte", "remux", "youtube", "forced")
+# A remux moves segment/mux boundaries; half a second absorbs that without
+# admitting a different edit.
+IDENTITY_TOLERANCE_SECONDS = 0.5
+# Method/provider vocabulary that denotes a platform-transcoded rendition whose
+# codec family may differ between two downloads.
+_IDENTITY_YOUTUBE_HINTS = ("ytdlp", "youtube")
+
+
+def identity_verification(record: Mapping[str, Any]) -> dict[str, Any]:
+    """Normalise one census record's reacquired-media identity statement.
+
+    Reads the top-level ``identityVerification`` block and maps its recorded
+    ``kind`` onto the report-facing delivery mode:
+
+    ``strict-sha``
+        ``byte`` — direct-file delivery, byte identity asserted.
+    ``duration+resolution+codec``
+        ``remux`` for a remuxed manifest, ``youtube`` when the acquisition
+        method/provider is a platform transcoder (yt-dlp/YouTube) or the
+        block already records ``codecMatched: false``.
+    ``forced``
+        ``forced`` — measured with the identity gate waived.
+
+    A record with no block (written before the tolerance rules) yields
+    ``kind: None`` and ``mode: None`` so callers render ``—`` rather than
+    inventing an identity claim.
+    """
+    record = _mapping(record)
+    block = _mapping(record.get("identityVerification"))
+    kind = as_text(block.get("kind"))
+    acquisition = _mapping(record.get("acquisition"))
+    method = (as_text(acquisition.get("method")) or "").lower()
+    provider = (as_text(acquisition.get("provider")) or "").lower()
+
+    mode: str | None = None
+    if kind == IDENTITY_STRICT:
+        mode = "byte"
+    elif kind == IDENTITY_FORCED:
+        mode = "forced"
+    elif kind is not None:
+        platform = block.get("codecMatched") is False or any(
+            hint in method or hint == provider for hint in _IDENTITY_YOUTUBE_HINTS)
+        mode = "youtube" if platform else "remux"
+    return {
+        "kind": kind,
+        "mode": mode,
+        "recorded": kind is not None,
+        "forced": kind == IDENTITY_FORCED,
+        "reason": as_text(block.get("reason")),
+        "toleranceSeconds": IDENTITY_TOLERANCE_SECONDS,
+    }
+
+
+def _identity_for(entry: Mapping[str, Any]) -> dict[str, Any]:
+    """Identity info for a census record or an already-annotated report row."""
+    if isinstance(entry, Mapping) and "identity_kind" in entry:
+        kind = as_text(entry.get("identity_kind"))
+        mode = as_text(entry.get("identity"))
+        return {
+            "kind": kind,
+            "mode": mode,
+            "recorded": kind is not None,
+            "forced": (entry.get("identity_forced") is True
+                       or mode == "forced"),
+            "reason": as_text(entry.get("identity_reason")),
+            "toleranceSeconds": IDENTITY_TOLERANCE_SECONDS,
+        }
+    return identity_verification(entry)
+
+
+def _census_identity_id(entry: Mapping[str, Any], fallback: int) -> str:
+    """Record id for a raw census record (id lives under ``record``) or a row."""
+    inner = _mapping(entry.get("record"))
+    for candidate in (inner.get("id"), inner.get("slug"),
+                      entry.get("id"), entry.get("slug")):
+        text = as_text(candidate)
+        if text is not None:
+            return text
+    return _record_id(entry, fallback)
+
+
+def census_identity(records: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
+    """Count the records behind a census section by identity mode.
+
+    ``counts`` uses the census index vocabulary (``strict-sha``, ``tolerant``,
+    ``forced``); ``unrecorded`` counts census records with no identity block at
+    all, so ``sum(counts) + unrecorded`` is the number of census records. An
+    annotated report row whose ``census_present`` is false is not a census
+    record and is skipped. Every ``forced`` record is named by id (with its
+    reason and rate when the caller passed an annotated row) because it must
+    stay out of the aggregates.
+    """
+    counts = {key: 0 for key in IDENTITY_COUNT_KEYS}
+    modes = {mode: 0 for mode in IDENTITY_MODES}
+    forced: list[dict[str, Any]] = []
+    unrecorded = 0
+    n = 0
+    for index, entry in enumerate(records or []):
+        if not isinstance(entry, Mapping):
+            continue
+        if entry.get("census_present") is False:
+            continue
+        n += 1
+        info = _identity_for(entry)
+        if info["kind"] is None:
+            unrecorded += 1
+            continue
+        if info["kind"] == IDENTITY_STRICT:
+            counts["strict-sha"] += 1
+        elif info["kind"] == IDENTITY_FORCED:
+            counts["forced"] += 1
+        else:
+            counts["tolerant"] += 1
+        mode = info["mode"]
+        if mode in modes:
+            modes[mode] += 1
+        if info["forced"]:
+            forced.append({
+                "id": _census_identity_id(entry, index),
+                "reason": info["reason"],
+                "fullCutsPerMinute": finite_float(entry.get("full_cuts_per_min")),
+            })
+    forced.sort(key=lambda item: item["id"])
+    return {
+        "n": n,
+        "counts": counts,
+        "modes": modes,
+        "unrecorded": unrecorded,
+        "forced": forced,
+        "forcedIds": [item["id"] for item in forced],
+        "toleranceSeconds": IDENTITY_TOLERANCE_SECONDS,
+    }
+
 
 def census_columns(record: Mapping[str, Any]) -> dict[str, Any]:
     """Report columns for one full-runtime census record.
@@ -606,6 +755,7 @@ def census_columns(record: Mapping[str, Any]) -> dict[str, Any]:
     decoded = finite_float(coverage.get("decodeCoverageFraction"))
     if decoded is None:
         decoded = finite_float(summary.get("decodeCoverageFraction"))
+    identity = identity_verification(record)
     return {
         "full_cut_count": as_int(scan.get("cutCount")),
         "full_cuts_per_min": finite_float(scan.get("cutsPerMinute")),
@@ -615,6 +765,11 @@ def census_columns(record: Mapping[str, Any]) -> dict[str, Any]:
         "mean_luma": finite_float(summary.get("meanDisplayLuma")),
         "mean_saturation": finite_float(summary.get("meanSaturation")),
         "decoded_fraction": decoded,
+        "identity": identity["mode"],
+        "identity_kind": identity["kind"],
+        "identity_forced": identity["forced"],
+        "identity_reason": identity["reason"],
+        "census_present": True,
         "evidence": "full-film",
     }
 
@@ -697,7 +852,10 @@ def census_annotate_rows(
     """Add ``fullCutsPerMinute`` and ``fullVsWindow`` to per-video rows.
 
     Rows without a census record keep explicit ``None``/``—`` values, so a
-    report never implies film-level evidence it does not have.
+    report never implies film-level evidence it does not have. The reacquired
+    media identity travels with them as ``identity`` (the delivery mode shown
+    in the ``identity`` column), ``identity_kind`` (the recorded vocabulary)
+    and ``identity_forced`` (true when the identity gate was waived).
     """
     for row in rows:
         if not isinstance(row, dict):
@@ -707,6 +865,11 @@ def census_annotate_rows(
             row["fullCutsPerMinute"] = None
             row["fullVsWindow"] = "—"
             row.update({
+                "identity": None,
+                "identity_kind": None,
+                "identity_forced": False,
+                "identity_reason": None,
+                "census_present": False,
                 "editorial_present": False,
                 "shot_count": None,
                 "median_shot_s": None,
@@ -739,8 +902,13 @@ def census_reconciliation(
     pairs: list[dict[str, Any]] = []
     seen: set[str] = set()
     skipped_zero = 0
+    skipped_forced = 0
     for index, row in enumerate(window_rows or []):
         if not isinstance(row, Mapping):
+            continue
+        if _identity_for(row)["forced"]:
+            # A forced measurement must not move a film-level comparison.
+            skipped_forced += 1
             continue
         census = census_for(row, census_by_id)
         if census is None:
@@ -805,6 +973,7 @@ def census_reconciliation(
     return {
         "n": len(pairs),
         "skipped_zero_full_rate": skipped_zero,
+        "skipped_forced": skipped_forced,
         "median_abs_relative_error": _round(
             statistics.median(abs_errors) if abs_errors else None),
         "p90_abs_relative_error": _round(_percentile(abs_errors, 0.90)),
@@ -848,12 +1017,19 @@ def census_aggregate(rows: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
     :func:`census_columns`, where the key is present) enter the aggregate. The
     main range is computed over non-strobe records only; strobe records get
     their own block and are cited by id.
+
+    A row whose reacquired media identity was ``forced`` (the identity gate
+    was waived) is excluded from **both** ranges: a measurement of media whose
+    identity was not established must not move a film-level number.
+    :func:`census_identity` names those records for the report.
     """
     plain: list[tuple[str, float]] = []
     strobe: list[tuple[str, float]] = []
     strobe_rows: list[dict[str, Any]] = []
-    for index, row in enumerate(rows or []):
-        if not isinstance(row, Mapping):
+    row_list = [row for row in (rows or []) if isinstance(row, Mapping)]
+    for index, row in enumerate(row_list):
+        info = _identity_for(row)
+        if info["forced"]:
             continue
         if row.get("evidence") not in (None, "full-film"):
             continue
@@ -866,6 +1042,7 @@ def census_aggregate(rows: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
             strobe_rows.append({
                 "id": identifier,
                 "full_cuts_per_min": _round(rate),
+                "identity": info["mode"],
                 "median_gap_frames": finite_float(row.get("median_gap_frames")),
                 "burst_fraction": finite_float(row.get("burst_fraction")),
             })
@@ -1119,6 +1296,48 @@ def _fmt_id(value: object) -> str:
     return text if text is not None else "—"
 
 
+def _census_identity_lines(identity: Mapping[str, Any]) -> list[str]:
+    """Render the identity-mode breakdown and the forced exclusions."""
+    counts = _mapping(identity.get("counts"))
+    modes = _mapping(identity.get("modes"))
+    unrecorded = as_int(identity.get("unrecorded")) or 0
+    tolerance = finite_float(identity.get("toleranceSeconds"))
+    tolerance = (IDENTITY_TOLERANCE_SECONDS if tolerance is None else tolerance)
+    counted = {
+        key: as_int(counts.get(key)) or 0 for key in IDENTITY_COUNT_KEYS}
+    mode_counts = {key: as_int(modes.get(key)) or 0 for key in IDENTITY_MODES}
+    lines = [
+        "Reacquired-media identity, per delivery mode: "
+        f"strict-sha: {counted['strict-sha']}, "
+        f"tolerant: {counted['tolerant']} (duration+resolution+codec), "
+        f"forced: {counted['forced']}, unrecorded: {unrecorded}. "
+        "Byte identity is asserted only for direct-file sources; remuxed and "
+        f"platform-transcoded sources are matched on duration ±{tolerance:g} s, "
+        "resolution and codec family.",
+        "",
+        "By delivery, the same records read: "
+        f"byte {mode_counts['byte']}, remux {mode_counts['remux']}, "
+        f"youtube {mode_counts['youtube']}, forced {mode_counts['forced']}. "
+        "A row whose census record carries no `identityVerification` block is "
+        "counted as `unrecorded`; a row with no census record at all also "
+        "shows `—` in the `identity` column.",
+        "",
+    ]
+    forced = identity.get("forced") or []
+    if forced:
+        names = []
+        for entry in forced:
+            entry = _mapping(entry)
+            reason = as_text(entry.get("reason"))
+            label = f"`{_fmt_id(entry.get('id'))}`"
+            names.append(f"{label} ({reason})" if reason else label)
+        lines.append(
+            "Excluded from every census aggregate below because identity was "
+            "not established (`forced`): " + ", ".join(names) + ".")
+        lines.append("")
+    return lines
+
+
 def census_context_lines(
     context: Mapping[str, Any], *, site: str, digits: int = 2,
 ) -> list[str]:
@@ -1137,7 +1356,8 @@ def census_context_lines(
         coverage_m=as_int(coverage.get("videoRecords")) or 0,
         site=site,
         decode_fraction=finite_float(coverage.get("decodeFraction")),
-        index_counts=index_counts, digits=digits)
+        index_counts=index_counts, digits=digits,
+        identity=_mapping(context.get("censusIdentity")))
     lines.extend(editorial_section_lines(
         _mapping(context.get("editorial")), site=site, digits=digits))
     return lines
@@ -1149,6 +1369,7 @@ def census_section_lines(
     *, coverage_n: int, coverage_m: int, site: str,
     decode_fraction: float | None = 1.0,
     index_counts: tuple[int, int] | None = None,
+    identity: Mapping[str, Any] | None = None,
     digits: int = 2,
 ) -> list[str]:
     """Markdown lines for the two census sections every adapter report renders.
@@ -1158,6 +1379,9 @@ def census_section_lines(
     the helper still emits both headings and an explicit ``census: not
     present`` line, so a window-only report degrades visibly rather than
     silently.
+
+    ``identity`` is the block from :func:`census_identity`; absent entries mean
+    the tree carries no identity statement and no identity claim is rendered.
     """
     lines: list[str] = []
     if not coverage_n:
@@ -1199,6 +1423,9 @@ def census_section_lines(
         "rate**, so strobe records are excluded from the range below and "
         "reported separately.")
     lines.append("")
+    identity = _mapping(identity) or _mapping(aggregate.get("censusIdentity"))
+    if identity:
+        lines.extend(_census_identity_lines(identity))
     lines.append("| statistic | full_cuts_per_min (non-strobe) |")
     lines.append("| --- | --- |")
     for label in ("n", "min", "p10", "median", "p90", "max"):
@@ -1207,13 +1434,16 @@ def census_section_lines(
         lines.append(f"| {label} | {rendered} |")
     lines.append("")
     if aggregate.get("n"):
+        forced_note = (
+            " `forced` records are excluded as well."
+            if identity.get("forcedIds") else "")
         lines.append(
             "Range endpoints: min "
             f"{_fmt(aggregate.get('min'), digits)} "
             f"(`{aggregate.get('min_id')}`), max "
             f"{_fmt(aggregate.get('max'), digits)} "
             f"(`{aggregate.get('max_id')}`); n counts non-strobe records "
-            "only.")
+            "only." + forced_note)
         lines.append("")
     strobe = aggregate.get("strobe") or {}
     if aggregate.get("strobe_count"):
@@ -1248,7 +1478,9 @@ def census_section_lines(
     lines.append(
         f"- comparable records: {reconciliation.get('n', 0)}; "
         f"skipped for a zero full-film rate: "
-        f"{reconciliation.get('skipped_zero_full_rate', 0)}")
+        f"{reconciliation.get('skipped_zero_full_rate', 0)}; "
+        "skipped as `forced` (identity not established): "
+        f"{reconciliation.get('skipped_forced', 0)}")
     lines.append(
         "- median |relative error|: "
         f"{_fmt(reconciliation.get('median_abs_relative_error'), 3)}; "
