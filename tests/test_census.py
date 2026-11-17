@@ -297,6 +297,7 @@ class _Options:
             "max_duration_seconds": 600.0, "ffmpeg": "ffmpeg",
             "ffprobe": "ffprobe", "yt_dlp": "yt-dlp",
             "sample_seconds": 1.0, "timeout_seconds": 60.0,
+            "strict_identity": False, "allow_media_change": False,
         }
         values.update(overrides)
         self.__dict__.update(values)
@@ -307,10 +308,38 @@ def _item(root: Path, *, sha: str | None = "a" * 64) -> dict:
         "id": "123", "slug": "clip", "recordPath": "promonews/videos/123-clip.json",
         "videoUrl": "https://www.youtube.com/watch?v=abcdefghijk",
         "storedProvider": "youtube", "delivery": "youtube",
+        "storedMethod": "ytdlp-merge",
         "mediaSha256": sha, "hosts": ("youtube.com",),
+        "durationSeconds": 2.0, "resolution": [1280, 720],
+        "container": "mov,mp4,m4a,3gp,3g2,mj2", "videoCodec": "h264",
         "allowQuery": False,
         "outputPath": root / "promonews" / "census" / "123-clip.json",
     }
+
+
+def _hls_item(root: Path, *, sha: str | None = "a" * 64) -> dict:
+    item = _item(root, sha=sha)
+    item.update({
+        "recordPath": "aicp/videos/123-clip.json",
+        "videoUrl": "https://player.vimeo.com/external/1.m3u8?s=x",
+        "storedProvider": "hls", "delivery": "hls",
+        "storedMethod": "ffmpeg-hls-copy",
+        "hosts": ("player.vimeo.com", ".vimeocdn.com"),
+        "allowQuery": True,
+        "durationSeconds": 111.04, "resolution": [1280, 720],
+        "outputPath": root / "aicp" / "census" / "123-clip.json",
+    })
+    return item
+
+
+def _observed(**overrides) -> dict:
+    payload = {
+        "mediaSha256": "b" * 64, "durationSeconds": 111.2,
+        "resolution": [1280, 720],
+        "container": "mov,mp4,m4a,3gp,3g2,mj2", "videoCodec": "h264",
+    }
+    payload.update(overrides)
+    return payload
 
 
 def _fake_download(created: list[Path]):
@@ -387,6 +416,232 @@ class ScriptLifecycleTests(unittest.TestCase):
                     census_script.run_census_item(
                         _item(root), site="promonews", options=_Options(root))
             self.assertFalse(created[0].exists())
+
+
+class IdentityVerificationTests(unittest.TestCase):
+    def test_tolerant_hls_accepts_duration_equal_remux_with_different_sha(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            created: list[Path] = []
+            with patch.object(census_script, "resolve_hls_base",
+                              side_effect=lambda url, **kwargs: url), \
+                 patch.object(census_script, "download_media",
+                              side_effect=_fake_download(created)), \
+                 patch.object(census_script, "source_metadata",
+                              return_value=_observed()), \
+                 patch.object(census_script, "scan_full_runtime",
+                              return_value=_scan_payload()) as scan:
+                row = census_script.run_census_item(
+                    _hls_item(root), site="aicp", options=_Options(root))
+            scan.assert_called_once()
+            identity = row["identityVerification"]
+            self.assertEqual(identity["kind"], "duration+resolution+codec")
+            self.assertFalse(identity["shaMatched"])
+            self.assertAlmostEqual(identity["durationDeltaSeconds"], 0.16,
+                                   places=6)
+            self.assertTrue(identity["resolutionMatched"])
+            self.assertTrue(identity["containerMatched"])
+            self.assertTrue(identity["codecMatched"])
+            evidence = json.loads(
+                (root / "aicp" / "census" / "123-clip.json").read_text(
+                    encoding="utf-8"))
+            self.assertEqual(evidence["identityVerification"], identity)
+            self.assertFalse(created[0].exists())
+
+    def test_tolerant_hls_rejects_duration_outside_half_second(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            created: list[Path] = []
+            with patch.object(census_script, "resolve_hls_base",
+                              side_effect=lambda url, **kwargs: url), \
+                 patch.object(census_script, "download_media",
+                              side_effect=_fake_download(created)), \
+                 patch.object(census_script, "source_metadata",
+                              return_value=_observed(durationSeconds=112.0)), \
+                 patch.object(census_script, "scan_full_runtime") as scan:
+                with self.assertRaises(census_script.MediaChanged) as raised:
+                    census_script.run_census_item(
+                        _hls_item(root), site="aicp", options=_Options(root))
+            scan.assert_not_called()
+            self.assertIn("duration delta", raised.exception.detail)
+            self.assertFalse(created[0].exists())
+            self.assertFalse(
+                (root / "aicp" / "census" / "123-clip.json").exists())
+
+    def test_strict_identity_forces_sha_for_remux(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with patch.object(census_script, "resolve_hls_base",
+                              side_effect=lambda url, **kwargs: url), \
+                 patch.object(census_script, "download_media",
+                              side_effect=_fake_download([])), \
+                 patch.object(census_script, "source_metadata",
+                              return_value=_observed()), \
+                 patch.object(census_script, "scan_full_runtime") as scan:
+                with self.assertRaises(census_script.MediaChanged):
+                    census_script.run_census_item(
+                        _hls_item(root), site="aicp",
+                        options=_Options(root, strict_identity=True))
+            scan.assert_not_called()
+
+    def test_allow_media_change_measures_and_marks_forced(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with patch.object(census_script, "resolve_hls_base",
+                              side_effect=lambda url, **kwargs: url), \
+                 patch.object(census_script, "download_media",
+                              side_effect=_fake_download([])), \
+                 patch.object(census_script, "source_metadata",
+                              return_value=_observed(durationSeconds=150.0)), \
+                 patch.object(census_script, "scan_full_runtime",
+                              return_value=_scan_payload()) as scan:
+                row = census_script.run_census_item(
+                    _hls_item(root), site="aicp",
+                    options=_Options(root, allow_media_change=True))
+            scan.assert_called_once()
+            identity = row["identityVerification"]
+            self.assertEqual(identity["kind"], "forced")
+            self.assertFalse(identity["shaMatched"])
+            self.assertIn("duration delta", identity["reason"])
+            evidence = json.loads(
+                (root / "aicp" / "census" / "123-clip.json").read_text(
+                    encoding="utf-8"))
+            self.assertEqual(evidence["identityVerification"]["kind"], "forced")
+
+    def test_direct_mp4_sha_mismatch_still_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            item = _item(root)
+            item.update({
+                "recordPath": "shots/videos/123-clip.json",
+                "videoUrl": "https://cdn.test/clip.mp4",
+                "storedProvider": "direct-mp4", "delivery": "direct",
+                "storedMethod": "http-download",
+                "hosts": ("cdn.test",), "allowQuery": True,
+                "durationSeconds": 2.0, "resolution": [1280, 720],
+                "outputPath": root / "shots" / "census" / "123-clip.json",
+            })
+            with patch.object(census_script, "download_media",
+                              side_effect=_fake_download([])), \
+                 patch.object(census_script, "source_metadata",
+                              return_value=_observed(durationSeconds=2.0)), \
+                 patch.object(census_script, "scan_full_runtime") as scan:
+                with self.assertRaises(census_script.MediaChanged) as raised:
+                    census_script.run_census_item(
+                        item, site="shots", options=_Options(root))
+            scan.assert_not_called()
+            self.assertIn("sha256", raised.exception.detail)
+
+    def test_youtube_codec_change_is_tolerated(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with patch.object(census_script, "download_media",
+                              side_effect=_fake_download([])), \
+                 patch.object(census_script, "source_metadata",
+                              return_value=_observed(
+                                  durationSeconds=2.0, videoCodec="vp9",
+                                  resolution=[1280, 720])), \
+                 patch.object(census_script, "scan_full_runtime",
+                              return_value=_scan_payload()):
+                row = census_script.run_census_item(
+                    _item(root), site="promonews", options=_Options(root))
+            identity = row["identityVerification"]
+            self.assertEqual(identity["kind"], "duration+resolution+codec")
+            self.assertTrue(identity["resolutionMatched"])
+            self.assertFalse(identity["codecMatched"])
+            self.assertFalse(identity["shaMatched"])
+
+    def test_media_changed_index_row_carries_specific_detail(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            videos = root / "aicp" / "videos"
+            videos.mkdir(parents=True)
+            (videos / "749498-clip.json").write_text(json.dumps({
+                "id": "749498", "slug": "clip", "provider": "hls",
+                "source": {
+                    "mediaSha256": "a" * 64, "durationSeconds": 111.04,
+                    "resolution": [1280, 720],
+                    "container": "mov,mp4,m4a,3gp,3g2,mj2",
+                    "videoCodec": "h264",
+                },
+                "acquisition": {
+                    "provider": "hls", "method": "ffmpeg-hls-copy",
+                    "videoUrl": "https://player.vimeo.com/external/1.m3u8",
+                },
+            }), encoding="utf-8")
+            with patch.object(census_script, "resolve_hls_base",
+                              side_effect=lambda url, **kwargs: url), \
+                 patch.object(census_script, "download_media",
+                              side_effect=_fake_download([])), \
+                 patch.object(census_script, "source_metadata",
+                              return_value=_observed(durationSeconds=115.0)), \
+                 patch.object(census_script, "scan_full_runtime") as scan, \
+                 contextlib.redirect_stdout(io.StringIO()):
+                code = census_script.main([
+                    "--root", str(root), "--site", "aicp",
+                    "--acknowledge-rights", "--limit", "1",
+                    "--delay-seconds", "0"])
+            self.assertEqual(code, 0)
+            scan.assert_not_called()
+            index = json.loads(
+                (root / "aicp" / "census-index.json").read_text(
+                    encoding="utf-8"))
+            failure = index["failures"][0]
+            self.assertEqual(failure["reason"], "media-changed")
+            self.assertIn("duration delta", failure["detail"])
+            self.assertEqual(index["identityCounts"],
+                             {"strict-sha": 0, "tolerant": 0, "forced": 0})
+
+    def test_identity_counts_group_the_three_kinds(self) -> None:
+        records = [
+            {"identityVerification": {"kind": "strict-sha"}},
+            {"identityVerification": {"kind": "duration+resolution+codec"}},
+            {"identityVerification": {"kind": "forced"}},
+            {"identityVerification": {"kind": "duration+resolution+codec"}},
+            {},
+        ]
+        self.assertEqual(
+            census_script.identity_counts(records),
+            {"strict-sha": 1, "tolerant": 2, "forced": 1})
+
+    def test_index_stores_blocks_and_counts(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            videos = root / "promonews" / "videos"
+            videos.mkdir(parents=True)
+            for index in range(1, 4):
+                (videos / f"{index}-clip-{index}.json").write_text(
+                    json.dumps({
+                        "id": str(index), "nid": index, "slug": f"clip-{index}",
+                        "provider": "youtube",
+                        "videoUrl": "https://www.youtube.com/watch?v=abcdefghijk",
+                        "source": {"mediaSha256": "a" * 64},
+                    }), encoding="utf-8")
+            kinds = ["strict-sha", "duration+resolution+codec", "forced"]
+
+            def fake_run(item: dict, *, site: str, options: object) -> dict:
+                kind = kinds[int(item["id"]) - 1]
+                return {"id": item["id"], "slug": item["slug"],
+                        "identityVerification": {"kind": kind,
+                                                 "shaMatched": kind != "forced"}}
+
+            with patch.object(census_script, "run_census_item",
+                              side_effect=fake_run), \
+                 contextlib.redirect_stdout(io.StringIO()) as stdout:
+                code = census_script.main([
+                    "--root", str(root), "--site", "promonews",
+                    "--acknowledge-rights", "--delay-seconds", "0"])
+            self.assertEqual(code, 0)
+            index = json.loads(
+                (root / "promonews" / "census-index.json").read_text(
+                    encoding="utf-8"))
+            self.assertEqual(index["identityCounts"],
+                             {"strict-sha": 1, "tolerant": 1, "forced": 1})
+            self.assertEqual(
+                [row["identityVerification"]["kind"]
+                 for row in index["records"]], kinds)
+            self.assertIn("identity strict-sha=1 tolerant=1 forced=1",
+                          stdout.getvalue())
 
 
 class ScriptBatchTests(unittest.TestCase):

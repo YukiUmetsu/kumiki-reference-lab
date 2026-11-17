@@ -3,8 +3,16 @@
 
 For every ``<root>/<site>/videos/*.json`` record this driver recovers the
 canonical upstream URL, re-downloads the public media once, verifies the stored
-media SHA-256, decodes the whole file twice (scene candidates + fixed-cadence
+source identity, decodes the whole file twice (scene candidates + fixed-cadence
 appearance), writes one census record atomically, and deletes the media.
+
+Identity is verified per delivery method: byte-stable direct downloads must
+match the stored SHA-256 exactly, while remuxed HLS and platform-transcoded
+YouTube renditions are checked for duration, resolution and container/codec
+family. Every record states which rule ran in ``identityVerification``.
+``--strict-identity`` forces the SHA gate everywhere; ``--allow-media-change``
+measures a record whose identity could not be established and marks it
+``forced``.
 
 Usage:
     PYTHONPATH=src python scripts/census_video_cuts.py --acknowledge-rights \
@@ -18,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import sys
 import tempfile
@@ -79,9 +88,37 @@ CENSUS_LIMITS = [
     "intent, style, quality or identity claim is made.",
     "No human or expert review was performed; the record is not a verdict on "
     "the work.",
-    "Media bytes are not retained and the media SHA-256 is the record's "
-    "identity check, not a licence.",
+    "Media bytes are not retained; for byte-stable deliveries the media "
+    "SHA-256 is a byte-identity check, never a licence.",
+    "Remuxed HLS and platform-transcoded renditions are not asserted to be "
+    "byte-identical: their identity is checked as duration within 0.5 s, "
+    "resolution and container/codec family, as recorded in "
+    "identityVerification.",
 ]
+
+# Identity rules. ``strict-sha`` is byte identity; ``duration+resolution+codec``
+# is content identity for remuxed/transcoded deliveries; ``forced`` records a
+# measurement whose identity gate was explicitly waived.
+IDENTITY_STRICT = "strict-sha"
+IDENTITY_TOLERANT = "duration+resolution+codec"
+IDENTITY_FORCED = "forced"
+IDENTITY_COUNT_KEYS = ("strict-sha", "tolerant", "forced")
+# A remux moves segment/mux boundaries; half a second absorbs that without
+# admitting a different edit.
+IDENTITY_DURATION_TOLERANCE_SECONDS = 0.5
+
+_CODEC_FAMILIES = {
+    "avc1": "h264", "avc3": "h264", "h264": "h264",
+    "hev1": "hevc", "hvc1": "hevc", "h265": "hevc", "hevc": "hevc",
+    "av01": "av1", "av1": "av1",
+    "vp08": "vp8", "vp8": "vp8", "vp09": "vp9", "vp9": "vp9",
+    "mp4v": "mpeg4", "mpeg4": "mpeg4",
+}
+# Provider vocabulary that denotes a streamed manifest rather than a file.
+_STREAMING_PROVIDERS = frozenset({
+    "hls", "dash", "m3u8", "mpd", "stream", "streaming", "mux",
+    "cloudflare-stream", "vimeo", "brightcove",
+})
 
 _BYTES_SUFFIXES = {
     "": 1,
@@ -108,6 +145,10 @@ class MediaChanged(Exception):
     """Raised when the re-downloaded media no longer matches the record."""
 
     reason = "media-changed"
+
+    def __init__(self, message: str = "", *, detail: str | None = None) -> None:
+        super().__init__(message)
+        self.detail = detail or message or self.reason
 
 
 class StaleSignedUrl(Exception):
@@ -144,6 +185,14 @@ def _containers(record: dict[str, Any]) -> list[dict[str, Any]]:
     if isinstance(evidence, dict):
         found.append(evidence)
     return found
+
+
+def _resolution(value: Any) -> list[int] | None:
+    """Return a positive ``[width, height]`` pair or ``None``."""
+    if (isinstance(value, (list, tuple)) and len(value) == 2
+            and all(type(item) is int and item > 0 for item in value)):
+        return [value[0], value[1]]
+    return None
 
 
 def extract_record_identity(
@@ -240,6 +289,22 @@ def extract_record_identity(
         if duration is None and isinstance(container.get("catalog"), dict):
             duration = container["catalog"].get("durationSeconds")
 
+    resolution = None
+    container_name = None
+    video_codec = None
+    for source in sources:
+        if resolution is None:
+            resolution = _resolution(source.get("resolution"))
+        if container_name is None:
+            container_name = _first_text(source, ("container",))
+        if video_codec is None:
+            video_codec = _first_text(source, ("videoCodec",))
+    acquisition_method = None
+    for acquisition in acquisitions:
+        acquisition_method = _first_text(acquisition, ("method",))
+        if acquisition_method:
+            break
+
     return {
         "id": record_id,
         "slug": slug,
@@ -248,6 +313,10 @@ def extract_record_identity(
         "mediaSha256": (media_sha256 or "").lower() or None,
         "durationSeconds": duration,
         "sizeBytes": size,
+        "resolution": resolution,
+        "container": container_name,
+        "videoCodec": video_codec,
+        "acquisitionMethod": acquisition_method,
     }
 
 
@@ -266,6 +335,210 @@ def _canonical_url(url: str, delivery: str) -> str:
     if delivery == YOUTUBE:
         return allowlisted_youtube_url(url, allowed_hosts=DEFAULT_YOUTUBE_HOSTS)
     return url
+
+
+def _number(value: Any) -> float | None:
+    """Return a finite float for a JSON number, else ``None``."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    number = float(value)
+    return number if math.isfinite(number) else None
+
+
+def _container_families(value: Any) -> set[str]:
+    text = str(value or "").strip().lower()
+    return {part.strip() for part in text.split(",") if part.strip()}
+
+
+def _container_matches(stored: Any, observed: Any) -> bool | None:
+    left = _container_families(stored)
+    right = _container_families(observed)
+    if not left or not right:
+        return None
+    return bool(left & right)
+
+
+def _codec_family(value: Any) -> str | None:
+    text = str(value or "").strip().lower()
+    if not text:
+        return None
+    return _CODEC_FAMILIES.get(text, text)
+
+
+def _codec_matches(stored: Any, observed: Any) -> bool | None:
+    left = _codec_family(stored)
+    right = _codec_family(observed)
+    if left is None or right is None:
+        return None
+    return left == right
+
+
+def _identity_mode(item: dict[str, Any], method: str | None) -> str:
+    """Return ``youtube``, ``remux`` or ``byte`` for the observed delivery."""
+    provider = str(item.get("storedProvider") or "").strip().lower()
+    delivery = item.get("delivery")
+    observed = str(method or "").strip().lower()
+    stored_method = str(item.get("storedMethod") or "").strip().lower()
+    if delivery == YOUTUBE or provider == "youtube" or "ytdlp" in observed:
+        return "youtube"
+    path = urlsplit(str(item.get("videoUrl") or "")).path.lower()
+    if (delivery == HLS or provider in _STREAMING_PROVIDERS
+            or "stream" in provider or "hls" in observed
+            or "hls" in stored_method
+            or path.endswith((".m3u8", ".mpd"))):
+        return "remux"
+    return "byte"
+
+
+def _tolerance_block(
+    item: dict[str, Any], observed: dict[str, Any], sha_matched: bool,
+) -> dict[str, Any]:
+    """Describe content identity for a remuxed/transcoded delivery."""
+    stored_duration = _number(item.get("durationSeconds"))
+    observed_duration = _number(observed.get("durationSeconds"))
+    if stored_duration is not None and observed_duration is not None:
+        duration_delta: float | None = round(
+            abs(observed_duration - stored_duration), 6)
+    else:
+        # Equal bytes are the same runtime by definition.
+        duration_delta = 0.0 if sha_matched else None
+    stored_resolution = _resolution(item.get("resolution"))
+    observed_resolution = _resolution(observed.get("resolution"))
+    if stored_resolution is not None and observed_resolution is not None:
+        resolution_matched: bool | None = (
+            stored_resolution == observed_resolution)
+    else:
+        resolution_matched = True if sha_matched else None
+    container_matched = _container_matches(
+        item.get("container"), observed.get("container"))
+    if container_matched is None and sha_matched:
+        container_matched = True
+    codec_matched = _codec_matches(
+        item.get("videoCodec"), observed.get("videoCodec"))
+    if codec_matched is None and sha_matched:
+        codec_matched = True
+    return {
+        "kind": IDENTITY_TOLERANT,
+        "shaMatched": bool(sha_matched),
+        "durationDeltaSeconds": duration_delta,
+        "resolutionMatched": resolution_matched,
+        "containerMatched": container_matched,
+        "codecMatched": codec_matched,
+    }
+
+
+def _tolerance_problems(
+    item: dict[str, Any], observed: dict[str, Any], mode: str,
+) -> list[str]:
+    """List every content-identity mismatch in stable, specific order."""
+    problems: list[str] = []
+    stored_duration = _number(item.get("durationSeconds"))
+    observed_duration = _number(observed.get("durationSeconds"))
+    if stored_duration is None or observed_duration is None:
+        problems.append("no comparable stored duration")
+    else:
+        delta = abs(observed_duration - stored_duration)
+        if delta > IDENTITY_DURATION_TOLERANCE_SECONDS:
+            problems.append(
+                f"duration delta {delta:.3f}s exceeds "
+                f"{IDENTITY_DURATION_TOLERANCE_SECONDS:g}s")
+    stored_resolution = _resolution(item.get("resolution"))
+    observed_resolution = _resolution(observed.get("resolution"))
+    if stored_resolution is None or observed_resolution is None:
+        problems.append("no comparable stored resolution")
+    elif stored_resolution != observed_resolution:
+        problems.append(
+            f"resolution {observed_resolution} != stored {stored_resolution}")
+    container_matched = _container_matches(
+        item.get("container"), observed.get("container"))
+    if container_matched is None:
+        problems.append("no comparable stored container")
+    elif not container_matched:
+        problems.append("container family changed")
+    if mode != "youtube":
+        codec_matched = _codec_matches(
+            item.get("videoCodec"), observed.get("videoCodec"))
+        if codec_matched is None:
+            problems.append("no comparable stored video codec")
+        elif not codec_matched:
+            problems.append("video codec family changed")
+    return problems
+
+
+def _identity_failure(
+    item: dict[str, Any], block: dict[str, Any], allow_media_change: bool,
+    detail: str,
+) -> dict[str, Any]:
+    """Fail the gate, or record an explicitly forced measurement."""
+    item["identityFailureDetail"] = detail
+    if allow_media_change:
+        return {
+            **block,
+            "kind": IDENTITY_FORCED,
+            "shaMatched": False,
+            "reason": detail,
+        }
+    raise MediaChanged(detail, detail=detail)
+
+
+def verify_identity(
+    item: dict[str, Any], observed: dict[str, Any], *, method: str | None,
+    strict_identity: bool = False, allow_media_change: bool = False,
+) -> dict[str, Any]:
+    """Apply the delivery-dependent identity gate and return its record block.
+
+    Direct HTTP/MP4 deliveries keep strict SHA-256 equality. Remuxed HLS and
+    yt-dlp arrangements compare duration (within 0.5 s), resolution and
+    container/codec family instead; YouTube additionally tolerates a codec
+    family change because it serves different renditions per request.
+    ``strict_identity`` forces the SHA rule for every method, and
+    ``allow_media_change`` converts a would-be failure into a visible
+    ``forced`` measurement. A tampered identity is never reported as bytes.
+    """
+    stored_sha = str(item.get("mediaSha256") or "").strip().lower() or None
+    observed_sha = str(observed.get("mediaSha256") or "").strip().lower() or None
+    sha_matched = bool(stored_sha and observed_sha and stored_sha == observed_sha)
+    block = _tolerance_block(item, observed, sha_matched)
+    mode = _identity_mode(item, method)
+
+    if mode == "byte" or strict_identity:
+        if stored_sha is None:
+            # Nothing was stored to compare against; behaviour is unchanged.
+            return {"kind": IDENTITY_STRICT, "shaMatched": None}
+        if sha_matched:
+            return {"kind": IDENTITY_STRICT, "shaMatched": True}
+        detail = f"sha256 {observed_sha or 'unknown'} != stored {stored_sha}"
+        return _identity_failure(
+            item, block, allow_media_change, detail)
+
+    if sha_matched:
+        return {**block, "kind": IDENTITY_TOLERANT}
+    problems = _tolerance_problems(item, observed, mode)
+    if not problems:
+        return {**block, "kind": IDENTITY_TOLERANT}
+    return _identity_failure(
+        item, block, allow_media_change, "; ".join(problems))
+
+
+def _identity_count_key(block: Any) -> str | None:
+    kind = block.get("kind") if isinstance(block, dict) else None
+    if kind == IDENTITY_STRICT:
+        return "strict-sha"
+    if kind == IDENTITY_FORCED:
+        return "forced"
+    if isinstance(kind, str) and kind.strip():
+        return "tolerant"
+    return None
+
+
+def identity_counts(records: Iterable[dict[str, Any]]) -> dict[str, int]:
+    """Count measured records by identity group for the run summary."""
+    counts = {key: 0 for key in IDENTITY_COUNT_KEYS}
+    for record in records:
+        key = _identity_count_key(record.get("identityVerification"))
+        if key is not None:
+            counts[key] += 1
+    return counts
 
 
 def _catalog_rows(payload: Any) -> list[dict[str, Any]]:
@@ -525,8 +798,13 @@ def load_items(
             "catalogUrl": catalog_url,
             "urlSource": url_source,
             "storedProvider": identity["provider"],
+            "storedMethod": identity["acquisitionMethod"],
             "delivery": delivery,
             "mediaSha256": identity["mediaSha256"],
+            "durationSeconds": identity["durationSeconds"],
+            "resolution": identity["resolution"],
+            "container": identity["container"],
+            "videoCodec": identity["videoCodec"],
             "hosts": policy["hosts"],
             "allowQuery": policy["allow_query"],
             "outputPath": output_path,
@@ -583,10 +861,11 @@ def run_census_item(
             else:
                 raise
         metadata = source_metadata(path, ffprobe=options.ffprobe)
-        stored = item.get("mediaSha256")
-        if stored and metadata["mediaSha256"] != stored:
-            raise MediaChanged(
-                f"stored {stored} != observed {metadata['mediaSha256']}")
+        item.pop("identityFailureDetail", None)
+        identity = verify_identity(
+            item, metadata, method=method,
+            strict_identity=getattr(options, "strict_identity", False),
+            allow_media_change=getattr(options, "allow_media_change", False))
         scan = scan_full_runtime(
             path, sample_seconds=options.sample_seconds,
             width=160, height=90,
@@ -605,9 +884,10 @@ def run_census_item(
             "id": item["id"],
             "slug": item["slug"],
             "path": item["recordPath"],
-            "storedMediaSha256": stored,
+            "storedMediaSha256": item.get("mediaSha256"),
             "urlSource": used_source,
         }
+        evidence["identityVerification"] = identity
         evidence["mediaRetained"] = False
         write_json_atomic(item["outputPath"], evidence)
     return {
@@ -621,14 +901,19 @@ def run_census_item(
         "strobe": scan["strobe"],
         "method": method,
         "urlSource": used_source,
+        "identityVerification": identity,
     }
 
 
 def _failure_row(item: dict[str, Any], reason: str) -> dict[str, Any]:
-    return {
+    row = {
         "id": item["id"], "slug": item["slug"],
         "recordPath": item["recordPath"], "reason": reason,
     }
+    detail = item.get("identityFailureDetail")
+    if detail and reason == MediaChanged.reason:
+        row["detail"] = detail
+    return row
 
 
 def _skip_row(item: dict[str, Any], reason: str) -> dict[str, Any]:
@@ -673,9 +958,12 @@ def census_site(
           f"{'file' if ids is not None else 'records'})")
     index_path = root / site / "census-index.json"
     schema = f"kumiki.{site}-census-index.v1"
+    identity_summary: dict[str, int] = {key: 0 for key in IDENTITY_COUNT_KEYS}
 
     def build(records: list[dict[str, Any]], skips: list[dict[str, Any]],
               failures: list[dict[str, Any]]) -> dict[str, Any]:
+        counts = identity_counts(records)
+        identity_summary.update(counts)
         return build_index(
             schema_version=schema, records=records, skips=skips,
             failures=failures, generated_at=utc_now(),
@@ -684,6 +972,7 @@ def census_site(
                 "sourceRoot": str((root / site / "videos").relative_to(root)),
                 "sampleSeconds": options.sample_seconds,
                 "windowSeconds": options.window_seconds,
+                "identityCounts": counts,
                 "limits": CENSUS_LIMITS,
             })
 
@@ -712,6 +1001,9 @@ def census_site(
         delay_seconds=options.delay_seconds)
     print(f"{site}: measured={outcome.measured} skipped={outcome.skipped} "
           f"failed={outcome.failed} index={outcome.index_path}")
+    print(f"{site}: identity strict-sha={identity_summary['strict-sha']} "
+          f"tolerant={identity_summary['tolerant']} "
+          f"forced={identity_summary['forced']}")
     return outcome
 
 
@@ -741,6 +1033,13 @@ def build_parser() -> argparse.ArgumentParser:
                         help="fixed appearance cadence (default 1.0)")
     parser.add_argument("--acknowledge-rights", action="store_true",
                         help="required: attest public research use")
+    parser.add_argument("--strict-identity", action="store_true",
+                        help="require the stored SHA-256 for every delivery "
+                             "method, including remuxed HLS and YouTube")
+    parser.add_argument("--allow-media-change", action="store_true",
+                        help="measure a record whose identity cannot be "
+                             "established and mark it identityVerification "
+                             "kind=forced")
     parser.add_argument("--resume", dest="resume", action="store_true",
                         default=True, help="skip existing census records")
     parser.add_argument("--refresh", dest="resume", action="store_false",
@@ -762,6 +1061,9 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--limit must be zero or positive")
     if options.jobs not in (1, 2):
         parser.error("--jobs must be 1 or 2")
+    if options.strict_identity and options.allow_media_change:
+        parser.error(
+            "--strict-identity and --allow-media-change are mutually exclusive")
     options.sample_seconds = options.sample_seconds or options.window_seconds or 1.0
     options.window_seconds = options.window_seconds or options.sample_seconds
     root = Path(options.root)
