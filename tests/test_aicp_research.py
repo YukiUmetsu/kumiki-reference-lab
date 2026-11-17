@@ -601,6 +601,107 @@ class CollectSelectionTests(unittest.TestCase):
         self.assertEqual(index["skips"][0]["reason"], "duration-over-cap")
 
 
+class IdSelectionTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+
+    def write(self, name: str, text: str) -> Path:
+        path = self.root / name
+        path.write_text(text, encoding="utf-8")
+        return path
+
+    def catalog(self, identifiers: list[str]) -> Path:
+        rows = [aicp.parse_entry(entry_node(id=identifier, slug=f"clip-{identifier}"))
+                for identifier in identifiers]
+        path = self.root / "catalog.json"
+        acq.write_json_atomic(
+            path, aicp.build_catalog(rows, len(rows), generated_at="x"))
+        return path
+
+    def test_all_three_forms_and_numeric_equality(self) -> None:
+        self.assertEqual(
+            aicp.load_ids_file(self.write("list.json", '["1", 2, "3"]')),
+            ["1", "2", "3"])
+        self.assertEqual(
+            aicp.load_ids_file(self.write("object.json", '{"ids": [1, 2]}')),
+            ["1", "2"])
+        self.assertEqual(
+            aicp.load_ids_file(self.write("lines.txt", "1\n2\n3\n")),
+            ["1", "2", "3"])
+
+    def test_malformed_and_blank_ids_are_refused(self) -> None:
+        for name, text in (
+                ("empty.txt", " \n"), ("bad.json", "{not json"),
+                ("no-ids.json", '{"other": []}'), ("scalar.json", '"1"'),
+                ("blank-list.json", '["1", " "]'),
+                ("blank-line.txt", "1\n \n2\n")):
+            with self.subTest(name=name):
+                path = self.write(name, text)
+                with self.assertRaises(ValueError) as caught:
+                    aicp.load_ids_file(path)
+                self.assertIn(str(path), str(caught.exception))
+
+    def test_filter_limit_order_and_missing(self) -> None:
+        rows = [
+            {"id": 3, "slug": "c"},
+            {"id": 1, "slug": "a"},
+            {"id": 2, "slug": "b"},
+        ]
+        chosen, missing = aicp.select_ids(rows, ["3", "1", "999"], key="id")
+        self.assertEqual([row["id"] for row in chosen], [3, 1])
+        self.assertEqual(missing, ["999"])
+        capped = aicp._lane_items(
+            chosen, limit=1, static_reason=lambda _row: None)
+        self.assertEqual([row["id"] for row in capped], [3])
+
+    def test_missing_id_becomes_a_skip_row(self) -> None:
+        catalog_path = self.catalog(["1"])
+        ids_path = self.write("ids.json", '["1", 999]')
+        out_dir = self.root / "out"
+
+        def fake_collect(row: dict, _out_dir: Path, **_: object) -> dict:
+            return synthetic_video_record(
+                entry_id=str(row["id"]), slug=str(row["slug"]))
+
+        with patch.object(aicp, "collect_one", side_effect=fake_collect):
+            code = aicp.run_collect(
+                catalog_path, out_dir=out_dir, resume=False,
+                acknowledge_rights=True, delay_seconds=0, ids_file=ids_path,
+                log=lambda _: None)
+
+        self.assertEqual(code, 0)
+        index = json.loads((out_dir / "index.json").read_text(encoding="utf-8"))
+        missing = [row for row in index["skips"]
+                   if row["reason"] == "missing-from-catalog"]
+        self.assertEqual([row["id"] for row in missing], ["999"])
+
+    def test_run_collect_selects_exactly_three_ids_offline(self) -> None:
+        catalog_path = self.catalog(["1", "2", "3", "4", "5"])
+        ids_path = self.write("ids.txt", "5\n2\n4\n")
+        out_dir = self.root / "out"
+        calls: list[str] = []
+
+        def fake_collect(row: dict, _out_dir: Path, **_: object) -> dict:
+            calls.append(str(row["id"]))
+            return synthetic_video_record(
+                entry_id=str(row["id"]), slug=str(row["slug"]))
+
+        lines: list[str] = []
+        with patch.object(aicp, "collect_one", side_effect=fake_collect):
+            code = aicp.run_collect(
+                catalog_path, out_dir=out_dir, limit=0, resume=False,
+                acknowledge_rights=True, delay_seconds=0, ids_file=ids_path,
+                log=lines.append)
+
+        self.assertEqual(code, 0)
+        self.assertEqual(calls, ["2", "4", "5"])
+        self.assertIn("ids=3 matched=3 missing=0", lines)
+        index = json.loads((out_dir / "index.json").read_text(encoding="utf-8"))
+        self.assertEqual(index["counts"]["measured"], 3)
+
+
 class DownloadLifecycleTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory()

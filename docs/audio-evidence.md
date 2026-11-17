@@ -50,6 +50,8 @@ PYTHONPATH=src python scripts/audio_census.py --acknowledge-rights \
 ```
 
 `--sites a,b` and the repeatable `--site a --site b` are equivalent.
+`--ids-file PATH` restricts a run to an explicit id list (JSON list,
+`{"ids": [...]}`, or newline ids); `--limit` then applies to that selection.
 `--sample-stratified N` picks the centre of each equal-width slice of the
 ordered record list, so a sample is spread across the catalogue instead of
 taking the newest records. `--limit` caps the work after sampling. `--resume`

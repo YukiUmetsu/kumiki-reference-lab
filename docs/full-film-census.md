@@ -68,6 +68,9 @@ writes no files and retains no media.
 
 ## Commands
 
+`--ids-file PATH` restricts each site to an explicit id list (JSON list,
+`{"ids": [...]}`, or newline ids); `--limit` then applies to that selection.
+
 ```bash
 # Two records into a temporary tree (the only live smoke).
 PYTHONPATH=src python scripts/census_video_cuts.py \

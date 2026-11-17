@@ -257,6 +257,8 @@ python scripts/research_motiondesignawards.py collect \
   --acknowledge-rights
 
 # Alternative orderings / concurrency.
+# --ids-file PATH (JSON list, {"ids": [...]} or newline ids) filters the
+# catalogue first; --limit then applies to that selection.
 python scripts/research_motiondesignawards.py collect \
   --catalog research/analysis/motiondesignawards/catalog.json \
   --out-dir research/analysis/motiondesignawards \

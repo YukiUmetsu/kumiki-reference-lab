@@ -464,6 +464,106 @@ class ScriptBatchTests(unittest.TestCase):
             self.assertFalse(created[0].exists())
 
 
+class ScriptIdSelectionTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+
+    def write(self, name: str, text: str) -> Path:
+        path = self.root / name
+        path.write_text(text, encoding="utf-8")
+        return path
+
+    def _write_record(self, record_id: int, slug: str) -> None:
+        videos = self.root / "promonews" / "videos"
+        videos.mkdir(parents=True, exist_ok=True)
+        (videos / f"{record_id}-{slug}.json").write_text(json.dumps({
+            "id": str(record_id), "nid": record_id, "slug": slug,
+            "provider": "youtube",
+            "videoUrl": "https://www.youtube.com/watch?v=abcdefghijk",
+            "source": {"mediaSha256": "a" * 64},
+        }), encoding="utf-8")
+
+    def test_all_three_forms_and_numeric_equality(self) -> None:
+        self.assertEqual(
+            census_script.load_ids_file(
+                self.write("list.json", '["1", 2, "3"]')),
+            ["1", "2", "3"])
+        self.assertEqual(
+            census_script.load_ids_file(
+                self.write("object.json", '{"ids": [1, 2]}')),
+            ["1", "2"])
+        self.assertEqual(
+            census_script.load_ids_file(self.write("lines.txt", "1\n2\n3\n")),
+            ["1", "2", "3"])
+
+    def test_malformed_and_blank_ids_are_refused(self) -> None:
+        for name, text in (
+                ("empty.txt", " \n"), ("bad.json", "{not json"),
+                ("no-ids.json", '{"other": []}'), ("scalar.json", '"1"'),
+                ("blank-list.json", '["1", " "]'),
+                ("blank-line.txt", "1\n \n2\n")):
+            with self.subTest(name=name):
+                path = self.write(name, text)
+                with self.assertRaises(ValueError) as caught:
+                    census_script.load_ids_file(path)
+                self.assertIn(str(path), str(caught.exception))
+
+    def test_filter_preserves_record_order_and_reports_missing(self) -> None:
+        rows = [{"id": "3"}, {"id": "1"}, {"id": "2"}]
+        chosen, missing = census_script.select_ids(rows, ["3", 1, "999"])
+        self.assertEqual([row["id"] for row in chosen], ["3", "1"])
+        self.assertEqual(missing, ["999"])
+
+    def test_missing_id_becomes_a_skip_row(self) -> None:
+        self._write_record(1, "clip-1")
+        ids_path = self.write("ids.json", '["1", 999]')
+
+        def fake_run(item: dict, *, site: str, options: object) -> dict:
+            return {"id": item["id"], "slug": item["slug"]}
+
+        with patch.object(census_script, "run_census_item",
+                          side_effect=fake_run):
+            code = census_script.main([
+                "--root", str(self.root), "--site", "promonews",
+                "--ids-file", str(ids_path), "--acknowledge-rights",
+                "--delay-seconds", "0"])
+
+        self.assertEqual(code, 0)
+        index = json.loads(
+            (self.root / "promonews" / "census-index.json").read_text(
+                encoding="utf-8"))
+        missing = [row for row in index["skips"]
+                   if row["reason"] == "missing-from-catalog"]
+        self.assertEqual([row["id"] for row in missing], ["999"])
+
+    def test_main_selects_exactly_three_ids_offline(self) -> None:
+        for index in range(1, 6):
+            self._write_record(index, f"clip-{index}")
+        ids_path = self.write("ids.json", '{"ids": [4, "2", 5]}')
+        calls: list[str] = []
+
+        def fake_run(item: dict, *, site: str, options: object) -> dict:
+            calls.append(str(item["id"]))
+            return {"id": item["id"], "slug": item["slug"]}
+
+        with patch.object(census_script, "run_census_item",
+                          side_effect=fake_run):
+            code = census_script.main([
+                "--root", str(self.root), "--site", "promonews",
+                "--ids-file", str(ids_path), "--acknowledge-rights",
+                "--delay-seconds", "0"])
+
+        self.assertEqual(code, 0)
+        self.assertEqual(calls, ["2", "4", "5"])
+        index = json.loads(
+            (self.root / "promonews" / "census-index.json").read_text(
+                encoding="utf-8"))
+        self.assertEqual(index["counts"], {"measured": 3, "skipped": 0,
+                                           "failed": 0})
+
+
 class ScriptCatalogFallbackTests(unittest.TestCase):
     def test_catalog_urls_index_every_adapter_id_shape(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

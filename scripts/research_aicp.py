@@ -46,7 +46,8 @@ from kumiki_reference_lab.acquisition import (  # noqa: E402
     build_video_evidence, census_aggregate, census_annotate_rows,
     census_columns, census_lookup, census_reconciliation,
     comparability_block, coverage_distribution, cut_columns, download_http,
-    download_media, duplicate_summary, finite_float, image_target,
+    download_media, duplicate_summary, editorial_aggregate, finite_float,
+    image_target,
     measure_still, measure_windows, resume_matches as _resume_matches,
     run_batch, safe_error, safe_slug, source_metadata, still_decode_counts,
     still_decode_dimensions, still_has_quality_flags, still_image_format,
@@ -264,6 +265,63 @@ def downloadability(
     if is_long_form(video_types):
         return False, "unsupported-long-form"
     return True, None
+
+
+def load_ids_file(path: Path) -> list[str]:
+    """Read an explicit id selection: JSON list, ``{"ids": [...]}``, or lines.
+
+    Ids are compared as ``str()`` everywhere, so catalog integers and JSON
+    strings are interchangeable. Malformed files raise ``ValueError`` naming the
+    path and the reason; blank ids are refused so an empty line cannot silently
+    widen the selection.
+    """
+    path = Path(path)
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as error:
+        raise ValueError(f"ids file {path}: unreadable ({error})") from None
+    stripped = text.strip()
+    if not stripped:
+        raise ValueError(f"ids file {path}: file is empty")
+    if stripped[0] in "[{\"":
+        try:
+            payload = json.loads(stripped)
+        except ValueError as error:
+            raise ValueError(f"ids file {path}: invalid JSON ({error})") from None
+        if isinstance(payload, dict):
+            if "ids" not in payload:
+                raise ValueError(
+                    f'ids file {path}: JSON object must contain an "ids" list')
+            payload = payload["ids"]
+        if not isinstance(payload, list):
+            raise ValueError(
+                f'ids file {path}: expected a JSON list or an object with an '
+                f'"ids" list')
+        raw = payload
+    else:
+        raw = text.splitlines()
+    ids: list[str] = []
+    for value in raw:
+        if isinstance(value, (dict, list)):
+            raise ValueError(f"ids file {path}: id {value!r} is not a scalar")
+        if value is None:
+            raise ValueError(f"ids file {path}: null id is not allowed")
+        identifier = str(value).strip()
+        if not identifier:
+            raise ValueError(f"ids file {path}: empty id after stripping")
+        ids.append(identifier)
+    return ids
+
+
+def select_ids(
+    rows: Iterable[dict[str, Any]], ids: Iterable[str], *, key: str,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """Filter rows to the id set, preserving order; return missing ids."""
+    wanted = {str(value) for value in ids}
+    chosen = [row for row in rows
+              if row.get(key) is not None and str(row.get(key)) in wanted]
+    present = {str(row.get(key)) for row in rows if row.get(key) is not None}
+    return chosen, sorted(wanted - present)
 
 
 def collect_skip_reason(
@@ -941,6 +999,7 @@ def _run_lane(
     detail: Callable[[dict[str, Any]], str], label: str, final_note: str,
     static_reason: Callable[[dict[str, Any]], str | None],
     retained: list[dict[str, Any]] | None = None,
+    initial_skips: Iterable[dict[str, Any]] = (),
     resume: bool = True, jobs: int = 1, delay_seconds: float = 0.0,
     limit: int | None = None, log: Callable[[str], None] = print,
 ) -> int:
@@ -990,7 +1049,8 @@ def _run_lane(
         summary_row=lambda record: summary_row(record, None),
         skip_row=_skip_row,
         describe=lambda row: str(row.get("slug") or row.get("id")),
-        skip_reason=skip_reason, error_text=_error_text(out_dir),
+        skip_reason=skip_reason, initial_skips=initial_skips,
+        error_text=_error_text(out_dir),
         progress=report, jobs=jobs, delay_seconds=delay_seconds)
     log(f"{label}={len(retained) + outcome.measured} skipped={outcome.skipped} "
         f"failed={outcome.failed} attempted={outcome.attempted} "
@@ -1007,7 +1067,8 @@ def run_collect(
     max_duration_seconds: float = DEFAULT_MAX_DURATION_SECONDS,
     max_file_bytes: int = DEFAULT_MAX_FILE_BYTES,
     rights_note: str = DEFAULT_RIGHTS_NOTE, ffmpeg: str = "ffmpeg",
-    ffprobe: str = "ffprobe", log: Callable[[str], None] = print,
+    ffprobe: str = "ffprobe", ids_file: Path | None = None,
+    log: Callable[[str], None] = print,
 ) -> int:
     """Measure eligible catalog entries; ``--limit 0`` means all remaining."""
     if acknowledge_rights is not True:
@@ -1027,9 +1088,21 @@ def run_collect(
     catalog_sha = sha256_file(catalog_file)
     rows = _load_catalog(catalog_file)["entries"]
     out_dir = Path(out_dir)
+    ids = load_ids_file(ids_file) if ids_file is not None else None
+    missing: list[str] = []
+    if ids is not None:
+        present = {str(row.get("id")) for row in rows
+                   if row.get("id") is not None}
+        wanted = set(ids)
+        log(f"ids={len(wanted)} matched={len(wanted & present)} "
+            f"missing={len(wanted - present)}")
+        rows, missing = select_ids(rows, ids, key="id")
     static = partial(
         collect_skip_reason, max_duration_seconds=max_duration_seconds)
     items = _lane_items(rows, limit=limit, static_reason=static)
+    log(f"selection: {len(items)} rows selected "
+        f"(limit={'all' if not limit else limit}, ids="
+        f"{'file' if ids is not None else 'catalog'})")
     retained = (_load_retained(out_dir, "videos", VIDEO_SCHEMA,
                                _video_summary_row) if resume else [])
     return _run_lane(
@@ -1044,7 +1117,10 @@ def run_collect(
         label="measured",
         final_note="all downloaded media was deleted; only numeric evidence "
                    "and catalog metadata remain",
-        static_reason=static, retained=retained, resume=resume, jobs=jobs,
+        static_reason=static, retained=retained,
+        initial_skips=[_skip_row({"id": identifier}, "missing-from-catalog")
+                       for identifier in missing],
+        resume=resume, jobs=jobs,
         delay_seconds=delay_seconds, limit=limit, log=log)
 
 
@@ -1212,6 +1288,7 @@ def _census_context(
         },
         "aggregate": census_aggregate(rows),
         "reconciliation": census_reconciliation(reconcile_rows, lookup),
+        "editorial": editorial_aggregate(rows),
         "indexCounts": (None if not counts else {
             "measured": as_int(counts.get("measured")) or 0,
             "failed": as_int(counts.get("failed")) or 0,
@@ -1567,7 +1644,8 @@ def _render_report(aggregate: dict[str, Any], *,
         "year", "title", "company", "video_type", "duration_text",
         "duration_s", "resolution", "fps", "bitrate_mbps", "windows",
         "coverage_pct", "candidates_n", "sampled_cut_candidates_per_min",
-        "full_cuts_per_min", "full_vs_window",
+        "full_cuts_per_min", "full_vs_window", "median_shot_s",
+        "shots_lt_0_5s_pct", "pace_trend", "flicker",
         "ci95", "burst", "gap_frames", "within_shot_pairs", "cut_sep_pairs",
         "delta_basis_pairs", "validity", "mean_luma", "mean_sat", "delta_per_s")
     add("| " + " | ".join(columns) + " |")
@@ -1584,6 +1662,10 @@ def _render_report(aggregate: dict[str, Any], *,
             _num(row["sampledCutCandidatesPerMinute"], 2),
             _num(row.get("fullCutsPerMinute"), 2),
             row.get("fullVsWindow") or "—",
+            _num(row.get("median_shot_s"), 2),
+            _num(row.get("shots_lt_0_5s_pct"), 1),
+            row.get("pace_trend") or "—",
+            _num(row.get("flicker"), 3),
             (f"{_num(ci[0], 2)}-{_num(ci[1], 2)}" if ci else None),
             _num(row["burstFraction"], 3), _num(row["medianGapFrames"], 1),
             _int(row["withinShotPairs"]), _int(row["cutSeparatedPairs"]),
@@ -2072,6 +2154,9 @@ def build_parser() -> argparse.ArgumentParser:
     collect.add_argument("--out-dir", type=Path, required=True)
     collect.add_argument("--limit", type=int, default=None,
                          help="cap attempted entries (0 = all remaining)")
+    collect.add_argument("--ids-file", type=Path, default=None,
+                         help="JSON id list / {\"ids\": [...]} / newline ids; "
+                              "--limit applies to the filtered selection")
     collect.add_argument("--acknowledge-rights", action="store_true")
     group = collect.add_mutually_exclusive_group()
     group.add_argument("--resume", dest="resume", action="store_true",
@@ -2150,7 +2235,7 @@ def main(argv: list[str] | None = None) -> int:
             max_duration_seconds=args.max_duration_seconds,
             max_file_bytes=args.max_file_bytes,
             rights_note=args.rights_note, ffmpeg=args.ffmpeg,
-            ffprobe=args.ffprobe)
+            ffprobe=args.ffprobe, ids_file=args.ids_file)
     except ValueError as error:
         parser.error(str(error))
         return 2

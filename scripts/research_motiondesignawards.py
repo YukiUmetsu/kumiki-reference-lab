@@ -48,7 +48,8 @@ from kumiki_reference_lab.acquisition import (  # noqa: E402
     build_video_evidence, census_aggregate, census_annotate_rows,
     census_columns, census_lookup, census_reconciliation,
     comparability_block, coverage_distribution, cut_columns, download_http,
-    download_media, duplicate_summary, finite_float, image_target,
+    download_media, duplicate_summary, editorial_aggregate, finite_float,
+    image_target,
     measure_still, measure_windows, resume_matches as _resume_matches,
     run_batch, safe_error, safe_slug, source_metadata, still_decode_counts,
     still_decode_dimensions, still_has_quality_flags, still_image_format,
@@ -282,6 +283,63 @@ def _load_catalog(path: Path) -> dict[str, Any]:
     return catalog
 
 
+def load_ids_file(path: Path) -> list[str]:
+    """Read an explicit id selection: JSON list, ``{"ids": [...]}``, or lines.
+
+    Ids are compared as ``str()`` everywhere, so catalog integers and JSON
+    strings are interchangeable. Malformed files raise ``ValueError`` naming the
+    path and the reason; blank ids are refused so an empty line cannot silently
+    widen the selection.
+    """
+    path = Path(path)
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as error:
+        raise ValueError(f"ids file {path}: unreadable ({error})") from None
+    stripped = text.strip()
+    if not stripped:
+        raise ValueError(f"ids file {path}: file is empty")
+    if stripped[0] in "[{\"":
+        try:
+            payload = json.loads(stripped)
+        except ValueError as error:
+            raise ValueError(f"ids file {path}: invalid JSON ({error})") from None
+        if isinstance(payload, dict):
+            if "ids" not in payload:
+                raise ValueError(
+                    f'ids file {path}: JSON object must contain an "ids" list')
+            payload = payload["ids"]
+        if not isinstance(payload, list):
+            raise ValueError(
+                f'ids file {path}: expected a JSON list or an object with an '
+                f'"ids" list')
+        raw = payload
+    else:
+        raw = text.splitlines()
+    ids: list[str] = []
+    for value in raw:
+        if isinstance(value, (dict, list)):
+            raise ValueError(f"ids file {path}: id {value!r} is not a scalar")
+        if value is None:
+            raise ValueError(f"ids file {path}: null id is not allowed")
+        identifier = str(value).strip()
+        if not identifier:
+            raise ValueError(f"ids file {path}: empty id after stripping")
+        ids.append(identifier)
+    return ids
+
+
+def select_ids(
+    rows: Iterable[dict[str, Any]], ids: Iterable[str], *, key: str,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """Filter rows to the id set, preserving order; return missing ids."""
+    wanted = {str(value) for value in ids}
+    chosen = [row for row in rows
+              if row.get(key) is not None and str(row.get(key)) in wanted]
+    present = {str(row.get(key)) for row in rows if row.get(key) is not None}
+    return chosen, sorted(wanted - present)
+
+
 def selection_key(project: dict[str, Any], order: str) -> tuple[Any, ...]:
     text = str(project.get("projectId") or "")
     project_id = int(text) if text.isdigit() else -1
@@ -303,24 +361,33 @@ def selection_key(project: dict[str, Any], order: str) -> tuple[Any, ...]:
 
 def select_projects(
     projects: Iterable[dict[str, Any]], *, order: str = "best",
-    limit: int | None = None,
+    limit: int | None = None, ids: Iterable[str] | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Return (eligible chosen, unsupported skip rows), deterministically ordered.
 
     Supported providers enter the work list; Vimeo entries are carried here only
     so their explicit ``unsupported-vimeo`` skip reason is recorded in the index.
     They are never attempted. ``limit`` counts eligible projects, not skips; it
-    may be ``0`` to select nothing (an offline smoke run).
+    may be ``0`` to select nothing (an offline smoke run). When ``ids`` is given
+    only those catalog rows are considered, ``limit`` applies to that selection
+    (``0`` then means all of them), and file ids absent from the catalog become
+    ``missing-from-catalog`` skip rows.
     """
     if limit is not None and (type(limit) is not int or limit < 0):
         raise ValueError("limit must be a non-negative integer")
-    if limit == 0:
+    projects = list(projects)
+    missing: list[str] = []
+    if ids is not None:
+        projects, missing = select_ids(projects, ids, key="projectId")
+    elif limit == 0:
         return [], []
     candidates = [project for project in projects if project.get("downloadable") is True
                   or (project.get("provider") == "vimeo" and project.get("videoUrl"))]
     ranked = sorted(candidates, key=lambda p: selection_key(p, order), reverse=True)
     chosen: list[dict[str, Any]] = []
-    skips: list[dict[str, Any]] = []
+    skips: list[dict[str, Any]] = [
+        {"slug": None, "projectId": identifier, "provider": None,
+         "reason": "missing-from-catalog"} for identifier in missing]
     for project in ranked:
         provider = project.get("provider")
         if provider in SUPPORTED_PROVIDERS:
@@ -328,7 +395,7 @@ def select_projects(
         else:
             skips.append(_skip_row(project, "unsupported-vimeo" if provider == "vimeo"
                                    else f"unsupported-provider-{provider}"))
-        if limit is not None and len(chosen) >= limit:
+        if limit and len(chosen) >= limit:
             break
     return chosen, skips
 
@@ -590,6 +657,7 @@ def run_collect(
     catalog_path: Path, *, out_dir: Path, limit: int | None = None,
     order: str = "best", resume: bool = True, jobs: int = 1,
     acknowledge_rights: bool = False, delay_seconds: float = 1.5,
+    ids_file: Path | None = None,
     log: Callable[[str], None] = print, **video_options: Any,
 ) -> int:
     if acknowledge_rights is not True:
@@ -600,7 +668,18 @@ def run_collect(
     catalog_sha = sha256_file(Path(catalog_path))
     projects = _load_catalog(Path(catalog_path))["projects"]
     out_dir = Path(out_dir)
-    chosen, unsupported = select_projects(projects, order=order, limit=limit)
+    ids = load_ids_file(ids_file) if ids_file is not None else None
+    chosen, unsupported = select_projects(
+        projects, order=order, limit=limit, ids=ids)
+    if ids is not None:
+        wanted = set(ids)
+        present = {str(project.get("projectId")) for project in projects
+                   if project.get("projectId") is not None}
+        log(f"ids={len(wanted)} matched={len(wanted & present)} "
+            f"missing={len(wanted - present)}")
+    log(f"selection: {len(chosen)} projects selected "
+        f"(limit={'all' if not limit else limit}, "
+        f"order={order}, ids={'file' if ids is not None else 'catalog'})")
     return _run_lane(
         chosen, out_dir=out_dir, folder="videos", index_name="index.json",
         schema=INDEX_SCHEMA, catalog_sha=catalog_sha,
@@ -776,6 +855,7 @@ def _census_context(
         },
         "aggregate": census_aggregate(rows),
         "reconciliation": census_reconciliation(reconcile_rows, lookup),
+        "editorial": editorial_aggregate(rows),
         "indexCounts": (None if not counts else {
             "measured": as_int(counts.get("measured")) or 0,
             "failed": as_int(counts.get("failed")) or 0,
@@ -1134,7 +1214,8 @@ def _render_report(aggregate: dict[str, Any], *,
         "provider", "runtime_s", "resolution", "fps", "bitrate_mbps",
         "download_mb", "windows", "coverage_pct", "candidates_n",
         "sampled_cut_candidates_per_min", "full_cuts_per_min",
-        "full_vs_window", "ci95", "burst", "gap_frames",
+        "full_vs_window", "median_shot_s", "shots_lt_0_5s_pct",
+        "pace_trend", "flicker", "ci95", "burst", "gap_frames",
         "within_shot_pairs", "cut_sep_pairs", "delta_basis_pairs", "validity",
         "mean_luma", "mean_sat", "delta_per_s")
     add("| " + " | ".join(columns) + " |")
@@ -1151,6 +1232,10 @@ def _render_report(aggregate: dict[str, Any], *,
             _num(row["sampledCutCandidatesPerMinute"], 2),
             _num(row.get("fullCutsPerMinute"), 2),
             row.get("fullVsWindow") or "—",
+            _num(row.get("median_shot_s"), 2),
+            _num(row.get("shots_lt_0_5s_pct"), 1),
+            row.get("pace_trend") or "—",
+            _num(row.get("flicker"), 3),
             (f"{_num(ci[0], 2)}-{_num(ci[1], 2)}" if ci else None),
             _num(row["burstFraction"], 3), _num(row["medianGapFrames"], 1),
             _int(row["withinShotPairs"]), _int(row["cutSeparatedPairs"]),
@@ -1587,6 +1672,9 @@ def build_parser() -> argparse.ArgumentParser:
     collect.add_argument("--catalog", type=Path, required=True)
     collect.add_argument("--out-dir", type=Path, required=True)
     collect.add_argument("--limit", type=int, default=None)
+    collect.add_argument("--ids-file", type=Path, default=None,
+                         help="JSON id list / {\"ids\": [...]} / newline ids; "
+                              "--limit applies to the filtered selection")
     collect.add_argument("--order", choices=("best", "latest", "awards-first"),
                          default="best")
     collect.add_argument("--windows", type=int, default=4)
@@ -1667,7 +1755,8 @@ def main(argv: list[str] | None = None) -> int:
             max_duration_seconds=args.max_duration_seconds,
             max_file_bytes=args.max_file_bytes,
             image_translation=args.image_translation,
-            rights_note=args.rights_note, ffmpeg=args.ffmpeg, ffprobe=args.ffprobe)
+            rights_note=args.rights_note, ffmpeg=args.ffmpeg,
+            ffprobe=args.ffprobe, ids_file=args.ids_file)
     except ValueError as error:
         parser.error(str(error))
         return 2
