@@ -1,0 +1,243 @@
+{
+  "schemaVersion": "kumiki.quality-selection.v1",
+  "rules": {
+    "motiondesignawards": [
+      {
+        "tier": 1,
+        "predicate": "awards[].type intersects {DOTY, SOTY, VOTM, VOTY}"
+      },
+      {
+        "tier": 2,
+        "predicate": "awards[].type contains VOTD and scores.overall >= 8.0"
+      },
+      {
+        "tier": 3,
+        "predicate": "scores.overall >= 8.5"
+      }
+    ],
+    "aicp": [
+      {
+        "tier": 1,
+        "predicate": "categories[] intersects {Advertising Excellence, Advertising Excellence / Campaign, Advertising Excellence / International, Best of Region, National Campaign, Integrated Campaign}"
+      },
+      {
+        "tier": 2,
+        "predicate": "categories[] non-empty and year <= 2023"
+      }
+    ],
+    "promonews": [
+      {
+        "tier": 1,
+        "predicate": "categories[] contains 'UKMVAs <year> winner'"
+      },
+      {
+        "tier": 2,
+        "predicate": "categories[] contains 'UKMVAs <year> nominee'"
+      },
+      {
+        "tier": 3,
+        "predicate": "categories[] contains 'Pick of the Day'"
+      }
+    ],
+    "directorslibrary": [
+      {
+        "tier": 1,
+        "predicate": "terms.award[] non-empty"
+      },
+      {
+        "tier": 2,
+        "predicate": "terms.festival[] intersects {Cannes, Sundance, Venice Biennale, Toronto (TIFF), Berlinale, SXSW}"
+      }
+    ],
+    "shots": [
+      {
+        "tier": 1,
+        "predicate": "brandName == 'Straight 8'"
+      },
+      {
+        "tier": 2,
+        "predicate": "clientName, agencyName, artists[] and year all non-empty (documentation-completeness proxy, not a quality claim)"
+      }
+    ],
+    "stash": []
+  },
+  "order": {
+    "motiondesignawards": "tier asc, scores.overall desc, totalVotes desc",
+    "aicp": "tier asc, year asc, title asc",
+    "promonews": "tier asc, publishedDate asc",
+    "directorslibrary": "tier asc, publicationDate asc",
+    "shots": "tier asc, year desc",
+    "stash": "none"
+  },
+  "sites": {
+    "motiondesignawards": {
+      "selection": "tiered",
+      "counts": {
+        "catalogItems": 1919,
+        "selected": 324,
+        "crossSite": 2,
+        "byTier": {
+          "1": 131,
+          "2": 192,
+          "3": 1
+        }
+      },
+      "cohorts": {
+        "1": {
+          "size": 131,
+          "alreadyVideoMeasured": 22,
+          "alreadyCensusMeasured": 21,
+          "alreadyAudioMeasured": 1
+        },
+        "2": {
+          "size": 192,
+          "alreadyVideoMeasured": 41,
+          "alreadyCensusMeasured": 41,
+          "alreadyAudioMeasured": 2
+        },
+        "3": {
+          "size": 1,
+          "alreadyVideoMeasured": 0,
+          "alreadyCensusMeasured": 0,
+          "alreadyAudioMeasured": 0
+        }
+      },
+      "bias": "Crowd vote, not jury: `scores.overall` is an open audience average and VOTD/VOTM are daily/monthly vote wins, so tiers 1-2 over-sample work with an active voting audience. Tiers 2-3 over-sample recent, high-traffic uploads because the top of the score distribution is thin. The rule cannot see craft: a well-voted but conventional piece ranks above an unvoted experimental one."
+    },
+    "aicp": {
+      "selection": "tiered",
+      "counts": {
+        "catalogItems": 2715,
+        "selected": 2372,
+        "crossSite": 179,
+        "byTier": {
+          "1": 528,
+          "2": 1844
+        }
+      },
+      "cohorts": {
+        "1": {
+          "size": 528,
+          "alreadyVideoMeasured": 51,
+          "alreadyCensusMeasured": 34,
+          "alreadyAudioMeasured": 0
+        },
+        "2": {
+          "size": 1844,
+          "alreadyVideoMeasured": 185,
+          "alreadyCensusMeasured": 64,
+          "alreadyAudioMeasured": 0
+        }
+      },
+      "bias": "Prize categories favour big-budget, US-agency work ('Advertising Excellence', 'Best of Region', 'National Campaign'), so tier 1 over-samples large production companies and award-show entries. Tier 2 (`year <= 2023`) deliberately over-samples older archive years, whose categories are sparser and whose downloadable renditions are less reliable; it is a coverage correction, not a claim that older work is better. 134 of 2,715 entries carry no category and cannot enter at all."
+    },
+    "promonews": {
+      "selection": "tiered",
+      "counts": {
+        "catalogItems": 17805,
+        "selected": 1198,
+        "crossSite": 6,
+        "byTier": {
+          "1": 63,
+          "2": 202,
+          "3": 933
+        }
+      },
+      "cohorts": {
+        "1": {
+          "size": 63,
+          "alreadyVideoMeasured": 14,
+          "alreadyCensusMeasured": 6,
+          "alreadyAudioMeasured": 0
+        },
+        "2": {
+          "size": 202,
+          "alreadyVideoMeasured": 54,
+          "alreadyCensusMeasured": 11,
+          "alreadyAudioMeasured": 3
+        },
+        "3": {
+          "size": 933,
+          "alreadyVideoMeasured": 148,
+          "alreadyCensusMeasured": 57,
+          "alreadyAudioMeasured": 12
+        }
+      },
+      "bias": "UK-only music video coverage: every selected row is a British promo, so no non-UK or non-music-video work can enter. Tier 1-2 over-sample UKMVAs winners/nominees, and the CMS only tags 2018 and 2022-2026, so the tier is also a recent-years filter. Tier 3 over-samples 2018+ 'Pick of the Day' promos. Festival and long-form work is invisible."
+    },
+    "directorslibrary": {
+      "selection": "tiered",
+      "counts": {
+        "catalogItems": 5412,
+        "selected": 358,
+        "crossSite": 0,
+        "byTier": {
+          "1": 69,
+          "2": 289
+        }
+      },
+      "cohorts": {
+        "1": {
+          "size": 69,
+          "alreadyVideoMeasured": 16,
+          "alreadyCensusMeasured": 5,
+          "alreadyAudioMeasured": 0
+        },
+        "2": {
+          "size": 289,
+          "alreadyVideoMeasured": 70,
+          "alreadyCensusMeasured": 41,
+          "alreadyAudioMeasured": 0
+        }
+      },
+      "bias": "Festival films, not music videos: the site is a directors' directory of shorts, commercials and features, so tiers 1-2 over-sample narrative shorts that premiered at Cannes/Sundance/Venice/TIFF/Berlinale/SXSW. The 461 `terms.festival[]` and 69 `terms.award[]` tags are editor-applied and unevenly maintained across 5,412 items, so absence of a tag is not absence of quality."
+    },
+    "shots": {
+      "selection": "tiered",
+      "counts": {
+        "catalogItems": 40908,
+        "selected": 8748,
+        "crossSite": 107,
+        "byTier": {
+          "1": 9,
+          "2": 8739
+        }
+      },
+      "cohorts": {
+        "1": {
+          "size": 9,
+          "alreadyVideoMeasured": 0,
+          "alreadyCensusMeasured": 0,
+          "alreadyAudioMeasured": 0
+        },
+        "2": {
+          "size": 8739,
+          "alreadyVideoMeasured": 560,
+          "alreadyCensusMeasured": 323,
+          "alreadyAudioMeasured": 116
+        }
+      },
+      "bias": "Tier 1 is the 9 'Straight 8' entries, a sponsor contest rather than a quality ranking. Tier 2 is explicitly a documentation-completeness proxy (client + agency + artists[] + year), not a quality claim: it over-samples recent, fully credited commercial work from large agencies and excludes 27,701 clips with no year and 15,550 with no agency, regardless of how good they are. shots.net publishes no editorial or award signal at all."
+    },
+    "stash": {
+      "selection": "excluded",
+      "counts": {
+        "catalogItems": 5399,
+        "selected": 0,
+        "crossSite": 0,
+        "byTier": {}
+      },
+      "cohorts": {},
+      "bias": "No selection: STASH exposes no quality field (`Featured` is true on 91.9% of rows) and many posts are image galleries rather than videos."
+    }
+  },
+  "stashExclusion": "STASH has no quality field: `Featured` is true on 91.9% of 5,399 posts and the catalog publishes no awards, categories or festival terms. It also mixes image galleries with videos. Selecting 'featured' rows would rank the site's own promotion, not work quality, so no video target list is emitted. STASH still has 5,277 measured stills and can supply poster-level evidence.",
+  "allIds": {
+    "motiondesignawards": 324,
+    "aicp": 2372,
+    "promonews": 1198,
+    "directorslibrary": 358,
+    "shots": 8748
+  },
+  "allIdsTotal": 13000
+}

@@ -1,0 +1,2514 @@
+{
+  "schemaVersion": "kumiki.artistic-components.v1",
+  "generatedFrom": {
+    "sites": {
+      "motiondesignawards": {
+        "videoRecords": 492,
+        "censusRecords": 491,
+        "audioRecords": 489,
+        "joinedRecords": 492,
+        "withCensus": 491,
+        "withAudio": 489
+      },
+      "shots": {
+        "videoRecords": 855,
+        "censusRecords": 805,
+        "audioRecords": 763,
+        "joinedRecords": 855,
+        "withCensus": 805,
+        "withAudio": 763
+      },
+      "aicp": {
+        "videoRecords": 703,
+        "censusRecords": 703,
+        "audioRecords": 475,
+        "joinedRecords": 703,
+        "withCensus": 703,
+        "withAudio": 475
+      },
+      "promonews": {
+        "videoRecords": 879,
+        "censusRecords": 331,
+        "audioRecords": 637,
+        "joinedRecords": 879,
+        "withCensus": 331,
+        "withAudio": 637
+      },
+      "directorslibrary": {
+        "videoRecords": 451,
+        "censusRecords": 142,
+        "audioRecords": 448,
+        "joinedRecords": 451,
+        "withCensus": 142,
+        "withAudio": 448
+      }
+    },
+    "unreadableRecords": {
+      "motiondesignawards": {
+        "videos": 0,
+        "census": 0,
+        "audio": 0
+      },
+      "shots": {
+        "videos": 0,
+        "census": 0,
+        "audio": 0
+      },
+      "aicp": {
+        "videos": 0,
+        "census": 0,
+        "audio": 0
+      },
+      "promonews": {
+        "videos": 0,
+        "census": 0,
+        "audio": 0
+      },
+      "directorslibrary": {
+        "videos": 0,
+        "census": 0,
+        "audio": 0
+      }
+    },
+    "totalVideoRecords": 3380,
+    "totalCensusRecords": 2472,
+    "totalAudioRecords": 2812,
+    "totalJoinedRecords": 3380,
+    "stillsOnlyRecords": 5277
+  },
+  "corpusSize": 3380,
+  "method": {
+    "linkage": "complete-linkage agglomerative",
+    "standardization": "median/IQR; fallback 1.4826*MAD, then unit scale; missing values imputed at the median and clipped at \u00b14",
+    "distance": "Euclidean on robust-standardized features",
+    "kSelection": "best mean silhouette over candidates; ties to smaller k",
+    "silhouetteSampling": "fixed stride, at most 2000 rows",
+    "clusterFeatures": [
+      "cutsPerMinute",
+      "medianShotSeconds",
+      "burstFraction",
+      "shotsUnderHalfSecondPct",
+      "paceDriftRatio",
+      "flickerLumaPerSecond"
+    ],
+    "excludedFromClustering": [
+      "records whose census strobe flag is true",
+      "records with no full-runtime census (windowed fallback)"
+    ],
+    "clusteredRecords": 2197,
+    "fullFilmRecords": 2472,
+    "strobeRecords": 275,
+    "windowedRecords": 908,
+    "k": 4,
+    "candidateRange": "3..8",
+    "silhouette": 0.4005447611657876,
+    "candidateSilhouette": {
+      "3": 0.3811,
+      "4": 0.4005,
+      "5": 0.3796,
+      "6": 0.3676,
+      "7": 0.2117,
+      "8": 0.2078
+    },
+    "kStability": {
+      "folds": 5,
+      "foldDesign": "5 deterministic 80 % stride folds (index % folds != fold)",
+      "winningK": {
+        "3": 3,
+        "4": 1,
+        "7": 1
+      },
+      "stable": false,
+      "candidateSilhouetteRange": {
+        "3": [
+          0.2533,
+          0.3992
+        ],
+        "4": [
+          0.3282,
+          0.3694
+        ],
+        "5": [
+          0.3198,
+          0.3643
+        ],
+        "6": [
+          0.3085,
+          0.349
+        ],
+        "7": [
+          0.2887,
+          0.3332
+        ],
+        "8": [
+          0.2886,
+          0.354
+        ]
+      }
+    },
+    "standardizationStats": {
+      "cutsPerMinute": {
+        "median": 20.275489,
+        "iqr": 20.611774,
+        "scale": 20.611774,
+        "fallback": null
+      },
+      "medianShotSeconds": {
+        "median": 1.897729,
+        "iqr": 1.828683,
+        "scale": 1.828683,
+        "fallback": null
+      },
+      "burstFraction": {
+        "median": 0.0,
+        "iqr": 0.166667,
+        "scale": 0.166667,
+        "fallback": null
+      },
+      "shotsUnderHalfSecondPct": {
+        "median": 3.14145,
+        "iqr": 16.069,
+        "scale": 16.069,
+        "fallback": null
+      },
+      "paceDriftRatio": {
+        "median": 0.9,
+        "iqr": 0.833333,
+        "scale": 0.833333,
+        "fallback": null
+      },
+      "flickerLumaPerSecond": {
+        "median": 0.019048,
+        "iqr": 0.023654,
+        "scale": 0.023654,
+        "fallback": null
+      }
+    },
+    "minClusterSize": 25
+  },
+  "featureCoverage": {
+    "cutsPerMinute": {
+      "present": 3380,
+      "total": 3380,
+      "fraction": 1.0,
+      "unit": "cuts/min",
+      "meaning": "detected scene-change candidates per minute"
+    },
+    "medianShotSeconds": {
+      "present": 3285,
+      "total": 3380,
+      "fraction": 0.9718934911242604,
+      "unit": "s",
+      "meaning": "median interval between detected scene-change candidates"
+    },
+    "p10ShotSeconds": {
+      "present": 2433,
+      "total": 3380,
+      "fraction": 0.7198224852071006,
+      "unit": "s",
+      "meaning": "10th-percentile interval between detected candidates (short end)"
+    },
+    "p90ShotSeconds": {
+      "present": 1570,
+      "total": 3380,
+      "fraction": 0.46449704142011833,
+      "unit": "s",
+      "meaning": "90th-percentile interval between detected candidates (long end)"
+    },
+    "burstFraction": {
+      "present": 3149,
+      "total": 3380,
+      "fraction": 0.9316568047337278,
+      "unit": "fraction",
+      "meaning": "share of candidates that land within a burst window of the previous one"
+    },
+    "shotsUnderHalfSecondPct": {
+      "present": 1570,
+      "total": 3380,
+      "fraction": 0.46449704142011833,
+      "unit": "%",
+      "meaning": "share of detected intervals shorter than 0.5 s"
+    },
+    "paceDriftRatio": {
+      "present": 1380,
+      "total": 3380,
+      "fraction": 0.40828402366863903,
+      "unit": "ratio",
+      "meaning": "last-third cut rate divided by first-third cut rate"
+    },
+    "paceTrendCode": {
+      "present": 1380,
+      "total": 3380,
+      "fraction": 0.40828402366863903,
+      "unit": "code",
+      "meaning": "editorial paceTrend as -1 decelerating / 0 steady / +1 accelerating"
+    },
+    "paceFirstThirdCutsPerMinute": {
+      "present": 1570,
+      "total": 3380,
+      "fraction": 0.46449704142011833,
+      "unit": "cuts/min",
+      "meaning": "candidate rate inside the first third of the runtime"
+    },
+    "paceLastThirdCutsPerMinute": {
+      "present": 1570,
+      "total": 3380,
+      "fraction": 0.46449704142011833,
+      "unit": "cuts/min",
+      "meaning": "candidate rate inside the last third of the runtime"
+    },
+    "flickerLumaPerSecond": {
+      "present": 1570,
+      "total": 3380,
+      "fraction": 0.46449704142011833,
+      "unit": "luma/s",
+      "meaning": "median absolute second-to-second change in mean display luma"
+    },
+    "staticFraction": {
+      "present": 1570,
+      "total": 3380,
+      "fraction": 0.46449704142011833,
+      "unit": "fraction",
+      "meaning": "share of sampled consecutive pairs with near-zero RGB change"
+    },
+    "meanLuma": {
+      "present": 3380,
+      "total": 3380,
+      "fraction": 1.0,
+      "unit": "0-1",
+      "meaning": "mean display-luma proxy across the appearance sample"
+    },
+    "meanSaturation": {
+      "present": 3380,
+      "total": 3380,
+      "fraction": 1.0,
+      "unit": "0-1",
+      "meaning": "mean saturation proxy across the appearance sample"
+    },
+    "durationSeconds": {
+      "present": 3380,
+      "total": 3380,
+      "fraction": 1.0,
+      "unit": "s",
+      "meaning": "measured runtime of the rendition, not an editorial duration"
+    },
+    "integratedLufs": {
+      "present": 2812,
+      "total": 3380,
+      "fraction": 0.8319526627218935,
+      "unit": "LUFS",
+      "meaning": "integrated programme loudness of the measured audio stream"
+    },
+    "loudnessRangeLu": {
+      "present": 2812,
+      "total": 3380,
+      "fraction": 0.8319526627218935,
+      "unit": "LU",
+      "meaning": "loudness range of the measured audio stream"
+    },
+    "truePeakDbfs": {
+      "present": 2808,
+      "total": 3380,
+      "fraction": 0.8307692307692308,
+      "unit": "dBFS",
+      "meaning": "true peak of the measured audio stream"
+    },
+    "silenceFraction": {
+      "present": 2812,
+      "total": 3380,
+      "fraction": 0.8319526627218935,
+      "unit": "fraction",
+      "meaning": "share of measured audio windows below the silence gate"
+    },
+    "onsetPerMinute": {
+      "present": 2812,
+      "total": 3380,
+      "fraction": 0.8319526627218935,
+      "unit": "onsets/min",
+      "meaning": "detected audio onsets per minute of measured runtime"
+    },
+    "onsetTrendCode": {
+      "present": 2812,
+      "total": 3380,
+      "fraction": 0.8319526627218935,
+      "unit": "code",
+      "meaning": "onset-rate trend as -1 decelerating / 0 steady / +1 accelerating"
+    },
+    "tempoHypothesisBpm": {
+      "present": 690,
+      "total": 3380,
+      "fraction": 0.20414201183431951,
+      "unit": "BPM",
+      "meaning": "periodicity hypothesis with at least 0.2 confidence; not a beat grid"
+    }
+  },
+  "components": [
+    {
+      "name": "steady-cut",
+      "n": 1695,
+      "share": 0.68568,
+      "sites": {
+        "aicp": 552,
+        "directorslibrary": 106,
+        "motiondesignawards": 223,
+        "promonews": 239,
+        "shots": 575
+      },
+      "evidenceLevels": {
+        "full-film": 1695
+      },
+      "profile": {
+        "n": 1695,
+        "share": 0.6856796116504854,
+        "sites": {
+          "aicp": 552,
+          "directorslibrary": 106,
+          "motiondesignawards": 223,
+          "promonews": 239,
+          "shots": 575
+        },
+        "evidenceLevels": {
+          "full-film": 1695
+        },
+        "features": {
+          "cutsPerMinute": {
+            "unit": "cuts/min",
+            "meaning": "detected scene-change candidates per minute",
+            "coverage": 1695,
+            "missing": 0,
+            "p10": 7.6399362,
+            "median": 20.728935,
+            "p90": 36.73587660000001
+          },
+          "medianShotSeconds": {
+            "unit": "s",
+            "meaning": "median interval between detected scene-change candidates",
+            "coverage": 1656,
+            "missing": 39,
+            "p10": 1.034367,
+            "median": 1.88,
+            "p90": 3.9895835
+          },
+          "p10ShotSeconds": {
+            "unit": "s",
+            "meaning": "10th-percentile interval between detected candidates (short end)",
+            "coverage": 1656,
+            "missing": 39,
+            "p10": 0.133467,
+            "median": 0.8150735,
+            "p90": 1.8409200000000001
+          },
+          "p90ShotSeconds": {
+            "unit": "s",
+            "meaning": "90th-percentile interval between detected candidates (long end)",
+            "coverage": 984,
+            "missing": 711,
+            "p10": 3.0138999999999996,
+            "median": 5.360666500000001,
+            "p90": 13.218016900000002
+          },
+          "burstFraction": {
+            "unit": "fraction",
+            "meaning": "share of candidates that land within a burst window of the previous one",
+            "coverage": 1643,
+            "missing": 52,
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 0.28109759999999995
+          },
+          "shotsUnderHalfSecondPct": {
+            "unit": "%",
+            "meaning": "share of detected intervals shorter than 0.5 s",
+            "coverage": 984,
+            "missing": 711,
+            "p10": 0.0,
+            "median": 3.4483,
+            "p90": 26.159450000000003
+          },
+          "paceDriftRatio": {
+            "unit": "ratio",
+            "meaning": "last-third cut rate divided by first-third cut rate",
+            "coverage": 935,
+            "missing": 760,
+            "p10": 0.26698560000000005,
+            "median": 0.875,
+            "p90": 1.7806766
+          },
+          "paceTrendCode": {
+            "unit": "code",
+            "meaning": "editorial paceTrend as -1 decelerating / 0 steady / +1 accelerating",
+            "coverage": 935,
+            "missing": 760,
+            "p10": -1.0,
+            "median": 0.0,
+            "p90": 1.0
+          },
+          "paceFirstThirdCutsPerMinute": {
+            "unit": "cuts/min",
+            "meaning": "candidate rate inside the first third of the runtime",
+            "coverage": 984,
+            "missing": 711,
+            "p10": 6.4942761,
+            "median": 19.482687499999997,
+            "p90": 37.851820100000005
+          },
+          "paceLastThirdCutsPerMinute": {
+            "unit": "cuts/min",
+            "meaning": "candidate rate inside the last third of the runtime",
+            "coverage": 984,
+            "missing": 711,
+            "p10": 3.7184439000000005,
+            "median": 17.40888,
+            "p90": 34.42509720000001
+          },
+          "flickerLumaPerSecond": {
+            "unit": "luma/s",
+            "meaning": "median absolute second-to-second change in mean display luma",
+            "coverage": 984,
+            "missing": 711,
+            "p10": 0.0058245000000000016,
+            "median": 0.019131500000000003,
+            "p90": 0.04170120000000002
+          },
+          "staticFraction": {
+            "unit": "fraction",
+            "meaning": "share of sampled consecutive pairs with near-zero RGB change",
+            "coverage": 984,
+            "missing": 711,
+            "p10": 0.1828593,
+            "median": 0.344828,
+            "p90": 0.5691038
+          },
+          "meanLuma": {
+            "unit": "0-1",
+            "meaning": "mean display-luma proxy across the appearance sample",
+            "coverage": 1695,
+            "missing": 0,
+            "p10": 0.1472078,
+            "median": 0.267232,
+            "p90": 0.48808799999999997
+          },
+          "meanSaturation": {
+            "unit": "0-1",
+            "meaning": "mean saturation proxy across the appearance sample",
+            "coverage": 1695,
+            "missing": 0,
+            "p10": 0.1477128,
+            "median": 0.309036,
+            "p90": 0.4771992000000001
+          },
+          "durationSeconds": {
+            "unit": "s",
+            "meaning": "measured runtime of the rendition, not an editorial duration",
+            "coverage": 1695,
+            "missing": 0,
+            "p10": 30.058667,
+            "median": 92.992,
+            "p90": 232.36673000000002
+          },
+          "integratedLufs": {
+            "unit": "LUFS",
+            "meaning": "integrated programme loudness of the measured audio stream",
+            "coverage": 1418,
+            "missing": 277,
+            "p10": -22.5,
+            "median": -14.4,
+            "p90": -8.6
+          },
+          "loudnessRangeLu": {
+            "unit": "LU",
+            "meaning": "loudness range of the measured audio stream",
+            "coverage": 1418,
+            "missing": 277,
+            "p10": 3.170000000000002,
+            "median": 7.05,
+            "p90": 14.2
+          },
+          "truePeakDbfs": {
+            "unit": "dBFS",
+            "meaning": "true peak of the measured audio stream",
+            "coverage": 1416,
+            "missing": 279,
+            "p10": -6.2,
+            "median": -0.8,
+            "p90": 1.4
+          },
+          "silenceFraction": {
+            "unit": "fraction",
+            "meaning": "share of measured audio windows below the silence gate",
+            "coverage": 1418,
+            "missing": 277,
+            "p10": 0.0026691,
+            "median": 0.017923500000000002,
+            "p90": 0.0854958
+          },
+          "onsetPerMinute": {
+            "unit": "onsets/min",
+            "meaning": "detected audio onsets per minute of measured runtime",
+            "coverage": 1418,
+            "missing": 277,
+            "p10": 205.5124,
+            "median": 285.8995,
+            "p90": 337.1751
+          },
+          "onsetTrendCode": {
+            "unit": "code",
+            "meaning": "onset-rate trend as -1 decelerating / 0 steady / +1 accelerating",
+            "coverage": 1418,
+            "missing": 277,
+            "p10": -1.0,
+            "median": 0.0,
+            "p90": 1.0
+          },
+          "tempoHypothesisBpm": {
+            "unit": "BPM",
+            "meaning": "periodicity hypothesis with at least 0.2 confidence; not a beat grid",
+            "coverage": 288,
+            "missing": 1407,
+            "p10": 63.8,
+            "median": 107.1,
+            "p90": 157.9
+          }
+        }
+      },
+      "recipe": {
+        "targetCuts": {
+          "15s": {
+            "seconds": 15,
+            "cuts": 5,
+            "medianShotSeconds": 3.0
+          },
+          "30s": {
+            "seconds": 30,
+            "cuts": 10,
+            "medianShotSeconds": 3.0
+          },
+          "60s": {
+            "seconds": 60,
+            "cuts": 21,
+            "medianShotSeconds": 2.857142857142857
+          },
+          "90s": {
+            "seconds": 90,
+            "cuts": 31,
+            "medianShotSeconds": 2.903225806451613
+          }
+        },
+        "cutRatePerMinute": {
+          "median": 20.728935,
+          "p10": 7.6399362,
+          "p90": 36.73587660000001
+        },
+        "shotSeconds": {
+          "medianSeconds": 1.88,
+          "p10Seconds": 1.034367,
+          "p90Seconds": 3.9895835,
+          "unit": "s"
+        },
+        "pace": {
+          "trend": "near-flat",
+          "driftRatio": 0.875,
+          "firstThirdCutsPerMinute": 19.482687499999997,
+          "lastThirdCutsPerMinute": 17.40888,
+          "firstThirdCoverage": 984,
+          "lastThirdCoverage": 984,
+          "driftRatioBand": {
+            "p10": 0.26698560000000005,
+            "median": 0.875,
+            "p90": 1.7806766,
+            "unit": "ratio",
+            "derivedFrom": 935
+          }
+        },
+        "loudness": {
+          "integratedLufs": {
+            "p10": -22.5,
+            "median": -14.4,
+            "p90": -8.6,
+            "unit": "LUFS",
+            "derivedFrom": 1418
+          },
+          "loudnessRangeLu": {
+            "p10": 3.170000000000002,
+            "median": 7.05,
+            "p90": 14.2,
+            "unit": "LU",
+            "derivedFrom": 1418
+          },
+          "truePeakDbfs": {
+            "p10": -6.2,
+            "median": -0.8,
+            "p90": 1.4,
+            "unit": "dBFS",
+            "derivedFrom": 1416
+          },
+          "silenceFraction": {
+            "p10": 0.0026691,
+            "median": 0.017923500000000002,
+            "p90": 0.0854958,
+            "unit": "fraction",
+            "derivedFrom": 1418
+          }
+        },
+        "onset": {
+          "onsetsPerMinute": {
+            "p10": 205.5124,
+            "median": 285.8995,
+            "p90": 337.1751,
+            "unit": "onsets/min",
+            "derivedFrom": 1418
+          },
+          "trendCode": {
+            "p10": -1.0,
+            "median": 0.0,
+            "p90": 1.0,
+            "unit": "code",
+            "derivedFrom": 1418
+          },
+          "tempoHypothesisBpm": {
+            "p10": 63.8,
+            "median": 107.1,
+            "p90": 157.9,
+            "unit": "BPM",
+            "derivedFrom": 288
+          }
+        },
+        "palette": {
+          "meanLuma": {
+            "p10": 0.1472078,
+            "median": 0.267232,
+            "p90": 0.48808799999999997,
+            "unit": "0-1",
+            "derivedFrom": 1695
+          },
+          "meanSaturation": {
+            "p10": 0.1477128,
+            "median": 0.309036,
+            "p90": 0.4771992000000001,
+            "unit": "0-1",
+            "derivedFrom": 1695
+          }
+        },
+        "burstFraction": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.28109759999999995,
+          "unit": "fraction",
+          "derivedFrom": 1643
+        },
+        "flickerLumaPerSecond": {
+          "p10": 0.0058245000000000016,
+          "median": 0.019131500000000003,
+          "p90": 0.04170120000000002,
+          "unit": "luma/s",
+          "derivedFrom": 984
+        },
+        "derivedFrom": 1695,
+        "formula": "cuts = round(median cutsPerMinute * seconds / 60)",
+        "note": "Measured mid-points of this component, not prescriptions; a different target duration does not change the measured rate. A 0-cut target at a short duration is the arithmetic result of a very low measured rate; use the shot-duration band there."
+      },
+      "exemplars": [
+        {
+          "site": "shots",
+          "id": "40539",
+          "slug": "inflatables",
+          "title": "Inflatables",
+          "durationSeconds": 30.059,
+          "silhouette": 0.6291
+        },
+        {
+          "site": "shots",
+          "id": "40497",
+          "slug": "see-yourself-in-canada-prince-edward-island",
+          "title": "See Yourself in Canada - Prince Edward Island",
+          "durationSeconds": 30.123,
+          "silhouette": 0.6291
+        },
+        {
+          "site": "shots",
+          "id": "40819",
+          "slug": "common-ground",
+          "title": "Common Ground",
+          "durationSeconds": 120.021,
+          "silhouette": 0.629
+        },
+        {
+          "site": "promonews",
+          "id": "85453",
+          "slug": "thomas-de-pourquery-rhythm-changed-ludovic-gontrand",
+          "title": "Thomas De Pourquery 'The Rhythm Changed' by Ludovic Gontrand",
+          "durationSeconds": 244.878,
+          "silhouette": 0.629
+        },
+        {
+          "site": "shots",
+          "id": "36503",
+          "slug": "power-struggle",
+          "title": "Power Struggle",
+          "durationSeconds": 60.053,
+          "silhouette": 0.6288
+        },
+        {
+          "site": "aicp",
+          "id": "811382",
+          "slug": "5-missing-menu-meal-tik-tok",
+          "title": "$5 Missing Menu Meal-Tik Tok",
+          "durationSeconds": 122.304,
+          "silhouette": 0.6286
+        }
+      ],
+      "clusterK": 4,
+      "silhouette": 0.4005,
+      "medianSilhouette": 0.3914
+    },
+    {
+      "name": "strobe-textured",
+      "n": 275,
+      "share": 0.111246,
+      "sites": {
+        "aicp": 46,
+        "directorslibrary": 9,
+        "motiondesignawards": 104,
+        "promonews": 40,
+        "shots": 76
+      },
+      "evidenceLevels": {
+        "full-film": 275
+      },
+      "profile": {
+        "n": 275,
+        "share": 0.11124595469255663,
+        "sites": {
+          "aicp": 46,
+          "directorslibrary": 9,
+          "motiondesignawards": 104,
+          "promonews": 40,
+          "shots": 76
+        },
+        "evidenceLevels": {
+          "full-film": 275
+        },
+        "features": {
+          "cutsPerMinute": {
+            "unit": "cuts/min",
+            "meaning": "detected scene-change candidates per minute",
+            "coverage": 275,
+            "missing": 0,
+            "p10": 15.750525600000007,
+            "median": 48.655063,
+            "p90": 132.94117160000002
+          },
+          "medianShotSeconds": {
+            "unit": "s",
+            "meaning": "median interval between detected scene-change candidates",
+            "coverage": 275,
+            "missing": 0,
+            "p10": 0.083333,
+            "median": 0.24,
+            "p90": 1.0416248000000001
+          },
+          "p10ShotSeconds": {
+            "unit": "s",
+            "meaning": "10th-percentile interval between detected candidates (short end)",
+            "coverage": 275,
+            "missing": 0,
+            "p10": 0.04,
+            "median": 0.08,
+            "p90": 0.133467
+          },
+          "p90ShotSeconds": {
+            "unit": "s",
+            "meaning": "90th-percentile interval between detected candidates (long end)",
+            "coverage": 188,
+            "missing": 87,
+            "p10": 0.9750501,
+            "median": 3.2099335,
+            "p90": 9.491916800000006
+          },
+          "burstFraction": {
+            "unit": "fraction",
+            "meaning": "share of candidates that land within a burst window of the previous one",
+            "coverage": 275,
+            "missing": 0,
+            "p10": 0.5463206,
+            "median": 0.707317,
+            "p90": 0.94971
+          },
+          "shotsUnderHalfSecondPct": {
+            "unit": "%",
+            "meaning": "share of detected intervals shorter than 0.5 s",
+            "coverage": 188,
+            "missing": 87,
+            "p10": 39.24676,
+            "median": 60.15875,
+            "p90": 80.15255
+          },
+          "paceDriftRatio": {
+            "unit": "ratio",
+            "meaning": "last-third cut rate divided by first-third cut rate",
+            "coverage": 170,
+            "missing": 105,
+            "p10": 0.0566919,
+            "median": 0.9330355,
+            "p90": 3.4666666999999998
+          },
+          "paceTrendCode": {
+            "unit": "code",
+            "meaning": "editorial paceTrend as -1 decelerating / 0 steady / +1 accelerating",
+            "coverage": 170,
+            "missing": 105,
+            "p10": -1.0,
+            "median": 0.0,
+            "p90": 1.0
+          },
+          "paceFirstThirdCutsPerMinute": {
+            "unit": "cuts/min",
+            "meaning": "candidate rate inside the first third of the runtime",
+            "coverage": 188,
+            "missing": 87,
+            "p10": 2.794769099999999,
+            "median": 36.432544,
+            "p90": 125.65243900000002
+          },
+          "paceLastThirdCutsPerMinute": {
+            "unit": "cuts/min",
+            "meaning": "candidate rate inside the last third of the runtime",
+            "coverage": 188,
+            "missing": 87,
+            "p10": 2.3668942999999993,
+            "median": 38.184303,
+            "p90": 131.27312310000022
+          },
+          "flickerLumaPerSecond": {
+            "unit": "luma/s",
+            "meaning": "median absolute second-to-second change in mean display luma",
+            "coverage": 188,
+            "missing": 87,
+            "p10": 0.0086578,
+            "median": 0.02981,
+            "p90": 0.08504060000000002
+          },
+          "staticFraction": {
+            "unit": "fraction",
+            "meaning": "share of sampled consecutive pairs with near-zero RGB change",
+            "coverage": 188,
+            "missing": 87,
+            "p10": 0.0943415,
+            "median": 0.2505145,
+            "p90": 0.5008196
+          },
+          "meanLuma": {
+            "unit": "0-1",
+            "meaning": "mean display-luma proxy across the appearance sample",
+            "coverage": 275,
+            "missing": 0,
+            "p10": 0.1343658,
+            "median": 0.289795,
+            "p90": 0.5989389999999999
+          },
+          "meanSaturation": {
+            "unit": "0-1",
+            "meaning": "mean saturation proxy across the appearance sample",
+            "coverage": 275,
+            "missing": 0,
+            "p10": 0.086699,
+            "median": 0.360295,
+            "p90": 0.6135586
+          },
+          "durationSeconds": {
+            "unit": "s",
+            "meaning": "measured runtime of the rendition, not an editorial duration",
+            "coverage": 275,
+            "missing": 0,
+            "p10": 17.920000200000004,
+            "median": 64.298333,
+            "p90": 235.4653166
+          },
+          "integratedLufs": {
+            "unit": "LUFS",
+            "meaning": "integrated programme loudness of the measured audio stream",
+            "coverage": 246,
+            "missing": 29,
+            "p10": -20.9,
+            "median": -13.9,
+            "p90": -8.1
+          },
+          "loudnessRangeLu": {
+            "unit": "LU",
+            "meaning": "loudness range of the measured audio stream",
+            "coverage": 246,
+            "missing": 29,
+            "p10": 2.4,
+            "median": 5.85,
+            "p90": 12.649999999999999
+          },
+          "truePeakDbfs": {
+            "unit": "dBFS",
+            "meaning": "true peak of the measured audio stream",
+            "coverage": 246,
+            "missing": 29,
+            "p10": -5.05,
+            "median": -0.2,
+            "p90": 1.8
+          },
+          "silenceFraction": {
+            "unit": "fraction",
+            "meaning": "share of measured audio windows below the silence gate",
+            "coverage": 246,
+            "missing": 29,
+            "p10": 0.0025564999999999997,
+            "median": 0.021285,
+            "p90": 0.09575800000000001
+          },
+          "onsetPerMinute": {
+            "unit": "onsets/min",
+            "meaning": "detected audio onsets per minute of measured runtime",
+            "coverage": 246,
+            "missing": 29,
+            "p10": 210.764,
+            "median": 292.856,
+            "p90": 338.024
+          },
+          "onsetTrendCode": {
+            "unit": "code",
+            "meaning": "onset-rate trend as -1 decelerating / 0 steady / +1 accelerating",
+            "coverage": 246,
+            "missing": 29,
+            "p10": -1.0,
+            "median": 0.0,
+            "p90": 1.0
+          },
+          "tempoHypothesisBpm": {
+            "unit": "BPM",
+            "meaning": "periodicity hypothesis with at least 0.2 confidence; not a beat grid",
+            "coverage": 65,
+            "missing": 210,
+            "p10": 63.019999999999996,
+            "median": 96.8,
+            "p90": 160.02
+          }
+        }
+      },
+      "recipe": {
+        "targetCuts": {
+          "15s": {
+            "seconds": 15,
+            "cuts": 12,
+            "medianShotSeconds": 1.25
+          },
+          "30s": {
+            "seconds": 30,
+            "cuts": 24,
+            "medianShotSeconds": 1.25
+          },
+          "60s": {
+            "seconds": 60,
+            "cuts": 49,
+            "medianShotSeconds": 1.2244897959183674
+          },
+          "90s": {
+            "seconds": 90,
+            "cuts": 73,
+            "medianShotSeconds": 1.2328767123287672
+          }
+        },
+        "cutRatePerMinute": {
+          "median": 48.655063,
+          "p10": 15.750525600000007,
+          "p90": 132.94117160000002
+        },
+        "shotSeconds": {
+          "medianSeconds": 0.24,
+          "p10Seconds": 0.083333,
+          "p90Seconds": 1.0416248000000001,
+          "unit": "s"
+        },
+        "pace": {
+          "trend": "near-flat",
+          "driftRatio": 0.9330355,
+          "firstThirdCutsPerMinute": 36.432544,
+          "lastThirdCutsPerMinute": 38.184303,
+          "firstThirdCoverage": 188,
+          "lastThirdCoverage": 188,
+          "driftRatioBand": {
+            "p10": 0.0566919,
+            "median": 0.9330355,
+            "p90": 3.4666666999999998,
+            "unit": "ratio",
+            "derivedFrom": 170
+          }
+        },
+        "loudness": {
+          "integratedLufs": {
+            "p10": -20.9,
+            "median": -13.9,
+            "p90": -8.1,
+            "unit": "LUFS",
+            "derivedFrom": 246
+          },
+          "loudnessRangeLu": {
+            "p10": 2.4,
+            "median": 5.85,
+            "p90": 12.649999999999999,
+            "unit": "LU",
+            "derivedFrom": 246
+          },
+          "truePeakDbfs": {
+            "p10": -5.05,
+            "median": -0.2,
+            "p90": 1.8,
+            "unit": "dBFS",
+            "derivedFrom": 246
+          },
+          "silenceFraction": {
+            "p10": 0.0025564999999999997,
+            "median": 0.021285,
+            "p90": 0.09575800000000001,
+            "unit": "fraction",
+            "derivedFrom": 246
+          }
+        },
+        "onset": {
+          "onsetsPerMinute": {
+            "p10": 210.764,
+            "median": 292.856,
+            "p90": 338.024,
+            "unit": "onsets/min",
+            "derivedFrom": 246
+          },
+          "trendCode": {
+            "p10": -1.0,
+            "median": 0.0,
+            "p90": 1.0,
+            "unit": "code",
+            "derivedFrom": 246
+          },
+          "tempoHypothesisBpm": {
+            "p10": 63.019999999999996,
+            "median": 96.8,
+            "p90": 160.02,
+            "unit": "BPM",
+            "derivedFrom": 65
+          }
+        },
+        "palette": {
+          "meanLuma": {
+            "p10": 0.1343658,
+            "median": 0.289795,
+            "p90": 0.5989389999999999,
+            "unit": "0-1",
+            "derivedFrom": 275
+          },
+          "meanSaturation": {
+            "p10": 0.086699,
+            "median": 0.360295,
+            "p90": 0.6135586,
+            "unit": "0-1",
+            "derivedFrom": 275
+          }
+        },
+        "burstFraction": {
+          "p10": 0.5463206,
+          "median": 0.707317,
+          "p90": 0.94971,
+          "unit": "fraction",
+          "derivedFrom": 275
+        },
+        "flickerLumaPerSecond": {
+          "p10": 0.0086578,
+          "median": 0.02981,
+          "p90": 0.08504060000000002,
+          "unit": "luma/s",
+          "derivedFrom": 188
+        },
+        "derivedFrom": 275,
+        "formula": "cuts = round(median cutsPerMinute * seconds / 60)",
+        "note": "Measured mid-points of this component, not prescriptions; a different target duration does not change the measured rate. A 0-cut target at a short duration is the arithmetic result of a very low measured rate; use the shot-duration band there."
+      },
+      "exemplars": [
+        {
+          "site": "motiondesignawards",
+          "id": "113",
+          "slug": "wolverine-hellcat",
+          "title": "Wolverine: Hellcat",
+          "durationSeconds": 30.023,
+          "centroidDistance": 0.8059
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "2648",
+          "slug": "rechannel",
+          "title": "Rechannel",
+          "durationSeconds": 51.376,
+          "centroidDistance": 0.9832
+        },
+        {
+          "site": "shots",
+          "id": "41246",
+          "slug": "100-real-with-pamela-anderson",
+          "title": "100% Real with Pamela Anderson",
+          "durationSeconds": 60.117,
+          "centroidDistance": 1.0482
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "2723",
+          "slug": "sevilla-design-walk-26-main-titles",
+          "title": "Sevilla Design Walk 26 - Main Titles",
+          "durationSeconds": 35.883,
+          "centroidDistance": 1.1132
+        },
+        {
+          "site": "aicp",
+          "id": "1173959",
+          "slug": "gatorade-cool-seats",
+          "title": "Gatorade \u2013 Cool Seats",
+          "durationSeconds": 116.928,
+          "centroidDistance": 1.1194
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "189",
+          "slug": "mission-m101",
+          "title": "Mission M101",
+          "durationSeconds": 212.757,
+          "centroidDistance": 1.2454
+        }
+      ],
+      "clusterK": null,
+      "silhouette": null,
+      "medianSilhouette": null,
+      "selection": "closest-to-centroid"
+    },
+    {
+      "name": "decelerating-long-take",
+      "n": 229,
+      "share": 0.092638,
+      "sites": {
+        "aicp": 29,
+        "directorslibrary": 7,
+        "motiondesignawards": 111,
+        "promonews": 18,
+        "shots": 64
+      },
+      "evidenceLevels": {
+        "full-film": 229
+      },
+      "profile": {
+        "n": 229,
+        "share": 0.09263754045307443,
+        "sites": {
+          "aicp": 29,
+          "directorslibrary": 7,
+          "motiondesignawards": 111,
+          "promonews": 18,
+          "shots": 64
+        },
+        "evidenceLevels": {
+          "full-film": 229
+        },
+        "features": {
+          "cutsPerMinute": {
+            "unit": "cuts/min",
+            "meaning": "detected scene-change candidates per minute",
+            "coverage": 229,
+            "missing": 0,
+            "p10": 0.0,
+            "median": 1.670995,
+            "p90": 5.293403200000001
+          },
+          "medianShotSeconds": {
+            "unit": "s",
+            "meaning": "median interval between detected scene-change candidates",
+            "coverage": 229,
+            "missing": 0,
+            "p10": 8.0005328,
+            "median": 16.791667,
+            "p90": 66.74346700000002
+          },
+          "p10ShotSeconds": {
+            "unit": "s",
+            "meaning": "10th-percentile interval between detected candidates (short end)",
+            "coverage": 229,
+            "missing": 0,
+            "p10": 2.103456,
+            "median": 9.393632,
+            "p90": 62.51520000000001
+          },
+          "p90ShotSeconds": {
+            "unit": "s",
+            "meaning": "90th-percentile interval between detected candidates (long end)",
+            "coverage": 200,
+            "missing": 29,
+            "p10": 13.0829336,
+            "median": 27.8024735,
+            "p90": 93.71541299999998
+          },
+          "burstFraction": {
+            "unit": "fraction",
+            "meaning": "share of candidates that land within a burst window of the previous one",
+            "coverage": 106,
+            "missing": 123,
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 0.066741
+          },
+          "shotsUnderHalfSecondPct": {
+            "unit": "%",
+            "meaning": "share of detected intervals shorter than 0.5 s",
+            "coverage": 200,
+            "missing": 29,
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "paceDriftRatio": {
+            "unit": "ratio",
+            "meaning": "last-third cut rate divided by first-third cut rate",
+            "coverage": 78,
+            "missing": 151,
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 1.0
+          },
+          "paceTrendCode": {
+            "unit": "code",
+            "meaning": "editorial paceTrend as -1 decelerating / 0 steady / +1 accelerating",
+            "coverage": 78,
+            "missing": 151,
+            "p10": -1.0,
+            "median": -1.0,
+            "p90": 0.0
+          },
+          "paceFirstThirdCutsPerMinute": {
+            "unit": "cuts/min",
+            "meaning": "candidate rate inside the first third of the runtime",
+            "coverage": 200,
+            "missing": 29,
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 7.150539899999999
+          },
+          "paceLastThirdCutsPerMinute": {
+            "unit": "cuts/min",
+            "meaning": "candidate rate inside the last third of the runtime",
+            "coverage": 200,
+            "missing": 29,
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 5.339661299999999
+          },
+          "flickerLumaPerSecond": {
+            "unit": "luma/s",
+            "meaning": "median absolute second-to-second change in mean display luma",
+            "coverage": 200,
+            "missing": 29,
+            "p10": 0.0012823,
+            "median": 0.0085155,
+            "p90": 0.031021200000000002
+          },
+          "staticFraction": {
+            "unit": "fraction",
+            "meaning": "share of sampled consecutive pairs with near-zero RGB change",
+            "coverage": 200,
+            "missing": 29,
+            "p10": 0.2,
+            "median": 0.5207765,
+            "p90": 0.9256034000000001
+          },
+          "meanLuma": {
+            "unit": "0-1",
+            "meaning": "mean display-luma proxy across the appearance sample",
+            "coverage": 229,
+            "missing": 0,
+            "p10": 0.08352119999999999,
+            "median": 0.230518,
+            "p90": 0.7181282000000001
+          },
+          "meanSaturation": {
+            "unit": "0-1",
+            "meaning": "mean saturation proxy across the appearance sample",
+            "coverage": 229,
+            "missing": 0,
+            "p10": 0.0849666,
+            "median": 0.301467,
+            "p90": 0.595225
+          },
+          "durationSeconds": {
+            "unit": "s",
+            "meaning": "measured runtime of the rendition, not an editorial duration",
+            "coverage": 229,
+            "missing": 0,
+            "p10": 17.907200000000003,
+            "median": 51.050667,
+            "p90": 179.2768002
+          },
+          "integratedLufs": {
+            "unit": "LUFS",
+            "meaning": "integrated programme loudness of the measured audio stream",
+            "coverage": 221,
+            "missing": 8,
+            "p10": -23.1,
+            "median": -15.0,
+            "p90": -10.2
+          },
+          "loudnessRangeLu": {
+            "unit": "LU",
+            "meaning": "loudness range of the measured audio stream",
+            "coverage": 221,
+            "missing": 8,
+            "p10": 2.5,
+            "median": 7.4,
+            "p90": 15.6
+          },
+          "truePeakDbfs": {
+            "unit": "dBFS",
+            "meaning": "true peak of the measured audio stream",
+            "coverage": 219,
+            "missing": 10,
+            "p10": -6.2,
+            "median": -0.9,
+            "p90": 0.9200000000000017
+          },
+          "silenceFraction": {
+            "unit": "fraction",
+            "meaning": "share of measured audio windows below the silence gate",
+            "coverage": 221,
+            "missing": 8,
+            "p10": 0.003438,
+            "median": 0.032601,
+            "p90": 0.16
+          },
+          "onsetPerMinute": {
+            "unit": "onsets/min",
+            "meaning": "detected audio onsets per minute of measured runtime",
+            "coverage": 221,
+            "missing": 8,
+            "p10": 173.09,
+            "median": 281.731,
+            "p90": 333.296
+          },
+          "onsetTrendCode": {
+            "unit": "code",
+            "meaning": "onset-rate trend as -1 decelerating / 0 steady / +1 accelerating",
+            "coverage": 221,
+            "missing": 8,
+            "p10": -1.0,
+            "median": 0.0,
+            "p90": 1.0
+          },
+          "tempoHypothesisBpm": {
+            "unit": "BPM",
+            "meaning": "periodicity hypothesis with at least 0.2 confidence; not a beat grid",
+            "coverage": 38,
+            "missing": 191,
+            "p10": 60.0,
+            "median": 95.3,
+            "p90": 157.9500000000001
+          }
+        }
+      },
+      "recipe": {
+        "targetCuts": {
+          "15s": {
+            "seconds": 15,
+            "cuts": 0,
+            "medianShotSeconds": null
+          },
+          "30s": {
+            "seconds": 30,
+            "cuts": 1,
+            "medianShotSeconds": 30.0
+          },
+          "60s": {
+            "seconds": 60,
+            "cuts": 2,
+            "medianShotSeconds": 30.0
+          },
+          "90s": {
+            "seconds": 90,
+            "cuts": 3,
+            "medianShotSeconds": 30.0
+          }
+        },
+        "cutRatePerMinute": {
+          "median": 1.670995,
+          "p10": 0.0,
+          "p90": 5.293403200000001
+        },
+        "shotSeconds": {
+          "medianSeconds": 16.791667,
+          "p10Seconds": 8.0005328,
+          "p90Seconds": 66.74346700000002,
+          "unit": "s"
+        },
+        "pace": {
+          "trend": "decelerating",
+          "driftRatio": 0.0,
+          "firstThirdCutsPerMinute": 0.0,
+          "lastThirdCutsPerMinute": 0.0,
+          "firstThirdCoverage": 200,
+          "lastThirdCoverage": 200,
+          "driftRatioBand": {
+            "p10": 0.0,
+            "median": 0.0,
+            "p90": 1.0,
+            "unit": "ratio",
+            "derivedFrom": 78
+          }
+        },
+        "loudness": {
+          "integratedLufs": {
+            "p10": -23.1,
+            "median": -15.0,
+            "p90": -10.2,
+            "unit": "LUFS",
+            "derivedFrom": 221
+          },
+          "loudnessRangeLu": {
+            "p10": 2.5,
+            "median": 7.4,
+            "p90": 15.6,
+            "unit": "LU",
+            "derivedFrom": 221
+          },
+          "truePeakDbfs": {
+            "p10": -6.2,
+            "median": -0.9,
+            "p90": 0.9200000000000017,
+            "unit": "dBFS",
+            "derivedFrom": 219
+          },
+          "silenceFraction": {
+            "p10": 0.003438,
+            "median": 0.032601,
+            "p90": 0.16,
+            "unit": "fraction",
+            "derivedFrom": 221
+          }
+        },
+        "onset": {
+          "onsetsPerMinute": {
+            "p10": 173.09,
+            "median": 281.731,
+            "p90": 333.296,
+            "unit": "onsets/min",
+            "derivedFrom": 221
+          },
+          "trendCode": {
+            "p10": -1.0,
+            "median": 0.0,
+            "p90": 1.0,
+            "unit": "code",
+            "derivedFrom": 221
+          },
+          "tempoHypothesisBpm": {
+            "p10": 60.0,
+            "median": 95.3,
+            "p90": 157.9500000000001,
+            "unit": "BPM",
+            "derivedFrom": 38
+          }
+        },
+        "palette": {
+          "meanLuma": {
+            "p10": 0.08352119999999999,
+            "median": 0.230518,
+            "p90": 0.7181282000000001,
+            "unit": "0-1",
+            "derivedFrom": 229
+          },
+          "meanSaturation": {
+            "p10": 0.0849666,
+            "median": 0.301467,
+            "p90": 0.595225,
+            "unit": "0-1",
+            "derivedFrom": 229
+          }
+        },
+        "burstFraction": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.066741,
+          "unit": "fraction",
+          "derivedFrom": 106
+        },
+        "flickerLumaPerSecond": {
+          "p10": 0.0012823,
+          "median": 0.0085155,
+          "p90": 0.031021200000000002,
+          "unit": "luma/s",
+          "derivedFrom": 200
+        },
+        "derivedFrom": 229,
+        "formula": "cuts = round(median cutsPerMinute * seconds / 60)",
+        "note": "Measured mid-points of this component, not prescriptions; a different target duration does not change the measured rate. A 0-cut target at a short duration is the arithmetic result of a very low measured rate; use the shot-duration band there."
+      },
+      "exemplars": [
+        {
+          "site": "motiondesignawards",
+          "id": "2005",
+          "slug": "flodesk-case-study",
+          "title": "FloDesk Case Study",
+          "durationSeconds": 56.555,
+          "silhouette": 0.8055
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "2653",
+          "slug": "the-palace-of-illusions",
+          "title": "The Palace of Illusions",
+          "durationSeconds": 49.726,
+          "silhouette": 0.8054
+        },
+        {
+          "site": "directorslibrary",
+          "id": "76390",
+          "slug": "chanel-25-handbag-chanel",
+          "title": "\u2018Chanel 25 Handbag\u2019 Chanel",
+          "durationSeconds": 53.104,
+          "silhouette": 0.8053
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "778",
+          "slug": "astro-man",
+          "title": "ASTRO - MAN",
+          "durationSeconds": 31.701,
+          "silhouette": 0.8048
+        },
+        {
+          "site": "shots",
+          "id": "41316",
+          "slug": "twas-the-season",
+          "title": "Twas the Season",
+          "durationSeconds": 96.405,
+          "silhouette": 0.8048
+        },
+        {
+          "site": "shots",
+          "id": "41150",
+          "slug": "behind-the-scenes-of-wear-your-best-life",
+          "title": "Behind the Scenes of Wear Your Best Life",
+          "durationSeconds": 33.685,
+          "silhouette": 0.8047
+        }
+      ],
+      "clusterK": 4,
+      "silhouette": 0.4005,
+      "medianSilhouette": 0.704
+    },
+    {
+      "name": "rapid-cut",
+      "n": 208,
+      "share": 0.084142,
+      "sites": {
+        "aicp": 58,
+        "directorslibrary": 8,
+        "motiondesignawards": 44,
+        "promonews": 19,
+        "shots": 79
+      },
+      "evidenceLevels": {
+        "full-film": 208
+      },
+      "profile": {
+        "n": 208,
+        "share": 0.08414239482200647,
+        "sites": {
+          "aicp": 58,
+          "directorslibrary": 8,
+          "motiondesignawards": 44,
+          "promonews": 19,
+          "shots": 79
+        },
+        "evidenceLevels": {
+          "full-film": 208
+        },
+        "features": {
+          "cutsPerMinute": {
+            "unit": "cuts/min",
+            "meaning": "detected scene-change candidates per minute",
+            "coverage": 208,
+            "missing": 0,
+            "p10": 33.481809500000004,
+            "median": 52.9545295,
+            "p90": 77.1325678
+          },
+          "medianShotSeconds": {
+            "unit": "s",
+            "meaning": "median interval between detected scene-change candidates",
+            "coverage": 208,
+            "missing": 0,
+            "p10": 0.5,
+            "median": 0.767433,
+            "p90": 1.2562549
+          },
+          "p10ShotSeconds": {
+            "unit": "s",
+            "meaning": "10th-percentile interval between detected candidates (short end)",
+            "coverage": 208,
+            "missing": 0,
+            "p10": 0.066733,
+            "median": 0.171004,
+            "p90": 0.5275271000000002
+          },
+          "p90ShotSeconds": {
+            "unit": "s",
+            "meaning": "90th-percentile interval between detected candidates (long end)",
+            "coverage": 133,
+            "missing": 75,
+            "p10": 1.4601256,
+            "median": 2.35235,
+            "p90": 3.8300322
+          },
+          "burstFraction": {
+            "unit": "fraction",
+            "meaning": "share of candidates that land within a burst window of the previous one",
+            "coverage": 208,
+            "missing": 0,
+            "p10": 0.04178710000000001,
+            "median": 0.2455095,
+            "p90": 0.4660907
+          },
+          "shotsUnderHalfSecondPct": {
+            "unit": "%",
+            "meaning": "share of detected intervals shorter than 0.5 s",
+            "coverage": 133,
+            "missing": 75,
+            "p10": 8.18218,
+            "median": 25.675700000000003,
+            "p90": 49.52004
+          },
+          "paceDriftRatio": {
+            "unit": "ratio",
+            "meaning": "last-third cut rate divided by first-third cut rate",
+            "coverage": 132,
+            "missing": 76,
+            "p10": 0.4004762,
+            "median": 0.9254755,
+            "p90": 1.8514287000000003
+          },
+          "paceTrendCode": {
+            "unit": "code",
+            "meaning": "editorial paceTrend as -1 decelerating / 0 steady / +1 accelerating",
+            "coverage": 132,
+            "missing": 76,
+            "p10": -1.0,
+            "median": 0.0,
+            "p90": 1.0
+          },
+          "paceFirstThirdCutsPerMinute": {
+            "unit": "cuts/min",
+            "meaning": "candidate rate inside the first third of the runtime",
+            "coverage": 133,
+            "missing": 75,
+            "p10": 21.521295800000004,
+            "median": 46.282188,
+            "p90": 80.45961039999999
+          },
+          "paceLastThirdCutsPerMinute": {
+            "unit": "cuts/min",
+            "meaning": "candidate rate inside the last third of the runtime",
+            "coverage": 133,
+            "missing": 75,
+            "p10": 17.096165,
+            "median": 41.888298,
+            "p90": 76.4173628
+          },
+          "flickerLumaPerSecond": {
+            "unit": "luma/s",
+            "meaning": "median absolute second-to-second change in mean display luma",
+            "coverage": 133,
+            "missing": 75,
+            "p10": 0.04337440000000001,
+            "median": 0.066855,
+            "p90": 0.1139278
+          },
+          "staticFraction": {
+            "unit": "fraction",
+            "meaning": "share of sampled consecutive pairs with near-zero RGB change",
+            "coverage": 133,
+            "missing": 75,
+            "p10": 0.050847,
+            "median": 0.133333,
+            "p90": 0.2370214
+          },
+          "meanLuma": {
+            "unit": "0-1",
+            "meaning": "mean display-luma proxy across the appearance sample",
+            "coverage": 208,
+            "missing": 0,
+            "p10": 0.2017336,
+            "median": 0.32009200000000004,
+            "p90": 0.4697235
+          },
+          "meanSaturation": {
+            "unit": "0-1",
+            "meaning": "mean saturation proxy across the appearance sample",
+            "coverage": 208,
+            "missing": 0,
+            "p10": 0.12721110000000002,
+            "median": 0.3059465,
+            "p90": 0.4706253
+          },
+          "durationSeconds": {
+            "unit": "s",
+            "meaning": "measured runtime of the rendition, not an editorial duration",
+            "coverage": 208,
+            "missing": 0,
+            "p10": 30.058667,
+            "median": 62.101333499999996,
+            "p90": 164.4413972000001
+          },
+          "integratedLufs": {
+            "unit": "LUFS",
+            "meaning": "integrated programme loudness of the measured audio stream",
+            "coverage": 176,
+            "missing": 32,
+            "p10": -21.4,
+            "median": -14.1,
+            "p90": -8.05
+          },
+          "loudnessRangeLu": {
+            "unit": "LU",
+            "meaning": "loudness range of the measured audio stream",
+            "coverage": 176,
+            "missing": 32,
+            "p10": 2.6,
+            "median": 5.95,
+            "p90": 12.05
+          },
+          "truePeakDbfs": {
+            "unit": "dBFS",
+            "meaning": "true peak of the measured audio stream",
+            "coverage": 176,
+            "missing": 32,
+            "p10": -6.9,
+            "median": -0.55,
+            "p90": 1.65
+          },
+          "silenceFraction": {
+            "unit": "fraction",
+            "meaning": "share of measured audio windows below the silence gate",
+            "coverage": 176,
+            "missing": 32,
+            "p10": 0.0030635,
+            "median": 0.017204999999999998,
+            "p90": 0.05824
+          },
+          "onsetPerMinute": {
+            "unit": "onsets/min",
+            "meaning": "detected audio onsets per minute of measured runtime",
+            "coverage": 176,
+            "missing": 32,
+            "p10": 225.35199999999998,
+            "median": 295.445,
+            "p90": 340.1205
+          },
+          "onsetTrendCode": {
+            "unit": "code",
+            "meaning": "onset-rate trend as -1 decelerating / 0 steady / +1 accelerating",
+            "coverage": 176,
+            "missing": 32,
+            "p10": -1.0,
+            "median": 0.0,
+            "p90": 1.0
+          },
+          "tempoHypothesisBpm": {
+            "unit": "BPM",
+            "meaning": "periodicity hypothesis with at least 0.2 confidence; not a beat grid",
+            "coverage": 48,
+            "missing": 160,
+            "p10": 66.25,
+            "median": 115.4,
+            "p90": 142.9
+          }
+        }
+      },
+      "recipe": {
+        "targetCuts": {
+          "15s": {
+            "seconds": 15,
+            "cuts": 13,
+            "medianShotSeconds": 1.1538461538461537
+          },
+          "30s": {
+            "seconds": 30,
+            "cuts": 26,
+            "medianShotSeconds": 1.1538461538461537
+          },
+          "60s": {
+            "seconds": 60,
+            "cuts": 53,
+            "medianShotSeconds": 1.1320754716981132
+          },
+          "90s": {
+            "seconds": 90,
+            "cuts": 79,
+            "medianShotSeconds": 1.139240506329114
+          }
+        },
+        "cutRatePerMinute": {
+          "median": 52.9545295,
+          "p10": 33.481809500000004,
+          "p90": 77.1325678
+        },
+        "shotSeconds": {
+          "medianSeconds": 0.767433,
+          "p10Seconds": 0.5,
+          "p90Seconds": 1.2562549,
+          "unit": "s"
+        },
+        "pace": {
+          "trend": "near-flat",
+          "driftRatio": 0.9254755,
+          "firstThirdCutsPerMinute": 46.282188,
+          "lastThirdCutsPerMinute": 41.888298,
+          "firstThirdCoverage": 133,
+          "lastThirdCoverage": 133,
+          "driftRatioBand": {
+            "p10": 0.4004762,
+            "median": 0.9254755,
+            "p90": 1.8514287000000003,
+            "unit": "ratio",
+            "derivedFrom": 132
+          }
+        },
+        "loudness": {
+          "integratedLufs": {
+            "p10": -21.4,
+            "median": -14.1,
+            "p90": -8.05,
+            "unit": "LUFS",
+            "derivedFrom": 176
+          },
+          "loudnessRangeLu": {
+            "p10": 2.6,
+            "median": 5.95,
+            "p90": 12.05,
+            "unit": "LU",
+            "derivedFrom": 176
+          },
+          "truePeakDbfs": {
+            "p10": -6.9,
+            "median": -0.55,
+            "p90": 1.65,
+            "unit": "dBFS",
+            "derivedFrom": 176
+          },
+          "silenceFraction": {
+            "p10": 0.0030635,
+            "median": 0.017204999999999998,
+            "p90": 0.05824,
+            "unit": "fraction",
+            "derivedFrom": 176
+          }
+        },
+        "onset": {
+          "onsetsPerMinute": {
+            "p10": 225.35199999999998,
+            "median": 295.445,
+            "p90": 340.1205,
+            "unit": "onsets/min",
+            "derivedFrom": 176
+          },
+          "trendCode": {
+            "p10": -1.0,
+            "median": 0.0,
+            "p90": 1.0,
+            "unit": "code",
+            "derivedFrom": 176
+          },
+          "tempoHypothesisBpm": {
+            "p10": 66.25,
+            "median": 115.4,
+            "p90": 142.9,
+            "unit": "BPM",
+            "derivedFrom": 48
+          }
+        },
+        "palette": {
+          "meanLuma": {
+            "p10": 0.2017336,
+            "median": 0.32009200000000004,
+            "p90": 0.4697235,
+            "unit": "0-1",
+            "derivedFrom": 208
+          },
+          "meanSaturation": {
+            "p10": 0.12721110000000002,
+            "median": 0.3059465,
+            "p90": 0.4706253,
+            "unit": "0-1",
+            "derivedFrom": 208
+          }
+        },
+        "burstFraction": {
+          "p10": 0.04178710000000001,
+          "median": 0.2455095,
+          "p90": 0.4660907,
+          "unit": "fraction",
+          "derivedFrom": 208
+        },
+        "flickerLumaPerSecond": {
+          "p10": 0.04337440000000001,
+          "median": 0.066855,
+          "p90": 0.1139278,
+          "unit": "luma/s",
+          "derivedFrom": 133
+        },
+        "derivedFrom": 208,
+        "formula": "cuts = round(median cutsPerMinute * seconds / 60)",
+        "note": "Measured mid-points of this component, not prescriptions; a different target duration does not change the measured rate. A 0-cut target at a short duration is the arithmetic result of a very low measured rate; use the shot-duration band there."
+      },
+      "exemplars": [
+        {
+          "site": "shots",
+          "id": "40915",
+          "slug": "freaknik-the-wildest-party-never-told-trailer",
+          "title": "Freaknik: The Wildest Party Never Told - Trailer",
+          "durationSeconds": 115.966,
+          "silhouette": 0.3743
+        },
+        {
+          "site": "aicp",
+          "id": "858158",
+          "slug": "hacking-google",
+          "title": "Hacking Google",
+          "durationSeconds": 111.744,
+          "silhouette": 0.3623
+        },
+        {
+          "site": "aicp",
+          "id": "863315",
+          "slug": "diamonds",
+          "title": "Diamonds",
+          "durationSeconds": 49.941,
+          "silhouette": 0.3546
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "2405",
+          "slug": "styleframe-showreel-2025",
+          "title": "Styleframe Showreel 2025",
+          "durationSeconds": 80.043,
+          "silhouette": 0.3499
+        },
+        {
+          "site": "shots",
+          "id": "41376",
+          "slug": "celebrate-being-human",
+          "title": "Celebrate Being Human",
+          "durationSeconds": 60.117,
+          "silhouette": 0.3481
+        },
+        {
+          "site": "aicp",
+          "id": "1143293",
+          "slug": "goodyear",
+          "title": "Still. Always. Forever",
+          "durationSeconds": 62.123,
+          "silhouette": 0.3452
+        }
+      ],
+      "clusterK": 4,
+      "silhouette": 0.4005,
+      "medianSilhouette": 0.1174
+    },
+    {
+      "name": "accelerating-steady-cut",
+      "n": 65,
+      "share": 0.026294,
+      "sites": {
+        "aicp": 18,
+        "directorslibrary": 12,
+        "motiondesignawards": 9,
+        "promonews": 15,
+        "shots": 11
+      },
+      "evidenceLevels": {
+        "full-film": 65
+      },
+      "profile": {
+        "n": 65,
+        "share": 0.026294498381877023,
+        "sites": {
+          "aicp": 18,
+          "directorslibrary": 12,
+          "motiondesignawards": 9,
+          "promonews": 15,
+          "shots": 11
+        },
+        "evidenceLevels": {
+          "full-film": 65
+        },
+        "features": {
+          "cutsPerMinute": {
+            "unit": "cuts/min",
+            "meaning": "detected scene-change candidates per minute",
+            "coverage": 65,
+            "missing": 0,
+            "p10": 6.758171600000001,
+            "median": 16.65797,
+            "p90": 30.5869924
+          },
+          "medianShotSeconds": {
+            "unit": "s",
+            "meaning": "median interval between detected scene-change candidates",
+            "coverage": 65,
+            "missing": 0,
+            "p10": 0.8160000000000001,
+            "median": 1.685017,
+            "p90": 3.293667
+          },
+          "p10ShotSeconds": {
+            "unit": "s",
+            "meaning": "10th-percentile interval between detected candidates (short end)",
+            "coverage": 65,
+            "missing": 0,
+            "p10": 0.13006600000000001,
+            "median": 0.446279,
+            "p90": 1.32
+          },
+          "p90ShotSeconds": {
+            "unit": "s",
+            "meaning": "90th-percentile interval between detected candidates (long end)",
+            "coverage": 65,
+            "missing": 0,
+            "p10": 4.2290736,
+            "median": 6.981524,
+            "p90": 20.494932400000003
+          },
+          "burstFraction": {
+            "unit": "fraction",
+            "meaning": "share of candidates that land within a burst window of the previous one",
+            "coverage": 65,
+            "missing": 0,
+            "p10": 0.0,
+            "median": 0.057971,
+            "p90": 0.36944160000000004
+          },
+          "shotsUnderHalfSecondPct": {
+            "unit": "%",
+            "meaning": "share of detected intervals shorter than 0.5 s",
+            "coverage": 65,
+            "missing": 0,
+            "p10": 0.0,
+            "median": 11.7647,
+            "p90": 35.176460000000006
+          },
+          "paceDriftRatio": {
+            "unit": "ratio",
+            "meaning": "last-third cut rate divided by first-third cut rate",
+            "coverage": 65,
+            "missing": 0,
+            "p10": 2.666667,
+            "median": 4.0,
+            "p90": 9.0
+          },
+          "paceTrendCode": {
+            "unit": "code",
+            "meaning": "editorial paceTrend as -1 decelerating / 0 steady / +1 accelerating",
+            "coverage": 65,
+            "missing": 0,
+            "p10": 1.0,
+            "median": 1.0,
+            "p90": 1.0
+          },
+          "paceFirstThirdCutsPerMinute": {
+            "unit": "cuts/min",
+            "meaning": "candidate rate inside the first third of the runtime",
+            "coverage": 65,
+            "missing": 0,
+            "p10": 2.4840777999999997,
+            "median": 5.648053,
+            "p90": 12.589666200000002
+          },
+          "paceLastThirdCutsPerMinute": {
+            "unit": "cuts/min",
+            "meaning": "candidate rate inside the last third of the runtime",
+            "coverage": 65,
+            "missing": 0,
+            "p10": 11.2961998,
+            "median": 25.161531,
+            "p90": 51.63358380000001
+          },
+          "flickerLumaPerSecond": {
+            "unit": "luma/s",
+            "meaning": "median absolute second-to-second change in mean display luma",
+            "coverage": 65,
+            "missing": 0,
+            "p10": 0.0054512,
+            "median": 0.014972,
+            "p90": 0.034189000000000004
+          },
+          "staticFraction": {
+            "unit": "fraction",
+            "meaning": "share of sampled consecutive pairs with near-zero RGB change",
+            "coverage": 65,
+            "missing": 0,
+            "p10": 0.16664020000000002,
+            "median": 0.392857,
+            "p90": 0.595356
+          },
+          "meanLuma": {
+            "unit": "0-1",
+            "meaning": "mean display-luma proxy across the appearance sample",
+            "coverage": 65,
+            "missing": 0,
+            "p10": 0.115668,
+            "median": 0.217498,
+            "p90": 0.4598152000000001
+          },
+          "meanSaturation": {
+            "unit": "0-1",
+            "meaning": "mean saturation proxy across the appearance sample",
+            "coverage": 65,
+            "missing": 0,
+            "p10": 0.1951306,
+            "median": 0.338211,
+            "p90": 0.6035552
+          },
+          "durationSeconds": {
+            "unit": "s",
+            "meaning": "measured runtime of the rendition, not an editorial duration",
+            "coverage": 65,
+            "missing": 0,
+            "p10": 45.0687998,
+            "median": 138.773333,
+            "p90": 260.1488544
+          },
+          "integratedLufs": {
+            "unit": "LUFS",
+            "meaning": "integrated programme loudness of the measured audio stream",
+            "coverage": 65,
+            "missing": 0,
+            "p10": -20.02,
+            "median": -12.6,
+            "p90": -7.94
+          },
+          "loudnessRangeLu": {
+            "unit": "LU",
+            "meaning": "loudness range of the measured audio stream",
+            "coverage": 65,
+            "missing": 0,
+            "p10": 3.92,
+            "median": 9.3,
+            "p90": 17.619999999999997
+          },
+          "truePeakDbfs": {
+            "unit": "dBFS",
+            "meaning": "true peak of the measured audio stream",
+            "coverage": 65,
+            "missing": 0,
+            "p10": -2.48,
+            "median": -0.0,
+            "p90": 2.22
+          },
+          "silenceFraction": {
+            "unit": "fraction",
+            "meaning": "share of measured audio windows below the silence gate",
+            "coverage": 65,
+            "missing": 0,
+            "p10": 0.005499,
+            "median": 0.021941,
+            "p90": 0.07425480000000001
+          },
+          "onsetPerMinute": {
+            "unit": "onsets/min",
+            "meaning": "detected audio onsets per minute of measured runtime",
+            "coverage": 65,
+            "missing": 0,
+            "p10": 204.38940000000002,
+            "median": 280.967,
+            "p90": 315.6714
+          },
+          "onsetTrendCode": {
+            "unit": "code",
+            "meaning": "onset-rate trend as -1 decelerating / 0 steady / +1 accelerating",
+            "coverage": 65,
+            "missing": 0,
+            "p10": -1.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "tempoHypothesisBpm": {
+            "unit": "BPM",
+            "meaning": "periodicity hypothesis with at least 0.2 confidence; not a beat grid",
+            "coverage": 14,
+            "missing": 51,
+            "p10": 63.31,
+            "median": 90.55,
+            "p90": 149.65000000000003
+          }
+        }
+      },
+      "recipe": {
+        "targetCuts": {
+          "15s": {
+            "seconds": 15,
+            "cuts": 4,
+            "medianShotSeconds": 3.75
+          },
+          "30s": {
+            "seconds": 30,
+            "cuts": 8,
+            "medianShotSeconds": 3.75
+          },
+          "60s": {
+            "seconds": 60,
+            "cuts": 17,
+            "medianShotSeconds": 3.5294117647058822
+          },
+          "90s": {
+            "seconds": 90,
+            "cuts": 25,
+            "medianShotSeconds": 3.6
+          }
+        },
+        "cutRatePerMinute": {
+          "median": 16.65797,
+          "p10": 6.758171600000001,
+          "p90": 30.5869924
+        },
+        "shotSeconds": {
+          "medianSeconds": 1.685017,
+          "p10Seconds": 0.8160000000000001,
+          "p90Seconds": 3.293667,
+          "unit": "s"
+        },
+        "pace": {
+          "trend": "accelerating",
+          "driftRatio": 4.0,
+          "firstThirdCutsPerMinute": 5.648053,
+          "lastThirdCutsPerMinute": 25.161531,
+          "firstThirdCoverage": 65,
+          "lastThirdCoverage": 65,
+          "driftRatioBand": {
+            "p10": 2.666667,
+            "median": 4.0,
+            "p90": 9.0,
+            "unit": "ratio",
+            "derivedFrom": 65
+          }
+        },
+        "loudness": {
+          "integratedLufs": {
+            "p10": -20.02,
+            "median": -12.6,
+            "p90": -7.94,
+            "unit": "LUFS",
+            "derivedFrom": 65
+          },
+          "loudnessRangeLu": {
+            "p10": 3.92,
+            "median": 9.3,
+            "p90": 17.619999999999997,
+            "unit": "LU",
+            "derivedFrom": 65
+          },
+          "truePeakDbfs": {
+            "p10": -2.48,
+            "median": -0.0,
+            "p90": 2.22,
+            "unit": "dBFS",
+            "derivedFrom": 65
+          },
+          "silenceFraction": {
+            "p10": 0.005499,
+            "median": 0.021941,
+            "p90": 0.07425480000000001,
+            "unit": "fraction",
+            "derivedFrom": 65
+          }
+        },
+        "onset": {
+          "onsetsPerMinute": {
+            "p10": 204.38940000000002,
+            "median": 280.967,
+            "p90": 315.6714,
+            "unit": "onsets/min",
+            "derivedFrom": 65
+          },
+          "trendCode": {
+            "p10": -1.0,
+            "median": 0.0,
+            "p90": 0.0,
+            "unit": "code",
+            "derivedFrom": 65
+          },
+          "tempoHypothesisBpm": {
+            "p10": 63.31,
+            "median": 90.55,
+            "p90": 149.65000000000003,
+            "unit": "BPM",
+            "derivedFrom": 14
+          }
+        },
+        "palette": {
+          "meanLuma": {
+            "p10": 0.115668,
+            "median": 0.217498,
+            "p90": 0.4598152000000001,
+            "unit": "0-1",
+            "derivedFrom": 65
+          },
+          "meanSaturation": {
+            "p10": 0.1951306,
+            "median": 0.338211,
+            "p90": 0.6035552,
+            "unit": "0-1",
+            "derivedFrom": 65
+          }
+        },
+        "burstFraction": {
+          "p10": 0.0,
+          "median": 0.057971,
+          "p90": 0.36944160000000004,
+          "unit": "fraction",
+          "derivedFrom": 65
+        },
+        "flickerLumaPerSecond": {
+          "p10": 0.0054512,
+          "median": 0.014972,
+          "p90": 0.034189000000000004,
+          "unit": "luma/s",
+          "derivedFrom": 65
+        },
+        "derivedFrom": 65,
+        "formula": "cuts = round(median cutsPerMinute * seconds / 60)",
+        "note": "Measured mid-points of this component, not prescriptions; a different target duration does not change the measured rate. A 0-cut target at a short duration is the arithmetic result of a very low measured rate; use the shot-duration band there."
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "1028143",
+          "slug": "giants-make-us-tall",
+          "title": "Giants Make Us Tall",
+          "durationSeconds": 227.861,
+          "silhouette": 0.576
+        },
+        {
+          "site": "directorslibrary",
+          "id": "76867",
+          "slug": "youre-not-like-that-the-rapants",
+          "title": "\u2018You\u2019re Not Like That\u2019 The Rapants",
+          "durationSeconds": 321.016,
+          "silhouette": 0.5668
+        },
+        {
+          "site": "promonews",
+          "id": "96173",
+          "slug": "anotr-it-alice-kong",
+          "title": "ANOTR 'Like It' by Alice Kong",
+          "durationSeconds": 268.469,
+          "silhouette": 0.5653
+        },
+        {
+          "site": "promonews",
+          "id": "96313",
+          "slug": "eliza-rose-undercover-lover-jade-ang-jackman",
+          "title": "Eliza Rose 'Undercover Lover' by Jade Ang Jackman",
+          "durationSeconds": 237.796,
+          "silhouette": 0.5636
+        },
+        {
+          "site": "aicp",
+          "id": "1132185",
+          "slug": "kyiv",
+          "title": "Kyiv",
+          "durationSeconds": 181.675,
+          "silhouette": 0.5608
+        },
+        {
+          "site": "promonews",
+          "id": "96830",
+          "slug": "chloe-qisha-he-likes-boys-bedroom",
+          "title": "Chloe Qisha 'He Likes Boys' by Bedroom",
+          "durationSeconds": 214.529,
+          "silhouette": 0.5581
+        }
+      ],
+      "clusterK": 4,
+      "silhouette": 0.4005,
+      "medianSilhouette": 0.4013
+    }
+  ],
+  "stillsOnly": {
+    "n": 5277,
+    "sites": [
+      {
+        "site": "stash",
+        "n": 5277,
+        "unreadable": 0,
+        "palette": {
+          "meanLuma": {
+            "p10": 0.20872,
+            "median": 0.465719,
+            "p90": 0.746031,
+            "coverage": 5277
+          },
+          "meanSaturation": {
+            "p10": 0.09274,
+            "median": 0.342227,
+            "p90": 0.650693,
+            "coverage": 5277
+          },
+          "lumaStdDev": {
+            "p10": 0.134068,
+            "median": 0.215513,
+            "p90": 0.299824,
+            "coverage": 5277
+          },
+          "edgeDensity": {
+            "p10": 0.019349,
+            "median": 0.03933,
+            "p90": 0.068169,
+            "coverage": 5277
+          }
+        },
+        "dominantHueFamilies": {
+          "blue": 678,
+          "cyan": 186,
+          "green": 207,
+          "magenta": 282,
+          "neutral": 1656,
+          "orange": 1257,
+          "purple": 128,
+          "red": 610,
+          "yellow": 273
+        },
+        "topWidths": {
+          "1920": 1920,
+          "960": 1392,
+          "640": 198,
+          "2000": 152,
+          "2389": 136
+        },
+        "limits": [
+          "Stills are published poster images, not video frames: there is no cut, pacing, motion or audio measurement and no clustering.",
+          "One published still per record describes the chosen frame, not the film's palette over time."
+        ]
+      }
+    ],
+    "note": "Stills-only site(s) are reported as measured palette bands and are never clustered with video components."
+  },
+  "limits": [
+    "Cut candidates are not verified edits: an ffmpeg scene-score exceedance is also produced by fast motion, flashes, dissolves and compression.",
+    "A component is a measurement cluster, not a genre, a style verdict or a quality ranking; the names summarise measured timing only.",
+    "Strobe detection is a fixed threshold on sampled luma instability, not a ground-truth photic-safety or flash-rate measurement.",
+    "Rendition and bitrate affect both cut detection and luma/saturation proxies; the same work at another bitrate can move between components.",
+    "Sampling coverage is uneven: promonews and directorslibrary contribute mostly windowed records, and windowed records are not clustered because their full-runtime strobe status is unknown.",
+    "Windowed evidence covers at most 40 s spread across a runtime, so long films are under-sampled and short clips are over-represented in that share; windowed records never enter the component fit.",
+    "Audio exists on a subset of records, so loudness and onset bands are derived from that subset only; per-feature coverage is reported.",
+    "Component profiles are descriptive quantiles over observed records; they do not establish a target, a recommendation or a causal edit effect.",
+    "No expert or human review was performed; every number is an automated proxy over decoded renditions.",
+    "The evidence trees were still being written by harvest lanes during derivation: this is a snapshot of the counts in `generatedFrom`, and a later run can produce different counts and, at the margin, a different k."
+  ],
+  "distinctness": {
+    "threshold": 0.25,
+    "distinct": true,
+    "silhouette": 0.4005
+  }
+}
