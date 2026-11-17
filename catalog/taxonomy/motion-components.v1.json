@@ -1,0 +1,3021 @@
+{
+  "schema": "kumiki.motion-component-taxonomy.v1",
+  "version": 1,
+  "status": "specified-and-partially-measured",
+  "title": "Labelled motion-component taxonomy",
+  "description": "Versioned, machine-applied labels over stored numeric evidence. Every label is a predicate over named fields, not a creative archetype. Layer D is specified but has no stored evidence in this corpus.",
+  "derivedOnlyFrom": "research/analysis/**",
+  "layers": [
+    {
+      "id": "A-pacing",
+      "name": "Pacing and timing",
+      "description": "Cut-candidate rate, shot-gap statistics, per-third pace trend, and strobe/burst texture. Rate labels are bands; trend and texture labels are orthogonal to the bands.",
+      "evidenceTier": "measured-full-runtime",
+      "assignable": true
+    },
+    {
+      "id": "B-temporal-appearance",
+      "name": "Temporal appearance",
+      "description": "Second-to-second luma instability, static-pair share, and least-squares luma drift with an R-squared requirement. Derived from the stored 1 Hz appearance series.",
+      "evidenceTier": "measured-sampled",
+      "assignable": true
+    },
+    {
+      "id": "C-audio-energy",
+      "name": "Audio energy",
+      "description": "Integrated loudness bands, loudness range, onset density, tail silence, and loudness slope with an R-squared requirement. Only assigned where an audio record is joined.",
+      "evidenceTier": "measured-full-runtime",
+      "assignable": true
+    },
+    {
+      "id": "D-transition-motion",
+      "name": "Transition and global motion",
+      "description": "Transition-vocabulary shares, global translation fractions, centre-weighted local motion, and overlay-activity proxy. Specified against the real motion_profile fields; no record in this corpus carries the block, so no label can be assigned today.",
+      "evidenceTier": "unmeasured",
+      "assignable": true
+    },
+    {
+      "id": "E-editorial-composites",
+      "name": "Editorial-behaviour composites",
+      "description": "Small conjunctions of measured pace, appearance and audio components. A composite is refused when any component is missing, even if the remaining components point the same way.",
+      "evidenceTier": "measured-sampled",
+      "assignable": true
+    },
+    {
+      "id": "F-out-of-scope",
+      "name": "Explicitly out of scope",
+      "description": "Names that this taxonomy deliberately does not assign. They are listed so that consumers cannot mistake an adjacent numeric label for a claim about style, effect identity, genre, quality, intent or authorship.",
+      "evidenceTier": "unmeasured",
+      "assignable": false
+    }
+  ],
+  "thresholds": {
+    "noCutCount": 0,
+    "rapidCutsPerMinute": 40.0,
+    "steadyCutMinCutsPerMinute": 8.0,
+    "longTakeMaxCutsPerMinute": 8.0,
+    "minimumCutsForPacingLabel": 20,
+    "minimumCutsForMotionLabel": 20,
+    "highConfidenceCutCount": 60,
+    "lowConfidenceCutCount": 20,
+    "highConfidenceDurationSeconds": 30.0,
+    "lowConfidenceDurationSeconds": 10.0,
+    "minimumEditorialSeriesSamples": 30,
+    "highConfidenceSeriesSamples": 100,
+    "lowConfidenceSeriesSamples": 40,
+    "minimumAudioDurationSeconds": 10.0,
+    "highConfidenceAudioDurationSeconds": 60.0,
+    "lowConfidenceAudioDurationSeconds": 30.0,
+    "acceleratingDriftRatioAtLeast": 1.15,
+    "deceleratingDriftRatioAtMost": 0.85,
+    "frontLoadDriftRatioAtMost": 0.75,
+    "frontLoadEarlyCutsPerMinuteAtLeast": 30.0,
+    "burstFractionAtLeast": 0.5,
+    "flickerHighAtLeast": 0.05,
+    "flickerLowAtMost": 0.01,
+    "staticFrameHighAtLeast": 0.5,
+    "lumaDriftSlopeAtLeast": 0.05,
+    "lumaDriftR2AtLeast": 0.25,
+    "audioGateLufs": -70.0,
+    "loudMixAtLeastLufs": -14.0,
+    "quietMixAtMostLufs": -20.0,
+    "wideLraAtLeastLu": 12.0,
+    "narrowLraAtMostLu": 4.0,
+    "onsetDenseAtLeastPerMinute": 320.0,
+    "onsetSparseAtMostPerMinute": 200.0,
+    "silentTailAtLeastSeconds": 1.5,
+    "loudnessSlopeAtLeastLuPerMinute": 2.0,
+    "loudnessSlopeR2AtLeast": 0.3,
+    "hardCutShareAtLeast": 0.6,
+    "dissolveShareAtLeast": 0.2,
+    "fadeShareAtLeast": 0.1,
+    "panFractionAtLeast": 0.5,
+    "staticCameraFractionAtLeast": 0.6,
+    "centreShareAtLeast": 0.2,
+    "overlayActivityAtLeast": 0.3,
+    "minimumMotionPairs": 10
+  },
+  "labels": [
+    {
+      "id": "a.single-shot",
+      "layer": "A-pacing",
+      "label": "single-shot",
+      "definition": "The full-runtime scan found no scene-score exceedance, so the record has one interval between start and end.",
+      "positive": {
+        "all": [
+          {
+            "field": "census.cutCount",
+            "op": "<=",
+            "threshold": "noCutCount"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "census.cutCount",
+        "census.durationSeconds"
+      ],
+      "eligibility": [
+        {
+          "field": "census.durationSeconds",
+          "op": ">=",
+          "threshold": "lowConfidenceDurationSeconds",
+          "reason": "duration-too-short"
+        }
+      ],
+      "evidenceTier": "measured-full-runtime",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "census.durationSeconds",
+            "op": ">=",
+            "threshold": "highConfidenceDurationSeconds"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "census.durationSeconds",
+                "op": "<",
+                "threshold": "lowConfidenceDurationSeconds"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "772809",
+          "slug": "swipe-night-2"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "76558",
+          "slug": "trying-times-james-blake"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "13",
+          "slug": "72-and-sunny"
+        },
+        {
+          "site": "promonews",
+          "id": "90758",
+          "slug": "ok-go-love-damian-kulash-aaron-duffy-miguel-espada"
+        }
+      ],
+      "reuseNote": "Use as the zero-detected-event end of the cut-rate scale; do not read it as an unbroken take in the editorial sense.",
+      "nonClaims": [
+        "Does not prove the work has a single shot: an undetected cut, a locked-off long take and a continuous generated image all produce the same scan.",
+        "Does not establish camera movement, subject continuity or editorial intent."
+      ]
+    },
+    {
+      "id": "a.long-take",
+      "layer": "A-pacing",
+      "label": "long-take",
+      "definition": "Detected scene-change rate is below the long-take ceiling and at least one scene candidate exists.",
+      "positive": {
+        "all": [
+          {
+            "field": "census.cutsPerMinute",
+            "op": "<",
+            "threshold": "longTakeMaxCutsPerMinute"
+          }
+        ]
+      },
+      "exclusions": [
+        {
+          "field": "census.cutCount",
+          "op": "<=",
+          "threshold": "noCutCount"
+        }
+      ],
+      "requires": [
+        "census.cutsPerMinute",
+        "census.cutCount"
+      ],
+      "eligibility": [],
+      "evidenceTier": "measured-full-runtime",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "census.cutCount",
+            "op": ">=",
+            "threshold": "highConfidenceCutCount"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "census.cutCount",
+                "op": "<",
+                "threshold": "lowConfidenceCutCount"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "745801",
+          "slug": "in-her-shoes-2"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "58342",
+          "slug": "beginning"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "6",
+          "slug": "frank-riggio-tttt"
+        },
+        {
+          "site": "promonews",
+          "id": "38892",
+          "slug": "david-bowie-lazarus-johan-renck"
+        }
+      ],
+      "reuseNote": "Use for low detected-event density; pair with a separate text search if a specific take length matters.",
+      "nonClaims": [
+        "A low detected-event rate is not a verified take length: missed cuts shorten apparent shots and false candidates split them.",
+        "Does not establish that the camera holds, that the action is continuous, or that the shot is the editorial unit."
+      ]
+    },
+    {
+      "id": "a.steady-cut",
+      "layer": "A-pacing",
+      "label": "steady-cut",
+      "definition": "Detected scene-change rate falls in the middle band between the long-take ceiling and the rapid-montage floor.",
+      "positive": {
+        "all": [
+          {
+            "field": "census.cutsPerMinute",
+            "op": ">=",
+            "threshold": "steadyCutMinCutsPerMinute"
+          },
+          {
+            "field": "census.cutsPerMinute",
+            "op": "<",
+            "threshold": "rapidCutsPerMinute"
+          }
+        ]
+      },
+      "exclusions": [
+        {
+          "field": "census.cutCount",
+          "op": "<=",
+          "threshold": "noCutCount"
+        }
+      ],
+      "requires": [
+        "census.cutsPerMinute",
+        "census.cutCount"
+      ],
+      "eligibility": [
+        {
+          "field": "census.cutCount",
+          "op": ">=",
+          "threshold": "minimumCutsForPacingLabel",
+          "reason": "insufficient-cuts"
+        }
+      ],
+      "evidenceTier": "measured-full-runtime",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "census.cutCount",
+            "op": ">=",
+            "threshold": "highConfidenceCutCount"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "census.cutCount",
+                "op": "<",
+                "threshold": "lowConfidenceCutCount"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "740256",
+          "slug": "dark-necessities"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "55219",
+          "slug": "dune"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "23",
+          "slug": "akima"
+        },
+        {
+          "site": "promonews",
+          "id": "82956",
+          "slug": "benjamin-earl-turner-headspacebent-abteen-bagheri"
+        }
+      ],
+      "reuseNote": "Default middle-band label for corpus aggregation; do not treat it as a style or genre class.",
+      "nonClaims": [
+        "Describes a candidate-event rate over the runtime, not a rhythmic pattern, beat alignment or editing philosophy.",
+        "Does not distinguish hard cuts from fades, dissolves, flashes or false candidates."
+      ]
+    },
+    {
+      "id": "a.rapid-montage",
+      "layer": "A-pacing",
+      "label": "rapid-montage",
+      "definition": "Detected scene-change rate is at or above the rapid-montage floor.",
+      "positive": {
+        "all": [
+          {
+            "field": "census.cutsPerMinute",
+            "op": ">=",
+            "threshold": "rapidCutsPerMinute"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "census.cutsPerMinute",
+        "census.cutCount"
+      ],
+      "eligibility": [
+        {
+          "field": "census.cutCount",
+          "op": ">=",
+          "threshold": "minimumCutsForPacingLabel",
+          "reason": "insufficient-cuts"
+        }
+      ],
+      "evidenceTier": "measured-full-runtime",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "census.cutCount",
+            "op": ">=",
+            "threshold": "highConfidenceCutCount"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "census.cutCount",
+                "op": "<",
+                "threshold": "lowConfidenceCutCount"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "745451",
+          "slug": "the-sound-of-healing"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "58891",
+          "slug": "paris-13th-district"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "5",
+          "slug": "genesis-motion-design-manifesto"
+        },
+        {
+          "site": "promonews",
+          "id": "83203",
+          "slug": "leigh-anne-ft-ayra-starr-my-love-meji-alabi"
+        }
+      ],
+      "reuseNote": "Use as the high-density end of the cut-rate scale; cite the rate and the candidate-event caveat together.",
+      "nonClaims": [
+        "Fast movement, flashes, strobe and compression can inflate the candidate count, so a high rate is not proof of rapid editing.",
+        "Does not establish shot count, transition type, pace change within the runtime or editorial intent."
+      ]
+    },
+    {
+      "id": "a.accelerating",
+      "layer": "A-pacing",
+      "label": "accelerating",
+      "definition": "The stored per-third pace ratio is above the accelerating band, and the derived trend names acceleration.",
+      "positive": {
+        "all": [
+          {
+            "field": "editorial.paceTrend",
+            "op": "==",
+            "value": "accelerating"
+          },
+          {
+            "field": "editorial.paceDriftRatio",
+            "op": ">=",
+            "threshold": "acceleratingDriftRatioAtLeast"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "editorial.paceTrend",
+        "editorial.paceDriftRatio"
+      ],
+      "eligibility": [
+        {
+          "field": "census.cutCount",
+          "op": ">=",
+          "threshold": "minimumCutsForPacingLabel",
+          "reason": "insufficient-cuts"
+        },
+        {
+          "field": "editorial.seriesSamples",
+          "op": ">=",
+          "threshold": "minimumEditorialSeriesSamples",
+          "reason": "insufficient-editorial-samples"
+        }
+      ],
+      "evidenceTier": "measured-full-runtime",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "census.cutCount",
+            "op": ">=",
+            "threshold": "highConfidenceCutCount"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "census.cutCount",
+                "op": "<",
+                "threshold": "lowConfidenceCutCount"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "854462",
+          "slug": "hulu-ids"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "75555",
+          "slug": "backrooms"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "66",
+          "slug": "deep-thoughts-bounce"
+        },
+        {
+          "site": "promonews",
+          "id": "94701",
+          "slug": "el-roig-stupid-cowboy-claudia-o-sala"
+        }
+      ],
+      "reuseNote": "Use only as a direction-of-change signal between first and last thirds; keep the ratio alongside it.",
+      "nonClaims": [
+        "Third-to-third ratios are sensitive to where the cuts happen to fall and to false candidates.",
+        "Does not show a smooth ramp, a musical build, or a deliberate escalation."
+      ]
+    },
+    {
+      "id": "a.decelerating",
+      "layer": "A-pacing",
+      "label": "decelerating",
+      "definition": "The stored per-third pace ratio is below the decelerating band, and the derived trend names deceleration.",
+      "positive": {
+        "all": [
+          {
+            "field": "editorial.paceTrend",
+            "op": "==",
+            "value": "decelerating"
+          },
+          {
+            "field": "editorial.paceDriftRatio",
+            "op": "<=",
+            "threshold": "deceleratingDriftRatioAtMost"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "editorial.paceTrend",
+        "editorial.paceDriftRatio"
+      ],
+      "eligibility": [
+        {
+          "field": "census.cutCount",
+          "op": ">=",
+          "threshold": "minimumCutsForPacingLabel",
+          "reason": "insufficient-cuts"
+        },
+        {
+          "field": "editorial.seriesSamples",
+          "op": ">=",
+          "threshold": "minimumEditorialSeriesSamples",
+          "reason": "insufficient-editorial-samples"
+        }
+      ],
+      "evidenceTier": "measured-full-runtime",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "census.cutCount",
+            "op": ">=",
+            "threshold": "highConfidenceCutCount"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "census.cutCount",
+                "op": "<",
+                "threshold": "lowConfidenceCutCount"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "851015",
+          "slug": "made-to-travel-nothing"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "75820",
+          "slug": "once-again-orelsan-yame"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "5",
+          "slug": "genesis-motion-design-manifesto"
+        },
+        {
+          "site": "promonews",
+          "id": "94682",
+          "slug": "isaiah-rashad-same-sht-omar-jones"
+        }
+      ],
+      "reuseNote": "Use only as a direction-of-change signal between first and last thirds; keep the ratio alongside it.",
+      "nonClaims": [
+        "Third-to-third ratios are sensitive to where the cuts happen to fall and to false candidates.",
+        "Does not show a fade-out, a slow ending, or a deliberate release of tension."
+      ]
+    },
+    {
+      "id": "a.strobe-texture",
+      "layer": "A-pacing",
+      "label": "strobe-texture",
+      "definition": "The census strobe flag is true, meaning the sampled luma series exceeded the stored instability threshold.",
+      "positive": {
+        "all": [
+          {
+            "field": "census.strobe",
+            "op": "==",
+            "value": true
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "census.strobe",
+        "census.seriesSummary.meanDisplayLuma"
+      ],
+      "eligibility": [],
+      "evidenceTier": "measured-sampled",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "census.seriesSummary.samples",
+            "op": ">=",
+            "threshold": "highConfidenceSeriesSamples"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "census.seriesSummary.samples",
+                "op": "<",
+                "threshold": "lowConfidenceSeriesSamples"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "745457",
+          "slug": "games-for-days"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "65214",
+          "slug": "agent-of-happiness"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "5",
+          "slug": "genesis-motion-design-manifesto"
+        },
+        {
+          "site": "promonews",
+          "id": "83441",
+          "slug": "chien-m%C3%A9chant-%C3%A9tiole-filante-kelzang-revach"
+        }
+      ],
+      "reuseNote": "Use as a photic-texture caution signal; it is a sampled instability flag, not an edit or a safety verdict.",
+      "nonClaims": [
+        "Not an editing label: strobe texture can come from flashing content inside a shot, from a strobe light, or from compression artefacts.",
+        "Not a photic-safety measurement: the 1 Hz appearance series aliases higher frequencies and cannot certify a flash rate."
+      ]
+    },
+    {
+      "id": "a.burst-texture",
+      "layer": "A-pacing",
+      "label": "burst-texture",
+      "definition": "At least half of the detected cut gaps are shorter than the stored burst-gap ceiling.",
+      "positive": {
+        "all": [
+          {
+            "field": "census.burstFraction",
+            "op": ">=",
+            "threshold": "burstFractionAtLeast"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "census.burstFraction",
+        "census.cutCount"
+      ],
+      "eligibility": [
+        {
+          "field": "census.cutCount",
+          "op": ">=",
+          "threshold": "minimumCutsForPacingLabel",
+          "reason": "insufficient-cuts"
+        }
+      ],
+      "evidenceTier": "measured-full-runtime",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "census.cutCount",
+            "op": ">=",
+            "threshold": "highConfidenceCutCount"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "census.cutCount",
+                "op": "<",
+                "threshold": "lowConfidenceCutCount"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "745457",
+          "slug": "games-for-days"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "65214",
+          "slug": "agent-of-happiness"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "5",
+          "slug": "genesis-motion-design-manifesto"
+        },
+        {
+          "site": "promonews",
+          "id": "83441",
+          "slug": "chien-m%C3%A9chant-%C3%A9tiole-filante-kelzang-revach"
+        }
+      ],
+      "reuseNote": "Use to separate clustered candidate events from evenly spread ones at the same average rate.",
+      "nonClaims": [
+        "A burst of candidate events is not a verified rapid sequence; it can be motion or luminance artefacts.",
+        "Does not establish a montage, a chase, a stinger or any narrative function."
+      ]
+    },
+    {
+      "id": "b.flicker-high",
+      "layer": "B-temporal-appearance",
+      "label": "flicker-high",
+      "definition": "Median absolute second-to-second luma change is at or above the high-instability floor.",
+      "positive": {
+        "all": [
+          {
+            "field": "editorial.flickerLumaPerSecond",
+            "op": ">=",
+            "threshold": "flickerHighAtLeast"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "editorial.flickerLumaPerSecond"
+      ],
+      "eligibility": [
+        {
+          "field": "editorial.seriesSamples",
+          "op": ">=",
+          "threshold": "minimumEditorialSeriesSamples",
+          "reason": "insufficient-editorial-samples"
+        }
+      ],
+      "evidenceTier": "measured-sampled",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "editorial.seriesSamples",
+            "op": ">=",
+            "threshold": "highConfidenceSeriesSamples"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "editorial.seriesSamples",
+                "op": "<",
+                "threshold": "lowConfidenceSeriesSamples"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "853983",
+          "slug": "amani"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "75847",
+          "slug": "father"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "5",
+          "slug": "genesis-motion-design-manifesto"
+        },
+        {
+          "site": "promonews",
+          "id": "94732",
+          "slug": "ma%C3%ABlle-tic-tac-elisa-baudoin"
+        }
+      ],
+      "reuseNote": "Use as a sampled instability band; quote the 1 Hz cadence with it.",
+      "nonClaims": [
+        "Not a flicker frequency or a flash-rate measurement; the 1 Hz series aliases content above roughly 1 Hz.",
+        "Does not identify strobing, flashing, lightning, camera shake or an effect."
+      ]
+    },
+    {
+      "id": "b.flicker-low",
+      "layer": "B-temporal-appearance",
+      "label": "flicker-low",
+      "definition": "Median absolute second-to-second luma change is at or below the low-instability ceiling.",
+      "positive": {
+        "all": [
+          {
+            "field": "editorial.flickerLumaPerSecond",
+            "op": "<=",
+            "threshold": "flickerLowAtMost"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "editorial.flickerLumaPerSecond"
+      ],
+      "eligibility": [
+        {
+          "field": "editorial.seriesSamples",
+          "op": ">=",
+          "threshold": "minimumEditorialSeriesSamples",
+          "reason": "insufficient-editorial-samples"
+        }
+      ],
+      "evidenceTier": "measured-sampled",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "editorial.seriesSamples",
+            "op": ">=",
+            "threshold": "highConfidenceSeriesSamples"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "editorial.seriesSamples",
+                "op": "<",
+                "threshold": "lowConfidenceSeriesSamples"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "857838",
+          "slug": "nike-invincible-3"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "75820",
+          "slug": "once-again-orelsan-yame"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "6",
+          "slug": "frank-riggio-tttt"
+        },
+        {
+          "site": "promonews",
+          "id": "94706",
+          "slug": "hylo-its-not-about-him-james-humby"
+        }
+      ],
+      "reuseNote": "Use as the low end of the sampled instability scale, not as a stillness claim.",
+      "nonClaims": [
+        "A low sampled instability value does not mean the image is still, nor that the shot is locked off.",
+        "Cadence aliases fast variation, so low values can coexist with visible flicker."
+      ]
+    },
+    {
+      "id": "b.static-frame-dominant",
+      "layer": "B-temporal-appearance",
+      "label": "static-frame-dominant",
+      "definition": "The static-pair share of consecutive appearance samples is at or above one half.",
+      "positive": {
+        "all": [
+          {
+            "field": "editorial.staticFraction",
+            "op": ">=",
+            "threshold": "staticFrameHighAtLeast"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "editorial.staticFraction"
+      ],
+      "eligibility": [
+        {
+          "field": "editorial.seriesSamples",
+          "op": ">=",
+          "threshold": "minimumEditorialSeriesSamples",
+          "reason": "insufficient-editorial-samples"
+        }
+      ],
+      "evidenceTier": "measured-sampled",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "editorial.seriesSamples",
+            "op": ">=",
+            "threshold": "highConfidenceSeriesSamples"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "editorial.seriesSamples",
+                "op": "<",
+                "threshold": "lowConfidenceSeriesSamples"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "851015",
+          "slug": "made-to-travel-nothing"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "75887",
+          "slug": "rose"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "13",
+          "slug": "72-and-sunny"
+        },
+        {
+          "site": "promonews",
+          "id": "94706",
+          "slug": "hylo-its-not-about-him-james-humby"
+        }
+      ],
+      "reuseNote": "Use to flag records whose sampled appearance changes little between consecutive seconds.",
+      "nonClaims": [
+        "A static appearance pair is not a static camera or a still frame; slow motion and long dissolves can also change little per second.",
+        "Does not establish a freeze, a title card or a held composition."
+      ]
+    },
+    {
+      "id": "b.luma-rise",
+      "layer": "B-temporal-appearance",
+      "label": "luma-rise",
+      "definition": "The least-squares luma slope is positive at or above the drift floor, with an R-squared at or above the drift-fit floor.",
+      "positive": {
+        "all": [
+          {
+            "field": "editorial.lumaSlopePerMinute",
+            "op": ">=",
+            "threshold": "lumaDriftSlopeAtLeast"
+          },
+          {
+            "field": "editorial.lumaSlopeR2",
+            "op": ">=",
+            "threshold": "lumaDriftR2AtLeast"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "editorial.lumaSlopePerMinute",
+        "editorial.lumaSlopeR2"
+      ],
+      "eligibility": [
+        {
+          "field": "editorial.seriesSamples",
+          "op": ">=",
+          "threshold": "minimumEditorialSeriesSamples",
+          "reason": "insufficient-editorial-samples"
+        }
+      ],
+      "evidenceTier": "measured-sampled",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "editorial.seriesSamples",
+            "op": ">=",
+            "threshold": "highConfidenceSeriesSamples"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "editorial.seriesSamples",
+                "op": "<",
+                "threshold": "lowConfidenceSeriesSamples"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "863629",
+          "slug": "the-greatest-story-ever-fair-exchange"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "6",
+          "slug": "frank-riggio-tttt"
+        },
+        {
+          "site": "promonews",
+          "id": "95398",
+          "slug": "nihilists-climbing-over-bodies-kelli-watson-jack-hyslop"
+        },
+        {
+          "site": "shots",
+          "id": "40930",
+          "slug": "google-translate-live-translate"
+        }
+      ],
+      "reuseNote": "Use only with the reported R-squared; the slope alone is dominated by single bright passages.",
+      "nonClaims": [
+        "A fitted upward drift is not a creative brightening, a reveal, or a deliberate tonal arc.",
+        "R-squared is fit quality over 1 Hz samples, not evidence of causation or continuity."
+      ]
+    },
+    {
+      "id": "b.luma-fall",
+      "layer": "B-temporal-appearance",
+      "label": "luma-fall",
+      "definition": "The least-squares luma slope is negative at or below the negated drift floor, with an R-squared at or above the drift-fit floor.",
+      "positive": {
+        "all": [
+          {
+            "field": "editorial.lumaSlopePerMinute",
+            "op": "<=",
+            "threshold": "lumaDriftSlopeAtLeast",
+            "negate": true
+          },
+          {
+            "field": "editorial.lumaSlopeR2",
+            "op": ">=",
+            "threshold": "lumaDriftR2AtLeast"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "editorial.lumaSlopePerMinute",
+        "editorial.lumaSlopeR2"
+      ],
+      "eligibility": [
+        {
+          "field": "editorial.seriesSamples",
+          "op": ">=",
+          "threshold": "minimumEditorialSeriesSamples",
+          "reason": "insufficient-editorial-samples"
+        }
+      ],
+      "evidenceTier": "measured-sampled",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "editorial.seriesSamples",
+            "op": ">=",
+            "threshold": "highConfidenceSeriesSamples"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "editorial.seriesSamples",
+                "op": "<",
+                "threshold": "lowConfidenceSeriesSamples"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "862191",
+          "slug": "its-not-called-getting-old"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "75558",
+          "slug": "freak-is-wild-skuzland-shygirl"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "74",
+          "slug": "halography-opening-title-sequence"
+        },
+        {
+          "site": "promonews",
+          "id": "94682",
+          "slug": "isaiah-rashad-same-sht-omar-jones"
+        }
+      ],
+      "reuseNote": "Use only with the reported R-squared; the slope alone is dominated by single dark passages.",
+      "nonClaims": [
+        "A fitted downward drift is not a fade, a blackout, or a deliberate tonal arc.",
+        "R-squared is fit quality over 1 Hz samples, not evidence of causation or continuity."
+      ]
+    },
+    {
+      "id": "c.loud-mix",
+      "layer": "C-audio-energy",
+      "label": "loud-mix",
+      "definition": "Integrated loudness is above the gate and at or above the loud band floor.",
+      "positive": {
+        "all": [
+          {
+            "field": "audio.integratedLufs",
+            "op": ">=",
+            "threshold": "loudMixAtLeastLufs"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "audio.integratedLufs",
+        "audio.durationSeconds"
+      ],
+      "gate": [
+        {
+          "field": "audio.integratedLufs",
+          "op": "<=",
+          "threshold": "audioGateLufs",
+          "reason": "integrated-at-or-below-gate"
+        }
+      ],
+      "eligibility": [
+        {
+          "field": "audio.durationSeconds",
+          "op": ">=",
+          "threshold": "minimumAudioDurationSeconds",
+          "reason": "audio-too-short"
+        }
+      ],
+      "evidenceTier": "measured-full-runtime",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "audio.durationSeconds",
+            "op": ">=",
+            "threshold": "highConfidenceAudioDurationSeconds"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "audio.durationSeconds",
+                "op": "<",
+                "threshold": "lowConfidenceAudioDurationSeconds"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "745622",
+          "slug": "humble"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "58470",
+          "slug": "another-round"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "5",
+          "slug": "genesis-motion-design-manifesto"
+        },
+        {
+          "site": "promonews",
+          "id": "38892",
+          "slug": "david-bowie-lazarus-johan-renck"
+        }
+      ],
+      "reuseNote": "Use as a band on measured integrated loudness; never as a mix-quality judgement.",
+      "nonClaims": [
+        "A loud integrated level is not loudness compliance, clarity, impact or a quality verdict.",
+        "The value is a programme-loudness measurement of one mixed stream; it says nothing about dialogue, music or effects separately."
+      ]
+    },
+    {
+      "id": "c.quiet-mix",
+      "layer": "C-audio-energy",
+      "label": "quiet-mix",
+      "definition": "Integrated loudness is above the gate and at or below the quiet band ceiling.",
+      "positive": {
+        "all": [
+          {
+            "field": "audio.integratedLufs",
+            "op": "<=",
+            "threshold": "quietMixAtMostLufs"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "audio.integratedLufs",
+        "audio.durationSeconds"
+      ],
+      "gate": [
+        {
+          "field": "audio.integratedLufs",
+          "op": "<=",
+          "threshold": "audioGateLufs",
+          "reason": "integrated-at-or-below-gate"
+        }
+      ],
+      "eligibility": [
+        {
+          "field": "audio.durationSeconds",
+          "op": ">=",
+          "threshold": "minimumAudioDurationSeconds",
+          "reason": "audio-too-short"
+        }
+      ],
+      "evidenceTier": "measured-full-runtime",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "audio.durationSeconds",
+            "op": ">=",
+            "threshold": "highConfidenceAudioDurationSeconds"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "audio.durationSeconds",
+                "op": "<",
+                "threshold": "lowConfidenceAudioDurationSeconds"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "779163",
+          "slug": "hbo-imagine"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "48463",
+          "slug": "voyage-of-time"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "21",
+          "slug": "security-me-1"
+        },
+        {
+          "site": "promonews",
+          "id": "84517",
+          "slug": "romy-shes-my-mind-vic-lentaigne"
+        }
+      ],
+      "reuseNote": "Use as the low band of measured integrated loudness; keep the gate note with it.",
+      "nonClaims": [
+        "A quiet integrated level is not intimacy, restraint, a mix defect or a quality verdict.",
+        "Records at or below the -70 LUFS gate are reported as at-or-below-gate and receive no loudness band."
+      ]
+    },
+    {
+      "id": "c.wide-lra",
+      "layer": "C-audio-energy",
+      "label": "wide-lra",
+      "definition": "Measured loudness range is at or above the wide-range floor.",
+      "positive": {
+        "all": [
+          {
+            "field": "audio.loudnessRangeLu",
+            "op": ">=",
+            "threshold": "wideLraAtLeastLu"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "audio.loudnessRangeLu",
+        "audio.durationSeconds"
+      ],
+      "eligibility": [
+        {
+          "field": "audio.durationSeconds",
+          "op": ">=",
+          "threshold": "minimumAudioDurationSeconds",
+          "reason": "audio-too-short"
+        }
+      ],
+      "evidenceTier": "measured-full-runtime",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "audio.durationSeconds",
+            "op": ">=",
+            "threshold": "highConfidenceAudioDurationSeconds"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "audio.durationSeconds",
+                "op": "<",
+                "threshold": "lowConfidenceAudioDurationSeconds"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "771922",
+          "slug": "true-name"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "48463",
+          "slug": "voyage-of-time"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "24",
+          "slug": "how-to-make-sushi"
+        },
+        {
+          "site": "promonews",
+          "id": "82956",
+          "slug": "benjamin-earl-turner-headspacebent-abteen-bagheri"
+        }
+      ],
+      "reuseNote": "Use to separate records with a broad measured level range from compressed ones.",
+      "nonClaims": [
+        "Loudness range is a statistical spread of short-term loudness, not a dynamic-style, genre or quality judgement.",
+        "Does not localise the loud and quiet passages, and does not establish a build or a drop."
+      ]
+    },
+    {
+      "id": "c.narrow-lra",
+      "layer": "C-audio-energy",
+      "label": "narrow-lra",
+      "definition": "Measured loudness range is at or below the narrow-range ceiling.",
+      "positive": {
+        "all": [
+          {
+            "field": "audio.loudnessRangeLu",
+            "op": "<=",
+            "threshold": "narrowLraAtMostLu"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "audio.loudnessRangeLu",
+        "audio.durationSeconds"
+      ],
+      "eligibility": [
+        {
+          "field": "audio.durationSeconds",
+          "op": ">=",
+          "threshold": "minimumAudioDurationSeconds",
+          "reason": "audio-too-short"
+        }
+      ],
+      "evidenceTier": "measured-full-runtime",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "audio.durationSeconds",
+            "op": ">=",
+            "threshold": "highConfidenceAudioDurationSeconds"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "audio.durationSeconds",
+                "op": "<",
+                "threshold": "lowConfidenceAudioDurationSeconds"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "772464",
+          "slug": "oh-my-god"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "63299",
+          "slug": "terrestrial-verses"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "13",
+          "slug": "72-and-sunny"
+        },
+        {
+          "site": "promonews",
+          "id": "83193",
+          "slug": "purple-disco-machine-duke-dumont-nothing-thieves-something-my-mind-denisha"
+        }
+      ],
+      "reuseNote": "Use to flag a compressed measured level range; pair it with the actual LRA value.",
+      "nonClaims": [
+        "A narrow range is not a loudness-war verdict, a format convention or a quality judgement.",
+        "Does not show that the record is dynamically flat to a listener or that the mix is consistent in intent."
+      ]
+    },
+    {
+      "id": "c.onset-dense",
+      "layer": "C-audio-energy",
+      "label": "onset-dense",
+      "definition": "Detected envelope onsets per minute of runtime are at or above the dense floor.",
+      "positive": {
+        "all": [
+          {
+            "field": "audio.onsetsPerMinuteOfRuntime",
+            "op": ">=",
+            "threshold": "onsetDenseAtLeastPerMinute"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "audio.onsetsPerMinuteOfRuntime",
+        "audio.durationSeconds"
+      ],
+      "eligibility": [
+        {
+          "field": "audio.durationSeconds",
+          "op": ">=",
+          "threshold": "minimumAudioDurationSeconds",
+          "reason": "audio-too-short"
+        }
+      ],
+      "evidenceTier": "measured-full-runtime",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "audio.durationSeconds",
+            "op": ">=",
+            "threshold": "highConfidenceAudioDurationSeconds"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "audio.durationSeconds",
+                "op": "<",
+                "threshold": "lowConfidenceAudioDurationSeconds"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "748325",
+          "slug": "will-finds-a-way-teddy-riner"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "58959",
+          "slug": "there-is-no-evil"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "21",
+          "slug": "security-me-1"
+        },
+        {
+          "site": "promonews",
+          "id": "83203",
+          "slug": "leigh-anne-ft-ayra-starr-my-love-meji-alabi"
+        }
+      ],
+      "reuseNote": "Use as an amplitude-envelope event-density band, not as a beat or edit-sync indicator.",
+      "nonClaims": [
+        "Onsets are amplitude-envelope rises, not musical beats, cuts, hits or speech events.",
+        "Dense onset detection can come from percussive music, speech, noise or effects; no source separation is performed."
+      ]
+    },
+    {
+      "id": "c.onset-sparse",
+      "layer": "C-audio-energy",
+      "label": "onset-sparse",
+      "definition": "Detected envelope onsets per minute of runtime are at or below the sparse ceiling.",
+      "positive": {
+        "all": [
+          {
+            "field": "audio.onsetsPerMinuteOfRuntime",
+            "op": "<=",
+            "threshold": "onsetSparseAtMostPerMinute"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "audio.onsetsPerMinuteOfRuntime",
+        "audio.durationSeconds"
+      ],
+      "eligibility": [
+        {
+          "field": "audio.durationSeconds",
+          "op": ">=",
+          "threshold": "minimumAudioDurationSeconds",
+          "reason": "audio-too-short"
+        }
+      ],
+      "evidenceTier": "measured-full-runtime",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "audio.durationSeconds",
+            "op": ">=",
+            "threshold": "highConfidenceAudioDurationSeconds"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "audio.durationSeconds",
+                "op": "<",
+                "threshold": "lowConfidenceAudioDurationSeconds"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "790530",
+          "slug": "life-in-four-years-2"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "58342",
+          "slug": "beginning"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "13",
+          "slug": "72-and-sunny"
+        },
+        {
+          "site": "promonews",
+          "id": "83013",
+          "slug": "nick-wilson-you-it-was-him-sophia-suzie"
+        }
+      ],
+      "reuseNote": "Use as the low end of the envelope-event density scale.",
+      "nonClaims": [
+        "Sparse onsets are not silence, a drone, an ambient score, or a deliberate restraint.",
+        "The detector is causal and threshold-based; sustained sounds with smooth attacks can yield few onsets."
+      ]
+    },
+    {
+      "id": "c.silent-tail",
+      "layer": "C-audio-energy",
+      "label": "silent-tail",
+      "definition": "Measured tail silence is at or above the silent-tail floor.",
+      "positive": {
+        "all": [
+          {
+            "field": "audio.tailSilenceSeconds",
+            "op": ">=",
+            "threshold": "silentTailAtLeastSeconds"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "audio.tailSilenceSeconds",
+        "audio.durationSeconds"
+      ],
+      "eligibility": [
+        {
+          "field": "audio.durationSeconds",
+          "op": ">=",
+          "threshold": "minimumAudioDurationSeconds",
+          "reason": "audio-too-short"
+        }
+      ],
+      "evidenceTier": "measured-full-runtime",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "audio.durationSeconds",
+            "op": ">=",
+            "threshold": "highConfidenceAudioDurationSeconds"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "audio.durationSeconds",
+                "op": "<",
+                "threshold": "lowConfidenceAudioDurationSeconds"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "749462",
+          "slug": "will-finds-a-way-teddy-riner-2"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "48463",
+          "slug": "voyage-of-time"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "5",
+          "slug": "genesis-motion-design-manifesto"
+        },
+        {
+          "site": "promonews",
+          "id": "38892",
+          "slug": "david-bowie-lazarus-johan-renck"
+        }
+      ],
+      "reuseNote": "Use to detect trailing silence in the measured stream, for example when trimming or concatenating.",
+      "nonClaims": [
+        "Tail silence may be an artefact of the rendition, the encode, or the source's own end card, not an editorial choice.",
+        "Does not establish an ending, a button, a fade-out or a pause in the narrative."
+      ]
+    },
+    {
+      "id": "c.loudness-rise",
+      "layer": "C-audio-energy",
+      "label": "loudness-rise",
+      "definition": "The least-squares loudness slope is positive at or above the loudness-drift floor, with an R-squared at or above the loudness-fit floor.",
+      "positive": {
+        "all": [
+          {
+            "field": "audio.loudnessSlopeLuPerMinute",
+            "op": ">=",
+            "threshold": "loudnessSlopeAtLeastLuPerMinute"
+          },
+          {
+            "field": "audio.loudnessSlopeR2",
+            "op": ">=",
+            "threshold": "loudnessSlopeR2AtLeast"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "audio.loudnessSlopeLuPerMinute",
+        "audio.loudnessSlopeR2",
+        "audio.integratedLufs",
+        "audio.durationSeconds"
+      ],
+      "gate": [
+        {
+          "field": "audio.integratedLufs",
+          "op": "<=",
+          "threshold": "audioGateLufs",
+          "reason": "integrated-at-or-below-gate"
+        }
+      ],
+      "eligibility": [
+        {
+          "field": "audio.durationSeconds",
+          "op": ">=",
+          "threshold": "minimumAudioDurationSeconds",
+          "reason": "audio-too-short"
+        }
+      ],
+      "evidenceTier": "measured-full-runtime",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "audio.durationSeconds",
+            "op": ">=",
+            "threshold": "highConfidenceAudioDurationSeconds"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "audio.durationSeconds",
+                "op": "<",
+                "threshold": "lowConfidenceAudioDurationSeconds"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "790430",
+          "slug": "fate-2"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "76447",
+          "slug": "lime-tikka-baalti-lapgan"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "42",
+          "slug": "stay-home"
+        },
+        {
+          "site": "promonews",
+          "id": "85441",
+          "slug": "kings-leon-mustang-brook-linder"
+        }
+      ],
+      "reuseNote": "Use only with the reported R-squared; a positive slope over a long record is easily produced by one loud section.",
+      "nonClaims": [
+        "A fitted loudness rise is not a build, a crescendo, a drop or a deliberate energy arc.",
+        "R-squared is fit quality across the runtime, not evidence of causation or listener-perceived change."
+      ]
+    },
+    {
+      "id": "c.loudness-fall",
+      "layer": "C-audio-energy",
+      "label": "loudness-fall",
+      "definition": "The least-squares loudness slope is negative at or below the negated loudness-drift floor, with an R-squared at or above the loudness-fit floor.",
+      "positive": {
+        "all": [
+          {
+            "field": "audio.loudnessSlopeLuPerMinute",
+            "op": "<=",
+            "threshold": "loudnessSlopeAtLeastLuPerMinute",
+            "negate": true
+          },
+          {
+            "field": "audio.loudnessSlopeR2",
+            "op": ">=",
+            "threshold": "loudnessSlopeR2AtLeast"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "audio.loudnessSlopeLuPerMinute",
+        "audio.loudnessSlopeR2",
+        "audio.integratedLufs",
+        "audio.durationSeconds"
+      ],
+      "gate": [
+        {
+          "field": "audio.integratedLufs",
+          "op": "<=",
+          "threshold": "audioGateLufs",
+          "reason": "integrated-at-or-below-gate"
+        }
+      ],
+      "eligibility": [
+        {
+          "field": "audio.durationSeconds",
+          "op": ">=",
+          "threshold": "minimumAudioDurationSeconds",
+          "reason": "audio-too-short"
+        }
+      ],
+      "evidenceTier": "measured-full-runtime",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "audio.durationSeconds",
+            "op": ">=",
+            "threshold": "highConfidenceAudioDurationSeconds"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "audio.durationSeconds",
+                "op": "<",
+                "threshold": "lowConfidenceAudioDurationSeconds"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "782080",
+          "slug": "pompeii"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "58609",
+          "slug": "titane"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "28",
+          "slug": "spiritual-birth"
+        },
+        {
+          "site": "promonews",
+          "id": "85369",
+          "slug": "pet-shop-boys-loneliness-alasdair-mclellan"
+        }
+      ],
+      "reuseNote": "Use only with the reported R-squared; a negative slope over a long record is easily produced by one quiet section.",
+      "nonClaims": [
+        "A fitted loudness fall is not a release, a fade, a breakdown or a deliberate energy arc.",
+        "R-squared is fit quality across the runtime, not evidence of causation or listener-perceived change."
+      ]
+    },
+    {
+      "id": "d.hard-cut-dominant",
+      "layer": "D-transition-motion",
+      "label": "hard-cut-dominant",
+      "definition": "At least the stated share of detected scene candidates is classified as hard-cut by the fixed transition vocabulary.",
+      "positive": {
+        "all": [
+          {
+            "field": "motionProfile.transitions.shares.hard-cut",
+            "op": ">=",
+            "threshold": "hardCutShareAtLeast"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "motionProfile.transitions.shares.hard-cut",
+        "motionProfile.transitions.transitionCount"
+      ],
+      "eligibility": [
+        {
+          "field": "motionProfile.transitions.transitionCount",
+          "op": ">=",
+          "threshold": "minimumCutsForMotionLabel",
+          "reason": "insufficient-cuts"
+        }
+      ],
+      "evidenceTier": "unmeasured",
+      "confidence": {
+        "default": "unmeasured"
+      },
+      "exemplars": [],
+      "reuseNote": "Do not assign until a motion-profile re-scan exists; the share is a proxy from short windows, never transition ground truth.",
+      "nonClaims": [
+        "Cannot be assigned from the current corpus: no census record contains motionProfile.",
+        "Even when measured, the transition classes are fixed proxies that can confuse flashes, fast motion and compression with edits."
+      ]
+    },
+    {
+      "id": "d.dissolve-using",
+      "layer": "D-transition-motion",
+      "label": "dissolve-using",
+      "definition": "The combined short-dissolve and long-dissolve shares reach the stated dissolve share floor.",
+      "positive": {
+        "all": [
+          {
+            "fields": [
+              "motionProfile.transitions.shares.short-dissolve",
+              "motionProfile.transitions.shares.long-dissolve"
+            ],
+            "agg": "sum",
+            "op": ">=",
+            "threshold": "dissolveShareAtLeast"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "motionProfile.transitions.shares.short-dissolve",
+        "motionProfile.transitions.shares.long-dissolve",
+        "motionProfile.transitions.transitionCount"
+      ],
+      "eligibility": [
+        {
+          "field": "motionProfile.transitions.transitionCount",
+          "op": ">=",
+          "threshold": "minimumCutsForMotionLabel",
+          "reason": "insufficient-cuts"
+        }
+      ],
+      "evidenceTier": "unmeasured",
+      "confidence": {
+        "default": "unmeasured"
+      },
+      "exemplars": [],
+      "reuseNote": "Do not assign until a motion-profile re-scan exists; the class is a graded-change window proxy.",
+      "nonClaims": [
+        "Cannot be assigned from the current corpus: no census record contains motionProfile.",
+        "Even when measured, short and long dissolve classes do not establish a specific transition effect, direction or intent."
+      ]
+    },
+    {
+      "id": "d.fade-using",
+      "layer": "D-transition-motion",
+      "label": "fade-using",
+      "definition": "The combined fade-through-black and fade-through-white shares reach the stated fade share floor.",
+      "positive": {
+        "all": [
+          {
+            "fields": [
+              "motionProfile.transitions.shares.fade-through-black",
+              "motionProfile.transitions.shares.fade-through-white"
+            ],
+            "agg": "sum",
+            "op": ">=",
+            "threshold": "fadeShareAtLeast"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "motionProfile.transitions.shares.fade-through-black",
+        "motionProfile.transitions.shares.fade-through-white",
+        "motionProfile.transitions.transitionCount"
+      ],
+      "eligibility": [
+        {
+          "field": "motionProfile.transitions.transitionCount",
+          "op": ">=",
+          "threshold": "minimumCutsForMotionLabel",
+          "reason": "insufficient-cuts"
+        }
+      ],
+      "evidenceTier": "unmeasured",
+      "confidence": {
+        "default": "unmeasured"
+      },
+      "exemplars": [],
+      "reuseNote": "Do not assign until a motion-profile re-scan exists; fade detection is a recovered luma extreme, not an editorial fade.",
+      "nonClaims": [
+        "Cannot be assigned from the current corpus: no census record contains motionProfile.",
+        "Even when measured, a recovered luma dip or peak does not establish a fade to black or white as an edit."
+      ]
+    },
+    {
+      "id": "d.pan-dominant",
+      "layer": "D-transition-motion",
+      "label": "pan-dominant",
+      "definition": "At least the stated share of observable frame pairs has global image-plane displacement at or above the pan threshold.",
+      "positive": {
+        "all": [
+          {
+            "field": "motionProfile.globalMotion.panFraction",
+            "op": ">=",
+            "threshold": "panFractionAtLeast"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "motionProfile.globalMotion.panFraction",
+        "motionProfile.globalMotion.observablePairs"
+      ],
+      "eligibility": [
+        {
+          "field": "motionProfile.globalMotion.observablePairs",
+          "op": ">=",
+          "threshold": "minimumMotionPairs",
+          "reason": "insufficient-motion-pairs"
+        }
+      ],
+      "evidenceTier": "unmeasured",
+      "confidence": {
+        "default": "unmeasured"
+      },
+      "exemplars": [],
+      "reuseNote": "Do not assign until a motion-profile re-scan exists; pan is an image-plane translation hypothesis, not a camera move.",
+      "nonClaims": [
+        "Cannot be assigned from the current corpus: no census record contains motionProfile.",
+        "Even when measured, a pan fraction cannot separate camera, subject and post moves, and parallax or zooms violate the translation model."
+      ]
+    },
+    {
+      "id": "d.static-camera",
+      "layer": "D-transition-motion",
+      "label": "static-camera",
+      "definition": "At least the stated share of observable frame pairs is at or below the static displacement threshold.",
+      "positive": {
+        "all": [
+          {
+            "field": "motionProfile.globalMotion.staticFraction",
+            "op": ">=",
+            "threshold": "staticCameraFractionAtLeast"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "motionProfile.globalMotion.staticFraction",
+        "motionProfile.globalMotion.observablePairs"
+      ],
+      "eligibility": [
+        {
+          "field": "motionProfile.globalMotion.observablePairs",
+          "op": ">=",
+          "threshold": "minimumMotionPairs",
+          "reason": "insufficient-motion-pairs"
+        }
+      ],
+      "evidenceTier": "unmeasured",
+      "confidence": {
+        "default": "unmeasured"
+      },
+      "exemplars": [],
+      "reuseNote": "Do not assign until a motion-profile re-scan exists; the label is about image-plane stillness, not a rig or a tripod.",
+      "nonClaims": [
+        "Cannot be assigned from the current corpus: no census record contains motionProfile.",
+        "Even when measured, a majority of static translation pairs does not establish a static camera, a locked-off rig, or an absence of internal subject motion."
+      ]
+    },
+    {
+      "id": "d.centre-weighted-motion",
+      "layer": "D-transition-motion",
+      "label": "centre-weighted-motion",
+      "definition": "The centre cell's share of measured frame-to-frame RGB change is at or above the stated centre-share floor.",
+      "positive": {
+        "all": [
+          {
+            "field": "motionProfile.localMotion.centreShare",
+            "op": ">=",
+            "threshold": "centreShareAtLeast"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "motionProfile.localMotion.centreShare"
+      ],
+      "eligibility": [],
+      "evidenceTier": "unmeasured",
+      "confidence": {
+        "default": "unmeasured"
+      },
+      "exemplars": [],
+      "reuseNote": "Do not assign until a motion-profile re-scan exists; the 3x3 distribution describes where change is measured, not what is framed.",
+      "nonClaims": [
+        "Cannot be assigned from the current corpus: no census record contains motionProfile.",
+        "Even when measured, a centre-heavy change distribution is not a subject position, a composition or a compositional intent."
+      ]
+    },
+    {
+      "id": "d.overlay-active",
+      "layer": "D-transition-motion",
+      "label": "overlay-active",
+      "definition": "The larger of the upper-third and lower-third high-frequency luma volatility proxies is at or above the overlay-activity floor.",
+      "positive": {
+        "all": [
+          {
+            "fields": [
+              "motionProfile.overlayActivity.upperThirdActivity",
+              "motionProfile.overlayActivity.lowerThirdActivity"
+            ],
+            "agg": "max",
+            "op": ">=",
+            "threshold": "overlayActivityAtLeast"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "motionProfile.overlayActivity.upperThirdActivity",
+        "motionProfile.overlayActivity.lowerThirdActivity"
+      ],
+      "eligibility": [],
+      "evidenceTier": "unmeasured",
+      "confidence": {
+        "default": "unmeasured"
+      },
+      "exemplars": [],
+      "reuseNote": "Do not assign until a motion-profile re-scan exists; this is a volatility proxy, not text, logo or graphic detection.",
+      "nonClaims": [
+        "Cannot be assigned from the current corpus: no census record contains motionProfile.",
+        "Even when measured, high-frequency luma volatility does not identify text, a logo, a lower-third, a title or any graphic element."
+      ]
+    },
+    {
+      "id": "e.front-loaded",
+      "layer": "E-editorial-composites",
+      "label": "front-loaded",
+      "definition": "The pace trend decelerates, the last-to-first third ratio is at or below the front-load ceiling, and the first third is at or above the early-rate floor.",
+      "positive": {
+        "all": [
+          {
+            "field": "editorial.paceTrend",
+            "op": "==",
+            "value": "decelerating"
+          },
+          {
+            "field": "editorial.paceDriftRatio",
+            "op": "<=",
+            "threshold": "frontLoadDriftRatioAtMost"
+          },
+          {
+            "field": "editorial.paceFirstThird",
+            "op": ">=",
+            "threshold": "frontLoadEarlyCutsPerMinuteAtLeast"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "editorial.paceTrend",
+        "editorial.paceDriftRatio",
+        "editorial.paceFirstThird"
+      ],
+      "eligibility": [
+        {
+          "field": "census.cutCount",
+          "op": ">=",
+          "threshold": "minimumCutsForPacingLabel",
+          "reason": "insufficient-cuts"
+        }
+      ],
+      "evidenceTier": "measured-full-runtime",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "census.cutCount",
+            "op": ">=",
+            "threshold": "highConfidenceCutCount"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "census.cutCount",
+                "op": "<",
+                "threshold": "lowConfidenceCutCount"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "854382",
+          "slug": "orgullo"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "75833",
+          "slug": "dragonfly"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "5",
+          "slug": "genesis-motion-design-manifesto"
+        },
+        {
+          "site": "promonews",
+          "id": "94682",
+          "slug": "isaiah-rashad-same-sht-omar-jones"
+        }
+      ],
+      "reuseNote": "Use when both the direction and the magnitude of the early density are present; never on the trend alone.",
+      "nonClaims": [
+        "Front-loaded does not mean a hook, a cold open, a trailer structure or an audience-retention tactic.",
+        "The composite is a conjunction of measured rate ratios, not an editorial reading of the opening."
+      ]
+    },
+    {
+      "id": "e.building",
+      "layer": "E-editorial-composites",
+      "label": "building",
+      "definition": "Pace accelerates while either fitted luma or fitted loudness rises above its floor, with every component measured.",
+      "positive": {
+        "all": [
+          {
+            "field": "editorial.paceTrend",
+            "op": "==",
+            "value": "accelerating"
+          },
+          {
+            "any": [
+              {
+                "all": [
+                  {
+                    "field": "editorial.lumaSlopePerMinute",
+                    "op": ">=",
+                    "threshold": "lumaDriftSlopeAtLeast"
+                  },
+                  {
+                    "field": "editorial.lumaSlopeR2",
+                    "op": ">=",
+                    "threshold": "lumaDriftR2AtLeast"
+                  }
+                ]
+              },
+              {
+                "all": [
+                  {
+                    "field": "audio.loudnessSlopeLuPerMinute",
+                    "op": ">=",
+                    "threshold": "loudnessSlopeAtLeastLuPerMinute"
+                  },
+                  {
+                    "field": "audio.loudnessSlopeR2",
+                    "op": ">=",
+                    "threshold": "loudnessSlopeR2AtLeast"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "editorial.paceTrend",
+        "editorial.paceDriftRatio",
+        "editorial.lumaSlopePerMinute",
+        "editorial.lumaSlopeR2",
+        "audio.loudnessSlopeLuPerMinute",
+        "audio.loudnessSlopeR2",
+        "audio.integratedLufs",
+        "audio.durationSeconds"
+      ],
+      "gate": [
+        {
+          "field": "audio.integratedLufs",
+          "op": "<=",
+          "threshold": "audioGateLufs",
+          "reason": "integrated-at-or-below-gate"
+        }
+      ],
+      "eligibility": [
+        {
+          "field": "census.cutCount",
+          "op": ">=",
+          "threshold": "minimumCutsForPacingLabel",
+          "reason": "insufficient-cuts"
+        },
+        {
+          "field": "audio.durationSeconds",
+          "op": ">=",
+          "threshold": "minimumAudioDurationSeconds",
+          "reason": "audio-too-short"
+        }
+      ],
+      "evidenceTier": "measured-sampled",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "census.cutCount",
+            "op": ">=",
+            "threshold": "highConfidenceCutCount"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "census.cutCount",
+                "op": "<",
+                "threshold": "lowConfidenceCutCount"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "876198",
+          "slug": "diy-january-with-martha-stewart"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "76447",
+          "slug": "lime-tikka-baalti-lapgan"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "177",
+          "slug": "xiaomi-redmi-note-5-1"
+        },
+        {
+          "site": "promonews",
+          "id": "95527",
+          "slug": "tamino-raven-thibaut-grevet"
+        }
+      ],
+      "reuseNote": "Use as a strict three-component conjunction; if audio is missing the composite is refused rather than inferred from picture alone.",
+      "nonClaims": [
+        "Building does not mean a narrative build, a musical crescendo, a rising action or an intended climax.",
+        "The label is a conjunction of a pace ratio and one fitted appearance or loudness slope; each component retains its own caveats."
+      ]
+    },
+    {
+      "id": "e.flat-steady",
+      "layer": "E-editorial-composites",
+      "label": "flat-steady",
+      "definition": "The pace trend is steady and the fitted luma drift stays inside the flat band with a low R-squared.",
+      "positive": {
+        "all": [
+          {
+            "field": "editorial.paceTrend",
+            "op": "==",
+            "value": "steady"
+          },
+          {
+            "field": "editorial.lumaSlopePerMinute",
+            "op": "<=",
+            "threshold": "lumaDriftSlopeAtLeast",
+            "abs": true
+          },
+          {
+            "field": "editorial.lumaSlopeR2",
+            "op": "<=",
+            "threshold": "lumaDriftR2AtLeast"
+          }
+        ]
+      },
+      "exclusions": [],
+      "requires": [
+        "editorial.paceTrend",
+        "editorial.paceDriftRatio",
+        "editorial.lumaSlopePerMinute",
+        "editorial.lumaSlopeR2"
+      ],
+      "eligibility": [
+        {
+          "field": "census.cutCount",
+          "op": ">=",
+          "threshold": "minimumCutsForPacingLabel",
+          "reason": "insufficient-cuts"
+        }
+      ],
+      "evidenceTier": "measured-sampled",
+      "confidence": {
+        "default": "medium",
+        "high": [
+          {
+            "field": "census.cutCount",
+            "op": ">=",
+            "threshold": "highConfidenceCutCount"
+          },
+          {
+            "field": "identityVerification.kind",
+            "op": "==",
+            "value": "strict-sha"
+          },
+          {
+            "field": "identityVerification.shaMatched",
+            "op": "==",
+            "value": true
+          }
+        ],
+        "low": [
+          {
+            "any": [
+              {
+                "field": "census.cutCount",
+                "op": "<",
+                "threshold": "lowConfidenceCutCount"
+              },
+              {
+                "field": "identityVerification.kind",
+                "op": "missing"
+              }
+            ]
+          }
+        ]
+      },
+      "exemplars": [
+        {
+          "site": "aicp",
+          "id": "862922",
+          "slug": "cash-in-cash-out"
+        },
+        {
+          "site": "directorslibrary",
+          "id": "75847",
+          "slug": "father"
+        },
+        {
+          "site": "motiondesignawards",
+          "id": "42",
+          "slug": "stay-home"
+        },
+        {
+          "site": "promonews",
+          "id": "94740",
+          "slug": "will-parker-mindless-state-jackson-ducasse"
+        }
+      ],
+      "reuseNote": "Use as a no-trend conjunction for baseline or control records; it is not a calm or neutral style label.",
+      "nonClaims": [
+        "Flat-steady does not mean calm, restrained, contemplative or monotonous.",
+        "A flat appearance fit and a steady pace ratio can coexist with strong internal motion, colour change or loud audio events."
+      ]
+    },
+    {
+      "id": "f.animation-style",
+      "layer": "F-out-of-scope",
+      "label": "animation-style",
+      "definition": "Not assigned: the taxonomy does not name an animation technique, medium or production method.",
+      "positive": {
+        "never": {
+          "reason": "no stored field measures animation technique or medium"
+        }
+      },
+      "exclusions": [],
+      "requires": [],
+      "eligibility": [],
+      "evidenceTier": "unmeasured",
+      "confidence": {
+        "default": "unmeasured"
+      },
+      "exemplars": [],
+      "assignable": false,
+      "reuseNote": "Do not derive style from pacing, appearance or motion proxies; use a separately labelled, human-coded study if needed.",
+      "nonClaims": [
+        "Does not identify stop-motion, CG, cel, collage, mixed media, hand-drawn or any other technique.",
+        "Would require labelled frames or a trained, validated classifier with documented error rates."
+      ]
+    },
+    {
+      "id": "f.vfx-effect-identity",
+      "layer": "F-out-of-scope",
+      "label": "vfx-effect-identity",
+      "definition": "Not assigned: the taxonomy does not identify a visual effect, filter, grain, glow, distortion, particle or compositing operation.",
+      "positive": {
+        "never": {
+          "reason": "no stored field measures effect identity"
+        }
+      },
+      "exclusions": [],
+      "requires": [],
+      "eligibility": [],
+      "evidenceTier": "unmeasured",
+      "confidence": {
+        "default": "unmeasured"
+      },
+      "exemplars": [],
+      "assignable": false,
+      "reuseNote": "Do not infer effects from luma volatility, edge density or motion proxies; those are not effect detectors.",
+      "nonClaims": [
+        "Does not identify blur, glow, grain, distortion, particles, keying or any compositing operation.",
+        "Would require an effect-labelled dataset and a validated detector, plus a stated confusion matrix."
+      ]
+    },
+    {
+      "id": "f.transition-ground-truth",
+      "layer": "F-out-of-scope",
+      "label": "transition-ground-truth",
+      "definition": "Not assigned: the taxonomy does not assert a verified edit type, cut frame or transition boundary.",
+      "positive": {
+        "never": {
+          "reason": "scene-score candidates and transition windows are proxies, not verified edits"
+        }
+      },
+      "exclusions": [],
+      "requires": [],
+      "eligibility": [],
+      "evidenceTier": "unmeasured",
+      "confidence": {
+        "default": "unmeasured"
+      },
+      "exemplars": [],
+      "assignable": false,
+      "reuseNote": "Do not use layer D or layer A counts as ground-truth edit lists; they are candidate events and fixed-vocabulary proxies.",
+      "nonClaims": [
+        "Does not establish that a cut occurred at a frame, that a dissolve lasted a stated time, or that a fade reached black.",
+        "Would require frame-accurate human annotation with an inter-annotator agreement statistic."
+      ]
+    },
+    {
+      "id": "f.video-template-detection",
+      "layer": "F-out-of-scope",
+      "label": "video-template-detection",
+      "definition": "Not assigned: the taxonomy does not match a record against a template, format, package or campaign system.",
+      "positive": {
+        "never": {
+          "reason": "no stored field measures template or package membership"
+        }
+      },
+      "exclusions": [],
+      "requires": [],
+      "eligibility": [],
+      "evidenceTier": "unmeasured",
+      "confidence": {
+        "default": "unmeasured"
+      },
+      "exemplars": [],
+      "assignable": false,
+      "reuseNote": "Do not cluster records into templates from these labels; use an explicit template library and matching method.",
+      "nonClaims": [
+        "Does not identify a reusable package, a design system, a template family or a campaign system.",
+        "Would require a template library plus a matcher with a measured false-positive rate."
+      ]
+    },
+    {
+      "id": "f.camera-rig-inference",
+      "layer": "F-out-of-scope",
+      "label": "camera-rig-inference",
+      "definition": "Not assigned: the taxonomy does not infer a camera body, lens, rig, gimbal, drone or physical move.",
+      "positive": {
+        "never": {
+          "reason": "no stored field measures camera or rig identity"
+        }
+      },
+      "exclusions": [],
+      "requires": [],
+      "eligibility": [],
+      "evidenceTier": "unmeasured",
+      "confidence": {
+        "default": "unmeasured"
+      },
+      "exemplars": [],
+      "assignable": false,
+      "reuseNote": "Do not read the layer D pan or static proxies as camera facts; they are image-plane translation summaries.",
+      "nonClaims": [
+        "Does not establish a dolly, crane, handheld, gimbal, drone or locked-off camera.",
+        "Would require EXIF/rig metadata or a validated camera-motion model with calibrated ambiguity handling."
+      ]
+    },
+    {
+      "id": "f.genre",
+      "layer": "F-out-of-scope",
+      "label": "genre",
+      "definition": "Not assigned: the taxonomy does not classify genre, format, market or audience category.",
+      "positive": {
+        "never": {
+          "reason": "no stored field measures genre"
+        }
+      },
+      "exclusions": [],
+      "requires": [],
+      "eligibility": [],
+      "evidenceTier": "unmeasured",
+      "confidence": {
+        "default": "unmeasured"
+      },
+      "exemplars": [],
+      "assignable": false,
+      "reuseNote": "Use catalog metadata if genre is needed; do not infer it from motion labels.",
+      "nonClaims": [
+        "Does not identify music video, commercial, title sequence, brand film, trailer or any other genre.",
+        "Would require a labelled genre corpus or the catalog's own editorial categories, used as a separate field."
+      ]
+    },
+    {
+      "id": "f.quality",
+      "layer": "F-out-of-scope",
+      "label": "quality",
+      "definition": "Not assigned: the taxonomy makes no quality, craft, taste or award-worthy judgement.",
+      "positive": {
+        "never": {
+          "reason": "no stored field measures quality"
+        }
+      },
+      "exclusions": [],
+      "requires": [],
+      "eligibility": [],
+      "evidenceTier": "unmeasured",
+      "confidence": {
+        "default": "unmeasured"
+      },
+      "exemplars": [],
+      "assignable": false,
+      "reuseNote": "Do not rank or filter on these labels as if they encoded quality; use them as descriptive strata only.",
+      "nonClaims": [
+        "Does not rank records, measure craft, predict awards or establish audience response.",
+        "Would require a defined rubric, trained raters and an inter-rater reliability statistic."
+      ]
+    },
+    {
+      "id": "f.intent",
+      "layer": "F-out-of-scope",
+      "label": "intent",
+      "definition": "Not assigned: the taxonomy does not infer creative intent, brief, strategy or narrative purpose.",
+      "positive": {
+        "never": {
+          "reason": "no stored field measures intent"
+        }
+      },
+      "exclusions": [],
+      "requires": [],
+      "eligibility": [],
+      "evidenceTier": "unmeasured",
+      "confidence": {
+        "default": "unmeasured"
+      },
+      "exemplars": [],
+      "assignable": false,
+      "reuseNote": "Do not translate measured behaviour into a purpose statement; keep the measurement and the interpretation separate.",
+      "nonClaims": [
+        "Does not establish why a choice was made, what a client asked for, or what a sequence is meant to achieve.",
+        "Would require creator interviews, briefs or a labelled intent study with documented coding rules."
+      ]
+    },
+    {
+      "id": "f.authorship",
+      "layer": "F-out-of-scope",
+      "label": "authorship",
+      "definition": "Not assigned: the taxonomy does not attribute a work to a person, studio, tool or model.",
+      "positive": {
+        "never": {
+          "reason": "no stored field measures authorship"
+        }
+      },
+      "exclusions": [],
+      "requires": [],
+      "eligibility": [],
+      "evidenceTier": "unmeasured",
+      "confidence": {
+        "default": "unmeasured"
+      },
+      "exemplars": [],
+      "assignable": false,
+      "reuseNote": "Use catalog credits for attribution; never infer authorship from measured behaviour.",
+      "nonClaims": [
+        "Does not identify a director, studio, animator, tool or generative model.",
+        "Would require provenance metadata or a validated authorship-attribution method with a stated error rate."
+      ]
+    }
+  ]
+}

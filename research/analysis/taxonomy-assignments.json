@@ -1,0 +1,1757 @@
+{
+  "cooccurrence": {
+    "A-pacing": {
+      "counts": [
+        [
+          94,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          430,
+          0,
+          0,
+          12,
+          15,
+          17,
+          2
+        ],
+        [
+          0,
+          0,
+          1565,
+          0,
+          262,
+          271,
+          89,
+          91
+        ],
+        [
+          0,
+          0,
+          0,
+          521,
+          81,
+          86,
+          196,
+          206
+        ],
+        [
+          0,
+          12,
+          262,
+          81,
+          355,
+          0,
+          52,
+          54
+        ],
+        [
+          0,
+          15,
+          271,
+          86,
+          0,
+          372,
+          58,
+          62
+        ],
+        [
+          0,
+          17,
+          89,
+          196,
+          52,
+          58,
+          345,
+          286
+        ],
+        [
+          0,
+          2,
+          91,
+          206,
+          54,
+          62,
+          286,
+          299
+        ]
+      ],
+      "labels": [
+        "a.single-shot",
+        "a.long-take",
+        "a.steady-cut",
+        "a.rapid-montage",
+        "a.accelerating",
+        "a.decelerating",
+        "a.strobe-texture",
+        "a.burst-texture"
+      ],
+      "recordCount": 3161
+    },
+    "C-audio-energy": {
+      "counts": [
+        [
+          1453,
+          0,
+          225,
+          268,
+          201,
+          181,
+          640,
+          18,
+          42
+        ],
+        [
+          0,
+          370,
+          75,
+          80,
+          91,
+          36,
+          113,
+          5,
+          20
+        ],
+        [
+          225,
+          75,
+          502,
+          0,
+          58,
+          42,
+          207,
+          22,
+          39
+        ],
+        [
+          268,
+          80,
+          0,
+          524,
+          172,
+          51,
+          138,
+          0,
+          13
+        ],
+        [
+          201,
+          91,
+          58,
+          172,
+          566,
+          0,
+          87,
+          7,
+          14
+        ],
+        [
+          181,
+          36,
+          42,
+          51,
+          0,
+          291,
+          174,
+          7,
+          12
+        ],
+        [
+          640,
+          113,
+          207,
+          138,
+          87,
+          174,
+          1017,
+          2,
+          46
+        ],
+        [
+          18,
+          5,
+          22,
+          0,
+          7,
+          7,
+          2,
+          50,
+          0
+        ],
+        [
+          42,
+          20,
+          39,
+          13,
+          14,
+          12,
+          46,
+          0,
+          102
+        ]
+      ],
+      "labels": [
+        "c.loud-mix",
+        "c.quiet-mix",
+        "c.wide-lra",
+        "c.narrow-lra",
+        "c.onset-dense",
+        "c.onset-sparse",
+        "c.silent-tail",
+        "c.loudness-rise",
+        "c.loudness-fall"
+      ],
+      "recordCount": 3161
+    }
+  },
+  "derivedFrom": {
+    "latestInputMtime": "2026-11-17T20:13:40.010668Z",
+    "note": "mtime only; no wall-clock timestamp is written",
+    "root": "research/analysis",
+    "sites": [
+      "aicp",
+      "directorslibrary",
+      "motiondesignawards",
+      "promonews",
+      "shots"
+    ]
+  },
+  "evidenceAvailability": {
+    "A-pacing": {
+      "labelCount": 8,
+      "recordsWithAllLayerFields": 1363,
+      "recordsWithAnyLabelRequires": 3161,
+      "recordsWithAtLeastOneLabel": 2653,
+      "requiredFields": [
+        "census.cutCount",
+        "census.durationSeconds",
+        "census.cutsPerMinute",
+        "editorial.paceTrend",
+        "editorial.paceDriftRatio",
+        "census.strobe",
+        "census.seriesSummary.meanDisplayLuma",
+        "census.burstFraction"
+      ]
+    },
+    "B-temporal-appearance": {
+      "labelCount": 5,
+      "recordsWithAllLayerFields": 1570,
+      "recordsWithAnyLabelRequires": 1570,
+      "recordsWithAtLeastOneLabel": 619,
+      "requiredFields": [
+        "editorial.flickerLumaPerSecond",
+        "editorial.staticFraction",
+        "editorial.lumaSlopePerMinute",
+        "editorial.lumaSlopeR2"
+      ]
+    },
+    "C-audio-energy": {
+      "labelCount": 9,
+      "recordsWithAllLayerFields": 2837,
+      "recordsWithAnyLabelRequires": 2841,
+      "recordsWithAtLeastOneLabel": 2562,
+      "requiredFields": [
+        "audio.integratedLufs",
+        "audio.durationSeconds",
+        "audio.loudnessRangeLu",
+        "audio.onsetsPerMinuteOfRuntime",
+        "audio.tailSilenceSeconds",
+        "audio.loudnessSlopeLuPerMinute",
+        "audio.loudnessSlopeR2"
+      ]
+    },
+    "D-transition-motion": {
+      "labelCount": 7,
+      "recordsWithAllLayerFields": 0,
+      "recordsWithAnyLabelRequires": 0,
+      "recordsWithAtLeastOneLabel": 0,
+      "requiredFields": [
+        "motionProfile.transitions.shares.hard-cut",
+        "motionProfile.transitions.transitionCount",
+        "motionProfile.transitions.shares.short-dissolve",
+        "motionProfile.transitions.shares.long-dissolve",
+        "motionProfile.transitions.shares.fade-through-black",
+        "motionProfile.transitions.shares.fade-through-white",
+        "motionProfile.globalMotion.panFraction",
+        "motionProfile.globalMotion.observablePairs",
+        "motionProfile.globalMotion.staticFraction",
+        "motionProfile.localMotion.centreShare",
+        "motionProfile.overlayActivity.upperThirdActivity",
+        "motionProfile.overlayActivity.lowerThirdActivity"
+      ]
+    },
+    "E-editorial-composites": {
+      "labelCount": 3,
+      "recordsWithAllLayerFields": 1376,
+      "recordsWithAnyLabelRequires": 1380,
+      "recordsWithAtLeastOneLabel": 319,
+      "requiredFields": [
+        "editorial.paceTrend",
+        "editorial.paceDriftRatio",
+        "editorial.paceFirstThird",
+        "editorial.lumaSlopePerMinute",
+        "editorial.lumaSlopeR2",
+        "audio.loudnessSlopeLuPerMinute",
+        "audio.loudnessSlopeR2",
+        "audio.integratedLufs",
+        "audio.durationSeconds"
+      ]
+    },
+    "F-out-of-scope": {
+      "labelCount": 9,
+      "recordsWithAllLayerFields": 0,
+      "recordsWithAnyLabelRequires": 0,
+      "recordsWithAtLeastOneLabel": 0,
+      "requiredFields": []
+    }
+  },
+  "labels": [
+    {
+      "assigned": 355,
+      "confidence": {
+        "low": 355
+      },
+      "eligibleRecords": 903,
+      "evidenceTier": "measured-full-runtime",
+      "id": "a.accelerating",
+      "label": "accelerating",
+      "layer": "A-pacing",
+      "nonClaims": [
+        "Third-to-third ratios are sensitive to where the cuts happen to fall and to false candidates.",
+        "Does not show a smooth ramp, a musical build, or a deliberate escalation."
+      ],
+      "requiresPresent": 1380,
+      "shareOfEligible": 0.393134,
+      "shareOfRecords": 0.112306
+    },
+    {
+      "assigned": 299,
+      "confidence": {
+        "high": 17,
+        "low": 151,
+        "medium": 131
+      },
+      "eligibleRecords": 2156,
+      "evidenceTier": "measured-full-runtime",
+      "id": "a.burst-texture",
+      "label": "burst-texture",
+      "layer": "A-pacing",
+      "nonClaims": [
+        "A burst of candidate events is not a verified rapid sequence; it can be motion or luminance artefacts.",
+        "Does not establish a montage, a chase, a stinger or any narrative function."
+      ],
+      "requiresPresent": 2972,
+      "shareOfEligible": 0.138683,
+      "shareOfRecords": 0.09459
+    },
+    {
+      "assigned": 372,
+      "confidence": {
+        "low": 372
+      },
+      "eligibleRecords": 903,
+      "evidenceTier": "measured-full-runtime",
+      "id": "a.decelerating",
+      "label": "decelerating",
+      "layer": "A-pacing",
+      "nonClaims": [
+        "Third-to-third ratios are sensitive to where the cuts happen to fall and to false candidates.",
+        "Does not show a fade-out, a slow ending, or a deliberate release of tension."
+      ],
+      "requiresPresent": 1380,
+      "shareOfEligible": 0.41196,
+      "shareOfRecords": 0.117684
+    },
+    {
+      "assigned": 430,
+      "confidence": {
+        "low": 389,
+        "medium": 41
+      },
+      "eligibleRecords": 3056,
+      "evidenceTier": "measured-full-runtime",
+      "id": "a.long-take",
+      "label": "long-take",
+      "layer": "A-pacing",
+      "nonClaims": [
+        "A low detected-event rate is not a verified take length: missed cuts shorten apparent shots and false candidates split them.",
+        "Does not establish that the camera holds, that the action is continuous, or that the shot is the editorial unit."
+      ],
+      "requiresPresent": 3161,
+      "shareOfEligible": 0.140707,
+      "shareOfRecords": 0.136033
+    },
+    {
+      "assigned": 521,
+      "confidence": {
+        "high": 44,
+        "low": 242,
+        "medium": 235
+      },
+      "eligibleRecords": 2156,
+      "evidenceTier": "measured-full-runtime",
+      "id": "a.rapid-montage",
+      "label": "rapid-montage",
+      "layer": "A-pacing",
+      "nonClaims": [
+        "Fast movement, flashes, strobe and compression can inflate the candidate count, so a high rate is not proof of rapid editing.",
+        "Does not establish shot count, transition type, pace change within the runtime or editorial intent."
+      ],
+      "requiresPresent": 3161,
+      "shareOfEligible": 0.241651,
+      "shareOfRecords": 0.164821
+    },
+    {
+      "assigned": 94,
+      "confidence": {
+        "high": 9,
+        "low": 73,
+        "medium": 12
+      },
+      "eligibleRecords": 3142,
+      "evidenceTier": "measured-full-runtime",
+      "id": "a.single-shot",
+      "label": "single-shot",
+      "layer": "A-pacing",
+      "nonClaims": [
+        "Does not prove the work has a single shot: an undetected cut, a locked-off long take and a continuous generated image all produce the same scan.",
+        "Does not establish camera movement, subject continuity or editorial intent."
+      ],
+      "requiresPresent": 3161,
+      "shareOfEligible": 0.029917,
+      "shareOfRecords": 0.029737
+    },
+    {
+      "assigned": 1565,
+      "confidence": {
+        "high": 27,
+        "low": 677,
+        "medium": 861
+      },
+      "eligibleRecords": 2156,
+      "evidenceTier": "measured-full-runtime",
+      "id": "a.steady-cut",
+      "label": "steady-cut",
+      "layer": "A-pacing",
+      "nonClaims": [
+        "Describes a candidate-event rate over the runtime, not a rhythmic pattern, beat alignment or editing philosophy.",
+        "Does not distinguish hard cuts from fades, dissolves, flashes or false candidates."
+      ],
+      "requiresPresent": 3161,
+      "shareOfEligible": 0.725881,
+      "shareOfRecords": 0.495096
+    },
+    {
+      "assigned": 345,
+      "confidence": {
+        "high": 8,
+        "low": 210,
+        "medium": 127
+      },
+      "eligibleRecords": 3161,
+      "evidenceTier": "measured-sampled",
+      "id": "a.strobe-texture",
+      "label": "strobe-texture",
+      "layer": "A-pacing",
+      "nonClaims": [
+        "Not an editing label: strobe texture can come from flashing content inside a shot, from a strobe light, or from compression artefacts.",
+        "Not a photic-safety measurement: the 1 Hz appearance series aliases higher frequencies and cannot certify a flash rate."
+      ],
+      "requiresPresent": 3161,
+      "shareOfEligible": 0.109143,
+      "shareOfRecords": 0.109143
+    },
+    {
+      "assigned": 165,
+      "confidence": {
+        "low": 165
+      },
+      "eligibleRecords": 1385,
+      "evidenceTier": "measured-sampled",
+      "id": "b.flicker-high",
+      "label": "flicker-high",
+      "layer": "B-temporal-appearance",
+      "nonClaims": [
+        "Not a flicker frequency or a flash-rate measurement; the 1 Hz series aliases content above roughly 1 Hz.",
+        "Does not identify strobing, flashing, lightning, camera shake or an effect."
+      ],
+      "requiresPresent": 1570,
+      "shareOfEligible": 0.119134,
+      "shareOfRecords": 0.052199
+    },
+    {
+      "assigned": 334,
+      "confidence": {
+        "low": 334
+      },
+      "eligibleRecords": 1385,
+      "evidenceTier": "measured-sampled",
+      "id": "b.flicker-low",
+      "label": "flicker-low",
+      "layer": "B-temporal-appearance",
+      "nonClaims": [
+        "A low sampled instability value does not mean the image is still, nor that the shot is locked off.",
+        "Cadence aliases fast variation, so low values can coexist with visible flicker."
+      ],
+      "requiresPresent": 1570,
+      "shareOfEligible": 0.241155,
+      "shareOfRecords": 0.105663
+    },
+    {
+      "assigned": 102,
+      "confidence": {
+        "low": 102
+      },
+      "eligibleRecords": 1385,
+      "evidenceTier": "measured-sampled",
+      "id": "b.luma-fall",
+      "label": "luma-fall",
+      "layer": "B-temporal-appearance",
+      "nonClaims": [
+        "A fitted downward drift is not a fade, a blackout, or a deliberate tonal arc.",
+        "R-squared is fit quality over 1 Hz samples, not evidence of causation or continuity."
+      ],
+      "requiresPresent": 1570,
+      "shareOfEligible": 0.073646,
+      "shareOfRecords": 0.032268
+    },
+    {
+      "assigned": 80,
+      "confidence": {
+        "low": 80
+      },
+      "eligibleRecords": 1385,
+      "evidenceTier": "measured-sampled",
+      "id": "b.luma-rise",
+      "label": "luma-rise",
+      "layer": "B-temporal-appearance",
+      "nonClaims": [
+        "A fitted upward drift is not a creative brightening, a reveal, or a deliberate tonal arc.",
+        "R-squared is fit quality over 1 Hz samples, not evidence of causation or continuity."
+      ],
+      "requiresPresent": 1570,
+      "shareOfEligible": 0.057762,
+      "shareOfRecords": 0.025308
+    },
+    {
+      "assigned": 287,
+      "confidence": {
+        "low": 287
+      },
+      "eligibleRecords": 1385,
+      "evidenceTier": "measured-sampled",
+      "id": "b.static-frame-dominant",
+      "label": "static-frame-dominant",
+      "layer": "B-temporal-appearance",
+      "nonClaims": [
+        "A static appearance pair is not a static camera or a still frame; slow motion and long dissolves can also change little per second.",
+        "Does not establish a freeze, a title card or a held composition."
+      ],
+      "requiresPresent": 1570,
+      "shareOfEligible": 0.20722,
+      "shareOfRecords": 0.090794
+    },
+    {
+      "assigned": 1453,
+      "confidence": {
+        "high": 54,
+        "low": 775,
+        "medium": 624
+      },
+      "eligibleRecords": 2820,
+      "evidenceTier": "measured-full-runtime",
+      "id": "c.loud-mix",
+      "label": "loud-mix",
+      "layer": "C-audio-energy",
+      "nonClaims": [
+        "A loud integrated level is not loudness compliance, clarity, impact or a quality verdict.",
+        "The value is a programme-loudness measurement of one mixed stream; it says nothing about dialogue, music or effects separately."
+      ],
+      "requiresPresent": 2841,
+      "shareOfEligible": 0.515248,
+      "shareOfRecords": 0.459665
+    },
+    {
+      "assigned": 102,
+      "confidence": {
+        "high": 3,
+        "low": 78,
+        "medium": 21
+      },
+      "eligibleRecords": 2820,
+      "evidenceTier": "measured-full-runtime",
+      "id": "c.loudness-fall",
+      "label": "loudness-fall",
+      "layer": "C-audio-energy",
+      "nonClaims": [
+        "A fitted loudness fall is not a release, a fade, a breakdown or a deliberate energy arc.",
+        "R-squared is fit quality across the runtime, not evidence of causation or listener-perceived change."
+      ],
+      "requiresPresent": 2837,
+      "shareOfEligible": 0.03617,
+      "shareOfRecords": 0.032268
+    },
+    {
+      "assigned": 50,
+      "confidence": {
+        "high": 3,
+        "low": 38,
+        "medium": 9
+      },
+      "eligibleRecords": 2820,
+      "evidenceTier": "measured-full-runtime",
+      "id": "c.loudness-rise",
+      "label": "loudness-rise",
+      "layer": "C-audio-energy",
+      "nonClaims": [
+        "A fitted loudness rise is not a build, a crescendo, a drop or a deliberate energy arc.",
+        "R-squared is fit quality across the runtime, not evidence of causation or listener-perceived change."
+      ],
+      "requiresPresent": 2837,
+      "shareOfEligible": 0.01773,
+      "shareOfRecords": 0.015818
+    },
+    {
+      "assigned": 524,
+      "confidence": {
+        "high": 24,
+        "low": 332,
+        "medium": 168
+      },
+      "eligibleRecords": 2824,
+      "evidenceTier": "measured-full-runtime",
+      "id": "c.narrow-lra",
+      "label": "narrow-lra",
+      "layer": "C-audio-energy",
+      "nonClaims": [
+        "A narrow range is not a loudness-war verdict, a format convention or a quality judgement.",
+        "Does not show that the record is dynamically flat to a listener or that the mix is consistent in intent."
+      ],
+      "requiresPresent": 2841,
+      "shareOfEligible": 0.185552,
+      "shareOfRecords": 0.16577
+    },
+    {
+      "assigned": 566,
+      "confidence": {
+        "high": 31,
+        "low": 369,
+        "medium": 166
+      },
+      "eligibleRecords": 2824,
+      "evidenceTier": "measured-full-runtime",
+      "id": "c.onset-dense",
+      "label": "onset-dense",
+      "layer": "C-audio-energy",
+      "nonClaims": [
+        "Onsets are amplitude-envelope rises, not musical beats, cuts, hits or speech events.",
+        "Dense onset detection can come from percussive music, speech, noise or effects; no source separation is performed."
+      ],
+      "requiresPresent": 2841,
+      "shareOfEligible": 0.200425,
+      "shareOfRecords": 0.179057
+    },
+    {
+      "assigned": 291,
+      "confidence": {
+        "high": 13,
+        "low": 167,
+        "medium": 111
+      },
+      "eligibleRecords": 2824,
+      "evidenceTier": "measured-full-runtime",
+      "id": "c.onset-sparse",
+      "label": "onset-sparse",
+      "layer": "C-audio-energy",
+      "nonClaims": [
+        "Sparse onsets are not silence, a drone, an ambient score, or a deliberate restraint.",
+        "The detector is causal and threshold-based; sustained sounds with smooth attacks can yield few onsets."
+      ],
+      "requiresPresent": 2841,
+      "shareOfEligible": 0.103045,
+      "shareOfRecords": 0.092059
+    },
+    {
+      "assigned": 370,
+      "confidence": {
+        "high": 20,
+        "low": 213,
+        "medium": 137
+      },
+      "eligibleRecords": 2820,
+      "evidenceTier": "measured-full-runtime",
+      "id": "c.quiet-mix",
+      "label": "quiet-mix",
+      "layer": "C-audio-energy",
+      "nonClaims": [
+        "A quiet integrated level is not intimacy, restraint, a mix defect or a quality verdict.",
+        "Records at or below the -70 LUFS gate are reported as at-or-below-gate and receive no loudness band."
+      ],
+      "requiresPresent": 2841,
+      "shareOfEligible": 0.131206,
+      "shareOfRecords": 0.117052
+    },
+    {
+      "assigned": 1017,
+      "confidence": {
+        "high": 32,
+        "low": 505,
+        "medium": 480
+      },
+      "eligibleRecords": 2824,
+      "evidenceTier": "measured-full-runtime",
+      "id": "c.silent-tail",
+      "label": "silent-tail",
+      "layer": "C-audio-energy",
+      "nonClaims": [
+        "Tail silence may be an artefact of the rendition, the encode, or the source's own end card, not an editorial choice.",
+        "Does not establish an ending, a button, a fade-out or a pause in the narrative."
+      ],
+      "requiresPresent": 2841,
+      "shareOfEligible": 0.360127,
+      "shareOfRecords": 0.321734
+    },
+    {
+      "assigned": 502,
+      "confidence": {
+        "high": 33,
+        "low": 291,
+        "medium": 178
+      },
+      "eligibleRecords": 2824,
+      "evidenceTier": "measured-full-runtime",
+      "id": "c.wide-lra",
+      "label": "wide-lra",
+      "layer": "C-audio-energy",
+      "nonClaims": [
+        "Loudness range is a statistical spread of short-term loudness, not a dynamic-style, genre or quality judgement.",
+        "Does not localise the loud and quiet passages, and does not establish a build or a drop."
+      ],
+      "requiresPresent": 2841,
+      "shareOfEligible": 0.177762,
+      "shareOfRecords": 0.158811
+    },
+    {
+      "assigned": 0,
+      "confidence": {},
+      "eligibleRecords": 0,
+      "evidenceTier": "unmeasured",
+      "id": "d.centre-weighted-motion",
+      "label": "centre-weighted-motion",
+      "layer": "D-transition-motion",
+      "nonClaims": [
+        "Cannot be assigned from the current corpus: no census record contains motionProfile.",
+        "Even when measured, a centre-heavy change distribution is not a subject position, a composition or a compositional intent."
+      ],
+      "requiresPresent": 0,
+      "shareOfEligible": 0.0,
+      "shareOfRecords": 0.0
+    },
+    {
+      "assigned": 0,
+      "confidence": {},
+      "eligibleRecords": 0,
+      "evidenceTier": "unmeasured",
+      "id": "d.dissolve-using",
+      "label": "dissolve-using",
+      "layer": "D-transition-motion",
+      "nonClaims": [
+        "Cannot be assigned from the current corpus: no census record contains motionProfile.",
+        "Even when measured, short and long dissolve classes do not establish a specific transition effect, direction or intent."
+      ],
+      "requiresPresent": 0,
+      "shareOfEligible": 0.0,
+      "shareOfRecords": 0.0
+    },
+    {
+      "assigned": 0,
+      "confidence": {},
+      "eligibleRecords": 0,
+      "evidenceTier": "unmeasured",
+      "id": "d.fade-using",
+      "label": "fade-using",
+      "layer": "D-transition-motion",
+      "nonClaims": [
+        "Cannot be assigned from the current corpus: no census record contains motionProfile.",
+        "Even when measured, a recovered luma dip or peak does not establish a fade to black or white as an edit."
+      ],
+      "requiresPresent": 0,
+      "shareOfEligible": 0.0,
+      "shareOfRecords": 0.0
+    },
+    {
+      "assigned": 0,
+      "confidence": {},
+      "eligibleRecords": 0,
+      "evidenceTier": "unmeasured",
+      "id": "d.hard-cut-dominant",
+      "label": "hard-cut-dominant",
+      "layer": "D-transition-motion",
+      "nonClaims": [
+        "Cannot be assigned from the current corpus: no census record contains motionProfile.",
+        "Even when measured, the transition classes are fixed proxies that can confuse flashes, fast motion and compression with edits."
+      ],
+      "requiresPresent": 0,
+      "shareOfEligible": 0.0,
+      "shareOfRecords": 0.0
+    },
+    {
+      "assigned": 0,
+      "confidence": {},
+      "eligibleRecords": 0,
+      "evidenceTier": "unmeasured",
+      "id": "d.overlay-active",
+      "label": "overlay-active",
+      "layer": "D-transition-motion",
+      "nonClaims": [
+        "Cannot be assigned from the current corpus: no census record contains motionProfile.",
+        "Even when measured, high-frequency luma volatility does not identify text, a logo, a lower-third, a title or any graphic element."
+      ],
+      "requiresPresent": 0,
+      "shareOfEligible": 0.0,
+      "shareOfRecords": 0.0
+    },
+    {
+      "assigned": 0,
+      "confidence": {},
+      "eligibleRecords": 0,
+      "evidenceTier": "unmeasured",
+      "id": "d.pan-dominant",
+      "label": "pan-dominant",
+      "layer": "D-transition-motion",
+      "nonClaims": [
+        "Cannot be assigned from the current corpus: no census record contains motionProfile.",
+        "Even when measured, a pan fraction cannot separate camera, subject and post moves, and parallax or zooms violate the translation model."
+      ],
+      "requiresPresent": 0,
+      "shareOfEligible": 0.0,
+      "shareOfRecords": 0.0
+    },
+    {
+      "assigned": 0,
+      "confidence": {},
+      "eligibleRecords": 0,
+      "evidenceTier": "unmeasured",
+      "id": "d.static-camera",
+      "label": "static-camera",
+      "layer": "D-transition-motion",
+      "nonClaims": [
+        "Cannot be assigned from the current corpus: no census record contains motionProfile.",
+        "Even when measured, a majority of static translation pairs does not establish a static camera, a locked-off rig, or an absence of internal subject motion."
+      ],
+      "requiresPresent": 0,
+      "shareOfEligible": 0.0,
+      "shareOfRecords": 0.0
+    },
+    {
+      "assigned": 28,
+      "confidence": {
+        "low": 28
+      },
+      "eligibleRecords": 914,
+      "evidenceTier": "measured-sampled",
+      "id": "e.building",
+      "label": "building",
+      "layer": "E-editorial-composites",
+      "nonClaims": [
+        "Building does not mean a narrative build, a musical crescendo, a rising action or an intended climax.",
+        "The label is a conjunction of a pace ratio and one fitted appearance or loudness slope; each component retains its own caveats."
+      ],
+      "requiresPresent": 1376,
+      "shareOfEligible": 0.030635,
+      "shareOfRecords": 0.008858
+    },
+    {
+      "assigned": 122,
+      "confidence": {
+        "low": 122
+      },
+      "eligibleRecords": 919,
+      "evidenceTier": "measured-sampled",
+      "id": "e.flat-steady",
+      "label": "flat-steady",
+      "layer": "E-editorial-composites",
+      "nonClaims": [
+        "Flat-steady does not mean calm, restrained, contemplative or monotonous.",
+        "A flat appearance fit and a steady pace ratio can coexist with strong internal motion, colour change or loud audio events."
+      ],
+      "requiresPresent": 1380,
+      "shareOfEligible": 0.132753,
+      "shareOfRecords": 0.038595
+    },
+    {
+      "assigned": 169,
+      "confidence": {
+        "low": 169
+      },
+      "eligibleRecords": 919,
+      "evidenceTier": "measured-full-runtime",
+      "id": "e.front-loaded",
+      "label": "front-loaded",
+      "layer": "E-editorial-composites",
+      "nonClaims": [
+        "Front-loaded does not mean a hook, a cold open, a trailer structure or an audience-retention tactic.",
+        "The composite is a conjunction of measured rate ratios, not an editorial reading of the opening."
+      ],
+      "requiresPresent": 1380,
+      "shareOfEligible": 0.183896,
+      "shareOfRecords": 0.053464
+    },
+    {
+      "assigned": 0,
+      "confidence": {},
+      "eligibleRecords": 0,
+      "evidenceTier": "unmeasured",
+      "id": "f.animation-style",
+      "label": "animation-style",
+      "layer": "F-out-of-scope",
+      "nonClaims": [
+        "Does not identify stop-motion, CG, cel, collage, mixed media, hand-drawn or any other technique.",
+        "Would require labelled frames or a trained, validated classifier with documented error rates."
+      ],
+      "requiresPresent": 0,
+      "shareOfEligible": 0.0,
+      "shareOfRecords": 0.0
+    },
+    {
+      "assigned": 0,
+      "confidence": {},
+      "eligibleRecords": 0,
+      "evidenceTier": "unmeasured",
+      "id": "f.authorship",
+      "label": "authorship",
+      "layer": "F-out-of-scope",
+      "nonClaims": [
+        "Does not identify a director, studio, animator, tool or generative model.",
+        "Would require provenance metadata or a validated authorship-attribution method with a stated error rate."
+      ],
+      "requiresPresent": 0,
+      "shareOfEligible": 0.0,
+      "shareOfRecords": 0.0
+    },
+    {
+      "assigned": 0,
+      "confidence": {},
+      "eligibleRecords": 0,
+      "evidenceTier": "unmeasured",
+      "id": "f.camera-rig-inference",
+      "label": "camera-rig-inference",
+      "layer": "F-out-of-scope",
+      "nonClaims": [
+        "Does not establish a dolly, crane, handheld, gimbal, drone or locked-off camera.",
+        "Would require EXIF/rig metadata or a validated camera-motion model with calibrated ambiguity handling."
+      ],
+      "requiresPresent": 0,
+      "shareOfEligible": 0.0,
+      "shareOfRecords": 0.0
+    },
+    {
+      "assigned": 0,
+      "confidence": {},
+      "eligibleRecords": 0,
+      "evidenceTier": "unmeasured",
+      "id": "f.genre",
+      "label": "genre",
+      "layer": "F-out-of-scope",
+      "nonClaims": [
+        "Does not identify music video, commercial, title sequence, brand film, trailer or any other genre.",
+        "Would require a labelled genre corpus or the catalog's own editorial categories, used as a separate field."
+      ],
+      "requiresPresent": 0,
+      "shareOfEligible": 0.0,
+      "shareOfRecords": 0.0
+    },
+    {
+      "assigned": 0,
+      "confidence": {},
+      "eligibleRecords": 0,
+      "evidenceTier": "unmeasured",
+      "id": "f.intent",
+      "label": "intent",
+      "layer": "F-out-of-scope",
+      "nonClaims": [
+        "Does not establish why a choice was made, what a client asked for, or what a sequence is meant to achieve.",
+        "Would require creator interviews, briefs or a labelled intent study with documented coding rules."
+      ],
+      "requiresPresent": 0,
+      "shareOfEligible": 0.0,
+      "shareOfRecords": 0.0
+    },
+    {
+      "assigned": 0,
+      "confidence": {},
+      "eligibleRecords": 0,
+      "evidenceTier": "unmeasured",
+      "id": "f.quality",
+      "label": "quality",
+      "layer": "F-out-of-scope",
+      "nonClaims": [
+        "Does not rank records, measure craft, predict awards or establish audience response.",
+        "Would require a defined rubric, trained raters and an inter-rater reliability statistic."
+      ],
+      "requiresPresent": 0,
+      "shareOfEligible": 0.0,
+      "shareOfRecords": 0.0
+    },
+    {
+      "assigned": 0,
+      "confidence": {},
+      "eligibleRecords": 0,
+      "evidenceTier": "unmeasured",
+      "id": "f.transition-ground-truth",
+      "label": "transition-ground-truth",
+      "layer": "F-out-of-scope",
+      "nonClaims": [
+        "Does not establish that a cut occurred at a frame, that a dissolve lasted a stated time, or that a fade reached black.",
+        "Would require frame-accurate human annotation with an inter-annotator agreement statistic."
+      ],
+      "requiresPresent": 0,
+      "shareOfEligible": 0.0,
+      "shareOfRecords": 0.0
+    },
+    {
+      "assigned": 0,
+      "confidence": {},
+      "eligibleRecords": 0,
+      "evidenceTier": "unmeasured",
+      "id": "f.vfx-effect-identity",
+      "label": "vfx-effect-identity",
+      "layer": "F-out-of-scope",
+      "nonClaims": [
+        "Does not identify blur, glow, grain, distortion, particles, keying or any compositing operation.",
+        "Would require an effect-labelled dataset and a validated detector, plus a stated confusion matrix."
+      ],
+      "requiresPresent": 0,
+      "shareOfEligible": 0.0,
+      "shareOfRecords": 0.0
+    },
+    {
+      "assigned": 0,
+      "confidence": {},
+      "eligibleRecords": 0,
+      "evidenceTier": "unmeasured",
+      "id": "f.video-template-detection",
+      "label": "video-template-detection",
+      "layer": "F-out-of-scope",
+      "nonClaims": [
+        "Does not identify a reusable package, a design system, a template family or a campaign system.",
+        "Would require a template library plus a matcher with a measured false-positive rate."
+      ],
+      "requiresPresent": 0,
+      "shareOfEligible": 0.0,
+      "shareOfRecords": 0.0
+    }
+  ],
+  "layers": {
+    "A-pacing": {
+      "assignable": true,
+      "assignedLabelInstances": 3981,
+      "evidenceTier": "measured-full-runtime",
+      "labelCount": 8,
+      "name": "Pacing and timing",
+      "recordsWithAllLayerFields": 1363,
+      "recordsWithAnyLabelRequires": 3161,
+      "recordsWithAtLeastOneLabel": 2653,
+      "requiredFields": [
+        "census.cutCount",
+        "census.durationSeconds",
+        "census.cutsPerMinute",
+        "editorial.paceTrend",
+        "editorial.paceDriftRatio",
+        "census.strobe",
+        "census.seriesSummary.meanDisplayLuma",
+        "census.burstFraction"
+      ]
+    },
+    "B-temporal-appearance": {
+      "assignable": true,
+      "assignedLabelInstances": 968,
+      "evidenceTier": "measured-sampled",
+      "labelCount": 5,
+      "name": "Temporal appearance",
+      "recordsWithAllLayerFields": 1570,
+      "recordsWithAnyLabelRequires": 1570,
+      "recordsWithAtLeastOneLabel": 619,
+      "requiredFields": [
+        "editorial.flickerLumaPerSecond",
+        "editorial.staticFraction",
+        "editorial.lumaSlopePerMinute",
+        "editorial.lumaSlopeR2"
+      ]
+    },
+    "C-audio-energy": {
+      "assignable": true,
+      "assignedLabelInstances": 4875,
+      "evidenceTier": "measured-full-runtime",
+      "labelCount": 9,
+      "name": "Audio energy",
+      "recordsWithAllLayerFields": 2837,
+      "recordsWithAnyLabelRequires": 2841,
+      "recordsWithAtLeastOneLabel": 2562,
+      "requiredFields": [
+        "audio.integratedLufs",
+        "audio.durationSeconds",
+        "audio.loudnessRangeLu",
+        "audio.onsetsPerMinuteOfRuntime",
+        "audio.tailSilenceSeconds",
+        "audio.loudnessSlopeLuPerMinute",
+        "audio.loudnessSlopeR2"
+      ]
+    },
+    "D-transition-motion": {
+      "assignable": true,
+      "assignedLabelInstances": 0,
+      "evidenceTier": "unmeasured",
+      "labelCount": 7,
+      "name": "Transition and global motion",
+      "recordsWithAllLayerFields": 0,
+      "recordsWithAnyLabelRequires": 0,
+      "recordsWithAtLeastOneLabel": 0,
+      "requiredFields": [
+        "motionProfile.transitions.shares.hard-cut",
+        "motionProfile.transitions.transitionCount",
+        "motionProfile.transitions.shares.short-dissolve",
+        "motionProfile.transitions.shares.long-dissolve",
+        "motionProfile.transitions.shares.fade-through-black",
+        "motionProfile.transitions.shares.fade-through-white",
+        "motionProfile.globalMotion.panFraction",
+        "motionProfile.globalMotion.observablePairs",
+        "motionProfile.globalMotion.staticFraction",
+        "motionProfile.localMotion.centreShare",
+        "motionProfile.overlayActivity.upperThirdActivity",
+        "motionProfile.overlayActivity.lowerThirdActivity"
+      ]
+    },
+    "E-editorial-composites": {
+      "assignable": true,
+      "assignedLabelInstances": 319,
+      "evidenceTier": "measured-sampled",
+      "labelCount": 3,
+      "name": "Editorial-behaviour composites",
+      "recordsWithAllLayerFields": 1376,
+      "recordsWithAnyLabelRequires": 1380,
+      "recordsWithAtLeastOneLabel": 319,
+      "requiredFields": [
+        "editorial.paceTrend",
+        "editorial.paceDriftRatio",
+        "editorial.paceFirstThird",
+        "editorial.lumaSlopePerMinute",
+        "editorial.lumaSlopeR2",
+        "audio.loudnessSlopeLuPerMinute",
+        "audio.loudnessSlopeR2",
+        "audio.integratedLufs",
+        "audio.durationSeconds"
+      ]
+    },
+    "F-out-of-scope": {
+      "assignable": false,
+      "assignedLabelInstances": 0,
+      "evidenceTier": "unmeasured",
+      "labelCount": 9,
+      "name": "Explicitly out of scope",
+      "recordsWithAllLayerFields": 0,
+      "recordsWithAnyLabelRequires": 0,
+      "recordsWithAtLeastOneLabel": 0,
+      "requiredFields": []
+    }
+  },
+  "notes": [
+    "A label is a predicate over stored numeric evidence, not a creative archetype.",
+    "Cut candidates are ffmpeg scene-score exceedances; fast motion, flashes and compression can inflate them.",
+    "Layer B and the appearance component of layer E come from the 1 Hz stored series, so they are sampled, not full-rate.",
+    "Layer D is specified against motionProfile.* but no stored record carries it; nothing in layer D is assigned.",
+    "Layer F names are non-assignable by construction and have assigned: 0.",
+    "No quality, genre, intent, authorship or effect-identity claim is made anywhere in this file."
+  ],
+  "perSite": {
+    "aicp": {
+      "assignedRecordCount": 658,
+      "joined": {
+        "audio": 475,
+        "catalog": 703,
+        "video": 703
+      },
+      "labels": {
+        "a.accelerating": 91,
+        "a.burst-texture": 43,
+        "a.decelerating": 85,
+        "a.long-take": 65,
+        "a.rapid-montage": 110,
+        "a.single-shot": 13,
+        "a.steady-cut": 411,
+        "a.strobe-texture": 46,
+        "b.flicker-high": 30,
+        "b.flicker-low": 80,
+        "b.luma-fall": 14,
+        "b.luma-rise": 17,
+        "b.static-frame-dominant": 71,
+        "c.loud-mix": 143,
+        "c.loudness-fall": 4,
+        "c.loudness-rise": 16,
+        "c.narrow-lra": 67,
+        "c.onset-dense": 134,
+        "c.onset-sparse": 33,
+        "c.quiet-mix": 96,
+        "c.silent-tail": 112,
+        "c.wide-lra": 103,
+        "d.centre-weighted-motion": 0,
+        "d.dissolve-using": 0,
+        "d.fade-using": 0,
+        "d.hard-cut-dominant": 0,
+        "d.overlay-active": 0,
+        "d.pan-dominant": 0,
+        "d.static-camera": 0,
+        "e.building": 12,
+        "e.flat-steady": 36,
+        "e.front-loaded": 33,
+        "f.animation-style": 0,
+        "f.authorship": 0,
+        "f.camera-rig-inference": 0,
+        "f.genre": 0,
+        "f.intent": 0,
+        "f.quality": 0,
+        "f.transition-ground-truth": 0,
+        "f.vfx-effect-identity": 0,
+        "f.video-template-detection": 0
+      },
+      "recordCount": 703
+    },
+    "directorslibrary": {
+      "assignedRecordCount": 352,
+      "joined": {
+        "audio": 352,
+        "catalog": 354,
+        "video": 354
+      },
+      "labels": {
+        "a.accelerating": 60,
+        "a.burst-texture": 10,
+        "a.decelerating": 37,
+        "a.long-take": 28,
+        "a.rapid-montage": 28,
+        "a.single-shot": 3,
+        "a.steady-cut": 272,
+        "a.strobe-texture": 12,
+        "b.flicker-high": 10,
+        "b.flicker-low": 40,
+        "b.luma-fall": 9,
+        "b.luma-rise": 0,
+        "b.static-frame-dominant": 36,
+        "c.loud-mix": 137,
+        "c.loudness-fall": 13,
+        "c.loudness-rise": 2,
+        "c.narrow-lra": 15,
+        "c.onset-dense": 41,
+        "c.onset-sparse": 29,
+        "c.quiet-mix": 67,
+        "c.silent-tail": 181,
+        "c.wide-lra": 99,
+        "d.centre-weighted-motion": 0,
+        "d.dissolve-using": 0,
+        "d.fade-using": 0,
+        "d.hard-cut-dominant": 0,
+        "d.overlay-active": 0,
+        "d.pan-dominant": 0,
+        "d.static-camera": 0,
+        "e.building": 1,
+        "e.flat-steady": 19,
+        "e.front-loaded": 7,
+        "f.animation-style": 0,
+        "f.authorship": 0,
+        "f.camera-rig-inference": 0,
+        "f.genre": 0,
+        "f.intent": 0,
+        "f.quality": 0,
+        "f.transition-ground-truth": 0,
+        "f.vfx-effect-identity": 0,
+        "f.video-template-detection": 0
+      },
+      "recordCount": 354
+    },
+    "motiondesignawards": {
+      "assignedRecordCount": 477,
+      "joined": {
+        "audio": 488,
+        "catalog": 491,
+        "video": 491
+      },
+      "labels": {
+        "a.accelerating": 57,
+        "a.burst-texture": 79,
+        "a.decelerating": 85,
+        "a.long-take": 112,
+        "a.rapid-montage": 74,
+        "a.single-shot": 43,
+        "a.steady-cut": 96,
+        "a.strobe-texture": 104,
+        "b.flicker-high": 69,
+        "b.flicker-low": 83,
+        "b.luma-fall": 32,
+        "b.luma-rise": 23,
+        "b.static-frame-dominant": 67,
+        "c.loud-mix": 248,
+        "c.loudness-fall": 38,
+        "c.loudness-rise": 7,
+        "c.narrow-lra": 137,
+        "c.onset-dense": 121,
+        "c.onset-sparse": 66,
+        "c.quiet-mix": 55,
+        "c.silent-tail": 166,
+        "c.wide-lra": 66,
+        "d.centre-weighted-motion": 0,
+        "d.dissolve-using": 0,
+        "d.fade-using": 0,
+        "d.hard-cut-dominant": 0,
+        "d.overlay-active": 0,
+        "d.pan-dominant": 0,
+        "d.static-camera": 0,
+        "e.building": 3,
+        "e.flat-steady": 9,
+        "e.front-loaded": 51,
+        "f.animation-style": 0,
+        "f.authorship": 0,
+        "f.camera-rig-inference": 0,
+        "f.genre": 0,
+        "f.intent": 0,
+        "f.quality": 0,
+        "f.transition-ground-truth": 0,
+        "f.vfx-effect-identity": 0,
+        "f.video-template-detection": 0
+      },
+      "recordCount": 491
+    },
+    "promonews": {
+      "assignedRecordCount": 808,
+      "joined": {
+        "audio": 763,
+        "catalog": 808,
+        "video": 808
+      },
+      "labels": {
+        "a.accelerating": 83,
+        "a.burst-texture": 103,
+        "a.decelerating": 65,
+        "a.long-take": 127,
+        "a.rapid-montage": 145,
+        "a.single-shot": 4,
+        "a.steady-cut": 530,
+        "a.strobe-texture": 107,
+        "b.flicker-high": 13,
+        "b.flicker-low": 44,
+        "b.luma-fall": 9,
+        "b.luma-rise": 5,
+        "b.static-frame-dominant": 35,
+        "c.loud-mix": 689,
+        "c.loudness-fall": 9,
+        "c.loudness-rise": 4,
+        "c.narrow-lra": 120,
+        "c.onset-dense": 59,
+        "c.onset-sparse": 113,
+        "c.quiet-mix": 10,
+        "c.silent-tail": 467,
+        "c.wide-lra": 115,
+        "d.centre-weighted-motion": 0,
+        "d.dissolve-using": 0,
+        "d.fade-using": 0,
+        "d.hard-cut-dominant": 0,
+        "d.overlay-active": 0,
+        "d.pan-dominant": 0,
+        "d.static-camera": 0,
+        "e.building": 3,
+        "e.flat-steady": 35,
+        "e.front-loaded": 21,
+        "f.animation-style": 0,
+        "f.authorship": 0,
+        "f.camera-rig-inference": 0,
+        "f.genre": 0,
+        "f.intent": 0,
+        "f.quality": 0,
+        "f.transition-ground-truth": 0,
+        "f.vfx-effect-identity": 0,
+        "f.video-template-detection": 0
+      },
+      "recordCount": 808
+    },
+    "shots": {
+      "assignedRecordCount": 759,
+      "joined": {
+        "audio": 763,
+        "catalog": 805,
+        "video": 805
+      },
+      "labels": {
+        "a.accelerating": 64,
+        "a.burst-texture": 64,
+        "a.decelerating": 100,
+        "a.long-take": 98,
+        "a.rapid-montage": 164,
+        "a.single-shot": 31,
+        "a.steady-cut": 256,
+        "a.strobe-texture": 76,
+        "b.flicker-high": 43,
+        "b.flicker-low": 87,
+        "b.luma-fall": 38,
+        "b.luma-rise": 35,
+        "b.static-frame-dominant": 78,
+        "c.loud-mix": 236,
+        "c.loudness-fall": 38,
+        "c.loudness-rise": 21,
+        "c.narrow-lra": 185,
+        "c.onset-dense": 211,
+        "c.onset-sparse": 50,
+        "c.quiet-mix": 142,
+        "c.silent-tail": 91,
+        "c.wide-lra": 119,
+        "d.centre-weighted-motion": 0,
+        "d.dissolve-using": 0,
+        "d.fade-using": 0,
+        "d.hard-cut-dominant": 0,
+        "d.overlay-active": 0,
+        "d.pan-dominant": 0,
+        "d.static-camera": 0,
+        "e.building": 9,
+        "e.flat-steady": 23,
+        "e.front-loaded": 57,
+        "f.animation-style": 0,
+        "f.authorship": 0,
+        "f.camera-rig-inference": 0,
+        "f.genre": 0,
+        "f.intent": 0,
+        "f.quality": 0,
+        "f.transition-ground-truth": 0,
+        "f.vfx-effect-identity": 0,
+        "f.video-template-detection": 0
+      },
+      "recordCount": 805
+    }
+  },
+  "recordCount": 3161,
+  "schema": "kumiki.taxonomy-assignments.v1",
+  "siteCount": 5,
+  "taxonomy": {
+    "labelCount": 41,
+    "path": "catalog/taxonomy/motion-components.v1.json",
+    "schema": "kumiki.motion-component-taxonomy.v1",
+    "status": "specified-and-partially-measured",
+    "title": "Labelled motion-component taxonomy",
+    "version": 1
+  },
+  "unassignedReasons": {
+    "a.accelerating": {
+      "insufficient-cuts": 461,
+      "insufficient-editorial-samples": 16,
+      "missing-editorial": 1781,
+      "predicate-false": 548
+    },
+    "a.burst-texture": {
+      "insufficient-cuts": 816,
+      "missing-census": 189,
+      "predicate-false": 1857
+    },
+    "a.decelerating": {
+      "insufficient-cuts": 461,
+      "insufficient-editorial-samples": 16,
+      "missing-editorial": 1781,
+      "predicate-false": 531
+    },
+    "a.long-take": {
+      "excluded": 105,
+      "predicate-false": 2626
+    },
+    "a.rapid-montage": {
+      "insufficient-cuts": 1005,
+      "predicate-false": 1635
+    },
+    "a.single-shot": {
+      "duration-too-short": 19,
+      "predicate-false": 3048
+    },
+    "a.steady-cut": {
+      "insufficient-cuts": 1005,
+      "predicate-false": 591
+    },
+    "a.strobe-texture": {
+      "predicate-false": 2816
+    },
+    "b.flicker-high": {
+      "insufficient-editorial-samples": 185,
+      "missing-editorial": 1591,
+      "predicate-false": 1220
+    },
+    "b.flicker-low": {
+      "insufficient-editorial-samples": 185,
+      "missing-editorial": 1591,
+      "predicate-false": 1051
+    },
+    "b.luma-fall": {
+      "insufficient-editorial-samples": 185,
+      "missing-editorial": 1591,
+      "predicate-false": 1283
+    },
+    "b.luma-rise": {
+      "insufficient-editorial-samples": 185,
+      "missing-editorial": 1591,
+      "predicate-false": 1305
+    },
+    "b.static-frame-dominant": {
+      "insufficient-editorial-samples": 185,
+      "missing-editorial": 1591,
+      "predicate-false": 1098
+    },
+    "c.loud-mix": {
+      "audio-too-short": 17,
+      "integrated-at-or-below-gate": 4,
+      "missing-audio": 320,
+      "predicate-false": 1367
+    },
+    "c.loudness-fall": {
+      "audio-too-short": 17,
+      "missing-audio": 324,
+      "predicate-false": 2718
+    },
+    "c.loudness-rise": {
+      "audio-too-short": 17,
+      "missing-audio": 324,
+      "predicate-false": 2770
+    },
+    "c.narrow-lra": {
+      "audio-too-short": 17,
+      "missing-audio": 320,
+      "predicate-false": 2300
+    },
+    "c.onset-dense": {
+      "audio-too-short": 17,
+      "missing-audio": 320,
+      "predicate-false": 2258
+    },
+    "c.onset-sparse": {
+      "audio-too-short": 17,
+      "missing-audio": 320,
+      "predicate-false": 2533
+    },
+    "c.quiet-mix": {
+      "audio-too-short": 17,
+      "integrated-at-or-below-gate": 4,
+      "missing-audio": 320,
+      "predicate-false": 2450
+    },
+    "c.silent-tail": {
+      "audio-too-short": 17,
+      "missing-audio": 320,
+      "predicate-false": 1807
+    },
+    "c.wide-lra": {
+      "audio-too-short": 17,
+      "missing-audio": 320,
+      "predicate-false": 2322
+    },
+    "d.centre-weighted-motion": {
+      "missing-motion-profile": 3161
+    },
+    "d.dissolve-using": {
+      "missing-motion-profile": 3161
+    },
+    "d.fade-using": {
+      "missing-motion-profile": 3161
+    },
+    "d.hard-cut-dominant": {
+      "missing-motion-profile": 3161
+    },
+    "d.overlay-active": {
+      "missing-motion-profile": 3161
+    },
+    "d.pan-dominant": {
+      "missing-motion-profile": 3161
+    },
+    "d.static-camera": {
+      "missing-motion-profile": 3161
+    },
+    "e.building": {
+      "audio-too-short": 1,
+      "insufficient-cuts": 461,
+      "missing-audio": 4,
+      "missing-editorial": 1781,
+      "predicate-false": 886
+    },
+    "e.flat-steady": {
+      "insufficient-cuts": 461,
+      "missing-editorial": 1781,
+      "predicate-false": 797
+    },
+    "e.front-loaded": {
+      "insufficient-cuts": 461,
+      "missing-editorial": 1781,
+      "predicate-false": 750
+    },
+    "f.animation-style": {
+      "out-of-scope-layer": 3161
+    },
+    "f.authorship": {
+      "out-of-scope-layer": 3161
+    },
+    "f.camera-rig-inference": {
+      "out-of-scope-layer": 3161
+    },
+    "f.genre": {
+      "out-of-scope-layer": 3161
+    },
+    "f.intent": {
+      "out-of-scope-layer": 3161
+    },
+    "f.quality": {
+      "out-of-scope-layer": 3161
+    },
+    "f.transition-ground-truth": {
+      "out-of-scope-layer": 3161
+    },
+    "f.vfx-effect-identity": {
+      "out-of-scope-layer": 3161
+    },
+    "f.video-template-detection": {
+      "out-of-scope-layer": 3161
+    }
+  },
+  "unmeasuredLabels": [
+    {
+      "assignable": true,
+      "assigned": 0,
+      "id": "d.centre-weighted-motion",
+      "layer": "D-transition-motion",
+      "requires": [
+        "motionProfile.localMotion.centreShare"
+      ]
+    },
+    {
+      "assignable": true,
+      "assigned": 0,
+      "id": "d.dissolve-using",
+      "layer": "D-transition-motion",
+      "requires": [
+        "motionProfile.transitions.shares.short-dissolve",
+        "motionProfile.transitions.shares.long-dissolve",
+        "motionProfile.transitions.transitionCount"
+      ]
+    },
+    {
+      "assignable": true,
+      "assigned": 0,
+      "id": "d.fade-using",
+      "layer": "D-transition-motion",
+      "requires": [
+        "motionProfile.transitions.shares.fade-through-black",
+        "motionProfile.transitions.shares.fade-through-white",
+        "motionProfile.transitions.transitionCount"
+      ]
+    },
+    {
+      "assignable": true,
+      "assigned": 0,
+      "id": "d.hard-cut-dominant",
+      "layer": "D-transition-motion",
+      "requires": [
+        "motionProfile.transitions.shares.hard-cut",
+        "motionProfile.transitions.transitionCount"
+      ]
+    },
+    {
+      "assignable": true,
+      "assigned": 0,
+      "id": "d.overlay-active",
+      "layer": "D-transition-motion",
+      "requires": [
+        "motionProfile.overlayActivity.upperThirdActivity",
+        "motionProfile.overlayActivity.lowerThirdActivity"
+      ]
+    },
+    {
+      "assignable": true,
+      "assigned": 0,
+      "id": "d.pan-dominant",
+      "layer": "D-transition-motion",
+      "requires": [
+        "motionProfile.globalMotion.panFraction",
+        "motionProfile.globalMotion.observablePairs"
+      ]
+    },
+    {
+      "assignable": true,
+      "assigned": 0,
+      "id": "d.static-camera",
+      "layer": "D-transition-motion",
+      "requires": [
+        "motionProfile.globalMotion.staticFraction",
+        "motionProfile.globalMotion.observablePairs"
+      ]
+    },
+    {
+      "assignable": false,
+      "assigned": 0,
+      "id": "f.animation-style",
+      "layer": "F-out-of-scope",
+      "requires": []
+    },
+    {
+      "assignable": false,
+      "assigned": 0,
+      "id": "f.authorship",
+      "layer": "F-out-of-scope",
+      "requires": []
+    },
+    {
+      "assignable": false,
+      "assigned": 0,
+      "id": "f.camera-rig-inference",
+      "layer": "F-out-of-scope",
+      "requires": []
+    },
+    {
+      "assignable": false,
+      "assigned": 0,
+      "id": "f.genre",
+      "layer": "F-out-of-scope",
+      "requires": []
+    },
+    {
+      "assignable": false,
+      "assigned": 0,
+      "id": "f.intent",
+      "layer": "F-out-of-scope",
+      "requires": []
+    },
+    {
+      "assignable": false,
+      "assigned": 0,
+      "id": "f.quality",
+      "layer": "F-out-of-scope",
+      "requires": []
+    },
+    {
+      "assignable": false,
+      "assigned": 0,
+      "id": "f.transition-ground-truth",
+      "layer": "F-out-of-scope",
+      "requires": []
+    },
+    {
+      "assignable": false,
+      "assigned": 0,
+      "id": "f.vfx-effect-identity",
+      "layer": "F-out-of-scope",
+      "requires": []
+    },
+    {
+      "assignable": false,
+      "assigned": 0,
+      "id": "f.video-template-detection",
+      "layer": "F-out-of-scope",
+      "requires": []
+    }
+  ]
+}
